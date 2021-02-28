@@ -1,0 +1,61 @@
+name: Build and publish
+
+on:
+    push:
+        tags:
+            - "*"
+
+env:
+    SQLITE_RELEASE_YEAR: "2021"
+    SQLITE_VERSION: "3340100"
+
+jobs:
+    build:
+        name: Build for ${{ matrix.os }}
+        runs-on: ${{ matrix.os }}
+        strategy:
+            matrix:
+                include:
+                    - os: ubuntu-latest
+                      artifact_extension: .so
+                    - os: windows-latest
+                      artifact_extension: .dll
+                    - os: macos-latest
+                      artifact_extension: .dylib
+
+        steps:
+            - uses: actions/checkout@v2
+
+            - name: Download SQLite sources
+              shell: bash
+              run: |
+                  curl -L http://sqlite.org/$SQLITE_RELEASE_YEAR/sqlite-amalgamation-$SQLITE_VERSION.zip --output src.zip
+                  unzip src.zip
+                  mv sqlite-amalgamation-$SQLITE_VERSION/* src
+                  mkdir -p dist
+
+            - name: Build for Linux
+              if: matrix.os == 'ubuntu-latest'
+              run: |
+                  gcc -fPIC -shared src/sqlite3vsv.c -o dist/sqlite3-vsv.so -lm
+                  gcc -fPIC -shared src/sqlite3stats.c -o dist/sqlite3-stats.so -lm
+
+            - name: Build for Windows
+              if: matrix.os == 'windows-latest'
+              run: |
+                  gcc -shared -I. src/sqlite3stats.c -o dist/sqlite3-stats.dll
+                  gcc -shared -I. src/sqlite3vsv.c -o dist/sqlite3-vsv.dll
+
+            - name: Build for macOS
+              if: matrix.os == 'macos-latest'
+              run: |
+                  gcc -fPIC -dynamiclib -I src src/sqlite3stats.c -o dist/sqlite3-stats.dylib -lm
+                  gcc -fPIC -dynamiclib -I src src/sqlite3vsv.c -o dist/sqlite3-vsv.dylib -lm
+
+            - name: Upload binaries to release
+              uses: svenstaro/upload-release-action@v2
+              with:
+                  repo_token: ${{ secrets.GITHUB_TOKEN }}
+                  file: dist/*
+                  file_glob: true
+                  tag: ${{ github.ref }}
