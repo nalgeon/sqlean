@@ -14,7 +14,7 @@ Here is what we've got right now:
 
 ## Download
 
-There are [precompiled binaries](/nalgeon/sqlite-plus/releases/latest) for every OS:
+There are [precompiled binaries](https://github.com/nalgeon/sqlite-plus/releases/latest) for every OS:
 
 -   `*.dll` - for Windows
 -   `*.so` - for Linux
