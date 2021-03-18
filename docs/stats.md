@@ -17,7 +17,9 @@ Provides following functions:
 -   `variance` or `var_samp` - sample variance,
 -   `var_pop` - population variance.
 
-Usage:
+[Download](/nalgeon/sqlite-plus/releases/latest)
+
+## Usage
 
 ```
 sqlite> .load sqlite3-stats;

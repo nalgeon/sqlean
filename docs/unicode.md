@@ -8,6 +8,10 @@ This extension implements true UNICODE functionality for SQLite in regards of ca
 
 Has no external dependencies (like libicu). Adapted from [sqlite3_unicode](https://github.com/Zensey/sqlite3_unicode) by Anton Litvinov.
 
+[Download](/nalgeon/sqlite-plus/releases/latest)
+
+## Usage
+
 Before:
 
 ```

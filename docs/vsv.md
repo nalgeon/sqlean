@@ -4,7 +4,9 @@ Provides virtual table for working directly with CSV files, without importing da
 
 Adapted from [vsv.c](http://www.dessus.com/files/vsv.c) by Keith Medcalf.
 
-Usage:
+[Download](/nalgeon/sqlite-plus/releases/latest)
+
+## Usage
 
 ```sql
 create virtual table temp.vsv using vsv(...);
