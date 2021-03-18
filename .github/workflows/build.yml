@@ -37,19 +37,22 @@ jobs:
             - name: Build for Linux
               if: matrix.os == 'ubuntu-latest'
               run: |
-                  gcc -fPIC -shared src/sqlite3vsv.c -o dist/sqlite3-vsv.so -lm
                   gcc -fPIC -shared src/sqlite3stats.c -o dist/sqlite3-stats.so -lm
+                  gcc -fPIC -shared src/sqlite3unicode.c -o dist/sqlite3-unicode.so -lm
+                  gcc -fPIC -shared src/sqlite3vsv.c -o dist/sqlite3-vsv.so -lm
 
             - name: Build for Windows
               if: matrix.os == 'windows-latest'
               run: |
                   gcc -shared -I. src/sqlite3stats.c -o dist/sqlite3-stats.dll
+                  gcc -shared -I. src/sqlite3unicode.c -o dist/sqlite3-unicode.dll
                   gcc -shared -I. src/sqlite3vsv.c -o dist/sqlite3-vsv.dll
 
             - name: Build for macOS
               if: matrix.os == 'macos-latest'
               run: |
                   gcc -fPIC -dynamiclib -I src src/sqlite3stats.c -o dist/sqlite3-stats.dylib -lm
+                  gcc -fPIC -dynamiclib -I src src/sqlite3unicode.c -o dist/sqlite3-unicode.dylib -lm
                   gcc -fPIC -dynamiclib -I src src/sqlite3vsv.c -o dist/sqlite3-vsv.dylib -lm
 
             - name: Upload binaries to release
