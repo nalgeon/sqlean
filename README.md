@@ -4,7 +4,7 @@ SQLite has very few functions compared to other DBMS. SQLite authors see this as
 
 There are a lot of SQLite extensions out there, but they are incomplete, inconsistent and scattered across the internet.
 
-SQLite Plus brings them all togeher, neatly packaged by domain modules and built for Linux, Windows and macOS.
+SQLite Plus brings them all together, neatly packaged by domain modules and built for Linux, Windows and macOS.
 
 Here is what we've got right now:
 
