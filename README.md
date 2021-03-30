@@ -8,6 +8,7 @@ SQLite Plus brings them all together, neatly packaged by domain modules and buil
 
 Here is what we've got right now:
 
+-   [re](docs/re.md): regular expressions
 -   [stats](docs/stats.md): common statistical functions
 -   [vsv](docs/vsv.md): CSV files as virtual tables
 -   [unicode](docs/unicode.md): Unicode string functions
