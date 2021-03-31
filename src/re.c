@@ -23,9 +23,9 @@
  */
 
 /*
- * regcomp, regexec, regsub, regerror
+ * re_compile, re_execute, re_substitute, re_error
  */
-#include "regexp.h"
+#include "re.h"
 
 #include <ctype.h>
 #include <stdio.h>
@@ -45,10 +45,10 @@
  * Regstart and reganch permit very fast decisions on suitable starting points
  * for a match, cutting down the work a lot.  Regmust permits fast rejection
  * of lines that cannot possibly match.  The regmust tests are costly enough
- * that regcomp() supplies a regmust only if the r.e. contains something
+ * that re_compile() supplies a regmust only if the r.e. contains something
  * potentially expensive (at present, the only such thing detected is * or +
  * at the start of the r.e., which can involve a lot of backup).  Regmlen is
- * supplied because the test in regexec() needs it and regcomp() is computing
+ * supplied because the test in re_execute() needs it and re_compile() is computing
  * it anyway.
  */
 
@@ -132,7 +132,7 @@
  */
 #define FAIL(m)        \
     {                  \
-        regerror(m);   \
+        re_error(m);   \
         return (NULL); \
     }
 #define ISREPN(c) ((c) == '*' || (c) == '+' || (c) == '?')
@@ -147,7 +147,7 @@
 #define WORST 0     /* Worst case. */
 
 /*
- * Work-variable struct for regcomp().
+ * Work-variable struct for re_compile().
  */
 struct comp {
     char *regparse;   /* Input-scan pointer. */
@@ -159,7 +159,7 @@ struct comp {
 #define EMITTING(cp) ((cp)->regcode != (cp)->regdummy)
 
 /*
- * Forward declarations for regcomp()'s friends.
+ * Forward declarations for re_compile()'s friends.
  */
 static char *reg(struct comp *cp, int paren, int *flagp);
 static char *regbranch(struct comp *cp, int *flagp);
@@ -172,12 +172,12 @@ static void reginsert(struct comp *cp, int op, char *opnd);
 static void regtail(struct comp *cp, char *p, char *val);
 static void regoptail(struct comp *cp, char *p, char *val);
 
-void regerror(char *s) {
+void re_error(char *s) {
     fprintf(stderr, "regexp(3): %s\n", s);
 }
 
 /*
- - regcomp - compile a regular expression into internal code
+ - re_compile - compile a regular expression into internal code
  *
  * We can't allocate space until we know how big the compiled form will be,
  * but we can't compile it (and thus know how big it is) until we've got a
@@ -192,7 +192,7 @@ void regerror(char *s) {
  * of the structure of the compiled regexp.
  */
 regexp *
-    regcomp(exp)
+    re_compile(exp)
         const char *exp;
 {
     register regexp *r;
@@ -201,7 +201,7 @@ regexp *
     struct comp co;
 
     if (exp == NULL)
-        FAIL("NULL argument to regcomp");
+        FAIL("NULL argument to re_compile");
 
     /* First pass: determine size, legality. */
     co.regparse = (char *)exp;
@@ -670,11 +670,11 @@ char *val;
 }
 
 /*
- * regexec and friends
+ * re_execute and friends
  */
 
 /*
- * Work-variable struct for regexec().
+ * Work-variable struct for re_execute().
  */
 struct exec {
     char *reginput;   /* String-input pointer. */
@@ -697,10 +697,10 @@ static char *regprop();
 #endif
 
 /*
- - regexec - match a regexp against a string
+ - re_execute - match a regexp against a string
  */
 int
-    regexec(prog, str) register regexp *prog;
+    re_execute(prog, str) register regexp *prog;
 const char *str;
 {
     register char *string = (char *)str; /* avert const poisoning */
@@ -709,13 +709,13 @@ const char *str;
 
     /* Be paranoid. */
     if (prog == NULL || string == NULL) {
-        regerror("NULL argument to regexec");
+        re_error("NULL argument to re_execute");
         return (0);
     }
 
     /* Check validity of program. */
     if ((unsigned char)*prog->program != MAGIC) {
-        regerror("corrupted regexp");
+        re_error("corrupted regexp");
         return (0);
     }
 
@@ -937,7 +937,7 @@ char *prog;
                 return (1); /* Success! */
                 break;
             default:
-                regerror("regexp corruption");
+                re_error("regexp corruption");
                 return (0);
                 break;
         }
@@ -947,7 +947,7 @@ char *prog;
 	 * We get here only if there's trouble -- normally "case END" is
 	 * the terminating point.
 	 */
-    regerror("corrupted pointers");
+    re_error("corrupted pointers");
     return (0);
 }
 
@@ -980,7 +980,7 @@ char *node;
             return (strcspn(ep->reginput, OPERAND(node)));
             break;
         default: /* Oh dear.  Called inappropriately. */
-            regerror("internal error: bad call of regrepeat");
+            re_error("internal error: bad call of regrepeat");
             return (0); /* Best compromise. */
             break;
     }
@@ -1120,7 +1120,7 @@ static char *
             p = "PLUS";
             break;
         default:
-            regerror("corrupted opcode");
+            re_error("corrupted opcode");
             break;
     }
     if (p != NULL)
@@ -1130,10 +1130,10 @@ static char *
 #endif
 
 /*
- - regsub - perform substitutions after a regexp match
+ - re_substitute - perform substitutions after a regexp match
  */
 int
-    regsub(rp, source, dest)
+    re_substitute(rp, source, dest)
         const regexp *rp;
 const char *source;
 char *dest;
@@ -1146,11 +1146,11 @@ char *dest;
     register size_t len;
 
     if (prog == NULL || source == NULL || dest == NULL) {
-        regerror("NULL parameter to regsub");
+        re_error("NULL parameter to re_substitute");
         return 1;
     }
     if ((unsigned char)*(prog->program) != MAGIC) {
-        regerror("damaged regexp");
+        re_error("damaged regexp");
         return 1;
     }
 
@@ -1172,7 +1172,7 @@ char *dest;
             (void)strncpy(dst, prog->startp[no], len);
             dst += len;
             if (*(dst - 1) == '\0') { /* strncpy hit NUL. */
-                regerror("damaged match string");
+                re_error("damaged match string");
                 return 1;
             }
         }

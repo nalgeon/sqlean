@@ -37,7 +37,7 @@ jobs:
             - name: Build for Linux
               if: matrix.os == 'ubuntu-latest'
               run: |
-                  gcc -fPIC -shared src/sqlite3re.c src/regexp.c -o dist/sqlite3-re.so -lm
+                  gcc -fPIC -shared src/sqlite3re.c src/re.c -o dist/sqlite3-re.so -lm
                   gcc -fPIC -shared src/sqlite3stats.c -o dist/sqlite3-stats.so -lm
                   gcc -fPIC -shared src/sqlite3unicode.c -o dist/sqlite3-unicode.so -lm
                   gcc -fPIC -shared src/sqlite3vsv.c -o dist/sqlite3-vsv.so -lm
@@ -45,7 +45,7 @@ jobs:
             - name: Build for Windows
               if: matrix.os == 'windows-latest'
               run: |
-                  gcc -shared -I. src/sqlite3re.c src/regexp.c -o dist/sqlite3-re.dll
+                  gcc -shared -I. src/sqlite3re.c src/re.c -o dist/sqlite3-re.dll
                   gcc -shared -I. src/sqlite3stats.c -o dist/sqlite3-stats.dll
                   gcc -shared -I. src/sqlite3unicode.c -o dist/sqlite3-unicode.dll
                   gcc -shared -I. src/sqlite3vsv.c -o dist/sqlite3-vsv.dll
@@ -53,7 +53,7 @@ jobs:
             - name: Build for macOS
               if: matrix.os == 'macos-latest'
               run: |
-                  gcc -fPIC -dynamiclib -I src src/sqlite3re.c src/regexp.c -o dist/sqlite3-re.dylib -lm
+                  gcc -fPIC -dynamiclib -I src src/sqlite3re.c src/re.c -o dist/sqlite3-re.dylib -lm
                   gcc -fPIC -dynamiclib -I src src/sqlite3stats.c -o dist/sqlite3-stats.dylib -lm
                   gcc -fPIC -dynamiclib -I src src/sqlite3unicode.c -o dist/sqlite3-unicode.dylib -lm
                   gcc -fPIC -dynamiclib -I src src/sqlite3vsv.c -o dist/sqlite3-vsv.dylib -lm

@@ -39,7 +39,7 @@ typedef struct regexp {
 	char program[1];	/* Unwarranted chumminess with compiler. */
 } regexp;
 
-extern regexp *regcomp(const char *re);
-extern int regexec(regexp *rp, const char *s);
-extern int regsub(const regexp *rp, const char *src, char *dst);
-extern void regerror(char *message);
+regexp *re_compile(const char *re);
+int re_execute(regexp *rp, const char *s);
+int re_substitute(const regexp *rp, const char *src, char *dst);
+void re_error(char *message);

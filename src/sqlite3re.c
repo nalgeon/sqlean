@@ -30,7 +30,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "regexp.h"
+#include "re.h"
 #include "sqlite3ext.h"
 SQLITE_EXTENSION_INIT1
 
@@ -62,7 +62,7 @@ static char *str_replace(char *orig, char *rep, char *with) {
         ins = tmp + len_rep;
     }
 
-    tmp = result = malloc(strlen(orig) + (len_with - len_rep) * count + 1);
+    tmp = result = sqlite3_malloc(strlen(orig) + (len_with - len_rep) * count + 1);
 
     if (!result)
         return NULL;
@@ -118,13 +118,13 @@ static void regexp_statement(
         return;
     }
 
-    r = regcomp(pattern);
+    r = re_compile(pattern);
     if (r == NULL) {
         sqlite3_result_error(context, "invalid regexp pattern", -1);
         return;
     }
 
-    is_match = regexec(r, source);
+    is_match = re_execute(r, source);
     sqlite3_result_int(context, is_match);
     free((char *)r);
 }
@@ -164,13 +164,13 @@ static void regexp_like(
         return;
     }
 
-    r = regcomp(pattern);
+    r = re_compile(pattern);
     if (r == NULL) {
         sqlite3_result_error(context, "invalid regexp pattern", -1);
         return;
     }
 
-    is_match = regexec(r, source);
+    is_match = re_execute(r, source);
     sqlite3_result_int(context, is_match);
     free((char *)r);
 }
@@ -202,13 +202,13 @@ static void regexp_substr(
         return;
     }
 
-    r = regcomp(pattern);
+    r = re_compile(pattern);
     if (r == NULL) {
         sqlite3_result_error(context, "invalid regexp pattern", -1);
         return;
     }
 
-    is_match = regexec(r, source);
+    is_match = re_execute(r, source);
     if (!is_match) {
         return;
     }
@@ -255,7 +255,7 @@ static void regexp_replace(
         return;
     }
 
-    r = regcomp(pattern);
+    r = re_compile(pattern);
     if (r == NULL) {
         sqlite3_result_error(context, "invalid regexp pattern", -1);
         return;
@@ -267,7 +267,7 @@ static void regexp_replace(
         return;
     }
 
-    is_match = regexec(r, source);
+    is_match = re_execute(r, source);
     if (!is_match) {
         sqlite3_result_value(context, argv[0]);
         return;
@@ -284,7 +284,7 @@ static void regexp_replace(
 #endif
 
     char replacement_str[BUFSIZ];
-    int err = regsub(r, replacement, replacement_str);
+    int err = re_substitute(r, replacement, replacement_str);
 #ifdef DEBUG
     fprintf(stderr, "replacement_str = '%s'\n", replacement_str);
 #endif
