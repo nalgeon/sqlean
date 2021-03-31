@@ -1,4 +1,4 @@
-# sqlite3-stats: Regular Expressions
+# sqlite3-re: Regular Expressions
 
 Regexp search and replace functions for SQLite.
 Adapted from [regexp.old](https://github.com/garyhouston/regexp.old) by Henry Spencer.
