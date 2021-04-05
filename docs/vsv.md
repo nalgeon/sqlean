@@ -4,7 +4,7 @@ Provides virtual table for working directly with CSV files, without importing da
 
 Adapted from [vsv.c](http://www.dessus.com/files/vsv.c) by Keith Medcalf.
 
-[Download](https://github.com/nalgeon/sqlite-plus/releases/latest)
+[Download](https://github.com/nalgeon/sqlean/releases/latest)
 
 ## Usage
 

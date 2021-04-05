@@ -82,4 +82,4 @@ sqlite> .load sqlite3-re;
 sqlite> select regexp_like('abcdef', 'b.d');
 ```
 
-[Download](https://github.com/nalgeon/sqlite-plus/releases/latest)
+[Download](https://github.com/nalgeon/sqlean/releases/latest)
