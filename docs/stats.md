@@ -22,6 +22,6 @@ Provides following functions:
 ## Usage
 
 ```
-sqlite> .load sqlite3-stats;
+sqlite> .load ./sqlite3-stats;
 sqlite> select median(value) from generate_series(1, 100);
 ```

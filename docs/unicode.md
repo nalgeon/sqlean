@@ -26,7 +26,7 @@ sqlite> select upper('привет');
 After:
 
 ```
-sqlite> .load sqlite3-unicode
+sqlite> .load ./sqlite3-unicode
 sqlite> select upper('hello');
 HELLO
 sqlite> select upper('привет');

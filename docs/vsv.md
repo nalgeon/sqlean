@@ -9,6 +9,8 @@ Adapted from [vsv.c](http://www.dessus.com/files/vsv.c) by Keith Medcalf.
 ## Usage
 
 ```sql
+.load ./sqlite3-vsv
+
 create virtual table temp.vsv using vsv(...);
 select * from vsv;
 ```
