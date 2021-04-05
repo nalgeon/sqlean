@@ -26,7 +26,7 @@ There are [precompiled binaries](https://github.com/nalgeon/sqlean/releases/late
 CLI usage:
 
 ```
-sqlite> .load ./sqlite3-stats;
+sqlite> .load ./sqlite3-stats
 sqlite> select median(value) from generate_series(1, 100);
 ```
 

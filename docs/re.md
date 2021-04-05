@@ -78,7 +78,7 @@ X$      X occurring at the end of the string
 ## Usage
 
 ```
-sqlite> .load ./sqlite3-re;
+sqlite> .load ./sqlite3-re
 sqlite> select regexp_like('abcdef', 'b.d');
 ```
 
