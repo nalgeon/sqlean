@@ -1,4 +1,4 @@
-# `sqlean`: all the missing SQLite functions
+# SQLean: all the missing SQLite functions
 
 SQLite has very few functions compared to other DBMS. SQLite authors see this as a feature rather than a bug, because SQLite has extension mechanism in place.
 
@@ -8,8 +8,9 @@ There are a lot of SQLite extensions out there, but they are incomplete, inconsi
 
 Here is what we've got right now:
 
+-   [math](docs/math.md): math functions
 -   [re](docs/re.md): regular expressions
--   [stats](docs/stats.md): common statistical functions
+-   [stats](docs/stats.md): statistical functions
 -   [vsv](docs/vsv.md): CSV files as virtual tables
 -   [unicode](docs/unicode.md): Unicode string functions
 
