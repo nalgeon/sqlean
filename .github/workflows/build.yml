@@ -34,9 +34,15 @@ jobs:
                   mv sqlite-amalgamation-$SQLITE_VERSION/* src
                   mkdir -p dist
 
+            - name: Download native SQLite extensions
+              shell: bash
+              run: |
+                  curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/json1.c --output src/json1.c
+
             - name: Build for Linux
               if: matrix.os == 'ubuntu-latest'
               run: |
+                  gcc -fPIC -shared src/json1.c -o dist/json1.so -lm
                   gcc -fPIC -shared src/sqlite3math.c -o dist/sqlite3-math.so -lm
                   gcc -fPIC -shared src/sqlite3re.c src/re.c -o dist/sqlite3-re.so -lm
                   gcc -fPIC -shared src/sqlite3stats.c -o dist/sqlite3-stats.so -lm
@@ -46,6 +52,7 @@ jobs:
             - name: Build for Windows
               if: matrix.os == 'windows-latest'
               run: |
+                  gcc -shared -I. src/json1.c -o dist/json1.dll
                   gcc -shared -I. src/sqlite3math.c -o dist/sqlite3-math.dll
                   gcc -shared -I. src/sqlite3re.c src/re.c -o dist/sqlite3-re.dll
                   gcc -shared -I. src/sqlite3stats.c -o dist/sqlite3-stats.dll
@@ -55,6 +62,7 @@ jobs:
             - name: Build for macOS
               if: matrix.os == 'macos-latest'
               run: |
+                  gcc -fPIC -dynamiclib -I src src/json1.c -o dist/json1.dylib -lm
                   gcc -fPIC -dynamiclib -I src src/sqlite3math.c -o dist/sqlite3-math.dylib -lm
                   gcc -fPIC -dynamiclib -I src src/sqlite3re.c src/re.c -o dist/sqlite3-re.dylib -lm
                   gcc -fPIC -dynamiclib -I src src/sqlite3stats.c -o dist/sqlite3-stats.dylib -lm
