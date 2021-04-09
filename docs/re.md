@@ -1,4 +1,4 @@
-# sqlite3-re: Regular Expressions
+# re: Regular Expressions
 
 Regexp search and replace functions for SQLite.
 Adapted from [regexp.old](https://github.com/garyhouston/regexp.old) by Henry Spencer.
@@ -78,7 +78,7 @@ X$      X occurring at the end of the string
 ## Usage
 
 ```
-sqlite> .load ./sqlite3-re
+sqlite> .load ./re
 sqlite> select regexp_like('abcdef', 'b.d');
 ```
 

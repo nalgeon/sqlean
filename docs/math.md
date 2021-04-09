@@ -1,4 +1,4 @@
-# sqlite3-math: Math Functions
+# math: Math Functions
 
 Common math functions for SQLite versions before 3.35.
 Extracted from SQLite 3.35.4 source code (`func.c`).
@@ -18,6 +18,6 @@ Provides following functions:
 ## Usage
 
 ```
-sqlite> .load ./sqlite3-math
+sqlite> .load ./math
 sqlite> select sqrt(9);
 ```

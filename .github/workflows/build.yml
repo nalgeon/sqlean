@@ -37,37 +37,37 @@ jobs:
             - name: Download native SQLite extensions
               shell: bash
               run: |
-                  curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/json1.c --output src/json1.c
+                  curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/json1.c --output src/sqlite3-json1.c
 
             - name: Build for Linux
               if: matrix.os == 'ubuntu-latest'
               run: |
-                  gcc -fPIC -shared src/json1.c -o dist/json1.so -lm
-                  gcc -fPIC -shared src/sqlite3math.c -o dist/sqlite3-math.so -lm
-                  gcc -fPIC -shared src/sqlite3re.c src/re.c -o dist/sqlite3-re.so -lm
-                  gcc -fPIC -shared src/sqlite3stats.c -o dist/sqlite3-stats.so -lm
-                  gcc -fPIC -shared src/sqlite3unicode.c -o dist/sqlite3-unicode.so -lm
-                  gcc -fPIC -shared src/sqlite3vsv.c -o dist/sqlite3-vsv.so -lm
+                  gcc -fPIC -shared src/sqlite3-json1.c -o dist/json1.so -lm
+                  gcc -fPIC -shared src/sqlite3-math.c -o dist/math.so -lm
+                  gcc -fPIC -shared src/sqlite3-re.c src/re.c -o dist/re.so -lm
+                  gcc -fPIC -shared src/sqlite3-stats.c -o dist/stats.so -lm
+                  gcc -fPIC -shared src/sqlite3-unicode.c -o dist/unicode.so -lm
+                  gcc -fPIC -shared src/sqlite3-vsv.c -o dist/vsv.so -lm
 
             - name: Build for Windows
               if: matrix.os == 'windows-latest'
               run: |
-                  gcc -shared -I. src/json1.c -o dist/json1.dll
-                  gcc -shared -I. src/sqlite3math.c -o dist/sqlite3-math.dll
-                  gcc -shared -I. src/sqlite3re.c src/re.c -o dist/sqlite3-re.dll
-                  gcc -shared -I. src/sqlite3stats.c -o dist/sqlite3-stats.dll
-                  gcc -shared -I. src/sqlite3unicode.c -o dist/sqlite3-unicode.dll
-                  gcc -shared -I. src/sqlite3vsv.c -o dist/sqlite3-vsv.dll
+                  gcc -shared -I. src/sqlite3-json1.c -o dist/json1.dll
+                  gcc -shared -I. src/sqlite3-math.c -o dist/math.dll
+                  gcc -shared -I. src/sqlite3-re.c src/re.c -o dist/re.dll
+                  gcc -shared -I. src/sqlite3-stats.c -o dist/stats.dll
+                  gcc -shared -I. src/sqlite3-unicode.c -o dist/unicode.dll
+                  gcc -shared -I. src/sqlite3-vsv.c -o dist/vsv.dll
 
             - name: Build for macOS
               if: matrix.os == 'macos-latest'
               run: |
-                  gcc -fPIC -dynamiclib -I src src/json1.c -o dist/json1.dylib -lm
-                  gcc -fPIC -dynamiclib -I src src/sqlite3math.c -o dist/sqlite3-math.dylib -lm
-                  gcc -fPIC -dynamiclib -I src src/sqlite3re.c src/re.c -o dist/sqlite3-re.dylib -lm
-                  gcc -fPIC -dynamiclib -I src src/sqlite3stats.c -o dist/sqlite3-stats.dylib -lm
-                  gcc -fPIC -dynamiclib -I src src/sqlite3unicode.c -o dist/sqlite3-unicode.dylib -lm
-                  gcc -fPIC -dynamiclib -I src src/sqlite3vsv.c -o dist/sqlite3-vsv.dylib -lm
+                  gcc -fPIC -dynamiclib -I src src/sqlite3-json1.c -o dist/json1.dylib -lm
+                  gcc -fPIC -dynamiclib -I src src/sqlite3-math.c -o dist/math.dylib -lm
+                  gcc -fPIC -dynamiclib -I src src/sqlite3-re.c src/re.c -o dist/re.dylib -lm
+                  gcc -fPIC -dynamiclib -I src src/sqlite3-stats.c -o dist/stats.dylib -lm
+                  gcc -fPIC -dynamiclib -I src src/sqlite3-unicode.c -o dist/unicode.dylib -lm
+                  gcc -fPIC -dynamiclib -I src src/sqlite3-vsv.c -o dist/vsv.dylib -lm
 
             - name: Upload binaries to release
               uses: svenstaro/upload-release-action@v2

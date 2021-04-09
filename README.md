@@ -28,14 +28,14 @@ There are [precompiled binaries](https://github.com/nalgeon/sqlean/releases/late
 CLI usage:
 
 ```
-sqlite> .load ./sqlite3-stats
+sqlite> .load ./stats
 sqlite> select median(value) from generate_series(1, 100);
 ```
 
 IDE usage:
 
 ```
-select load_extension('/path/to/extension/sqlite3-stats');
+select load_extension('/path/to/extension/stats');
 select median(value) from generate_series(1, 100);
 ```
 
@@ -46,9 +46,9 @@ import sqlite3
 
 connection = sqlite3.connect(":memory:")
 connection.enable_load_extension(True)
-connection.load_extension("./sqlite3-stats.so")
+connection.load_extension("./stats.so")
 connection.execute("select median(value) from generate_series(1, 100)")
 connection.close()
 ```
 
-You can specify any other supported extension instead of `sqlite3-stats`.
+You can specify any other supported extension instead of `stats`.

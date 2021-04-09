@@ -1,4 +1,4 @@
-# sqlite3-unicode: Unicode string functions
+# unicode: Unicode string functions
 
 This extension implements true UNICODE functionality for SQLite in regards of case-insensitive comparison of unicode data and SQLite. It uses UNICODE mapping tables to provide the following to SQLite:
 
@@ -26,7 +26,7 @@ sqlite> select upper('привет');
 After:
 
 ```
-sqlite> .load ./sqlite3-unicode
+sqlite> .load ./unicode
 sqlite> select upper('hello');
 HELLO
 sqlite> select upper('привет');

@@ -3113,7 +3113,7 @@ SQLITE_EXPORT int sqlite3_unicode_init(sqlite3 *db) {
 ** this function to initialise unicode functionality.
 */
 #ifndef SQLITE_CORE
-SQLITE_EXPORT int sqlite3_sqliteunicode_init(
+SQLITE_EXPORT int sqlite3_unicode_init(
     sqlite3 *db,
     char **pzErrMsg,
     const sqlite3_api_routines *pApi) {

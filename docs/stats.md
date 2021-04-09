@@ -1,4 +1,4 @@
-# sqlite3-stats: Statistics
+# stats: Statistics
 
 Common statistical functions for SQLite.
 Adapted from [extension-functions.c](https://sqlite.org/contrib/) by Liam Healy.
@@ -22,6 +22,6 @@ Provides following functions:
 ## Usage
 
 ```
-sqlite> .load ./sqlite3-stats
+sqlite> .load ./stats
 sqlite> select median(value) from generate_series(1, 100);
 ```

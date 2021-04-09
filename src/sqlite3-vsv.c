@@ -1623,7 +1623,7 @@ static sqlite3_module VsvModuleFauxWrite = {
 __declspec(dllexport)
 #endif
 #endif
-    int sqlite3_sqlitevsv_init(
+    int sqlite3_vsv_init(
         sqlite3 *db,
         char **pzErrMsg,
         const sqlite3_api_routines *pApi) {

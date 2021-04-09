@@ -1,4 +1,4 @@
-# sqlite3-vsv: CSV files as virtual tables
+# vsv: CSV files as virtual tables
 
 Provides virtual table for working directly with CSV files, without importing data into the database. Useful for very large datasets.
 
@@ -9,7 +9,7 @@ Adapted from [vsv.c](http://www.dessus.com/files/vsv.c) by Keith Medcalf.
 ## Usage
 
 ```sql
-.load ./sqlite3-vsv
+.load ./vsv
 
 create virtual table temp.vsv using vsv(...);
 select * from vsv;

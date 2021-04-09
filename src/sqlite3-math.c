@@ -213,7 +213,7 @@ static void piFunc(
 #ifdef _WIN32
 __declspec(dllexport)
 #endif
-    int sqlite3_sqlitemath_init(
+    int sqlite3_math_init(
         sqlite3 *db,
         char **pzErrMsg,
         const sqlite3_api_routines *pApi) {
