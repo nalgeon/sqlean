@@ -219,12 +219,6 @@ SQLITE_EXPORT int sqlite3_unicode_collate(
 
 /*
 ** <sqlite3_unicode>
-** Register the UNICODE extension functions with database db.
-*/
-SQLITE_EXPORT int sqlite3_unicode_init(sqlite3 *db);
-
-/*
-** <sqlite3_unicode>
 ** The following function needs to be called at application startup to load the extension.
 */
 SQLITE_EXPORT int sqlite3_unicode_load();
@@ -3058,7 +3052,7 @@ SQLITE_PRIVATE void versionFunc(
 ** <sqlite3_unicode>
 ** Register the UNICODE extension functions with database db.
 */
-SQLITE_EXPORT int sqlite3_unicode_init(sqlite3 *db) {
+SQLITE_EXPORT int sqlite3_unicode_init_impl(sqlite3 *db) {
     struct FuncScalar {
         const char *zName; /* Function name */
         int nArg;          /* Number of arguments */
@@ -3118,7 +3112,7 @@ SQLITE_EXPORT int sqlite3_unicode_init(
     char **pzErrMsg,
     const sqlite3_api_routines *pApi) {
     SQLITE_EXTENSION_INIT2(pApi)
-    return sqlite3_unicode_init(db);
+    return sqlite3_unicode_init_impl(db);
 }
 #endif
 
