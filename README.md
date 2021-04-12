@@ -12,8 +12,9 @@ Here is what we've got right now:
 -   [math](docs/math.md): math functions
 -   [re](docs/re.md): regular expressions
 -   [stats](docs/stats.md): statistical functions
--   [vsv](docs/vsv.md): CSV files as virtual tables
+-   [text](docs/text.md): string functions
 -   [unicode](docs/unicode.md): Unicode string functions
+-   [vsv](docs/vsv.md): CSV files as virtual tables
 
 ## Download
 
