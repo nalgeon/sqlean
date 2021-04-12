@@ -1,7 +1,7 @@
 # text: String Functions
 
 Additional string functions for SQLite.
-Adapted from [extension-functions.c](https://sqlite.org/contrib/) by Liam Healy.
+Adapted from [extension-functions.c](https://sqlite.org/contrib/) by Liam Healy. Currently available for Linux and macOS only.
 
 Provides following functions:
 
