@@ -11,9 +11,9 @@ Here is what we've got right now:
 -   [json1](docs/json1.md): JSON functions
 -   [math](docs/math.md): math functions
 -   [re](docs/re.md): regular expressions
--   [stats](docs/stats.md): statistical functions
+-   [stats](docs/stats.md): math statistics
 -   [text](docs/text.md): string functions
--   [unicode](docs/unicode.md): Unicode string functions
+-   [unicode](docs/unicode.md): Unicode support
 -   [vsv](docs/vsv.md): CSV files as virtual tables
 
 ## Download

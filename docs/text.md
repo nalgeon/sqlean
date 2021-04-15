@@ -1,4 +1,4 @@
-# text: String Functions
+# text: String functions
 
 Additional string functions for SQLite.
 Adapted from [extension-functions.c](https://sqlite.org/contrib/) by Liam Healy.
