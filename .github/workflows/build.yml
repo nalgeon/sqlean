@@ -42,6 +42,7 @@ jobs:
             - name: Build for Linux
               if: matrix.os == 'ubuntu-latest'
               run: |
+                  gcc -fPIC -shared src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.so -lm
                   gcc -fPIC -shared src/sqlite3-json1.c -o dist/json1.so -lm
                   gcc -fPIC -shared src/sqlite3-math.c -o dist/math.so -lm
                   gcc -fPIC -shared src/sqlite3-re.c src/re.c -o dist/re.so -lm
@@ -53,6 +54,7 @@ jobs:
             - name: Build for Windows
               if: matrix.os == 'windows-latest'
               run: |
+                  gcc -shared -I. src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.dll -lm
                   gcc -shared -I. src/sqlite3-json1.c -o dist/json1.dll
                   gcc -shared -I. src/sqlite3-math.c -o dist/math.dll
                   gcc -shared -I. src/sqlite3-re.c src/re.c -o dist/re.dll
@@ -64,6 +66,7 @@ jobs:
             - name: Build for macOS
               if: matrix.os == 'macos-latest'
               run: |
+                  gcc -fPIC -dynamiclib -I src src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.dylib -lm
                   gcc -fPIC -dynamiclib -I src src/sqlite3-json1.c -o dist/json1.dylib -lm
                   gcc -fPIC -dynamiclib -I src src/sqlite3-math.c -o dist/math.dylib -lm
                   gcc -fPIC -dynamiclib -I src src/sqlite3-re.c src/re.c -o dist/re.dylib -lm

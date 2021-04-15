@@ -8,6 +8,7 @@ There are a lot of SQLite extensions out there, but they are incomplete, inconsi
 
 Here is what we've got right now:
 
+-   [crypto](docs/crypto.md): secure hashes
 -   [json1](docs/json1.md): JSON functions
 -   [math](docs/math.md): math functions
 -   [re](docs/re.md): regular expressions
