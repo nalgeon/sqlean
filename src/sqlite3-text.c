@@ -141,13 +141,28 @@ static void sqlite3_reverse(sqlite3_context *context, int argc, sqlite3_value **
 }
 
 /*
+ * strsep() implementation, Windows doesn't have it
+ * copied from https://unixpapa.com/incnote/string.html
+ */
+static char *str_sep(char **sp, const char *sep) {
+    if (sp == NULL || *sp == NULL || **sp == '\0') {
+        return NULL;
+    }
+    char *s = *sp;
+    char *p = s + strcspn(s, sep);
+    if (*p != '\0') *p++ = '\0';
+    *sp = p;
+    return s;
+}
+
+/*
  * Splits `source` string on `sep` and returns the given `part` (counting from one)
  * split_part("one;two;three", ";", 2) == "two"
  */
 static char *split_part(char *source, const char *sep, int64_t part) {
     char *token;
     int64_t index = 1;
-    while ((token = strsep(&source, sep)) != NULL) {
+    while ((token = str_sep(&source, sep)) != NULL) {
         if (strcmp(token, "") == 0) {
             continue;
         }
