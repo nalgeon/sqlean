@@ -25,6 +25,8 @@ There are [precompiled binaries](https://github.com/nalgeon/sqlean/releases/late
 -   `*.so` - for Linux
 -   `*.dylib` - for macOS
 
+Binaries are 64-bit and require a 64-bit SQLite version. If you are using SQLite shell on Windows (`sqlite.exe`), its 64-bit version is available at https://github.com/nalgeon/sqlite.
+
 ## Usage
 
 CLI usage:
