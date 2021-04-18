@@ -23,7 +23,7 @@ compile-linux:
 	gcc -fPIC -shared src/sqlite3-vsv.c -o dist/vsv.so -lm
 
 compile-windows:
-	gcc -shared -I. src/sqlite3-crypto.win.c -o dist/crypto.dll -lm
+	gcc -shared -I. src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.dll -lm
 	gcc -shared -I. src/sqlite3-json1.c -o dist/json1.dll
 	gcc -shared -I. src/sqlite3-math.c -o dist/math.dll
 	gcc -shared -I. src/sqlite3-re.c src/re.c -o dist/re.dll

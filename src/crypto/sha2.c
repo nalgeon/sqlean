@@ -87,6 +87,18 @@
  * made).
  */
 
+#ifdef __BYTE_ORDER__
+#ifndef BYTE_ORDER
+#define BYTE_ORDER __BYTE_ORDER__
+#endif
+#ifndef BIG_ENDIAN
+#define BIG_ENDIAN __ORDER_BIG_ENDIAN__
+#endif
+#ifndef LITTLE_ENDIAN
+#define LITTLE_ENDIAN __ORDER_LITTLE_ENDIAN__
+#endif
+#endif
+
 #ifndef BYTE_ORDER
 #if defined(i386) || defined(__i386__) || defined(_M_IX86) ||      \
     defined(__x86_64) || defined(__x86_64__) || defined(_M_X64) || \
