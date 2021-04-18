@@ -1,25 +1,13 @@
-//#include "config.h"
-
-#define COMPILE_SQLITE_EXTENSIONS_AS_LOADABLE_MODULE 1
-
-#ifdef COMPILE_SQLITE_EXTENSIONS_AS_LOADABLE_MODULE
-#include "sqlite3ext.h"
-SQLITE_EXTENSION_INIT1
-#else
-#include "sqlite3.h"
-#endif
-
-#include <ctype.h>
-/* relicoder */
 #include <assert.h>
-#include <errno.h> /* LMH 2007-03-25 */
+#include <ctype.h>
+#include <errno.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#ifndef _MAP_H_
-#define _MAP_H_
+#include "sqlite3ext.h"
+SQLITE_EXTENSION_INIT1
 
 #include <stdint.h>
 
@@ -44,419 +32,108 @@ typedef struct map {
     short free;
 } map;
 
-/*
-** creates a map given a comparison function
-*/
-map map_make(cmp_func cmp);
+map map_make(cmp_func cmp) {
+    map r;
+    r.cmp = cmp;
+    r.base = 0;
 
-/*
-** inserts the element e into map m
-*/
-void map_insert(map *m, void *e);
+    return r;
+}
 
-/*
-** executes function iter over all elements in the map, in key increasing order
-*/
-void map_iterate(map *m, map_iterator iter, void *p);
+void *xcalloc(size_t nmemb, size_t size, char *s) {
+    void *ret = calloc(nmemb, size);
+    return ret;
+}
 
-/*
-** frees all memory used by a map
-*/
-void map_destroy(map *m);
+void xfree(void *p) {
+    free(p);
+}
 
-/*
-** compares 2 integers
-** to use with map_make
-*/
-int int_cmp(const void *a, const void *b);
+void node_insert(node **n, cmp_func cmp, void *e) {
+    int c;
+    node *nn;
+    if (*n == 0) {
+        nn = (node *)xcalloc(1, sizeof(node), "for node");
+        nn->data = e;
+        nn->count = 1;
+        *n = nn;
+    } else {
+        c = cmp((*n)->data, e);
+        if (0 == c) {
+            ++((*n)->count);
+            xfree(e);
+        } else if (c > 0) {
+            /* put it right here */
+            node_insert(&((*n)->l), cmp, e);
+        } else {
+            node_insert(&((*n)->r), cmp, e);
+        }
+    }
+}
 
-/*
-** compares 2 doubles
-** to use with map_make
-*/
-int double_cmp(const void *a, const void *b);
+void map_insert(map *m, void *e) {
+    node_insert(&(m->base), m->cmp, e);
+}
 
-#endif /* _MAP_H_ */
+void node_iterate(node *n, map_iterator iter, void *p) {
+    if (n) {
+        if (n->l)
+            node_iterate(n->l, iter, p);
+        iter(n->data, n->count, p);
+        if (n->r)
+            node_iterate(n->r, iter, p);
+    }
+}
+
+void map_iterate(map *m, map_iterator iter, void *p) {
+    node_iterate(m->base, iter, p);
+}
+
+void node_destroy(node *n) {
+    if (0 != n) {
+        xfree(n->data);
+        if (n->l)
+            node_destroy(n->l);
+        if (n->r)
+            node_destroy(n->r);
+
+        xfree(n);
+    }
+}
+
+void map_destroy(map *m) {
+    node_destroy(m->base);
+}
+
+int int_cmp(const void *a, const void *b) {
+    int64_t aa = *(int64_t *)(a);
+    int64_t bb = *(int64_t *)(b);
+    /* printf("cmp %d <=> %d\n",aa,bb); */
+    if (aa == bb)
+        return 0;
+    else if (aa < bb)
+        return -1;
+    else
+        return 1;
+}
+
+int double_cmp(const void *a, const void *b) {
+    double aa = *(double *)(a);
+    double bb = *(double *)(b);
+    /* printf("cmp %d <=> %d\n",aa,bb); */
+    if (aa == bb)
+        return 0;
+    else if (aa < bb)
+        return -1;
+    else
+        return 1;
+}
+
+/* end of binary tree implementation */
 
 typedef uint8_t u8;
 typedef uint16_t u16;
 typedef int64_t i64;
-
-static char *sqlite3StrDup(const char *z) {
-    char *res = sqlite3_malloc(strlen(z) + 1);
-    return strcpy(res, z);
-}
-
-/*
-** These are copied verbatim from fun.c so as to not have the names exported
-*/
-
-/* LMH from sqlite3 3.3.13 */
-/*
-** This table maps from the first byte of a UTF-8 character to the number
-** of trailing bytes expected. A value '4' indicates that the table key
-** is not a legal first byte for a UTF-8 character.
-*/
-static const u8 xtra_utf8_bytes[256] = {
-    /* 0xxxxxxx */
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-
-    /* 10wwwwww */
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-
-    /* 110yyyyy */
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-    1,
-
-    /* 1110zzzz */
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-
-    /* 11110yyy */
-    3,
-    3,
-    3,
-    3,
-    3,
-    3,
-    3,
-    3,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-    4,
-};
-
-/*
-** This table maps from the number of trailing bytes in a UTF-8 character
-** to an integer constant that is effectively calculated for each character
-** read by a naive implementation of a UTF-8 character reader. The code
-** in the READ_UTF8 macro explains things best.
-*/
-static const int xtra_utf8_bits[] = {
-    0,
-    12416,   /* (0xC0 << 6) + (0x80) */
-    925824,  /* (0xE0 << 12) + (0x80 << 6) + (0x80) */
-    63447168 /* (0xF0 << 18) + (0x80 << 12) + (0x80 << 6) + 0x80 */
-};
-
-/*
-** If a UTF-8 character contains N bytes extra bytes (N bytes follow
-** the initial byte so that the total character length is N+1) then
-** masking the character with utf8_mask[N] must produce a non-zero
-** result.  Otherwise, we have an (illegal) overlong encoding.
-*/
-static const int utf_mask[] = {
-    0x00000000,
-    0xffffff80,
-    0xfffff800,
-    0xffff0000,
-};
-
-/* LMH salvaged from sqlite3 3.3.13 source code src/utf.c */
-#define READ_UTF8(zIn, c)                                                                                    \
-    {                                                                                                        \
-        int xtra;                                                                                            \
-        c = *(zIn)++;                                                                                        \
-        xtra = xtra_utf8_bytes[c];                                                                           \
-        switch (xtra) {                                                                                      \
-            case 4:                                                                                          \
-                c = (int)0xFFFD;                                                                             \
-                break;                                                                                       \
-            case 3:                                                                                          \
-                c = (c << 6) + *(zIn)++;                                                                     \
-            case 2:                                                                                          \
-                c = (c << 6) + *(zIn)++;                                                                     \
-            case 1:                                                                                          \
-                c = (c << 6) + *(zIn)++;                                                                     \
-                c -= xtra_utf8_bits[xtra];                                                                   \
-                if ((utf_mask[xtra] & c) == 0 || (c & 0xFFFFF800) == 0xD800 || (c & 0xFFFFFFFE) == 0xFFFE) { \
-                    c = 0xFFFD;                                                                              \
-                }                                                                                            \
-        }                                                                                                    \
-    }
-
-static int sqlite3ReadUtf8(const unsigned char *z) {
-    int c;
-    READ_UTF8(z, c);
-    return c;
-}
-
-#define SKIP_UTF8(zIn)                            \
-    {                                             \
-        zIn += (xtra_utf8_bytes[*(u8 *)zIn] + 1); \
-    }
-
-/*
-** pZ is a UTF-8 encoded unicode string. If nByte is less than zero,
-** return the number of unicode characters in pZ up to (but not including)
-** the first 0x00 byte. If nByte is not less than zero, return the
-** number of unicode characters in the first nByte of pZ (or up to
-** the first 0x00, whichever comes first).
-*/
-static int sqlite3Utf8CharLen(const char *z, int nByte) {
-    int r = 0;
-    const char *zTerm;
-    if (nByte >= 0) {
-        zTerm = &z[nByte];
-    } else {
-        zTerm = (const char *)(-1);
-    }
-    assert(z <= zTerm);
-    while (*z != 0 && z < zTerm) {
-        SKIP_UTF8(z);
-        r++;
-    }
-    return r;
-}
-
-/*
-** X is a pointer to the first byte of a UTF-8 character.  Increment
-** X so that it points to the next character.  This only works right
-** if X points to a well-formed UTF-8 string.
-*/
-#define sqliteNextChar(X)             \
-    while ((0xc0 & *++(X)) == 0x80) { \
-    }
-#define sqliteCharVal(X) sqlite3ReadUtf8(X)
 
 /*
 ** An instance of the following structure holds the context of a
@@ -798,160 +475,42 @@ static void variancepopFinalize(sqlite3_context *context) {
 }
 
 /*
-** This function registered all of the above C functions as SQL
-** functions.  This should be the only routine in this file with
-** external linkage.
-*/
-int RegisterExtensionFunctions(sqlite3 *db) {
-    static const struct FuncDefAgg {
-        char *zName;
-        signed char nArg;
-        u8 argType;
-        u8 needCollSeq;
-        void (*xStep)(sqlite3_context *, int, sqlite3_value **);
-        void (*xFinalize)(sqlite3_context *);
-    } aAggs[] = {
-        {"stddev", 1, 0, 0, varianceStep, stddevFinalize},
-        {"stddev_samp", 1, 0, 0, varianceStep, stddevFinalize},
-        {"stddev_pop", 1, 0, 0, varianceStep, stddevpopFinalize},
-        {"variance", 1, 0, 0, varianceStep, varianceFinalize},
-        {"var_samp", 1, 0, 0, varianceStep, varianceFinalize},
-        {"var_pop", 1, 0, 0, varianceStep, variancepopFinalize},
-        {"mode", 1, 0, 0, modeStep, modeFinalize},
-        {"median", 1, 0, 0, modeStep, medianFinalize},
-        {"percentile_25", 1, 0, 0, modeStep, percentile_25Finalize},
-        {"percentile_75", 1, 0, 0, modeStep, percentile_75Finalize},
-        {"percentile_90", 1, 0, 0, modeStep, percentile_90Finalize},
-        {"percentile_95", 1, 0, 0, modeStep, percentile_95Finalize},
-        {"percentile_99", 1, 0, 0, modeStep, percentile_99Finalize},
-    };
-    int i;
-
-    for (i = 0; i < sizeof(aAggs) / sizeof(aAggs[0]); i++) {
-        void *pArg = 0;
-        switch (aAggs[i].argType) {
-            case 1:
-                pArg = db;
-                break;
-            case 2:
-                pArg = (void *)(-1);
-                break;
-        }
-        //sqlite3CreateFunc
-        /* LMH no error checking */
-        sqlite3_create_function(db, aAggs[i].zName, aAggs[i].nArg, SQLITE_UTF8,
-                                pArg, 0, aAggs[i].xStep, aAggs[i].xFinalize);
-    }
-    return 0;
-}
-
-#ifdef COMPILE_SQLITE_EXTENSIONS_AS_LOADABLE_MODULE
-int sqlite3_stats_init(
-    sqlite3 *db, char **pzErrMsg, const sqlite3_api_routines *pApi) {
+ * Registers the extension.
+ */
+#ifdef _WIN32
+__declspec(dllexport)
+#endif
+    int sqlite3_stats_init(
+        sqlite3 *db,
+        char **pzErrMsg,
+        const sqlite3_api_routines *pApi) {
     SQLITE_EXTENSION_INIT2(pApi);
-    RegisterExtensionFunctions(db);
-    return 0;
-}
-#endif /* COMPILE_SQLITE_EXTENSIONS_AS_LOADABLE_MODULE */
-
-map map_make(cmp_func cmp) {
-    map r;
-    r.cmp = cmp;
-    r.base = 0;
-
-    return r;
-}
-
-void *xcalloc(size_t nmemb, size_t size, char *s) {
-    void *ret = calloc(nmemb, size);
-    return ret;
-}
-
-void xfree(void *p) {
-    free(p);
-}
-
-void node_insert(node **n, cmp_func cmp, void *e) {
-    int c;
-    node *nn;
-    if (*n == 0) {
-        nn = (node *)xcalloc(1, sizeof(node), "for node");
-        nn->data = e;
-        nn->count = 1;
-        *n = nn;
-    } else {
-        c = cmp((*n)->data, e);
-        if (0 == c) {
-            ++((*n)->count);
-            xfree(e);
-        } else if (c > 0) {
-            /* put it right here */
-            node_insert(&((*n)->l), cmp, e);
-        } else {
-            node_insert(&((*n)->r), cmp, e);
-        }
-    }
-}
-
-void map_insert(map *m, void *e) {
-    node_insert(&(m->base), m->cmp, e);
-}
-
-void node_iterate(node *n, map_iterator iter, void *p) {
-    if (n) {
-        if (n->l)
-            node_iterate(n->l, iter, p);
-        iter(n->data, n->count, p);
-        if (n->r)
-            node_iterate(n->r, iter, p);
-    }
-}
-
-void map_iterate(map *m, map_iterator iter, void *p) {
-    node_iterate(m->base, iter, p);
-}
-
-void node_destroy(node *n) {
-    if (0 != n) {
-        xfree(n->data);
-        if (n->l)
-            node_destroy(n->l);
-        if (n->r)
-            node_destroy(n->r);
-
-        xfree(n);
-    }
-}
-
-void map_destroy(map *m) {
-    node_destroy(m->base);
-}
-
-int int_cmp(const void *a, const void *b) {
-    int64_t aa = *(int64_t *)(a);
-    int64_t bb = *(int64_t *)(b);
-    /* printf("cmp %d <=> %d\n",aa,bb); */
-    if (aa == bb)
-        return 0;
-    else if (aa < bb)
-        return -1;
-    else
-        return 1;
-}
-
-int double_cmp(const void *a, const void *b) {
-    double aa = *(double *)(a);
-    double bb = *(double *)(b);
-    /* printf("cmp %d <=> %d\n",aa,bb); */
-    if (aa == bb)
-        return 0;
-    else if (aa < bb)
-        return -1;
-    else
-        return 1;
-}
-
-void print_elem(void *e, int64_t c, void *p) {
-    int ee = *(int *)(e);
-    printf("%d => %lld\n", ee, c);
+    int err_count = 0;
+    err_count += sqlite3_create_function(
+        db, "stddev", 1, SQLITE_UTF8, 0, 0, varianceStep, stddevFinalize);
+    err_count += sqlite3_create_function(
+        db, "stddev_samp", 1, SQLITE_UTF8, 0, 0, varianceStep, stddevFinalize);
+    err_count += sqlite3_create_function(
+        db, "stddev_pop", 1, SQLITE_UTF8, 0, 0, varianceStep, stddevpopFinalize);
+    err_count += sqlite3_create_function(
+        db, "variance", 1, SQLITE_UTF8, 0, 0, varianceStep, varianceFinalize);
+    err_count += sqlite3_create_function(
+        db, "var_samp", 1, SQLITE_UTF8, 0, 0, varianceStep, varianceFinalize);
+    err_count += sqlite3_create_function(
+        db, "var_pop", 1, SQLITE_UTF8, 0, 0, varianceStep, variancepopFinalize);
+    err_count += sqlite3_create_function(
+        db, "mode", 1, SQLITE_UTF8, 0, 0, modeStep, modeFinalize);
+    err_count += sqlite3_create_function(
+        db, "median", 1, SQLITE_UTF8, 0, 0, modeStep, medianFinalize);
+    err_count += sqlite3_create_function(
+        db, "percentile_25", 1, SQLITE_UTF8, 0, 0, modeStep, percentile_25Finalize);
+    err_count += sqlite3_create_function(
+        db, "percentile_75", 1, SQLITE_UTF8, 0, 0, modeStep, percentile_75Finalize);
+    err_count += sqlite3_create_function(
+        db, "percentile_90", 1, SQLITE_UTF8, 0, 0, modeStep, percentile_90Finalize);
+    err_count += sqlite3_create_function(
+        db, "percentile_95", 1, SQLITE_UTF8, 0, 0, modeStep, percentile_95Finalize);
+    err_count += sqlite3_create_function(
+        db, "percentile_99", 1, SQLITE_UTF8, 0, 0, modeStep, percentile_99Finalize);
+    return err_count ? SQLITE_ERROR : SQLITE_OK;
 }
