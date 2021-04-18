@@ -87,6 +87,19 @@
  * made).
  */
 
+#ifndef BYTE_ORDER
+#if defined(i386) || defined(__i386__) || defined(_M_IX86) ||      \
+    defined(__x86_64) || defined(__x86_64__) || defined(_M_X64) || \
+    defined(_M_AMD64) || defined(_M_ARM) || defined(__x86) ||      \
+    defined(__arm__)
+#define BYTE_ORDER 1234
+#elif defined(sparc) || defined(__ppc__)
+#define BYTE_ORDER 4321
+#else
+#define BYTE_ORDER 0
+#endif
+#endif
+
 #if !defined(BYTE_ORDER) || (BYTE_ORDER != LITTLE_ENDIAN && BYTE_ORDER != BIG_ENDIAN)
 #error Define BYTE_ORDER to be equal to either LITTLE_ENDIAN or BIG_ENDIAN
 #endif
