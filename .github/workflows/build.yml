@@ -39,6 +39,7 @@ jobs:
                   make test suite=crypto
                   make test suite=reverse
                   make test suite=split_part
+                  make test suite=stats
 
             - name: Build for Windows
               if: matrix.os == 'windows-latest'
