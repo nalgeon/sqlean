@@ -9,6 +9,3 @@ select '07', split_part('one,two,three', ';', 2) = '';
 select '08', split_part('one,two,three', '', 1) = 'one,two,three';
 select '09', split_part('one, two, three', ', ', 2) = 'two';
 select '10', split_part('one,two,three', NULL, 2) is NULL;
-select 'ER', split_part('one,two,three', ',');
-select 'ER', split_part('one,two,three', ',', 0);
-select 'ER', split_part('one,two,three', ',', 'a');

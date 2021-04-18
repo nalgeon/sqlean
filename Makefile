@@ -1,4 +1,4 @@
-.PHONY: prepare-dist download-sqlite download-native compile-linux compile-windows compile-macos
+.PHONY: prepare-dist download-sqlite download-native compile-linux compile-windows compile-macos test
 
 prepare-dist:
 	mkdir -p dist
@@ -41,3 +41,8 @@ compile-macos:
 	gcc -fPIC -dynamiclib -I src src/sqlite3-text.c -o dist/text.dylib -lm
 	gcc -fPIC -dynamiclib -I src src/sqlite3-unicode.c -o dist/unicode.dylib -lm
 	gcc -fPIC -dynamiclib -I src src/sqlite3-vsv.c -o dist/vsv.dylib -lm
+
+# fails is grep does find a failed test case
+# https://stackoverflow.com/questions/15367674/bash-one-liner-to-exit-with-the-opposite-status-of-a-grep-command/21788642
+test:
+	sqlite3 < test/$(suite).sql | (! grep -E "\d+.0")

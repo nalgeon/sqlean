@@ -4,5 +4,3 @@ select '02', reverse('hello') = 'olleh';
 select '03', reverse('привет') = 'тевирп';
 select '04', reverse("𐌀𐌁𐌂") = '𐌂𐌁𐌀';
 select '05', reverse('hello 42@ world') = 'dlrow @24 olleh';
-select 'ER', reverse();
-select 'ER', reverse('hello', 'world');
