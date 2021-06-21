@@ -485,32 +485,33 @@ __declspec(dllexport)
         char **pzErrMsg,
         const sqlite3_api_routines *pApi) {
     SQLITE_EXTENSION_INIT2(pApi);
+    static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS;
     int err_count = 0;
     err_count += sqlite3_create_function(
-        db, "stddev", 1, SQLITE_UTF8, 0, 0, varianceStep, stddevFinalize);
+        db, "stddev", 1, flags, 0, 0, varianceStep, stddevFinalize);
     err_count += sqlite3_create_function(
-        db, "stddev_samp", 1, SQLITE_UTF8, 0, 0, varianceStep, stddevFinalize);
+        db, "stddev_samp", 1, flags, 0, 0, varianceStep, stddevFinalize);
     err_count += sqlite3_create_function(
-        db, "stddev_pop", 1, SQLITE_UTF8, 0, 0, varianceStep, stddevpopFinalize);
+        db, "stddev_pop", 1, flags, 0, 0, varianceStep, stddevpopFinalize);
     err_count += sqlite3_create_function(
-        db, "variance", 1, SQLITE_UTF8, 0, 0, varianceStep, varianceFinalize);
+        db, "variance", 1, flags, 0, 0, varianceStep, varianceFinalize);
     err_count += sqlite3_create_function(
-        db, "var_samp", 1, SQLITE_UTF8, 0, 0, varianceStep, varianceFinalize);
+        db, "var_samp", 1, flags, 0, 0, varianceStep, varianceFinalize);
     err_count += sqlite3_create_function(
-        db, "var_pop", 1, SQLITE_UTF8, 0, 0, varianceStep, variancepopFinalize);
+        db, "var_pop", 1, flags, 0, 0, varianceStep, variancepopFinalize);
     err_count += sqlite3_create_function(
-        db, "mode", 1, SQLITE_UTF8, 0, 0, modeStep, modeFinalize);
+        db, "mode", 1, flags, 0, 0, modeStep, modeFinalize);
     err_count += sqlite3_create_function(
-        db, "median", 1, SQLITE_UTF8, 0, 0, modeStep, medianFinalize);
+        db, "median", 1, flags, 0, 0, modeStep, medianFinalize);
     err_count += sqlite3_create_function(
-        db, "percentile_25", 1, SQLITE_UTF8, 0, 0, modeStep, percentile_25Finalize);
+        db, "percentile_25", 1, flags, 0, 0, modeStep, percentile_25Finalize);
     err_count += sqlite3_create_function(
-        db, "percentile_75", 1, SQLITE_UTF8, 0, 0, modeStep, percentile_75Finalize);
+        db, "percentile_75", 1, flags, 0, 0, modeStep, percentile_75Finalize);
     err_count += sqlite3_create_function(
-        db, "percentile_90", 1, SQLITE_UTF8, 0, 0, modeStep, percentile_90Finalize);
+        db, "percentile_90", 1, flags, 0, 0, modeStep, percentile_90Finalize);
     err_count += sqlite3_create_function(
-        db, "percentile_95", 1, SQLITE_UTF8, 0, 0, modeStep, percentile_95Finalize);
+        db, "percentile_95", 1, flags, 0, 0, modeStep, percentile_95Finalize);
     err_count += sqlite3_create_function(
-        db, "percentile_99", 1, SQLITE_UTF8, 0, 0, modeStep, percentile_99Finalize);
+        db, "percentile_99", 1, flags, 0, 0, modeStep, percentile_99Finalize);
     return err_count ? SQLITE_ERROR : SQLITE_OK;
 }

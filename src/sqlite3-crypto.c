@@ -100,16 +100,17 @@ __declspec(dllexport)
         const sqlite3_api_routines *pApi) {
     SQLITE_EXTENSION_INIT2(pApi);
 
+    static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
     int err_count = 0;
     err_count +=
-        sqlite3_create_function(db, "md5", 1, SQLITE_UTF8, (void *)5, sqlite3_hash, 0, 0);
+        sqlite3_create_function(db, "md5", 1, flags, (void *)5, sqlite3_hash, 0, 0);
     err_count +=
-        sqlite3_create_function(db, "sha1", 1, SQLITE_UTF8, (void *)1, sqlite3_hash, 0, 0);
+        sqlite3_create_function(db, "sha1", 1, flags, (void *)1, sqlite3_hash, 0, 0);
     err_count +=
-        sqlite3_create_function(db, "sha256", -1, SQLITE_UTF8, (void *)2256, sqlite3_hash, 0, 0);
+        sqlite3_create_function(db, "sha256", -1, flags, (void *)2256, sqlite3_hash, 0, 0);
     err_count +=
-        sqlite3_create_function(db, "sha384", -1, SQLITE_UTF8, (void *)2384, sqlite3_hash, 0, 0);
+        sqlite3_create_function(db, "sha384", -1, flags, (void *)2384, sqlite3_hash, 0, 0);
     err_count +=
-        sqlite3_create_function(db, "sha512", -1, SQLITE_UTF8, (void *)2512, sqlite3_hash, 0, 0);
+        sqlite3_create_function(db, "sha512", -1, flags, (void *)2512, sqlite3_hash, 0, 0);
     return err_count ? SQLITE_ERROR : SQLITE_OK;
 }

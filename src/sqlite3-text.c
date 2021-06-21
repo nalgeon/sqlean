@@ -223,7 +223,8 @@ __declspec(dllexport)
         char **pzErrMsg,
         const sqlite3_api_routines *pApi) {
     SQLITE_EXTENSION_INIT2(pApi);
-    sqlite3_create_function(db, "reverse", 1, SQLITE_UTF8, 0, sqlite3_reverse, 0, 0);
-    sqlite3_create_function(db, "split_part", 3, SQLITE_UTF8, 0, sqlite3_split_part, 0, 0);
+    static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
+    sqlite3_create_function(db, "reverse", 1, flags, 0, sqlite3_reverse, 0, 0);
+    sqlite3_create_function(db, "split_part", 3, flags, 0, sqlite3_split_part, 0, 0);
     return SQLITE_OK;
 }
