@@ -26,7 +26,6 @@ jobs:
             - name: Download SQLite sources
               shell: bash
               run: |
-                  make prepare-dist
                   make download-sqlite
                   make download-native
 
