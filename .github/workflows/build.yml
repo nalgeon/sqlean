@@ -41,6 +41,7 @@ jobs:
                   make test suite=reverse
                   make test suite=split_part
                   make test suite=stats
+                  make test suite=ipaddr
 
             - name: Build for Windows
               if: matrix.os == 'windows-latest'

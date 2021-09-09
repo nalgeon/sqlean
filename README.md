@@ -16,6 +16,7 @@ Here is what we've got right now:
 -   [text](docs/text.md): string functions
 -   [unicode](docs/unicode.md): Unicode support
 -   [vsv](docs/vsv.md): CSV files as virtual tables
+-   [ipaddr](docs/ipaddr.md): CSV files as virtual tables
 
 ## Download
 
