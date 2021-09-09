@@ -45,4 +45,4 @@ compile-macos:
 # fails is grep does find a failed test case
 # https://stackoverflow.com/questions/15367674/bash-one-liner-to-exit-with-the-opposite-status-of-a-grep-command/21788642
 test:
-	sqlite3 < test/$(suite).sql | (! grep -E "\d+.0")
+	! sqlite3 < test/$(suite).sql | grep -Px "\d+.0"
