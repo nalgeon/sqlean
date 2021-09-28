@@ -273,31 +273,51 @@ static void regexp_replace(
         return;
     }
 
-    int len = r->endp[0] - r->startp[0];
-    char *matched_str = sqlite3_malloc(len + 1);
-    (void)strncpy(matched_str, r->startp[0], len);
-    matched_str[len] = '\0';
+    int matched_len = r->endp[0] - r->startp[0];
+    char *matched_str = sqlite3_malloc(matched_len + 1);
+    (void)strncpy(matched_str, r->startp[0], matched_len);
+    matched_str[matched_len] = '\0';
 
-#ifdef DEBUG
-    fprintf(stderr, "len = %d\n", len);
-    fprintf(stderr, "matched_str = '%s'\n", matched_str);
-#endif
 
     char replacement_str[BUFSIZ];
     int err = re_substitute(r, replacement, replacement_str);
-#ifdef DEBUG
-    fprintf(stderr, "replacement_str = '%s'\n", replacement_str);
-#endif
     if (err) {
         sqlite3_result_error(context, "invalid replacement pattern", -1);
         return;
     }
 
-    result = str_replace(source, matched_str, replacement_str);
+    int head_len = r->startp[0] - source;
+    char *head_str = sqlite3_malloc(head_len + 1);
+    (void)strncpy(head_str, source, head_len);
+    head_str[head_len] = '\0';
+
+    int tail_len = source + strlen(source) - r->endp[0];
+    char *tail_str = sqlite3_malloc(tail_len + 1);
+    (void)strncpy(tail_str, r->endp[0], tail_len);
+    tail_str[tail_len] = '\0';
+
+    int replacement_len = strlen(replacement_str);
+
+    int result_len = head_len + replacement_len + tail_len;
+    result = sqlite3_malloc(result_len + 1);
+    strcat(result, head_str);
+    strcat(result, replacement_str);
+    strcat(result, tail_str);
+    result[result_len] = '\0';
+
 #ifdef DEBUG
+    fprintf(stderr, "head string (%d) = '%s'\n", head_len, head_str);
+    fprintf(stderr, "matched string (%d) = '%s'\n", matched_len, matched_str);
+    fprintf(stderr, "repl string (%d) = '%s'\n", replacement_len, replacement_str);
+    fprintf(stderr, "tail string (%d) = '%s'\n", tail_len, tail_str);
+    fprintf(stderr, "result string (%d) = '%s'\n", result_len, result);
     fprintf(stderr, "replace('%s', '%s', '%s') = '%s'\n", source, matched_str, replacement_str, result);
 #endif
+
     sqlite3_result_text(context, (char *)result, -1, sqlite3_free);
+    sqlite3_free(head_str);
+    sqlite3_free(matched_str);
+    sqlite3_free(tail_str);
     free((char *)r);
 }
 

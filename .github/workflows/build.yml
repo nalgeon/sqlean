@@ -37,6 +37,7 @@ jobs:
               run: |
                   make compile-linux
                   make test suite=crypto
+                  make test suite=regexp_replace
                   make test suite=reverse
                   make test suite=split_part
                   make test suite=stats
