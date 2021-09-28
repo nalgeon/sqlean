@@ -21,6 +21,8 @@ Splits `source` string on `sep` and returns the given `part` (counting from one)
 ```
 sqlite> select split_part('one;two;three', ';', 2);
 two
+sqlite> select split_part('one;;three', ';', 2);
+
 ```
 
 If `sep` is composed of multiple characters, each character is treated as separator. E.g.:

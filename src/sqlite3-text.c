@@ -163,9 +163,6 @@ static char *split_part(char *source, const char *sep, int64_t part) {
     char *token;
     int64_t index = 1;
     while ((token = str_sep(&source, sep)) != NULL) {
-        if (strcmp(token, "") == 0) {
-            continue;
-        }
         if (index == part) {
             break;
         }
