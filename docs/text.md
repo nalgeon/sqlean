@@ -32,6 +32,8 @@ sqlite> select split_part('one/two\three', '/\', 2);
 two
 ```
 
+Only ASCII (1-byte) symbols are supported as separators.
+
 [Download](https://github.com/nalgeon/sqlean/releases/latest)
 
 ## Usage
