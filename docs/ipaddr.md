@@ -1,9 +1,8 @@
 # ipaddr: IP address manipulation
 
-Additional functions to manipulate IPs and subnets. This module is not
-available for Windows.
+Functions to manipulate IPs and subnets.
 
-Provides following functions:
+⚠️ This extension is not available on Windows.
 
 ### `ipfamily(ip)`
 
@@ -58,3 +57,5 @@ sqlite> .load ./ipaddr
 sqlite> select ipfamily('2001:db8::1');
 6
 ```
+
+[Download](https://github.com/nalgeon/sqlean/releases/latest)

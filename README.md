@@ -9,6 +9,7 @@ There are a lot of SQLite extensions out there, but they are incomplete, inconsi
 Here is what we've got right now:
 
 -   [crypto](docs/crypto.md): secure hashes
+-   [ipaddr](docs/ipaddr.md): IP address manipulation
 -   [json1](docs/json1.md): JSON functions
 -   [math](docs/math.md): math functions
 -   [re](docs/re.md): regular expressions
@@ -16,7 +17,6 @@ Here is what we've got right now:
 -   [text](docs/text.md): string functions
 -   [unicode](docs/unicode.md): Unicode support
 -   [vsv](docs/vsv.md): CSV files as virtual tables
--   [ipaddr](docs/ipaddr.md): CSV files as virtual tables
 
 ## Download
 
