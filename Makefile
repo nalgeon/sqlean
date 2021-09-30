@@ -21,6 +21,7 @@ compile-linux:
 	gcc -fPIC -shared src/sqlite3-text.c -o dist/text.so -lm
 	gcc -fPIC -shared src/sqlite3-unicode.c -o dist/unicode.so -lm
 	gcc -fPIC -shared src/sqlite3-vsv.c -o dist/vsv.so -lm
+	gcc -fPIC -shared src/sqlite3-ipaddr.c -o dist/ipaddr.so -lm
 
 compile-windows:
 	gcc -shared -I. src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.dll -lm
@@ -41,6 +42,7 @@ compile-macos:
 	gcc -fPIC -dynamiclib -I src src/sqlite3-text.c -o dist/text.dylib -lm
 	gcc -fPIC -dynamiclib -I src src/sqlite3-unicode.c -o dist/unicode.dylib -lm
 	gcc -fPIC -dynamiclib -I src src/sqlite3-vsv.c -o dist/vsv.dylib -lm
+	gcc -fPIC -dynamiclib -I src src/sqlite3-ipaddr.c -o dist/ipaddr.dylib -lm
 
 # fails is grep does find a failed test case
 # https://stackoverflow.com/questions/15367674/bash-one-liner-to-exit-with-the-opposite-status-of-a-grep-command/21788642
