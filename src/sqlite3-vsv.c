@@ -255,8 +255,8 @@ SQLITE_EXTENSION_INIT1
 */
 typedef struct VsvReader VsvReader;
 struct VsvReader {
-    FILE *in;             /* Read the VSV text from this input stream */
-    char *z;              /* Accumulated text for a field */
+    FILE* in;             /* Read the VSV text from this input stream */
+    char* z;              /* Accumulated text for a field */
     int n;                /* Number of bytes in z */
     int nAlloc;           /* Space allocated for z[] */
     int nLine;            /* Current line number */
@@ -268,14 +268,14 @@ struct VsvReader {
     int notNull;          /* Have we seen data for field */
     size_t iIn;           /* Next unread character in the input buffer */
     size_t nIn;           /* Number of characters in the input buffer */
-    char *zIn;            /* The input buffer */
+    char* zIn;            /* The input buffer */
     char zErr[VSV_MXERR]; /* Error message */
 };
 
 /*
 ** Initialize a VsvReader object
 */
-static void vsv_reader_init(VsvReader *p) {
+static void vsv_reader_init(VsvReader* p) {
     p->in = 0;
     p->z = 0;
     p->n = 0;
@@ -291,7 +291,7 @@ static void vsv_reader_init(VsvReader *p) {
 /*
 ** Close and reset a VsvReader object
 */
-static void vsv_reader_reset(VsvReader *p) {
+static void vsv_reader_reset(VsvReader* p) {
     if (p->in) {
         fclose(p->in);
         sqlite3_free(p->zIn);
@@ -303,7 +303,7 @@ static void vsv_reader_reset(VsvReader *p) {
 /*
 ** Report an error on a VsvReader
 */
-static void vsv_errmsg(VsvReader *p, const char *zFormat, ...) {
+static void vsv_errmsg(VsvReader* p, const char* zFormat, ...) {
     va_list ap;
     va_start(ap, zFormat);
     sqlite3_vsnprintf(VSV_MXERR, p->zErr, zFormat, ap);
@@ -314,10 +314,9 @@ static void vsv_errmsg(VsvReader *p, const char *zFormat, ...) {
 ** Open the file associated with a VsvReader
 ** Return the number of errors.
 */
-static int vsv_reader_open(
-    VsvReader *p,          /* The reader to open */
-    const char *zFilename, /* Read from this filename */
-    const char *zData      /*  ... or use this data */
+static int vsv_reader_open(VsvReader* p,          /* The reader to open */
+                           const char* zFilename, /* Read from this filename */
+                           const char* zData      /*  ... or use this data */
 ) {
     if (zFilename) {
         p->zIn = sqlite3_malloc(VSV_INBUFSZ);
@@ -334,7 +333,7 @@ static int vsv_reader_open(
         }
     } else {
         assert(p->in == 0);
-        p->zIn = (char *)zData;
+        p->zIn = (char*)zData;
         p->nIn = strlen(zData);
     }
     return 0;
@@ -344,7 +343,7 @@ static int vsv_reader_open(
 ** The input buffer has overflowed.  Refill the input buffer, then
 ** return the next character
 */
-static VSV_NOINLINE int vsv_getc_refill(VsvReader *p) {
+static VSV_NOINLINE int vsv_getc_refill(VsvReader* p) {
     size_t got;
 
     assert(p->iIn >= p->nIn); /* Only called on an empty input buffer */
@@ -362,22 +361,22 @@ static VSV_NOINLINE int vsv_getc_refill(VsvReader *p) {
 /*
 ** Return the next character of input.  Return EOF at end of input.
 */
-static int vsv_getc(VsvReader *p) {
+static int vsv_getc(VsvReader* p) {
     if (p->iIn >= p->nIn) {
         if (p->in != 0) {
             return vsv_getc_refill(p);
         }
         return EOF;
     }
-    return ((unsigned char *)p->zIn)[p->iIn++];
+    return ((unsigned char*)p->zIn)[p->iIn++];
 }
 
 /*
 ** Increase the size of p->z and append character c to the end.
 ** Return 0 on success and non-zero if there is an OOM error
 */
-static VSV_NOINLINE int vsv_resize_and_append(VsvReader *p, char c) {
-    char *zNew;
+static VSV_NOINLINE int vsv_resize_and_append(VsvReader* p, char c) {
+    char* zNew;
     int nNew = p->nAlloc * 2 + 100;
     zNew = sqlite3_realloc64(p->z, nNew);
     if (zNew) {
@@ -395,7 +394,7 @@ static VSV_NOINLINE int vsv_resize_and_append(VsvReader *p, char c) {
 ** Append a single character to the VsvReader.z[] array.
 ** Return 0 on success and non-zero if there is an OOM error
 */
-static int vsv_append(VsvReader *p, char c) {
+static int vsv_append(VsvReader* p, char c) {
     if (p->n >= p->nAlloc - 1) {
         return vsv_resize_and_append(p, c);
     }
@@ -417,7 +416,7 @@ static int vsv_append(VsvReader *p, char c) {
 ** Return 0 at EOF or on OOM.  On EOF, the p->cTerm character will have
 ** been set to EOF.
 */
-static char *vsv_read_one_field(VsvReader *p) {
+static char* vsv_read_one_field(VsvReader* p) {
     int c;
     p->notNull = 0;
     p->n = 0;
@@ -441,7 +440,9 @@ static char *vsv_read_one_field(VsvReader *p) {
                 ppc = 0;
                 continue;
             }
-            if ((c == p->fsep && pc == '"') || (c == p->rsep && pc == '"') || (p->rsep == '\n' && c == '\n' && pc == '\r' && ppc == '"') || (c == EOF && pc == '"')) {
+            if ((c == p->fsep && pc == '"') || (c == p->rsep && pc == '"') ||
+                (p->rsep == '\n' && c == '\n' && pc == '\r' && ppc == '"') ||
+                (c == EOF && pc == '"')) {
                 do {
                     p->n--;
                 } while (p->z[p->n] != '"');
@@ -512,25 +513,29 @@ static char *vsv_read_one_field(VsvReader *p) {
 ** Forward references to the various virtual table methods implemented
 ** in this file.
 */
-static int vsvtabCreate(sqlite3 *, void *, int, const char *const *, sqlite3_vtab **, char **);
-static int vsvtabConnect(sqlite3 *, void *, int, const char *const *, sqlite3_vtab **, char **);
-static int vsvtabBestIndex(sqlite3_vtab *, sqlite3_index_info *);
-static int vsvtabDisconnect(sqlite3_vtab *);
-static int vsvtabOpen(sqlite3_vtab *, sqlite3_vtab_cursor **);
-static int vsvtabClose(sqlite3_vtab_cursor *);
-static int vsvtabFilter(sqlite3_vtab_cursor *, int idxNum, const char *idxStr, int argc, sqlite3_value **argv);
-static int vsvtabNext(sqlite3_vtab_cursor *);
-static int vsvtabEof(sqlite3_vtab_cursor *);
-static int vsvtabColumn(sqlite3_vtab_cursor *, sqlite3_context *, int);
-static int vsvtabRowid(sqlite3_vtab_cursor *, sqlite3_int64 *);
+static int vsvtabCreate(sqlite3*, void*, int, const char* const*, sqlite3_vtab**, char**);
+static int vsvtabConnect(sqlite3*, void*, int, const char* const*, sqlite3_vtab**, char**);
+static int vsvtabBestIndex(sqlite3_vtab*, sqlite3_index_info*);
+static int vsvtabDisconnect(sqlite3_vtab*);
+static int vsvtabOpen(sqlite3_vtab*, sqlite3_vtab_cursor**);
+static int vsvtabClose(sqlite3_vtab_cursor*);
+static int vsvtabFilter(sqlite3_vtab_cursor*,
+                        int idxNum,
+                        const char* idxStr,
+                        int argc,
+                        sqlite3_value** argv);
+static int vsvtabNext(sqlite3_vtab_cursor*);
+static int vsvtabEof(sqlite3_vtab_cursor*);
+static int vsvtabColumn(sqlite3_vtab_cursor*, sqlite3_context*, int);
+static int vsvtabRowid(sqlite3_vtab_cursor*, sqlite3_int64*);
 
 /*
 ** An instance of the VSV virtual table
 */
 typedef struct VsvTable {
     sqlite3_vtab base;     /* Base class.  Must be first */
-    char *zFilename;       /* Name of the VSV file */
-    char *zData;           /* Raw VSV data in lieu of zFilename */
+    char* zFilename;       /* Name of the VSV file */
+    char* zData;           /* Raw VSV data in lieu of zFilename */
     long iStart;           /* Offset to start of data in zFilename */
     int nCol;              /* Number of columns in the VSV file */
     int fsep;              /* The field seperator for this VSV file */
@@ -552,16 +557,16 @@ typedef struct VsvTable {
 typedef struct VsvCursor {
     sqlite3_vtab_cursor base; /* Base class.  Must be first */
     VsvReader rdr;            /* The VsvReader object */
-    char **azVal;             /* Value of the current row */
-    int *aLen;                /* Allocation Length of each entry */
-    int *dLen;                /* Data Length of each entry */
+    char** azVal;             /* Value of the current row */
+    int* aLen;                /* Allocation Length of each entry */
+    int* dLen;                /* Data Length of each entry */
     sqlite3_int64 iRowid;     /* The current rowid.  Negative for EOF */
 } VsvCursor;
 
 /*
 ** Transfer error message text from a reader into a VsvTable
 */
-static void vsv_xfer_error(VsvTable *pTab, VsvReader *pRdr) {
+static void vsv_xfer_error(VsvTable* pTab, VsvReader* pRdr) {
     sqlite3_free(pTab->base.zErrMsg);
     pTab->base.zErrMsg = sqlite3_mprintf("%s", pRdr->zErr);
 }
@@ -569,8 +574,8 @@ static void vsv_xfer_error(VsvTable *pTab, VsvReader *pRdr) {
 /*
 ** This method is the destructor for a VsvTable object.
 */
-static int vsvtabDisconnect(sqlite3_vtab *pVtab) {
-    VsvTable *p = (VsvTable *)pVtab;
+static int vsvtabDisconnect(sqlite3_vtab* pVtab) {
+    VsvTable* p = (VsvTable*)pVtab;
     sqlite3_free(p->zFilename);
     sqlite3_free(p->zData);
     sqlite3_free(p);
@@ -581,7 +586,7 @@ static int vsvtabDisconnect(sqlite3_vtab *pVtab) {
 ** Skip leading whitespace.  Return a pointer to the first non-whitespace
 ** character, or to the zero terminator if the string has only whitespace
 */
-static const char *vsv_skip_whitespace(const char *z) {
+static const char* vsv_skip_whitespace(const char* z) {
     while (isspace((unsigned char)z[0])) {
         z++;
     }
@@ -591,7 +596,7 @@ static const char *vsv_skip_whitespace(const char *z) {
 /*
 ** Remove trailing whitespace from the end of string z[]
 */
-static void vsv_trim_whitespace(char *z) {
+static void vsv_trim_whitespace(char* z) {
     size_t n = strlen(z);
     while (n > 0 && isspace((unsigned char)z[n])) {
         n--;
@@ -602,7 +607,7 @@ static void vsv_trim_whitespace(char *z) {
 /*
 ** Dequote the string
 */
-static void vsv_dequote(char *z) {
+static void vsv_dequote(char* z) {
     int j;
     char cQuote = z[0];
     size_t i, n;
@@ -628,7 +633,7 @@ static void vsv_dequote(char *z) {
 ** whitespace before and around tokens.  If it is, return a pointer to the
 ** first character of VALUE.  If it is not, return NULL.
 */
-static const char *vsv_parameter(const char *zTag, int nTag, const char *z) {
+static const char* vsv_parameter(const char* zTag, int nTag, const char* z) {
     z = vsv_skip_whitespace(z);
     if (strncmp(zTag, z, nTag) != 0) {
         return 0;
@@ -647,13 +652,12 @@ static const char *vsv_parameter(const char *zTag, int nTag, const char *z) {
 ** even if there is an error.  If an error occurs, then an error message
 ** is left in p->zErr.  If there are no errors, p->zErr[0]==0.
 */
-static int vsv_string_parameter(
-    VsvReader *p,       /* Leave the error message here, if there is one */
-    const char *zParam, /* Parameter we are checking for */
-    const char *zArg,   /* Raw text of the virtual table argment */
-    char **pzVal        /* Write the dequoted string value here */
+static int vsv_string_parameter(VsvReader* p, /* Leave the error message here, if there is one */
+                                const char* zParam, /* Parameter we are checking for */
+                                const char* zArg,   /* Raw text of the virtual table argment */
+                                char** pzVal        /* Write the dequoted string value here */
 ) {
-    const char *zValue;
+    const char* zValue;
     zValue = vsv_parameter(zParam, (int)strlen(zParam), zArg);
     if (zValue == 0) {
         return 0;
@@ -677,11 +681,13 @@ static int vsv_string_parameter(
 ** Return 0 if the argument is false and 1 if it is true.  Return -1 if
 ** we cannot really tell.
 */
-static int vsv_boolean(const char *z) {
-    if (sqlite3_stricmp("yes", z) == 0 || sqlite3_stricmp("on", z) == 0 || sqlite3_stricmp("true", z) == 0 || (z[0] == '1' && z[1] == 0)) {
+static int vsv_boolean(const char* z) {
+    if (sqlite3_stricmp("yes", z) == 0 || sqlite3_stricmp("on", z) == 0 ||
+        sqlite3_stricmp("true", z) == 0 || (z[0] == '1' && z[1] == 0)) {
         return 1;
     }
-    if (sqlite3_stricmp("no", z) == 0 || sqlite3_stricmp("off", z) == 0 || sqlite3_stricmp("false", z) == 0 || (z[0] == '0' && z[1] == 0)) {
+    if (sqlite3_stricmp("no", z) == 0 || sqlite3_stricmp("off", z) == 0 ||
+        sqlite3_stricmp("false", z) == 0 || (z[0] == '0' && z[1] == 0)) {
         return 0;
     }
     return -1;
@@ -693,11 +699,10 @@ static int vsv_boolean(const char *z) {
 ** not "= BOOLEAN" component) and return non-zero.  If the input string
 ** does not begin with TAG, return zero.
 */
-static int vsv_boolean_parameter(
-    const char *zTag, /* Tag we are looking for */
-    int nTag,         /* Size of the tag in bytes */
-    const char *z,    /* Input parameter */
-    int *pValue       /* Write boolean value here */
+static int vsv_boolean_parameter(const char* zTag, /* Tag we are looking for */
+                                 int nTag,         /* Size of the tag in bytes */
+                                 const char* z,    /* Input parameter */
+                                 int* pValue       /* Write boolean value here */
 ) {
     int b;
     z = vsv_skip_whitespace(z);
@@ -731,7 +736,7 @@ static int vsv_boolean_parameter(
 **      escaped hex byte   \x1e \x1f etc (RS and US respectively)
 **
 */
-static int vsv_parse_sep_char(char *in, int dflt, int *out) {
+static int vsv_parse_sep_char(char* in, int dflt, int* out) {
     if (!in) {
         *out = dflt;
         return 0;
@@ -808,13 +813,13 @@ static int vsv_parse_sep_char(char *in, int dflt, int *out) {
 ** the number of columns in the first row is counted to determine the
 ** column count.  If header=YES, then the first row is skipped.
 */
-static int vsvtabConnect(
-    sqlite3 *db,
-    void *pAux,
-    int argc, const char *const *argv,
-    sqlite3_vtab **ppVtab,
-    char **pzErr) {
-    VsvTable *pNew = 0;    /* The VsvTable object to construct */
+static int vsvtabConnect(sqlite3* db,
+                         void* pAux,
+                         int argc,
+                         const char* const* argv,
+                         sqlite3_vtab** ppVtab,
+                         char** pzErr) {
+    VsvTable* pNew = 0;    /* The VsvTable object to construct */
     int affinity = -1;     /* Affinity coercion */
     int bHeader = -1;      /* header= flags.  -1 means not seen yet */
     int validateUTF8 = -1; /* validateUTF8 flag */
@@ -828,10 +833,9 @@ static int vsvtabConnect(
     int nSkip = -1;  /* Value of the skip= parameter */
     int bNulls = -1; /* Process Nulls flag */
     VsvReader sRdr;  /* A VSV file reader used to store an error
-                               ** message and/or to count the number of columns */
-    static const char *azParam[] = {
-        "filename", "data", "schema", "fsep", "rsep"};
-    char *azPValue[5]; /* Parameter values */
+                      ** message and/or to count the number of columns */
+    static const char* azParam[] = {"filename", "data", "schema", "fsep", "rsep"};
+    char* azPValue[5]; /* Parameter values */
 #define VSV_FILENAME (azPValue[0])
 #define VSV_DATA (azPValue[1])
 #define VSV_SCHEMA (azPValue[2])
@@ -842,8 +846,8 @@ static int vsvtabConnect(
     memset(&sRdr, 0, sizeof(sRdr));
     memset(azPValue, 0, sizeof(azPValue));
     for (i = 3; i < argc; i++) {
-        const char *z = argv[i];
-        const char *zValue;
+        const char* z = argv[i];
+        const char* zValue;
         for (j = 0; j < sizeof(azParam) / sizeof(azParam[0]); j++) {
             if (vsv_string_parameter(&sRdr, azParam[j], z, &azPValue[j])) {
                 break;
@@ -949,7 +953,7 @@ static int vsvtabConnect(
         goto vsvtab_connect_error;
     }
     pNew = sqlite3_malloc(sizeof(*pNew));
-    *ppVtab = (sqlite3_vtab *)pNew;
+    *ppVtab = (sqlite3_vtab*)pNew;
     if (pNew == 0) {
         goto vsvtab_connect_oom;
     }
@@ -960,8 +964,8 @@ static int vsvtabConnect(
     pNew->validateUTF8 = validateUTF8;
     pNew->nulls = bNulls;
     if (VSV_SCHEMA == 0) {
-        sqlite3_str *pStr = sqlite3_str_new(0);
-        char *zSep = "";
+        sqlite3_str* pStr = sqlite3_str_new(0);
+        char* zSep = "";
         int iCol = 0;
         sqlite3_str_appendf(pStr, "CREATE TABLE x(");
         if (nCol < 0 && bHeader < 1) {
@@ -978,7 +982,7 @@ static int vsvtabConnect(
             }
         } else {
             do {
-                char *z = vsv_read_one_field(&sRdr);
+                char* z = vsv_read_one_field(&sRdr);
                 if ((nCol > 0 && iCol < nCol) || (nCol < 0 && bHeader)) {
                     sqlite3_str_appendf(pStr, "%s\"%w\"", zSep, z);
                     zSep = ",";
@@ -1088,8 +1092,8 @@ vsvtab_connect_error:
 /*
 ** Reset the current row content held by a VsvCursor.
 */
-static void vsvtabCursorRowReset(VsvCursor *pCur) {
-    VsvTable *pTab = (VsvTable *)pCur->base.pVtab;
+static void vsvtabCursorRowReset(VsvCursor* pCur) {
+    VsvTable* pTab = (VsvTable*)pCur->base.pVtab;
     int i;
     for (i = 0; i < pTab->nCol; i++) {
         sqlite3_free(pCur->azVal[i]);
@@ -1103,20 +1107,20 @@ static void vsvtabCursorRowReset(VsvCursor *pCur) {
 ** The xConnect and xCreate methods do the same thing, but they must be
 ** different so that the virtual table is not an eponymous virtual table.
 */
-static int vsvtabCreate(
-    sqlite3 *db,
-    void *pAux,
-    int argc, const char *const *argv,
-    sqlite3_vtab **ppVtab,
-    char **pzErr) {
+static int vsvtabCreate(sqlite3* db,
+                        void* pAux,
+                        int argc,
+                        const char* const* argv,
+                        sqlite3_vtab** ppVtab,
+                        char** pzErr) {
     return vsvtabConnect(db, pAux, argc, argv, ppVtab, pzErr);
 }
 
 /*
 ** Destructor for a VsvCursor.
 */
-static int vsvtabClose(sqlite3_vtab_cursor *cur) {
-    VsvCursor *pCur = (VsvCursor *)cur;
+static int vsvtabClose(sqlite3_vtab_cursor* cur) {
+    VsvCursor* pCur = (VsvCursor*)cur;
     vsvtabCursorRowReset(pCur);
     vsv_reader_reset(&pCur->rdr);
     sqlite3_free(cur);
@@ -1126,18 +1130,18 @@ static int vsvtabClose(sqlite3_vtab_cursor *cur) {
 /*
 ** Constructor for a new VsvTable cursor object.
 */
-static int vsvtabOpen(sqlite3_vtab *p, sqlite3_vtab_cursor **ppCursor) {
-    VsvTable *pTab = (VsvTable *)p;
-    VsvCursor *pCur;
+static int vsvtabOpen(sqlite3_vtab* p, sqlite3_vtab_cursor** ppCursor) {
+    VsvTable* pTab = (VsvTable*)p;
+    VsvCursor* pCur;
     size_t nByte;
-    nByte = sizeof(*pCur) + (sizeof(char *) + (2 * sizeof(int))) * pTab->nCol;
+    nByte = sizeof(*pCur) + (sizeof(char*) + (2 * sizeof(int))) * pTab->nCol;
     pCur = sqlite3_malloc64(nByte);
     if (pCur == 0)
         return SQLITE_NOMEM;
     memset(pCur, 0, nByte);
-    pCur->azVal = (char **)&pCur[1];
-    pCur->aLen = (int *)&pCur->azVal[pTab->nCol];
-    pCur->dLen = (int *)&pCur->aLen[pTab->nCol];
+    pCur->azVal = (char**)&pCur[1];
+    pCur->aLen = (int*)&pCur->azVal[pTab->nCol];
+    pCur->dLen = (int*)&pCur->aLen[pTab->nCol];
     pCur->rdr.fsep = pTab->fsep;
     pCur->rdr.rsep = pTab->rsep;
     pCur->rdr.affinity = pTab->affinity;
@@ -1153,11 +1157,11 @@ static int vsvtabOpen(sqlite3_vtab *p, sqlite3_vtab_cursor **ppCursor) {
 ** Advance a VsvCursor to its next row of input.
 ** Set the EOF marker if we reach the end of input.
 */
-static int vsvtabNext(sqlite3_vtab_cursor *cur) {
-    VsvCursor *pCur = (VsvCursor *)cur;
-    VsvTable *pTab = (VsvTable *)cur->pVtab;
+static int vsvtabNext(sqlite3_vtab_cursor* cur) {
+    VsvCursor* pCur = (VsvCursor*)cur;
+    VsvTable* pTab = (VsvTable*)cur->pVtab;
     int i = 0;
-    char *z;
+    char* z;
     do {
         z = vsv_read_one_field(&pCur->rdr);
         if (z == 0) {
@@ -1165,7 +1169,7 @@ static int vsvtabNext(sqlite3_vtab_cursor *cur) {
                 pCur->dLen[i] = -1;
         } else if (i < pTab->nCol) {
             if (pCur->aLen[i] < pCur->rdr.n + 1) {
-                char *zNew = sqlite3_realloc64(pCur->azVal[i], pCur->rdr.n + 1);
+                char* zNew = sqlite3_realloc64(pCur->azVal[i], pCur->rdr.n + 1);
                 if (zNew == 0) {
                     z = 0;
                     vsv_errmsg(&pCur->rdr, "out of memory");
@@ -1209,9 +1213,9 @@ static int vsvtabNext(sqlite3_vtab_cursor *cur) {
 ** then may have digits
 ** then may have trailing space
 */
-static int vsv_isValidNumber(char *arg) {
-    char *start;
-    char *stop;
+static int vsv_isValidNumber(char* arg) {
+    char* start;
+    char* stop;
     int isValid = 0;
     int hasDigit = 0;
 
@@ -1287,13 +1291,13 @@ vsv_end_isValidNumber:
 ** Validate UTF-8
 ** Return -1 if invalid else length
 */
-static long long vsv_utf8IsValid(char *string) {
+static long long vsv_utf8IsValid(char* string) {
     long long length = 0;
-    unsigned char *start;
+    unsigned char* start;
     int trailing = 0;
     unsigned char c;
 
-    start = (unsigned char *)string;
+    start = (unsigned char*)string;
     while ((c = *start)) {
         if (trailing) {
             if ((c & 0xC0) == 0x80) {
@@ -1339,13 +1343,12 @@ static long long vsv_utf8IsValid(char *string) {
 ** Return values of columns for the row at which the VsvCursor
 ** is currently pointing.
 */
-static int vsvtabColumn(
-    sqlite3_vtab_cursor *cur, /* The cursor */
-    sqlite3_context *ctx,     /* First argument to sqlite3_result_...() */
-    int i                     /* Which column to return */
+static int vsvtabColumn(sqlite3_vtab_cursor* cur, /* The cursor */
+                        sqlite3_context* ctx,     /* First argument to sqlite3_result_...() */
+                        int i                     /* Which column to return */
 ) {
-    VsvCursor *pCur = (VsvCursor *)cur;
-    VsvTable *pTab = (VsvTable *)cur->pVtab;
+    VsvCursor* pCur = (VsvCursor*)cur;
+    VsvTable* pTab = (VsvTable*)cur->pVtab;
     long long dLen = pCur->dLen[i];
     long long length = 0;
 
@@ -1438,14 +1441,16 @@ static int vsvtabColumn(
                         dv = strtold(pCur->azVal[i], 0);
                         fp = modfl(dv, &ip);
                         if (sizeof(long double) > sizeof(double)) {
-                            if (fp == 0.0L && dv >= -9223372036854775808.0L && dv <= 9223372036854775807.0L) {
+                            if (fp == 0.0L && dv >= -9223372036854775808.0L &&
+                                dv <= 9223372036854775807.0L) {
                                 sqlite3_result_int64(ctx, (long long)dv);
                             } else {
                                 sqlite3_result_double(ctx, (double)dv);
                             }
                         } else {
                             // Only convert if it will fit in a 6-byte varint
-                            if (fp == 0.0L && dv >= -140737488355328.0L && dv <= 140737488355328.0L) {
+                            if (fp == 0.0L && dv >= -140737488355328.0L &&
+                                dv <= 140737488355328.0L) {
                                 sqlite3_result_int64(ctx, (long long)dv);
                             } else {
                                 sqlite3_result_double(ctx, (double)dv);
@@ -1476,8 +1481,8 @@ static int vsvtabColumn(
 /*
 ** Return the rowid for the current row.
 */
-static int vsvtabRowid(sqlite3_vtab_cursor *cur, sqlite_int64 *pRowid) {
-    VsvCursor *pCur = (VsvCursor *)cur;
+static int vsvtabRowid(sqlite3_vtab_cursor* cur, sqlite_int64* pRowid) {
+    VsvCursor* pCur = (VsvCursor*)cur;
     *pRowid = pCur->iRowid;
     return SQLITE_OK;
 }
@@ -1486,8 +1491,8 @@ static int vsvtabRowid(sqlite3_vtab_cursor *cur, sqlite_int64 *pRowid) {
 ** Return TRUE if the cursor has been moved off of the last
 ** row of output.
 */
-static int vsvtabEof(sqlite3_vtab_cursor *cur) {
-    VsvCursor *pCur = (VsvCursor *)cur;
+static int vsvtabEof(sqlite3_vtab_cursor* cur) {
+    VsvCursor* pCur = (VsvCursor*)cur;
     return pCur->iRowid < 0;
 }
 
@@ -1495,12 +1500,13 @@ static int vsvtabEof(sqlite3_vtab_cursor *cur) {
 ** Only a full table scan is supported.  So xFilter simply rewinds to
 ** the beginning.
 */
-static int vsvtabFilter(
-    sqlite3_vtab_cursor *pVtabCursor,
-    int idxNum, const char *idxStr,
-    int argc, sqlite3_value **argv) {
-    VsvCursor *pCur = (VsvCursor *)pVtabCursor;
-    VsvTable *pTab = (VsvTable *)pVtabCursor->pVtab;
+static int vsvtabFilter(sqlite3_vtab_cursor* pVtabCursor,
+                        int idxNum,
+                        const char* idxStr,
+                        int argc,
+                        sqlite3_value** argv) {
+    VsvCursor* pCur = (VsvCursor*)pVtabCursor;
+    VsvTable* pTab = (VsvTable*)pVtabCursor->pVtab;
     pCur->iRowid = 0;
     if (pCur->rdr.in == 0) {
         assert(pCur->rdr.zIn == pTab->zData);
@@ -1521,12 +1527,10 @@ static int vsvtabFilter(
 ** constraints lowers the estimated cost, which is fiction, but is useful
 ** for testing certain kinds of virtual table behavior.
 */
-static int vsvtabBestIndex(
-    sqlite3_vtab *tab,
-    sqlite3_index_info *pIdxInfo) {
+static int vsvtabBestIndex(sqlite3_vtab* tab, sqlite3_index_info* pIdxInfo) {
     pIdxInfo->estimatedCost = 1000000;
 #ifdef SQLITE_TEST
-    if ((((VsvTable *)tab)->tstFlags & VSVTEST_FIDX) != 0) {
+    if ((((VsvTable*)tab)->tstFlags & VSVTEST_FIDX) != 0) {
         /* The usual (and sensible) case is to always do a full table scan.
         ** The code in this branch only runs when testflags=1.  This code
         ** generates an artifical and unrealistic plan which is useful
@@ -1542,9 +1546,11 @@ static int vsvtabBestIndex(
         int nConst = 0;
         for (i = 0; i < pIdxInfo->nConstraint; i++) {
             unsigned char op;
-            if (pIdxInfo->aConstraint[i].usable == 0) continue;
+            if (pIdxInfo->aConstraint[i].usable == 0)
+                continue;
             op = pIdxInfo->aConstraint[i].op;
-            if (op == SQLITE_INDEX_CONSTRAINT_EQ || op == SQLITE_INDEX_CONSTRAINT_LIKE || op == SQLITE_INDEX_CONSTRAINT_GLOB) {
+            if (op == SQLITE_INDEX_CONSTRAINT_EQ || op == SQLITE_INDEX_CONSTRAINT_LIKE ||
+                op == SQLITE_INDEX_CONSTRAINT_GLOB) {
                 pIdxInfo->estimatedCost = 10;
                 pIdxInfo->aConstraintUsage[nConst].argvIndex = nConst + 1;
                 nConst++;
@@ -1584,7 +1590,7 @@ static sqlite3_module VsvModule = {
 ** available that has an xUpdate function.  But the xUpdate always returns
 ** SQLITE_READONLY since the VSV file is not really writable.
 */
-static int vsvtabUpdate(sqlite3_vtab *p, int n, sqlite3_value **v, sqlite3_int64 *x) {
+static int vsvtabUpdate(sqlite3_vtab* p, int n, sqlite3_value** v, sqlite3_int64* x) {
     return SQLITE_READONLY;
 }
 static sqlite3_module VsvModuleFauxWrite = {
@@ -1623,10 +1629,7 @@ static sqlite3_module VsvModuleFauxWrite = {
 __declspec(dllexport)
 #endif
 #endif
-    int sqlite3_vsv_init(
-        sqlite3 *db,
-        char **pzErrMsg,
-        const sqlite3_api_routines *pApi) {
+    int sqlite3_vsv_init(sqlite3* db, char** pzErrMsg, const sqlite3_api_routines* pApi) {
 #ifndef SQLITE_OMIT_VIRTUALTABLE
     int rc;
     SQLITE_EXTENSION_INIT2(pApi);

@@ -16,18 +16,18 @@ SQLITE_EXTENSION_INIT1
 ** Tree is not necessarily balanced. That would require something like red&black trees of AVL
 */
 
-typedef int (*cmp_func)(const void *, const void *);
-typedef void (*map_iterator)(void *, int64_t, void *);
+typedef int (*cmp_func)(const void*, const void*);
+typedef void (*map_iterator)(void*, int64_t, void*);
 
 typedef struct node {
-    struct node *l;
-    struct node *r;
-    void *data;
+    struct node* l;
+    struct node* r;
+    void* data;
     int64_t count;
 } node;
 
 typedef struct map {
-    node *base;
+    node* base;
     cmp_func cmp;
     short free;
 } map;
@@ -40,20 +40,20 @@ map map_make(cmp_func cmp) {
     return r;
 }
 
-void *xcalloc(size_t nmemb, size_t size, char *s) {
-    void *ret = calloc(nmemb, size);
+void* xcalloc(size_t nmemb, size_t size, char* s) {
+    void* ret = calloc(nmemb, size);
     return ret;
 }
 
-void xfree(void *p) {
+void xfree(void* p) {
     free(p);
 }
 
-void node_insert(node **n, cmp_func cmp, void *e) {
+void node_insert(node** n, cmp_func cmp, void* e) {
     int c;
-    node *nn;
+    node* nn;
     if (*n == 0) {
-        nn = (node *)xcalloc(1, sizeof(node), "for node");
+        nn = (node*)xcalloc(1, sizeof(node), "for node");
         nn->data = e;
         nn->count = 1;
         *n = nn;
@@ -71,11 +71,11 @@ void node_insert(node **n, cmp_func cmp, void *e) {
     }
 }
 
-void map_insert(map *m, void *e) {
+void map_insert(map* m, void* e) {
     node_insert(&(m->base), m->cmp, e);
 }
 
-void node_iterate(node *n, map_iterator iter, void *p) {
+void node_iterate(node* n, map_iterator iter, void* p) {
     if (n) {
         if (n->l)
             node_iterate(n->l, iter, p);
@@ -85,11 +85,11 @@ void node_iterate(node *n, map_iterator iter, void *p) {
     }
 }
 
-void map_iterate(map *m, map_iterator iter, void *p) {
+void map_iterate(map* m, map_iterator iter, void* p) {
     node_iterate(m->base, iter, p);
 }
 
-void node_destroy(node *n) {
+void node_destroy(node* n) {
     if (0 != n) {
         xfree(n->data);
         if (n->l)
@@ -101,13 +101,13 @@ void node_destroy(node *n) {
     }
 }
 
-void map_destroy(map *m) {
+void map_destroy(map* m) {
     node_destroy(m->base);
 }
 
-int int_cmp(const void *a, const void *b) {
-    int64_t aa = *(int64_t *)(a);
-    int64_t bb = *(int64_t *)(b);
+int int_cmp(const void* a, const void* b) {
+    int64_t aa = *(int64_t*)(a);
+    int64_t bb = *(int64_t*)(b);
     /* printf("cmp %d <=> %d\n",aa,bb); */
     if (aa == bb)
         return 0;
@@ -117,9 +117,9 @@ int int_cmp(const void *a, const void *b) {
         return 1;
 }
 
-int double_cmp(const void *a, const void *b) {
-    double aa = *(double *)(a);
-    double bb = *(double *)(b);
+int double_cmp(const void* a, const void* b) {
+    double aa = *(double*)(a);
+    double bb = *(double*)(b);
     /* printf("cmp %d <=> %d\n",aa,bb); */
     if (aa == bb)
         return 0;
@@ -165,15 +165,15 @@ struct ModeCtx {
     i64 mcnt;      /* maximum number of occurrences (for mode) */
     i64 mn;        /* number of occurrences (for mode and percentiles) */
     i64 is_double; /* whether the computation is being done for doubles (>0) or integers (=0) */
-    map *m;        /* map structure used for the computation */
+    map* m;        /* map structure used for the computation */
     int done;      /* whether the answer has been found */
 };
 
 /*
 ** called for each value received during a calculation of stddev or variance
 */
-static void varianceStep(sqlite3_context *context, int argc, sqlite3_value **argv) {
-    StddevCtx *p;
+static void varianceStep(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    StddevCtx* p;
 
     double delta;
     double x;
@@ -193,12 +193,12 @@ static void varianceStep(sqlite3_context *context, int argc, sqlite3_value **arg
 /*
 ** called for each value received during a calculation of mode of median
 */
-static void modeStep(sqlite3_context *context, int argc, sqlite3_value **argv) {
-    ModeCtx *p;
+static void modeStep(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    ModeCtx* p;
     i64 xi = 0;
     double xd = 0.0;
-    i64 *iptr;
-    double *dptr;
+    i64* iptr;
+    double* dptr;
     int type;
 
     assert(argc == 1);
@@ -226,12 +226,12 @@ static void modeStep(sqlite3_context *context, int argc, sqlite3_value **argv) {
 
     if (0 == p->is_double) {
         xi = sqlite3_value_int64(argv[0]);
-        iptr = (i64 *)calloc(1, sizeof(i64));
+        iptr = (i64*)calloc(1, sizeof(i64));
         *iptr = xi;
         map_insert(p->m, iptr);
     } else {
         xd = sqlite3_value_double(argv[0]);
-        dptr = (double *)calloc(1, sizeof(double));
+        dptr = (double*)calloc(1, sizeof(double));
         *dptr = xd;
         map_insert(p->m, dptr);
     }
@@ -241,13 +241,13 @@ static void modeStep(sqlite3_context *context, int argc, sqlite3_value **argv) {
 **  Auxiliary function that iterates all elements in a map and finds the mode
 **  (most frequent value)
 */
-static void modeIterate(void *e, i64 c, void *pp) {
+static void modeIterate(void* e, i64 c, void* pp) {
     i64 ei;
     double ed;
-    ModeCtx *p = (ModeCtx *)pp;
+    ModeCtx* p = (ModeCtx*)pp;
 
     if (0 == p->is_double) {
-        ei = *(int *)(e);
+        ei = *(int*)(e);
 
         if (p->mcnt == c) {
             ++p->mn;
@@ -257,7 +257,7 @@ static void modeIterate(void *e, i64 c, void *pp) {
             p->mn = 1;
         }
     } else {
-        ed = *(double *)(e);
+        ed = *(double*)(e);
 
         if (p->mcnt == c) {
             ++p->mn;
@@ -274,14 +274,14 @@ static void modeIterate(void *e, i64 c, void *pp) {
 **  (the value such that the number of elements smaller is equal the the number of
 **  elements larger)
 */
-static void medianIterate(void *e, i64 c, void *pp) {
+static void medianIterate(void* e, i64 c, void* pp) {
     i64 ei;
     double ed;
     double iL;
     double iR;
     int il;
     int ir;
-    ModeCtx *p = (ModeCtx *)pp;
+    ModeCtx* p = (ModeCtx*)pp;
 
     if (p->done > 0)
         return;
@@ -295,10 +295,10 @@ static void medianIterate(void *e, i64 c, void *pp) {
         if (ir >= iR) {
             ++p->mn;
             if (0 == p->is_double) {
-                ei = *(int *)(e);
+                ei = *(int*)(e);
                 p->riM += ei;
             } else {
-                ed = *(double *)(e);
+                ed = *(double*)(e);
                 p->rdM += ed;
             }
         } else {
@@ -311,8 +311,8 @@ static void medianIterate(void *e, i64 c, void *pp) {
 /*
 ** Returns the mode value
 */
-static void modeFinalize(sqlite3_context *context) {
-    ModeCtx *p;
+static void modeFinalize(sqlite3_context* context) {
+    ModeCtx* p;
     p = sqlite3_aggregate_context(context, 0);
     if (p && p->m) {
         map_iterate(p->m, modeIterate, p);
@@ -331,9 +331,9 @@ static void modeFinalize(sqlite3_context *context) {
 /*
 ** auxiliary function for percentiles
 */
-static void _medianFinalize(sqlite3_context *context) {
-    ModeCtx *p;
-    p = (ModeCtx *)sqlite3_aggregate_context(context, 0);
+static void _medianFinalize(sqlite3_context* context) {
+    ModeCtx* p;
+    p = (ModeCtx*)sqlite3_aggregate_context(context, 0);
     if (p && p->m) {
         p->done = 0;
         map_iterate(p->m, medianIterate, p);
@@ -353,9 +353,9 @@ static void _medianFinalize(sqlite3_context *context) {
 /*
 ** Returns the median value
 */
-static void medianFinalize(sqlite3_context *context) {
-    ModeCtx *p;
-    p = (ModeCtx *)sqlite3_aggregate_context(context, 0);
+static void medianFinalize(sqlite3_context* context) {
+    ModeCtx* p;
+    p = (ModeCtx*)sqlite3_aggregate_context(context, 0);
     if (p != 0) {
         p->pcnt = (p->cnt) / 2.0;
         _medianFinalize(context);
@@ -365,9 +365,9 @@ static void medianFinalize(sqlite3_context *context) {
 /*
 ** Returns the percentile_25 value
 */
-static void percentile_25Finalize(sqlite3_context *context) {
-    ModeCtx *p;
-    p = (ModeCtx *)sqlite3_aggregate_context(context, 0);
+static void percentile_25Finalize(sqlite3_context* context) {
+    ModeCtx* p;
+    p = (ModeCtx*)sqlite3_aggregate_context(context, 0);
     if (p != 0) {
         p->pcnt = (p->cnt) / 4.0;
         _medianFinalize(context);
@@ -377,9 +377,9 @@ static void percentile_25Finalize(sqlite3_context *context) {
 /*
 ** Returns the percentile_75 value
 */
-static void percentile_75Finalize(sqlite3_context *context) {
-    ModeCtx *p;
-    p = (ModeCtx *)sqlite3_aggregate_context(context, 0);
+static void percentile_75Finalize(sqlite3_context* context) {
+    ModeCtx* p;
+    p = (ModeCtx*)sqlite3_aggregate_context(context, 0);
     if (p != 0) {
         p->pcnt = (p->cnt) * 3 / 4.0;
         _medianFinalize(context);
@@ -389,9 +389,9 @@ static void percentile_75Finalize(sqlite3_context *context) {
 /*
 ** Returns the percentile_90 value
 */
-static void percentile_90Finalize(sqlite3_context *context) {
-    ModeCtx *p;
-    p = (ModeCtx *)sqlite3_aggregate_context(context, 0);
+static void percentile_90Finalize(sqlite3_context* context) {
+    ModeCtx* p;
+    p = (ModeCtx*)sqlite3_aggregate_context(context, 0);
     if (p != 0) {
         p->pcnt = (p->cnt) * 9 / 10.0;
         _medianFinalize(context);
@@ -401,9 +401,9 @@ static void percentile_90Finalize(sqlite3_context *context) {
 /*
 ** Returns the percentile_95 value
 */
-static void percentile_95Finalize(sqlite3_context *context) {
-    ModeCtx *p;
-    p = (ModeCtx *)sqlite3_aggregate_context(context, 0);
+static void percentile_95Finalize(sqlite3_context* context) {
+    ModeCtx* p;
+    p = (ModeCtx*)sqlite3_aggregate_context(context, 0);
     if (p != 0) {
         p->pcnt = (p->cnt) * 95 / 100.0;
         _medianFinalize(context);
@@ -413,9 +413,9 @@ static void percentile_95Finalize(sqlite3_context *context) {
 /*
 ** Returns the percentile_99 value
 */
-static void percentile_99Finalize(sqlite3_context *context) {
-    ModeCtx *p;
-    p = (ModeCtx *)sqlite3_aggregate_context(context, 0);
+static void percentile_99Finalize(sqlite3_context* context) {
+    ModeCtx* p;
+    p = (ModeCtx*)sqlite3_aggregate_context(context, 0);
     if (p != 0) {
         p->pcnt = (p->cnt) * 99 / 100.0;
         _medianFinalize(context);
@@ -425,8 +425,8 @@ static void percentile_99Finalize(sqlite3_context *context) {
 /*
 ** Returns the sample standard deviation value
 */
-static void stddevFinalize(sqlite3_context *context) {
-    StddevCtx *p;
+static void stddevFinalize(sqlite3_context* context) {
+    StddevCtx* p;
     p = sqlite3_aggregate_context(context, 0);
     if (p && p->cnt > 1) {
         sqlite3_result_double(context, sqrt(p->rS / (p->cnt - 1)));
@@ -438,8 +438,8 @@ static void stddevFinalize(sqlite3_context *context) {
 /*
 ** Returns the population standard deviation value
 */
-static void stddevpopFinalize(sqlite3_context *context) {
-    StddevCtx *p;
+static void stddevpopFinalize(sqlite3_context* context) {
+    StddevCtx* p;
     p = sqlite3_aggregate_context(context, 0);
     if (p && p->cnt > 1) {
         sqlite3_result_double(context, sqrt(p->rS / p->cnt));
@@ -451,8 +451,8 @@ static void stddevpopFinalize(sqlite3_context *context) {
 /*
 ** Returns the sample variance value
 */
-static void varianceFinalize(sqlite3_context *context) {
-    StddevCtx *p;
+static void varianceFinalize(sqlite3_context* context) {
+    StddevCtx* p;
     p = sqlite3_aggregate_context(context, 0);
     if (p && p->cnt > 1) {
         sqlite3_result_double(context, p->rS / (p->cnt - 1));
@@ -464,8 +464,8 @@ static void varianceFinalize(sqlite3_context *context) {
 /*
 ** Returns the population variance value
 */
-static void variancepopFinalize(sqlite3_context *context) {
-    StddevCtx *p;
+static void variancepopFinalize(sqlite3_context* context) {
+    StddevCtx* p;
     p = sqlite3_aggregate_context(context, 0);
     if (p && p->cnt > 1) {
         sqlite3_result_double(context, p->rS / p->cnt);
@@ -480,38 +480,33 @@ static void variancepopFinalize(sqlite3_context *context) {
 #ifdef _WIN32
 __declspec(dllexport)
 #endif
-    int sqlite3_stats_init(
-        sqlite3 *db,
-        char **pzErrMsg,
-        const sqlite3_api_routines *pApi) {
+    int sqlite3_stats_init(sqlite3* db, char** pzErrMsg, const sqlite3_api_routines* pApi) {
     SQLITE_EXTENSION_INIT2(pApi);
     static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS;
     int err_count = 0;
-    err_count += sqlite3_create_function(
-        db, "stddev", 1, flags, 0, 0, varianceStep, stddevFinalize);
-    err_count += sqlite3_create_function(
-        db, "stddev_samp", 1, flags, 0, 0, varianceStep, stddevFinalize);
-    err_count += sqlite3_create_function(
-        db, "stddev_pop", 1, flags, 0, 0, varianceStep, stddevpopFinalize);
-    err_count += sqlite3_create_function(
-        db, "variance", 1, flags, 0, 0, varianceStep, varianceFinalize);
-    err_count += sqlite3_create_function(
-        db, "var_samp", 1, flags, 0, 0, varianceStep, varianceFinalize);
-    err_count += sqlite3_create_function(
-        db, "var_pop", 1, flags, 0, 0, varianceStep, variancepopFinalize);
-    err_count += sqlite3_create_function(
-        db, "mode", 1, flags, 0, 0, modeStep, modeFinalize);
-    err_count += sqlite3_create_function(
-        db, "median", 1, flags, 0, 0, modeStep, medianFinalize);
-    err_count += sqlite3_create_function(
-        db, "percentile_25", 1, flags, 0, 0, modeStep, percentile_25Finalize);
-    err_count += sqlite3_create_function(
-        db, "percentile_75", 1, flags, 0, 0, modeStep, percentile_75Finalize);
-    err_count += sqlite3_create_function(
-        db, "percentile_90", 1, flags, 0, 0, modeStep, percentile_90Finalize);
-    err_count += sqlite3_create_function(
-        db, "percentile_95", 1, flags, 0, 0, modeStep, percentile_95Finalize);
-    err_count += sqlite3_create_function(
-        db, "percentile_99", 1, flags, 0, 0, modeStep, percentile_99Finalize);
+    err_count +=
+        sqlite3_create_function(db, "stddev", 1, flags, 0, 0, varianceStep, stddevFinalize);
+    err_count +=
+        sqlite3_create_function(db, "stddev_samp", 1, flags, 0, 0, varianceStep, stddevFinalize);
+    err_count +=
+        sqlite3_create_function(db, "stddev_pop", 1, flags, 0, 0, varianceStep, stddevpopFinalize);
+    err_count +=
+        sqlite3_create_function(db, "variance", 1, flags, 0, 0, varianceStep, varianceFinalize);
+    err_count +=
+        sqlite3_create_function(db, "var_samp", 1, flags, 0, 0, varianceStep, varianceFinalize);
+    err_count +=
+        sqlite3_create_function(db, "var_pop", 1, flags, 0, 0, varianceStep, variancepopFinalize);
+    err_count += sqlite3_create_function(db, "mode", 1, flags, 0, 0, modeStep, modeFinalize);
+    err_count += sqlite3_create_function(db, "median", 1, flags, 0, 0, modeStep, medianFinalize);
+    err_count += sqlite3_create_function(db, "percentile_25", 1, flags, 0, 0, modeStep,
+                                         percentile_25Finalize);
+    err_count += sqlite3_create_function(db, "percentile_75", 1, flags, 0, 0, modeStep,
+                                         percentile_75Finalize);
+    err_count += sqlite3_create_function(db, "percentile_90", 1, flags, 0, 0, modeStep,
+                                         percentile_90Finalize);
+    err_count += sqlite3_create_function(db, "percentile_95", 1, flags, 0, 0, modeStep,
+                                         percentile_95Finalize);
+    err_count += sqlite3_create_function(db, "percentile_99", 1, flags, 0, 0, modeStep,
+                                         percentile_99Finalize);
     return err_count ? SQLITE_ERROR : SQLITE_OK;
 }

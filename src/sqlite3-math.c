@@ -9,16 +9,16 @@
 SQLITE_EXTENSION_INIT1
 
 #if defined(HAVE_STDINT_H) /* Use this case if we have ANSI headers */
-#define SQLITE_INT_TO_PTR(X) ((void *)(intptr_t)(X))
+#define SQLITE_INT_TO_PTR(X) ((void*)(intptr_t)(X))
 #define SQLITE_PTR_TO_INT(X) ((int)(intptr_t)(X))
 #elif defined(__PTRDIFF_TYPE__) /* This case should work for GCC */
-#define SQLITE_INT_TO_PTR(X) ((void *)(__PTRDIFF_TYPE__)(X))
+#define SQLITE_INT_TO_PTR(X) ((void*)(__PTRDIFF_TYPE__)(X))
 #define SQLITE_PTR_TO_INT(X) ((int)(__PTRDIFF_TYPE__)(X))
 #elif !defined(__GNUC__) /* Works for compilers other than LLVM */
-#define SQLITE_INT_TO_PTR(X) ((void *)&((char *)0)[X])
-#define SQLITE_PTR_TO_INT(X) ((int)(((char *)X) - (char *)0))
+#define SQLITE_INT_TO_PTR(X) ((void*)&((char*)0)[X])
+#define SQLITE_PTR_TO_INT(X) ((int)(((char*)X) - (char*)0))
 #else /* Generates a warning - but it always works */
-#define SQLITE_INT_TO_PTR(X) ((void *)(X))
+#define SQLITE_INT_TO_PTR(X) ((void*)(X))
 #define SQLITE_PTR_TO_INT(X) ((int)(X))
 #endif
 
@@ -43,10 +43,7 @@ SQLITE_EXTENSION_INIT1
 ** The sqlite3_user_data() pointer is a pointer to the libm implementation
 ** of the underlying C function.
 */
-static void ceilingFunc(
-    sqlite3_context *context,
-    int argc,
-    sqlite3_value **argv) {
+static void ceilingFunc(sqlite3_context* context, int argc, sqlite3_value** argv) {
     assert(argc == 1);
     switch (sqlite3_value_numeric_type(argv[0])) {
         case SQLITE_INTEGER: {
@@ -69,8 +66,12 @@ static void ceilingFunc(
 ** unable to take a pointer to these functions.  Hence, we here wrap them
 ** in our own actual functions.
 */
-static double xCeil(double x) { return ceil(x); }
-static double xFloor(double x) { return floor(x); }
+static double xCeil(double x) {
+    return ceil(x);
+}
+static double xFloor(double x) {
+    return floor(x);
+}
 
 /*
 ** Implementation of SQL functions:
@@ -79,17 +80,15 @@ static double xFloor(double x) { return floor(x); }
 **   log(X)      - log X base 10
 **   log10(X)    - log X base 10
 */
-static void log1Func(
-    sqlite3_context *context,
-    int argc,
-    sqlite3_value **argv) {
+static void log1Func(sqlite3_context* context, int argc, sqlite3_value** argv) {
     double x, b, ans;
     assert(argc == 1);
     switch (sqlite3_value_numeric_type(argv[0])) {
         case SQLITE_INTEGER:
         case SQLITE_FLOAT:
             x = sqlite3_value_double(argv[0]);
-            if (x <= 0.0) return;
+            if (x <= 0.0)
+                return;
             break;
         default:
             return;
@@ -115,17 +114,15 @@ static void log1Func(
 **
 **   log(B,X)    - log X base B
 */
-static void log2Func(
-    sqlite3_context *context,
-    int argc,
-    sqlite3_value **argv) {
+static void log2Func(sqlite3_context* context, int argc, sqlite3_value** argv) {
     double x, b, ans;
     assert(argc == 2);
     switch (sqlite3_value_numeric_type(argv[0])) {
         case SQLITE_INTEGER:
         case SQLITE_FLOAT:
             x = sqlite3_value_double(argv[0]);
-            if (x <= 0.0) return;
+            if (x <= 0.0)
+                return;
             break;
         default:
             return;
@@ -134,9 +131,11 @@ static void log2Func(
         case SQLITE_INTEGER:
         case SQLITE_FLOAT:
             b = log(x);
-            if (b <= 0.0) return;
+            if (b <= 0.0)
+                return;
             x = sqlite3_value_double(argv[1]);
-            if (x <= 0.0) return;
+            if (x <= 0.0)
+                return;
             break;
         default:
             return;
@@ -148,24 +147,26 @@ static void log2Func(
 /*
 ** Functions to converts degrees to radians and radians to degrees.
 */
-static double degToRad(double x) { return x * (M_PI / 180.0); }
-static double radToDeg(double x) { return x * (180.0 / M_PI); }
+static double degToRad(double x) {
+    return x * (M_PI / 180.0);
+}
+static double radToDeg(double x) {
+    return x * (180.0 / M_PI);
+}
 
 /*
 ** Implementation of 1-argument SQL math functions:
 **
 **   exp(X)  - Compute e to the X-th power
 */
-static void math1Func(
-    sqlite3_context *context,
-    int argc,
-    sqlite3_value **argv) {
+static void math1Func(sqlite3_context* context, int argc, sqlite3_value** argv) {
     int type0;
     double v0, ans;
     double (*x)(double);
     assert(argc == 1);
     type0 = sqlite3_value_numeric_type(argv[0]);
-    if (type0 != SQLITE_INTEGER && type0 != SQLITE_FLOAT) return;
+    if (type0 != SQLITE_INTEGER && type0 != SQLITE_FLOAT)
+        return;
     v0 = sqlite3_value_double(argv[0]);
     x = (double (*)(double))sqlite3_user_data(context);
     ans = x(v0);
@@ -177,18 +178,17 @@ static void math1Func(
 **
 **   power(X,Y)  - Compute X to the Y-th power
 */
-static void math2Func(
-    sqlite3_context *context,
-    int argc,
-    sqlite3_value **argv) {
+static void math2Func(sqlite3_context* context, int argc, sqlite3_value** argv) {
     int type0, type1;
     double v0, v1, ans;
     double (*x)(double, double);
     assert(argc == 2);
     type0 = sqlite3_value_numeric_type(argv[0]);
-    if (type0 != SQLITE_INTEGER && type0 != SQLITE_FLOAT) return;
+    if (type0 != SQLITE_INTEGER && type0 != SQLITE_FLOAT)
+        return;
     type1 = sqlite3_value_numeric_type(argv[1]);
-    if (type1 != SQLITE_INTEGER && type1 != SQLITE_FLOAT) return;
+    if (type1 != SQLITE_INTEGER && type1 != SQLITE_FLOAT)
+        return;
     v0 = sqlite3_value_double(argv[0]);
     v1 = sqlite3_value_double(argv[1]);
     x = (double (*)(double, double))sqlite3_user_data(context);
@@ -199,10 +199,7 @@ static void math2Func(
 /*
 ** Implementation of pi() SQL math function
 */
-static void piFunc(
-    sqlite3_context *context,
-    int argc,
-    sqlite3_value **argv) {
+static void piFunc(sqlite3_context* context, int argc, sqlite3_value** argv) {
     assert(argc == 0);
     sqlite3_result_double(context, M_PI);
 }
@@ -213,10 +210,7 @@ static void piFunc(
 #ifdef _WIN32
 __declspec(dllexport)
 #endif
-    int sqlite3_math_init(
-        sqlite3 *db,
-        char **pzErrMsg,
-        const sqlite3_api_routines *pApi) {
+    int sqlite3_math_init(sqlite3* db, char** pzErrMsg, const sqlite3_api_routines* pApi) {
     static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
     SQLITE_EXTENSION_INIT2(pApi);
     sqlite3_create_function(db, "ceil", 1, flags, xCeil, ceilingFunc, 0, 0);
@@ -224,9 +218,9 @@ __declspec(dllexport)
     sqlite3_create_function(db, "floor", 1, flags, xFloor, ceilingFunc, 0, 0);
     sqlite3_create_function(db, "trunc", 1, flags, trunc, ceilingFunc, 0, 0);
     sqlite3_create_function(db, "ln", 1, flags, 0, log1Func, 0, 0);
-    sqlite3_create_function(db, "log", 1, flags, (void *)(1), log1Func, 0, 0);
-    sqlite3_create_function(db, "log10", 1, flags, (void *)(1), log1Func, 0, 0);
-    sqlite3_create_function(db, "log2", 1, flags, (void *)(2), log1Func, 0, 0);
+    sqlite3_create_function(db, "log", 1, flags, (void*)(1), log1Func, 0, 0);
+    sqlite3_create_function(db, "log10", 1, flags, (void*)(1), log1Func, 0, 0);
+    sqlite3_create_function(db, "log2", 1, flags, (void*)(2), log1Func, 0, 0);
     sqlite3_create_function(db, "log", 2, flags, 0, log2Func, 0, 0);
     sqlite3_create_function(db, "exp", 1, flags, exp, math1Func, 0, 0);
     sqlite3_create_function(db, "pow", 2, flags, pow, math2Func, 0, 0);

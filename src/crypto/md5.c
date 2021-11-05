@@ -1,13 +1,13 @@
 /*********************************************************************
-* Filename:   md5.c
-* Author:     Brad Conte (brad AT bradconte.com)
-* Source:     https://github.com/B-Con/crypto-algorithms
-* License:    Public Domain
-* Details:    Implementation of the MD5 hashing algorithm.
-				  Algorithm specification can be found here:
-				   * http://tools.ietf.org/html/rfc1321
-				  This implementation uses little endian byte order.
-*********************************************************************/
+ * Filename:   md5.c
+ * Author:     Brad Conte (brad AT bradconte.com)
+ * Source:     https://github.com/B-Con/crypto-algorithms
+ * License:    Public Domain
+ * Details:    Implementation of the MD5 hashing algorithm.
+ * Algorithm specification can be found here:
+ * http://tools.ietf.org/html/rfc1321
+ * This implementation uses little endian byte order.
+ *********************************************************************/
 
 /*************************** HEADER FILES ***************************/
 #include "md5.h"
@@ -45,7 +45,7 @@
     }
 
 /*********************** FUNCTION DEFINITIONS ***********************/
-void md5_transform(MD5_CTX *ctx, const BYTE data[]) {
+void md5_transform(MD5_CTX* ctx, const BYTE data[]) {
     WORD a, b, c, d, m[16], i, j;
 
     // MD5 specifies big endian byte order, but this implementation assumes a little
@@ -133,8 +133,8 @@ void md5_transform(MD5_CTX *ctx, const BYTE data[]) {
     ctx->state[3] += d;
 }
 
-void *md5_init() {
-    MD5_CTX *ctx;
+void* md5_init() {
+    MD5_CTX* ctx;
     ctx = malloc(sizeof(MD5_CTX));
     ctx->datalen = 0;
     ctx->bitlen = 0;
@@ -145,7 +145,7 @@ void *md5_init() {
     return ctx;
 }
 
-void md5_update(MD5_CTX *ctx, const BYTE data[], size_t len) {
+void md5_update(MD5_CTX* ctx, const BYTE data[], size_t len) {
     size_t i;
 
     for (i = 0; i < len; ++i) {
@@ -159,7 +159,7 @@ void md5_update(MD5_CTX *ctx, const BYTE data[], size_t len) {
     }
 }
 
-int md5_final(MD5_CTX *ctx, BYTE hash[]) {
+int md5_final(MD5_CTX* ctx, BYTE hash[]) {
     size_t i;
 
     i = ctx->datalen;

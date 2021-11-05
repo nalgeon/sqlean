@@ -23,8 +23,8 @@
  *     [^abc]  Any single character not in the set abc
  *     [a-z]   Any single character in the range a-z
  *     [^a-z]  Any single character not in the range a-z
-**
-*/
+ **
+ */
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,10 +37,10 @@ SQLITE_EXTENSION_INIT1
 /*
  * Replaces `rep` substring of the `orig` string with `with` substring.
  */
-static char *str_replace(char *orig, char *rep, char *with) {
-    char *result;   // the return string
-    char *ins;      // the next insert point
-    char *tmp;      // varies
+static char* str_replace(char* orig, char* rep, char* with) {
+    char* result;   // the return string
+    char* ins;      // the next insert point
+    char* tmp;      // varies
     int len_rep;    // length of rep (the string to remove)
     int len_with;   // length of with (the string to replace rep with)
     int len_front;  // distance between rep and end of last rep
@@ -89,18 +89,15 @@ static char *str_replace(char *orig, char *rep, char *with) {
  * E.g.:
  * select true where 'abc' regexp 'a.c';
  */
-static void regexp_statement(
-    sqlite3_context *context,
-    int argc,
-    sqlite3_value **argv) {
-    regexp *r;
-    const char *source;
-    const char *pattern;
+static void regexp_statement(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    regexp* r;
+    const char* source;
+    const char* pattern;
     int is_match = 0;
 
     assert(argc == 2);
 
-    source = (const char *)sqlite3_value_text(argv[1]);
+    source = (const char*)sqlite3_value_text(argv[1]);
 #ifdef DEBUG
     fprintf(stderr, "source = %s\n", source);
 #endif
@@ -109,7 +106,7 @@ static void regexp_statement(
         return;
     }
 
-    pattern = (const char *)sqlite3_value_text(argv[0]);
+    pattern = (const char*)sqlite3_value_text(argv[0]);
 #ifdef DEBUG
     fprintf(stderr, "pattern = %s\n", pattern);
 #endif
@@ -126,7 +123,7 @@ static void regexp_statement(
 
     is_match = re_execute(r, source);
     sqlite3_result_int(context, is_match);
-    free((char *)r);
+    free((char*)r);
 }
 
 /*
@@ -135,18 +132,15 @@ static void regexp_statement(
  * E.g.:
  * select regexp_like('abc', 'a.c');
  */
-static void regexp_like(
-    sqlite3_context *context,
-    int argc,
-    sqlite3_value **argv) {
-    regexp *r;
-    const char *source;
-    const char *pattern;
+static void regexp_like(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    regexp* r;
+    const char* source;
+    const char* pattern;
     int is_match = 0;
 
     assert(argc == 2);
 
-    source = (const char *)sqlite3_value_text(argv[0]);
+    source = (const char*)sqlite3_value_text(argv[0]);
 #ifdef DEBUG
     fprintf(stderr, "source = %s\n", source);
 #endif
@@ -155,7 +149,7 @@ static void regexp_like(
         return;
     }
 
-    pattern = (const char *)sqlite3_value_text(argv[1]);
+    pattern = (const char*)sqlite3_value_text(argv[1]);
 #ifdef DEBUG
     fprintf(stderr, "pattern = %s\n", pattern);
 #endif
@@ -172,7 +166,7 @@ static void regexp_like(
 
     is_match = re_execute(r, source);
     sqlite3_result_int(context, is_match);
-    free((char *)r);
+    free((char*)r);
 }
 
 /*
@@ -180,23 +174,20 @@ static void regexp_like(
  * regexp_substr(source, pattern)
  * E.g.: select regexp_substr('abcdef', 'b.d') = 'bcd';
  */
-static void regexp_substr(
-    sqlite3_context *context,
-    int argc,
-    sqlite3_value **argv) {
-    regexp *r;
-    const char *source;
-    const char *pattern;
+static void regexp_substr(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    regexp* r;
+    const char* source;
+    const char* pattern;
     int is_match = 0;
 
     assert(argc == 2);
 
-    source = (const char *)sqlite3_value_text(argv[0]);
+    source = (const char*)sqlite3_value_text(argv[0]);
     if (!source) {
         return;
     }
 
-    pattern = (const char *)sqlite3_value_text(argv[1]);
+    pattern = (const char*)sqlite3_value_text(argv[1]);
     if (!pattern) {
         sqlite3_result_error(context, "missing regexp pattern", -1);
         return;
@@ -214,15 +205,15 @@ static void regexp_substr(
     }
 
     int len = r->endp[0] - r->startp[0];
-    char *matched_str = sqlite3_malloc(len + 1);
+    char* matched_str = sqlite3_malloc(len + 1);
     (void)strncpy(matched_str, r->startp[0], len);
     matched_str[len] = '\0';
 #ifdef DEBUG
     fprintf(stderr, "matched_str = '%s'\n", matched_str);
 #endif
 
-    sqlite3_result_text(context, (char *)matched_str, -1, sqlite3_free);
-    free((char *)r);
+    sqlite3_result_text(context, (char*)matched_str, -1, sqlite3_free);
+    free((char*)r);
 }
 
 /*
@@ -230,26 +221,23 @@ static void regexp_substr(
  * regexp_replace(source, pattern, replacement)
  * E.g.: select regexp_replace('abcdef', 'b.d', '...') = 'a...ef';
  */
-static void regexp_replace(
-    sqlite3_context *context,
-    int argc,
-    sqlite3_value **argv) {
-    regexp *r;
-    char *source;
-    char *pattern;
-    char *replacement;
-    char *result;
+static void regexp_replace(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    regexp* r;
+    char* source;
+    char* pattern;
+    char* replacement;
+    char* result;
 
     int is_match = 0;
 
     assert(argc == 3);
 
-    source = (char *)sqlite3_value_text(argv[0]);
+    source = (char*)sqlite3_value_text(argv[0]);
     if (!source) {
         return;
     }
 
-    pattern = (char *)sqlite3_value_text(argv[1]);
+    pattern = (char*)sqlite3_value_text(argv[1]);
     if (!pattern) {
         sqlite3_result_error(context, "missing regexp pattern", -1);
         return;
@@ -261,7 +249,7 @@ static void regexp_replace(
         return;
     }
 
-    replacement = (char *)sqlite3_value_text(argv[2]);
+    replacement = (char*)sqlite3_value_text(argv[2]);
     if (!replacement) {
         sqlite3_result_value(context, argv[0]);
         return;
@@ -274,10 +262,9 @@ static void regexp_replace(
     }
 
     int matched_len = r->endp[0] - r->startp[0];
-    char *matched_str = sqlite3_malloc(matched_len + 1);
+    char* matched_str = sqlite3_malloc(matched_len + 1);
     (void)strncpy(matched_str, r->startp[0], matched_len);
     matched_str[matched_len] = '\0';
-
 
     char replacement_str[BUFSIZ];
     int err = re_substitute(r, replacement, replacement_str);
@@ -287,12 +274,12 @@ static void regexp_replace(
     }
 
     int head_len = r->startp[0] - source;
-    char *head_str = sqlite3_malloc(head_len + 1);
+    char* head_str = sqlite3_malloc(head_len + 1);
     (void)strncpy(head_str, source, head_len);
     head_str[head_len] = '\0';
 
     int tail_len = source + strlen(source) - r->endp[0];
-    char *tail_str = sqlite3_malloc(tail_len + 1);
+    char* tail_str = sqlite3_malloc(tail_len + 1);
     (void)strncpy(tail_str, r->endp[0], tail_len);
     tail_str[tail_len] = '\0';
 
@@ -311,14 +298,15 @@ static void regexp_replace(
     fprintf(stderr, "repl string (%d) = '%s'\n", replacement_len, replacement_str);
     fprintf(stderr, "tail string (%d) = '%s'\n", tail_len, tail_str);
     fprintf(stderr, "result string (%d) = '%s'\n", result_len, result);
-    fprintf(stderr, "replace('%s', '%s', '%s') = '%s'\n", source, matched_str, replacement_str, result);
+    fprintf(stderr, "replace('%s', '%s', '%s') = '%s'\n", source, matched_str, replacement_str,
+            result);
 #endif
 
-    sqlite3_result_text(context, (char *)result, -1, sqlite3_free);
+    sqlite3_result_text(context, (char*)result, -1, sqlite3_free);
     sqlite3_free(head_str);
     sqlite3_free(matched_str);
     sqlite3_free(tail_str);
-    free((char *)r);
+    free((char*)r);
 }
 
 /*
@@ -327,10 +315,7 @@ static void regexp_replace(
 #ifdef _WIN32
 __declspec(dllexport)
 #endif
-    int sqlite3_re_init(
-        sqlite3 *db,
-        char **pzErrMsg,
-        const sqlite3_api_routines *pApi) {
+    int sqlite3_re_init(sqlite3* db, char** pzErrMsg, const sqlite3_api_routines* pApi) {
     SQLITE_EXTENSION_INIT2(pApi);
     sqlite3_create_function(db, "regexp", 2, SQLITE_UTF8, 0, regexp_statement, 0, 0);
     sqlite3_create_function(db, "regexp_like", 2, SQLITE_UTF8, 0, regexp_like, 0, 0);

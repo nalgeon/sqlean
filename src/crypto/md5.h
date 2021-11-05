@@ -1,10 +1,10 @@
 /*********************************************************************
-* Filename:   md5.h
-* Author:     Brad Conte (brad AT bradconte.com)
-* Source:     https://github.com/B-Con/crypto-algorithms
-* License:    Public Domain
-* Details:    Defines the API for the corresponding MD5 implementation.
-*********************************************************************/
+ * Filename:   md5.h
+ * Author:     Brad Conte (brad AT bradconte.com)
+ * Source:     https://github.com/B-Con/crypto-algorithms
+ * License:    Public Domain
+ * Details:    Defines the API for the corresponding MD5 implementation.
+ *********************************************************************/
 
 #ifndef MD5_H
 #define MD5_H
@@ -27,8 +27,8 @@ typedef struct {
 } MD5_CTX;
 
 /*********************** FUNCTION DECLARATIONS **********************/
-void *md5_init();
-void md5_update(MD5_CTX *ctx, const BYTE data[], size_t len);
-int md5_final(MD5_CTX *ctx, BYTE hash[]);
+void* md5_init();
+void md5_update(MD5_CTX* ctx, const BYTE data[], size_t len);
+int md5_final(MD5_CTX* ctx, BYTE hash[]);
 
 #endif  // MD5_H

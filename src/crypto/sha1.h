@@ -15,8 +15,8 @@ typedef struct SHA1Context {
     unsigned char buffer[64];
 } SHA1Context;
 
-void *sha1_init();
-void sha1_update(SHA1Context *ctx, const unsigned char data[], size_t len);
-int sha1_final(SHA1Context *ctx, unsigned char hash[]);
+void* sha1_init();
+void sha1_update(SHA1Context* ctx, const unsigned char data[], size_t len);
+int sha1_final(SHA1Context* ctx, unsigned char hash[]);
 
 #endif

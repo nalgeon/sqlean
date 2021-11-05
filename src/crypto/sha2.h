@@ -81,16 +81,16 @@ typedef SHA512_CTX SHA384_CTX;
 
 /*** SHA-256/384/512 Function Prototypes ******************************/
 
-void *sha256_init();
-void sha256_update(SHA256_CTX *, const uint8_t *, size_t);
-int sha256_final(SHA256_CTX *, uint8_t[SHA256_DIGEST_LENGTH]);
+void* sha256_init();
+void sha256_update(SHA256_CTX*, const uint8_t*, size_t);
+int sha256_final(SHA256_CTX*, uint8_t[SHA256_DIGEST_LENGTH]);
 
-void *sha384_init();
-void sha384_update(SHA384_CTX *, const uint8_t *, size_t);
-int sha384_final(SHA384_CTX *, uint8_t[SHA384_DIGEST_LENGTH]);
+void* sha384_init();
+void sha384_update(SHA384_CTX*, const uint8_t*, size_t);
+int sha384_final(SHA384_CTX*, uint8_t[SHA384_DIGEST_LENGTH]);
 
-void *sha512_init();
-void sha512_update(SHA512_CTX *, const uint8_t *, size_t);
-int sha512_final(SHA512_CTX *, uint8_t[SHA512_DIGEST_LENGTH]);
+void* sha512_init();
+void sha512_update(SHA512_CTX*, const uint8_t*, size_t);
+int sha512_final(SHA512_CTX*, uint8_t[SHA512_DIGEST_LENGTH]);
 
 #endif  // MD5_H

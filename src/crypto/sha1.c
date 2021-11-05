@@ -1,16 +1,16 @@
 /*
  * Adapted from https://sqlite.org/src/file?name=ext/misc/sha1.c&ci=trunk
  *
-** 2017-01-27
-**
-** The author disclaims copyright to this source code.  In place of
-** a legal notice, here is a blessing:
-**
-**    May you do good and not evil.
-**    May you find forgiveness for yourself and forgive others.
-**    May you share freely, never taking more than you give.
-**
-*/
+ ** 2017-01-27
+ **
+ ** The author disclaims copyright to this source code.  In place of
+ ** a legal notice, here is a blessing:
+ **
+ **    May you do good and not evil.
+ **    May you find forgiveness for yourself and forgive others.
+ **    May you share freely, never taking more than you give.
+ **
+ */
 #include "sha1.h"
 
 #include <assert.h>
@@ -24,7 +24,9 @@
 
 #define blk0le(i) (block[i] = (ror(block[i], 8) & 0xFF00FF00) | (rol(block[i], 8) & 0x00FF00FF))
 #define blk0be(i) block[i]
-#define blk(i) (block[i & 15] = rol(block[(i + 13) & 15] ^ block[(i + 8) & 15] ^ block[(i + 2) & 15] ^ block[i & 15], 1))
+#define blk(i)       \
+    (block[i & 15] = \
+         rol(block[(i + 13) & 15] ^ block[(i + 8) & 15] ^ block[(i + 2) & 15] ^ block[i & 15], 1))
 
 /*
  * (R0+R1), R2, R3, R4 are the different operations (rounds) used in SHA1
@@ -77,7 +79,7 @@ void SHA1Transform(unsigned int state[5], const unsigned char buffer[64]) {
   */
 
     /* 4 rounds of 20 operations each. Loop unrolled. */
-    if (1 == *(unsigned char *)&one) {
+    if (1 == *(unsigned char*)&one) {
         Rl0(a, b, c, d, e, 0);
         Rl0(e, a, b, c, d, 1);
         Rl0(d, e, a, b, c, 2);
@@ -192,9 +194,9 @@ void SHA1Transform(unsigned int state[5], const unsigned char buffer[64]) {
 }
 
 /* Initialize a SHA1 context */
-void *sha1_init() {
+void* sha1_init() {
     /* SHA1 initialization constants */
-    SHA1Context *ctx;
+    SHA1Context* ctx;
     ctx = malloc(sizeof(SHA1Context));
     ctx->state[0] = 0x67452301;
     ctx->state[1] = 0xEFCDAB89;
@@ -206,7 +208,7 @@ void *sha1_init() {
 }
 
 /* Add new content to the SHA1 hash */
-void sha1_update(SHA1Context *ctx, const unsigned char *data, size_t len) {
+void sha1_update(SHA1Context* ctx, const unsigned char* data, size_t len) {
     unsigned int i, j;
 
     j = ctx->count[0];
@@ -227,17 +229,18 @@ void sha1_update(SHA1Context *ctx, const unsigned char *data, size_t len) {
     (void)memcpy(&ctx->buffer[j], &data[i], len - i);
 }
 
-int sha1_final(SHA1Context *ctx, unsigned char hash[]) {
+int sha1_final(SHA1Context* ctx, unsigned char hash[]) {
     unsigned int i;
     unsigned char finalcount[8];
     static const char zEncode[] = "0123456789abcdef";
 
     for (i = 0; i < 8; i++) {
-        finalcount[i] = (unsigned char)((ctx->count[(i >= 4 ? 0 : 1)] >> ((3 - (i & 3)) * 8)) & 255); /* Endian independent */
+        finalcount[i] = (unsigned char)((ctx->count[(i >= 4 ? 0 : 1)] >> ((3 - (i & 3)) * 8)) &
+                                        255); /* Endian independent */
     }
-    sha1_update(ctx, (const unsigned char *)"\200", 1);
+    sha1_update(ctx, (const unsigned char*)"\200", 1);
     while ((ctx->count[0] & 504) != 448) {
-        sha1_update(ctx, (const unsigned char *)"\0", 1);
+        sha1_update(ctx, (const unsigned char*)"\0", 1);
     }
     sha1_update(ctx, finalcount, 8); /* Should cause a SHA1Transform() */
     for (i = 0; i < 20; i++) {
