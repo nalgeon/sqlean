@@ -37,11 +37,12 @@ jobs:
               run: |
                   make compile-linux
                   make test suite=crypto
+                  make test suite=ipaddr
                   make test suite=regexp_replace
                   make test suite=reverse
                   make test suite=split_part
                   make test suite=stats
-                  make test suite=ipaddr
+                  make test suite=uuid
 
             - name: Build for Windows
               if: matrix.os == 'windows-latest'

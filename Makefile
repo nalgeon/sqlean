@@ -21,6 +21,7 @@ compile-linux:
 	gcc -fPIC -shared src/sqlite3-stats.c -o dist/stats.so -lm
 	gcc -fPIC -shared src/sqlite3-text.c -o dist/text.so -lm
 	gcc -fPIC -shared src/sqlite3-unicode.c -o dist/unicode.so -lm
+	gcc -fPIC -shared src/sqlite3-uuid.c -o dist/uuid.so -lm
 	gcc -fPIC -shared src/sqlite3-vsv.c -o dist/vsv.so -lm
 
 compile-windows:
@@ -31,6 +32,7 @@ compile-windows:
 	gcc -shared -I. src/sqlite3-stats.c -o dist/stats.dll
 	gcc -shared -I. src/sqlite3-text.c -o dist/text.dll
 	gcc -shared -I. src/sqlite3-unicode.c -o dist/unicode.dll
+	gcc -shared -I. src/sqlite3-uuid.c -o dist/uuid.dll
 	gcc -shared -I. src/sqlite3-vsv.c -o dist/vsv.dll
 
 compile-macos:
@@ -42,6 +44,7 @@ compile-macos:
 	gcc -fPIC -dynamiclib -I src src/sqlite3-stats.c -o dist/stats.dylib -lm
 	gcc -fPIC -dynamiclib -I src src/sqlite3-text.c -o dist/text.dylib -lm
 	gcc -fPIC -dynamiclib -I src src/sqlite3-unicode.c -o dist/unicode.dylib -lm
+	gcc -fPIC -dynamiclib -I src src/sqlite3-uuid.c -o dist/uuid.dylib -lm
 	gcc -fPIC -dynamiclib -I src src/sqlite3-vsv.c -o dist/vsv.dylib -lm
 
 # fails if grep does find a failed test case

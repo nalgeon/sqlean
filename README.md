@@ -16,6 +16,7 @@ Here is what we've got right now:
 -   [stats](docs/stats.md): math statistics
 -   [text](docs/text.md): string functions
 -   [unicode](docs/unicode.md): Unicode support
+-   [uuid](docs/uuid.md): Universally Unique IDentifiers
 -   [vsv](docs/vsv.md): CSV files as virtual tables
 
 ## Download
