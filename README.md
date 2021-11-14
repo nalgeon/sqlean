@@ -58,3 +58,5 @@ connection.close()
 ```
 
 You can specify any other supported extension instead of `stats`.
+
+_Follow [@ohmypy](https://twitter.com/ohmypy) on Twitter to keep up with new features 🚀_
