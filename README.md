@@ -1,10 +1,10 @@
-# SQLean: all the missing SQLite functions
+# All the missing SQLite functions
 
 SQLite has very few functions compared to other DBMS. SQLite authors see this as a feature rather than a bug, because SQLite has extension mechanism in place.
 
 There are a lot of SQLite extensions out there, but they are incomplete, inconsistent and scattered across the internet.
 
-`sqlean` brings them all together, neatly packaged by domain modules and built for Linux, Windows and macOS.
+`sqlean` brings them all together, neatly packaged into domain modules, tested, and built for Linux, Windows and macOS.
 
 Here is what we've got right now:
 
