@@ -14,6 +14,7 @@ download-native:
 
 compile-linux:
 	gcc -fPIC -shared src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.so -lm
+	gcc -fPIC -shared src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/fuzzy.so -lm
 	gcc -fPIC -shared src/sqlite3-ipaddr.c -o dist/ipaddr.so -lm
 	gcc -fPIC -shared src/sqlite3-json1.c -o dist/json1.so -lm
 	gcc -fPIC -shared src/sqlite3-math.c -o dist/math.so -lm
@@ -26,6 +27,7 @@ compile-linux:
 
 compile-windows:
 	gcc -shared -I. src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.dll -lm
+	gcc -shared -I. src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/fuzzy.dll
 	gcc -shared -I. src/sqlite3-json1.c -o dist/json1.dll
 	gcc -shared -I. src/sqlite3-math.c -o dist/math.dll
 	gcc -shared -I. src/sqlite3-re.c src/re.c -o dist/re.dll
@@ -37,6 +39,7 @@ compile-windows:
 
 compile-macos:
 	gcc -fPIC -dynamiclib -I src src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.dylib -lm
+	gcc -fPIC -dynamiclib -I src src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/fuzzy.dylib -lm
 	gcc -fPIC -dynamiclib -I src src/sqlite3-ipaddr.c -o dist/ipaddr.dylib -lm
 	gcc -fPIC -dynamiclib -I src src/sqlite3-json1.c -o dist/json1.dylib -lm
 	gcc -fPIC -dynamiclib -I src src/sqlite3-math.c -o dist/math.dylib -lm
