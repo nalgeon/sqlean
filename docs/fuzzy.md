@@ -8,6 +8,8 @@ Fuzzy-matching helpers:
 
 Adapted from [libstrcmp](https://github.com/Rostepher/libstrcmp) by Ross Bayer and [spellfix.c](https://www.sqlite.org/src/file?name=ext/misc/spellfix.c) by D. Richard Hipp.
 
+If you want a ready-to-use mechanism to search a large vocabulary for close matches, see the [spellfix](spellfix.md) extension.
+
 ## String distances
 
 Measure distance between two strings:

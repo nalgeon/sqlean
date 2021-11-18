@@ -40,6 +40,7 @@ jobs:
                   make test suite=fuzzy
                   make test suite=ipaddr
                   make test suite=regexp_replace
+                  make test suite=spellfix
                   make test suite=stats
                   make test suite=text
                   make test suite=uuid
