@@ -13,11 +13,11 @@ Provides following functions:
 
 [Full functions list](https://sqlite.org/lang_mathfunc.html)
 
-[Download](https://github.com/nalgeon/sqlean/releases/latest)
-
 ## Usage
 
 ```
 sqlite> .load ./math
 sqlite> select sqrt(9);
 ```
+
+[Download](https://github.com/nalgeon/sqlean/releases/latest)

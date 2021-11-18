@@ -39,11 +39,11 @@ sqlite> select hex(uuid_blob(uuid4()));
 7192B1B452964E809500CF0364476CD3
 ```
 
-[Download](https://github.com/nalgeon/sqlean/releases/latest)
-
 ## Usage
 
 ```
 sqlite> .load ./uuid
 sqlite> select uuid4();
 ```
+
+[Download](https://github.com/nalgeon/sqlean/releases/latest)

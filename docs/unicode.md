@@ -10,8 +10,6 @@ Overrides the default NOCASE case-insensitive collation sequence to support UTF-
 
 Has no external dependencies (like libicu). Adapted from [sqlite3_unicode](https://github.com/Zensey/sqlite3_unicode) by Anton Litvinov.
 
-[Download](https://github.com/nalgeon/sqlean/releases/latest)
-
 ## Usage
 
 Before:
@@ -32,3 +30,5 @@ HELLO
 sqlite> select upper('привет');
 ПРИВЕТ
 ```
+
+[Download](https://github.com/nalgeon/sqlean/releases/latest)

@@ -4,8 +4,6 @@ Provides virtual table for working directly with CSV files, without importing da
 
 Adapted from [vsv.c](http://www.dessus.com/files/vsv.c) by Keith Medcalf.
 
-[Download](https://github.com/nalgeon/sqlean/releases/latest)
-
 ## Usage
 
 ```sql
@@ -135,3 +133,5 @@ each value returned by the VSV virtual table:
     (see real above) then the number will
     returned as an integer if it has no
     fractional part; otherwise a double will be returned
+
+[Download](https://github.com/nalgeon/sqlean/releases/latest)

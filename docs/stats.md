@@ -17,11 +17,11 @@ Provides following functions:
 -   `variance` or `var_samp` - sample variance,
 -   `var_pop` - population variance.
 
-[Download](https://github.com/nalgeon/sqlean/releases/latest)
-
 ## Usage
 
 ```
 sqlite> .load ./stats
 sqlite> select median(value) from generate_series(1, 100);
 ```
+
+[Download](https://github.com/nalgeon/sqlean/releases/latest)

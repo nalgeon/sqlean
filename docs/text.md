@@ -34,11 +34,11 @@ two
 
 Only ASCII (1-byte) symbols are supported as separators.
 
-[Download](https://github.com/nalgeon/sqlean/releases/latest)
-
 ## Usage
 
 ```
 sqlite> .load ./text
 sqlite> select reverse('hello');
 ```
+
+[Download](https://github.com/nalgeon/sqlean/releases/latest)

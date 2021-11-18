@@ -76,11 +76,11 @@ sqlite> select translit('привет');
 privet
 ```
 
-[Download](https://github.com/nalgeon/sqlean/releases/latest)
-
 ## Usage
 
 ```
 sqlite> .load ./fuzzy
 sqlite> select soundex('hello');
 ```
+
+[Download](https://github.com/nalgeon/sqlean/releases/latest)
