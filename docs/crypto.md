@@ -1,4 +1,4 @@
-# crypto: Secure hashes
+# crypto: Secure hashes in SQLite
 
 Secure hash and message digest functions.
 

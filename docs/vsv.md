@@ -1,4 +1,4 @@
-# vsv: CSV files as virtual tables
+# vsv: CSV files as virtual tables in SQLite
 
 Provides virtual table for working directly with CSV files, without importing data into the database. Useful for very large datasets.
 

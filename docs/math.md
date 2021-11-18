@@ -1,4 +1,4 @@
-# math: Mathematical functions
+# math: Mathematics in SQLite
 
 Common math functions for SQLite versions before 3.35.
 Extracted from SQLite 3.35.4 source code (`func.c`).

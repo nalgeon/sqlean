@@ -1,6 +1,6 @@
-# text: String functions
+# text: Text manipulation in SQLite
 
-Additional string functions for SQLite.
+Additional string functions.
 Adapted from [extension-functions.c](https://sqlite.org/contrib/) by Liam Healy.
 
 Provides following functions:

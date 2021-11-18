@@ -1,6 +1,6 @@
-# stats: Mathematical statistics
+# stats: Mathematical statistics in SQLite
 
-Common statistical functions for SQLite.
+Common statistical functions.
 Adapted from [extension-functions.c](https://sqlite.org/contrib/) by Liam Healy.
 
 Provides following functions:

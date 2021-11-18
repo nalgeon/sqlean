@@ -1,4 +1,4 @@
-# uuid: Universally Unique IDentifiers (UUIDs)
+# uuid: Universally Unique IDentifiers (UUIDs) in SQLite
 
 Limited support for [RFC 4122](https://www.ietf.org/rfc/rfc4122.txt) compliant UUIDs:
 

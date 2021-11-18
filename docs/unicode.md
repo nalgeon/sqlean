@@ -1,4 +1,4 @@
-# unicode: Unicode support
+# unicode: Unicode support for SQLite
 
 This extension implements true UNICODE functionality for SQLite in regards of case-insensitive comparison of unicode data and SQLite. It uses UNICODE mapping tables to provide the following to SQLite:
 

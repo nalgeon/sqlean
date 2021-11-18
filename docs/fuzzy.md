@@ -1,6 +1,6 @@
-# fuzzy: Fuzzy string matching and phonetics
+# fuzzy: Fuzzy string matching and phonetics in SQLite
 
-Provides fuzzy-matching helpers:
+Fuzzy-matching helpers:
 
 -   Measure distance between two strings.
 -   Compute phonetic string code.

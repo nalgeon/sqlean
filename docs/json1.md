@@ -1,4 +1,4 @@
-# json1: JSON functions
+# json1: JSON handling in SQLite
 
 This is the 'native' SQLite [JSON1 extension](https://sqlite.org/json1.html).
 It's often compiled into SQLite build, but in case your build doesn't include it - I've compiled it separately.

@@ -1,4 +1,4 @@
-# ipaddr: IP address manipulation
+# ipaddr: IP address manipulation in SQLite
 
 Functions to manipulate IPs and subnets.
 

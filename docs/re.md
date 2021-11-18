@@ -1,6 +1,6 @@
-# re: Regular expressions
+# re: Regular expressions in SQLite
 
-Regexp search and replace functions for SQLite.
+Regexp search and replace functions.
 Adapted from [regexp.old](https://github.com/garyhouston/regexp.old) by Henry Spencer.
 
 Provides following functions:
