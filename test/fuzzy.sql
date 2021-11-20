@@ -51,19 +51,22 @@ select '66', edit_distance('abc', 'acb') = 110;
 select '67', edit_distance('abc', 'ca') = 225;
 
 -- Spellcheck phonetic code
-select '101', phonetic_hash('') = '';
-select '102', phonetic_hash('phonetics') = 'BAMADAC';
-select '103', phonetic_hash('is') = 'AC';
-select '104', phonetic_hash('awesome') = 'ABACAMA';
+select '101', phonetic_hash(null) is null;
+select '102', phonetic_hash('') = '';
+select '103', phonetic_hash('phonetics') = 'BAMADAC';
+select '104', phonetic_hash('is') = 'AC';
+select '105', phonetic_hash('awesome') = 'ABACAMA';
 
 -- Soundex code
-select '111', soundex('') = '';
-select '112', soundex('phonetics') = 'P532';
-select '113', soundex('is') = 'I200';
-select '114', soundex('awesome') = 'A250';
+select '111', soundex(null) is null;
+select '112', soundex('') = '';
+select '113', soundex('phonetics') = 'P532';
+select '114', soundex('is') = 'I200';
+select '115', soundex('awesome') = 'A250';
 
 -- Refined Soundex code
-select '121', rsoundex('') = '';
-select '122', rsoundex('phonetics') = 'P1080603';
-select '123', rsoundex('is') = 'I03';
-select '124', rsoundex('awesome') = 'A03080';
+select '121', rsoundex(null) is null;
+select '122', rsoundex('') = '';
+select '123', rsoundex('phonetics') = 'P1080603';
+select '124', rsoundex('is') = 'I03';
+select '125', rsoundex('awesome') = 'A03080';

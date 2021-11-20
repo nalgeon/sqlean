@@ -113,7 +113,6 @@ static void sqlite3_soundex(sqlite3_context* context, int argc, sqlite3_value** 
     assert(argc == 1);
     const unsigned char* source = sqlite3_value_text(argv[0]);
     if (source == 0) {
-        sqlite3_result_error(context, "argument should not be NULL", -1);
         return;
     }
     if (!is_ascii(source)) {
@@ -129,7 +128,6 @@ static void sqlite3_rsoundex(sqlite3_context* context, int argc, sqlite3_value**
     assert(argc == 1);
     const unsigned char* source = sqlite3_value_text(argv[0]);
     if (source == 0) {
-        sqlite3_result_error(context, "argument should not be NULL", -1);
         return;
     }
     if (!is_ascii(source)) {
