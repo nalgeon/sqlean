@@ -70,3 +70,10 @@ select '122', rsoundex('') = '';
 select '123', rsoundex('phonetics') = 'P1080603';
 select '124', rsoundex('is') = 'I03';
 select '125', rsoundex('awesome') = 'A03080';
+
+-- Caverphone phonetic code
+select '131', caverphone(null) is null;
+select '132', caverphone('') = '';
+select '133', caverphone('phonetics') = 'FNTKS11111';
+select '134', caverphone('is') = 'AS11111111';
+select '135', caverphone('awesome') = 'AWSM111111';

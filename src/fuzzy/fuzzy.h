@@ -14,6 +14,7 @@ unsigned optimal_string_alignment(const char*, const char*);
 int edit_distance(const char*, const char*, int*);
 
 // phonetics
+char* caverphone(const char*);
 char* soundex(const char*);
 char* refined_soundex(const char*);
 unsigned char* phonetic_hash(const unsigned char*, int);

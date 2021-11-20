@@ -237,6 +237,23 @@ static void sqlite3_script_code(sqlite3_context* context, int argc, sqlite3_valu
     sqlite3_result_int(context, res);
 }
 
+// Below are custom functions
+
+// sqlite3_caverphone implements Caverphone coding
+static void sqlite3_caverphone(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    assert(argc == 1);
+    const unsigned char* source = sqlite3_value_text(argv[0]);
+    if (source == 0) {
+        return;
+    }
+    if (!is_ascii(source)) {
+        sqlite3_result_error(context, "argument should be ASCII string", -1);
+        return;
+    }
+    char* result = caverphone((const char*)source);
+    sqlite3_result_text(context, result, -1, free);
+}
+
 /*
  * Registers the extension.
  */
@@ -259,5 +276,7 @@ __declspec(dllexport)
     sqlite3_create_function(db, "phonetic_hash", 1, flags, 0, sqlite3_phonetic_hash, 0, 0);
     sqlite3_create_function(db, "script_code", 1, flags, 0, sqlite3_script_code, 0, 0);
     sqlite3_create_function(db, "translit", 1, flags, 0, sqlite3_transliterate, 0, 0);
+    // custom
+    sqlite3_create_function(db, "caverphone", 1, flags, 0, sqlite3_caverphone, 0, 0);
     return SQLITE_OK;
 }

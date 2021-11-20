@@ -47,11 +47,15 @@ Only ASCII strings are supported.
 
 Compute phonetic string code:
 
+-   `caverphone(x)` - Caverphone code,
 -   `phonetic_hash(x)` - Spellcheck phonetic code,
 -   `soundex(x)` - Soundex code,
 -   `rsoundex(x)` - Refined Soundex code.
 
 ```
+sqlite> select caverphone('awesome');
+AWSM111111
+
 sqlite> select phonetic_hash('awesome');
 ABACAMA
 
