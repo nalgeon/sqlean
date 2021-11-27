@@ -30,6 +30,14 @@ static char* replace_start(const char* src, const char* old, const char* new) {
     assert(new_len <= old_len);
 
     char* res = malloc((src_len + 1) * sizeof(char));
+
+    if (src_len < old_len) {
+        // source string is shorter than the substring to replace,
+        // so there is definitely no match
+        strncpy(res, src, src_len);
+        return res;
+    }
+
     if (strncmp(src, old, old_len) == 0) {
         strncpy(res, new, new_len);
         strncpy(res + new_len, src + old_len, src_len - old_len);
@@ -50,6 +58,14 @@ static char* replace_end(const char* src, const char* old, const char* new) {
     assert(new_len <= old_len);
 
     char* res = malloc((src_len + 1) * sizeof(char));
+
+    if (src_len < old_len) {
+        // source string is shorter than the substring to replace,
+        // so there is definitely no match
+        strncpy(res, src, src_len);
+        return res;
+    }
+
     strncpy(res, src, src_len - old_len);
     if (strncmp(src + src_len - old_len, old, old_len) == 0) {
         strncpy(res + src_len - old_len, new, new_len);
@@ -70,6 +86,14 @@ static char* replace(const char* src, const char* old, const char* new) {
     assert(new_len <= old_len);
 
     char* res = malloc((src_len + 1) * sizeof(char));
+
+    if (src_len < old_len) {
+        // source string is shorter than the substring to replace,
+        // so there is definitely no match
+        strncpy(res, src, src_len);
+        return res;
+    }
+
     const char* src_it;
     char* res_it = res;
     for (size_t idx = 0; idx < src_len;) {
