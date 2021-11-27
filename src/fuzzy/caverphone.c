@@ -34,7 +34,7 @@ static char* replace_start(const char* src, const char* old, const char* new) {
     if (src_len < old_len) {
         // source string is shorter than the substring to replace,
         // so there is definitely no match
-        strncpy(res, src, src_len);
+        strcpy(res, src);
         return res;
     }
 
@@ -43,8 +43,7 @@ static char* replace_start(const char* src, const char* old, const char* new) {
         strncpy(res + new_len, src + old_len, src_len - old_len);
         *(res + src_len - old_len + new_len) = '\0';
     } else {
-        strncpy(res, src, src_len);
-        *(res + src_len) = '\0';
+        strcpy(res, src);
     }
     return res;
 }
@@ -62,7 +61,7 @@ static char* replace_end(const char* src, const char* old, const char* new) {
     if (src_len < old_len) {
         // source string is shorter than the substring to replace,
         // so there is definitely no match
-        strncpy(res, src, src_len);
+        strcpy(res, src);
         return res;
     }
 
@@ -90,7 +89,7 @@ static char* replace(const char* src, const char* old, const char* new) {
     if (src_len < old_len) {
         // source string is shorter than the substring to replace,
         // so there is definitely no match
-        strncpy(res, src, src_len);
+        strcpy(res, src);
         return res;
     }
 
