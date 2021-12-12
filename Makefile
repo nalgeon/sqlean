@@ -61,6 +61,17 @@ compile-macos:
 	gcc -fPIC -dynamiclib -I src src/sqlite3-uuid.c -o dist/uuid.dylib
 	gcc -fPIC -dynamiclib -I src src/sqlite3-vsv.c -o dist/vsv.dylib -lm
 
+test-all:
+	make test suite=crypto
+	make test suite=fileio
+	make test suite=fuzzy
+	make test suite=ipaddr
+	make test suite=re
+	make test suite=spellfix
+	make test suite=stats
+	make test suite=text
+	make test suite=uuid
+
 # fails if grep does find a failed test case
 # https://stackoverflow.com/questions/15367674/bash-one-liner-to-exit-with-the-opposite-status-of-a-grep-command/21788642
 test:

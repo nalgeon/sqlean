@@ -36,15 +36,7 @@ jobs:
               if: matrix.os == 'ubuntu-latest'
               run: |
                   make compile-linux
-                  make test suite=crypto
-                  make test suite=fileio
-                  make test suite=fuzzy
-                  make test suite=ipaddr
-                  make test suite=re
-                  make test suite=spellfix
-                  make test suite=stats
-                  make test suite=text
-                  make test suite=uuid
+                  make test-all
 
             - name: Build for Windows
               if: matrix.os == 'windows-latest'
