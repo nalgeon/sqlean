@@ -96,13 +96,11 @@ __declspec(dllexport)
 
     int sqlite3_crypto_init(sqlite3* db, char** pzErrMsg, const sqlite3_api_routines* pApi) {
     SQLITE_EXTENSION_INIT2(pApi);
-
     static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
-    int err_count = 0;
-    err_count += sqlite3_create_function(db, "md5", 1, flags, (void*)5, sqlite3_hash, 0, 0);
-    err_count += sqlite3_create_function(db, "sha1", 1, flags, (void*)1, sqlite3_hash, 0, 0);
-    err_count += sqlite3_create_function(db, "sha256", -1, flags, (void*)2256, sqlite3_hash, 0, 0);
-    err_count += sqlite3_create_function(db, "sha384", -1, flags, (void*)2384, sqlite3_hash, 0, 0);
-    err_count += sqlite3_create_function(db, "sha512", -1, flags, (void*)2512, sqlite3_hash, 0, 0);
-    return err_count ? SQLITE_ERROR : SQLITE_OK;
+    sqlite3_create_function(db, "md5", 1, flags, (void*)5, sqlite3_hash, 0, 0);
+    sqlite3_create_function(db, "sha1", 1, flags, (void*)1, sqlite3_hash, 0, 0);
+    sqlite3_create_function(db, "sha256", -1, flags, (void*)2256, sqlite3_hash, 0, 0);
+    sqlite3_create_function(db, "sha384", -1, flags, (void*)2384, sqlite3_hash, 0, 0);
+    sqlite3_create_function(db, "sha512", -1, flags, (void*)2512, sqlite3_hash, 0, 0);
+    return SQLITE_OK;
 }
