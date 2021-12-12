@@ -9,6 +9,7 @@ There are a lot of SQLite extensions out there, but they are incomplete, inconsi
 Here is what we've got right now:
 
 -   [crypto](docs/crypto.md): secure hashes
+-   [fileio](docs/fileio.md): read and write files
 -   [fuzzy](docs/fuzzy.md): fuzzy string matching and phonetics
 -   [ipaddr](docs/ipaddr.md): IP address manipulation
 -   [json1](docs/json1.md): JSON functions

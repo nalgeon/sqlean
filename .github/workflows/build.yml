@@ -37,6 +37,7 @@ jobs:
               run: |
                   make compile-linux
                   make test suite=crypto
+                  make test suite=fileio
                   make test suite=fuzzy
                   make test suite=ipaddr
                   make test suite=re
