@@ -13,7 +13,7 @@
 ** POSIX functions on Win32 using the MSVCRT.
 */
 
-#if defined(_WIN32) && defined(_MSC_VER)
+#if defined(_WIN32)
 #include "test_windirent.h"
 
 /*
@@ -188,4 +188,4 @@ INT closedir(
   return result;
 }
 
-#endif /* defined(WIN32) && defined(_MSC_VER) */
+#endif /* defined(WIN32) */

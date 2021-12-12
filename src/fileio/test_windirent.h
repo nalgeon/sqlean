@@ -13,7 +13,7 @@
 ** POSIX functions on Win32 using the MSVCRT.
 */
 
-#if defined(_WIN32) && defined(_MSC_VER) && !defined(SQLITE_WINDIRENT_H)
+#if defined(_WIN32) && !defined(SQLITE_WINDIRENT_H)
 #define SQLITE_WINDIRENT_H
 
 /*
@@ -156,4 +156,4 @@ extern LPDIRENT readdir(LPDIR dirp);
 extern INT readdir_r(LPDIR dirp, LPDIRENT entry, LPDIRENT *result);
 extern INT closedir(LPDIR dirp);
 
-#endif /* defined(WIN32) && defined(_MSC_VER) */
+#endif /* defined(WIN32) */
