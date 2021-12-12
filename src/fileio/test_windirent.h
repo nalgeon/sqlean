@@ -30,7 +30,7 @@
 ** We need several support functions from the SQLite core.
 */
 
-#include "sqlite3.h"
+#include "../sqlite3.h"
 
 /*
 ** We need several things from the ANSI and MSVCRT headers.
