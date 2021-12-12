@@ -39,7 +39,7 @@ jobs:
                   make test suite=crypto
                   make test suite=fuzzy
                   make test suite=ipaddr
-                  make test suite=regexp_replace
+                  make test suite=re
                   make test suite=spellfix
                   make test suite=stats
                   make test suite=text
