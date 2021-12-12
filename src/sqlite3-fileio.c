@@ -93,6 +93,8 @@ SQLITE_EXTENSION_INIT1
 #include <unistd.h>
 #include <utime.h>
 #else
+#define _MSC_VER 1929
+#define FILEIO_WIN32_DLL
 #include <direct.h>
 #include <io.h>
 #include "test_windirent.h"
@@ -106,7 +108,6 @@ SQLITE_EXTENSION_INIT1
 #endif
 #define mkdir(path, mode) _mkdir(path)
 #define lstat(path, buf) stat(path, buf)
-#define FILEIO_WIN32_DLL
 #endif
 #include <errno.h>
 #include <time.h>
