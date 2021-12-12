@@ -1,3 +1,6 @@
+-- Copyright (c) 2021 Anton Zhiyanov, MIT License
+-- https://github.com/nalgeon/sqlean
+
 .load dist/stats
 select '01', median(value) = 50 from generate_series(1, 99);
 select '02', mode(value) = 2 from (select 1 as value union all select 2 union all select 2);

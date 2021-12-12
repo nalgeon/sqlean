@@ -1,3 +1,6 @@
+# Copyright (c) 2021 Anton Zhiyanov, MIT License
+# https://github.com/nalgeon/sqlean
+
 .PHONY: prepare-dist download-sqlite download-native compile-linux compile-windows compile-macos test
 
 prepare-dist:

@@ -1,3 +1,9 @@
+// Copyright (c) 2021 Anton Zhiyanov, MIT License
+// https://github.com/nalgeon/sqlean
+
+// Caverphone phonetic coding algorithm.
+// https://en.wikipedia.org/wiki/Caverphone
+
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>

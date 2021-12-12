@@ -1,3 +1,9 @@
+// Originally by Liam Healy, Public Domain
+// extension-functions.c at https://sqlite.org/contrib/
+// Modified by Anton Zhiyanov, https://github.com/nalgeon/sqlean, MIT License
+
+// Statistical functions for SQLite.
+
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>

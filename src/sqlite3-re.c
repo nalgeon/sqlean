@@ -1,3 +1,6 @@
+// Copyright (c) 2021 Anton Zhiyanov, MIT License
+// https://github.com/nalgeon/sqlean
+
 /*
  * SQLite extension for working with regular expressions.
  *

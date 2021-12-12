@@ -1,3 +1,6 @@
+-- Copyright (c) 2021 Anton Zhiyanov, MIT License
+-- https://github.com/nalgeon/sqlean
+
 .load dist/spellfix
 
 create virtual table dictionary using spellfix1;

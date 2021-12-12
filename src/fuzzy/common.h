@@ -1,8 +1,8 @@
+// Adapted from the spellfix SQLite exension, Public Domain
+// https://www.sqlite.org/src/file/ext/misc/spellfix.c
+
 #ifndef COMMON_H
 #define COMMON_H
-
-// Extracted from the spellfix SQLite exension
-// https://www.sqlite.org/src/file?name=ext/misc/spellfix.c
 
 /*
 ** Character classes for ASCII characters:

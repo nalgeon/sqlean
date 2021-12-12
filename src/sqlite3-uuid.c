@@ -1,15 +1,8 @@
+// Originally from the uuid SQLite exension, Public Domain
+// https://www.sqlite.org/src/file/ext/misc/uuid.c
+// Modified by Anton Zhiyanov, https://github.com/nalgeon/sqlean/, MIT License
+
 /*
- * 2019-10-23
- * https://sqlite.org/src/file/ext/misc/uuid.c
- *
- * The author disclaims copyright to this source code.  In place of
- * a legal notice, here is a blessing:
- *
- *    May you do good and not evil.
- *    May you find forgiveness for yourself and forgive others.
- *    May you share freely, never taking more than you give.
- *
- *
  * This SQLite extension implements functions that handling RFC-4122 UUIDs
  * Three SQL functions are implemented:
  *

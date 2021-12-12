@@ -1,3 +1,6 @@
+// Originally from the vsv SQLite extension by Keith Medcalf, Public Domain
+// http://www.dessus.com/files/vsv.c
+
 /*
 ** 2020-02-08 modified by Keith Medcalf who also disclaims all copyright
 ** on the modifications and hereby places this code in the public domain

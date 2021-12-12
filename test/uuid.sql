@@ -1,7 +1,12 @@
+-- Copyright (c) 2021 Anton Zhiyanov, MIT License
+-- https://github.com/nalgeon/sqlean
+
 .load dist/uuid
+
 -- uuid4
 select '01', uuid4() like '________-____-4___-____-____________';
 select '02', gen_random_uuid() like '________-____-4___-____-____________';
+
 -- uuid_str
 select '03', uuid_str('d5a80b20-0d8f-11e5-b8cb-080027b6ec40') = 'd5a80b20-0d8f-11e5-b8cb-080027b6ec40';
 select '04', uuid_str('d5a80b200d8f11e5b8cb080027b6ec40') = 'd5a80b20-0d8f-11e5-b8cb-080027b6ec40';
@@ -12,6 +17,7 @@ select '08', uuid_str(uuid4()) like '________-____-4___-____-____________';
 select '09', uuid_str('hello') is null;
 select '10', uuid_str('') is null;
 select '11', uuid_str(null) is null;
+
 -- uuid_blob
 select '12', typeof(uuid_blob('d5a80b20-0d8f-11e5-b8cb-080027b6ec40')) = 'blob';
 select '13', typeof(uuid_blob(uuid4())) = 'blob';

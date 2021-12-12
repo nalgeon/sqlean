@@ -1,3 +1,6 @@
+-- Copyright (c) 2021 Vincent Bernat, MIT License
+-- https://github.com/nalgeon/sqlean
+
 .load dist/ipaddr
 select '00', ipfamily('192.168.16.12') = 4;
 select '01', ipfamily('192.168.16.12/24') = 4;

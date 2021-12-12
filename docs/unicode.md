@@ -8,7 +8,7 @@ This extension implements true UNICODE functionality for SQLite in regards of ca
 
 Overrides the default NOCASE case-insensitive collation sequence to support UTF-8 characters.
 
-Has no external dependencies (like libicu). Adapted from [sqlite3_unicode](https://github.com/Zensey/sqlite3_unicode) by Anton Litvinov.
+Has no external dependencies (like libicu). Adapted from [sqlite3_unicode](https://github.com/Zensey/sqlite3_unicode).
 
 ⚠️ This extension cannot be loaded via `load_extension()` SQL function due to SQLite restrictions. Quoting the [docs](https://sqlite.org/lang_corefunc.html#load_extension):
 

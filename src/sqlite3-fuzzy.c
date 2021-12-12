@@ -1,3 +1,6 @@
+// Copyright (c) 2021 Anton Zhiyanov, MIT License
+// https://github.com/nalgeon/sqlean
+
 /*
  * Fuzzy string matching and phonetics.
  */
@@ -139,7 +142,7 @@ static void sqlite3_rsoundex(sqlite3_context* context, int argc, sqlite3_value**
 }
 
 // Below are functions extracted from the spellfix SQLite exension
-// https://www.sqlite.org/src/file?name=ext/misc/spellfix.c
+// https://www.sqlite.org/src/file/ext/misc/spellfix.c
 
 /*
 ** phonetic_hash(X)

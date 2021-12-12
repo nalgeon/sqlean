@@ -1,6 +1,5 @@
-/*
- * Adapted from https://sqlite.org/src/file?name=ext/misc/sha1.c&ci=trunk
- */
+// Adapted from https://sqlite.org/src/file/ext/misc/sha1.c
+// Public domain
 
 #ifndef __SHA1_H__
 #define __SHA1_H__

@@ -1,5 +1,6 @@
-// Extracted from the spellfix SQLite exension
-// https://www.sqlite.org/src/file?name=ext/misc/spellfix.c
+// Originally from the spellfix SQLite exension, Public Domain
+// https://www.sqlite.org/src/file/ext/misc/spellfix.c
+// Modified by Anton Zhiyanov, https://github.com/nalgeon/sqlean/, MIT License
 
 #include <assert.h>
 #include <stdlib.h>

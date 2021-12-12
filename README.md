@@ -62,4 +62,12 @@ connection.close()
 
 You can specify any other supported extension instead of `stats`.
 
+## License
+
+Copyright (c) 2021 [Anton Zhiyanov](https://antonz.org/), [Contributors](https://github.com/nalgeon/sqlean/graphs/contributors) and [Third-party Authors](docs/third-party.md).
+
+The software is available under the MIT License.
+
+## Stay tuned
+
 _Follow [@ohmypy](https://twitter.com/ohmypy) on Twitter to keep up with new features 🚀_

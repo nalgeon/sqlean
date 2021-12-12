@@ -1,6 +1,8 @@
+// Originally by Henry Spencer, Spencer License 94
+// https://github.com/garyhouston/regexp.old
+// Modified by Anton Zhiyanov, https://github.com/nalgeon/sqlean/, MIT License
+
 /*
- * Adapted from https://github.com/garyhouston/regexp.old
- *
  * Copyright (c) 1986, 1993, 1995 by University of Toronto.
  * Written by Henry Spencer.  Not derived from licensed software.
  *

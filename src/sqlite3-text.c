@@ -1,3 +1,7 @@
+// Originally by Liam Healy, Public Domain
+// extension-functions.c at https://sqlite.org/contrib/
+// Modified by Anton Zhiyanov, https://github.com/nalgeon/sqlean, MIT License
+
 /*
  * SQLite text functions.
  */

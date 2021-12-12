@@ -1,6 +1,8 @@
+// Originally from SQLite 3.35.4 source code (func.c), Public Domain
+// Modified by Anton Zhiyanov, https://github.com/nalgeon/sqlean/, MIT License
+
 /*
  * SQLite math functions.
- * Extracted from SQLite 3.35.4 source code (func.c).
  */
 #include <assert.h>
 #include <math.h>

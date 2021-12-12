@@ -1,3 +1,6 @@
+// Copyright (c) 2021 Vincent Bernat, MIT License
+// https://github.com/nalgeon/sqlean
+
 /*
  * SQLite IP address functions.
  */
