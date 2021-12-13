@@ -2,29 +2,40 @@
 
 Read and write files directly from SQL. Adapted from [fileio.c](https://sqlite.org/src/file/ext/misc/fileio.c) by D. Richard Hipp.
 
-### `writefile(path, data [, mode [, mtime]])`
+### Write to file
 
-Given the first two arguments, writes blob `data` to a file specified by `path`. If successful, returns the number of written bytes. If an error occurs, returns NULL.
+`writefile(path, data [,perm [,mtime]])`
+
+Writes blob `data` to a file specified by `path`. Returns the number of written bytes. If an error occurs, returns NULL.
 
 ```
 sqlite> select writefile('hello.txt', 'hello world');
 11
 ```
 
-If optional `mode` argument is present, it expects an integer value that corresponds to a POSIX mode value (file type + permissions, as returned in the `stat.st_mode` field by the `stat()` system call). Three types of files may be written/created:
+The `perm` argument specifies permission bits for the file (octal `666` by default). Expects _decimal_ value, not octal. Here are some popular values:
 
--   regular files: `(mode & 0170000) == 0100000`
--   symbolic links: `(mode & 0170000) == 0120000`
--   directories: `(mode & 0170000) == 0040000`
+| Octal | Decimal | Description |
+| ----- | ------- | ----------- |
+| 600   | 384     | `rw-------` |
+| 644   | 420     | `rw-r--r--` |
+| 664   | 436     | `rw-rw-r--` |
+| 666   | 438     | `rw-rw-rw-` |
+| 755   | 493     | `rwxr-xr-x` |
+| 777   | 511     | `rwxrwxrwx` |
 
-For a directory, the `data` is ignored. For a symbolic link, it is interpreted as text and used as the target of the link. For a regular file, it is interpreted as a blob and written into the
-named file. Regardless of the type of file, its permissions are set to (`mode & 0777`) before returning.
+```
+sqlite> select writefile('hello.txt', 'hello world', 436);
+11
+```
 
-If the optional `mtime` argument is present, it expects an integer - the number of seconds since the unix epoch. The modification-time of the target file is set to this value before returning.
+If the optional `mtime` argument is present, it expects an integer — the number of seconds since the unix epoch. The modification-time of the target file is set to this value before returning.
 
-### `readfile(path)`
+### Read from file
 
-Reads the file specified by `path` and returns the contents as `blob`.
+`readfile(path)`
+
+Reads the file specified by `path` and returns its contents as `blob`.
 
 ```
 sqlite> select writefile('hello.txt', 'hello world');
@@ -37,7 +48,29 @@ sqlite> select length(readfile('hello.txt'));
 11
 ```
 
-### `fsdir(path [, dir])`
+### Create a directory
+
+`mkdir(path[, perm])`
+
+Creates a directory named `path` with permission bits `perm` (octal `777` by default).
+
+```
+sqlite> mkdir('hellodir')
+```
+
+### Create a symlink
+
+`symlink(src, dst)`
+
+Creates a symbolic link named `dst`, pointing to `src`.
+
+```
+select symlink('hello.txt', 'hello.lnk');
+```
+
+### List files and directories
+
+`fsdir(path[, dir])`
 
 Not a function, but a virtual table. Lists a single file specified by `path`:
 
@@ -50,7 +83,7 @@ sqlite> select name, mode, mtime, length(data) from fsdir('hello.txt');
 └───────────┴───────┴────────────┴──────────────┘
 ```
 
-Or a whole directory:
+Or a whole directory (with subdirectories):
 
 ```
 sqlite> select name, mode, mtime, length(data) from fsdir('test');
@@ -71,6 +104,32 @@ sqlite> select name, mode, mtime, length(data) from fsdir('test');
 └───────────────────┴───────┴────────────┴──────────────┘
 ```
 
+Each row has the following columns:
+
+-   `name`: Path to file or directory (text value).
+-   `mode`: Value of `stat.st_mode` for directory entry (an integer).
+-   `mtime`: Value of `stat.st_mtime` for directory entry (an integer).
+-   `data`: For a regular file, a blob containing the file data. For a symlink, a text value containing the text of the link. For a directory, NULL.
+
+Use `lsmode()` helper function to get a human-readable representation of the `mode`:
+
+```
+sqlite> select name, lsmode(mode) from fsdir('test');
+┌───────────────────┬──────────────┐
+│       name        │ lsmode(mode) │
+├───────────────────┼──────────────┤
+│ test              │ drwxr-xr-x   │
+│ test/stats.sql    │ -rw-r--r--   │
+│ test/ipaddr.sql   │ -rw-r--r--   │
+│ test/fileio.sql   │ -rw-r--r--   │
+│ ...               │ ...          │
+└───────────────────┴──────────────┘
+```
+
+Parameter `path` is an absolute or relative pathname. If the file that it refers to does not exist, it is an error. If the path refers to a regular file or symbolic link, it returns a single row. Or, if the path refers to a directory, it returns one row for the directory, and one row for each file within the hierarchy rooted at `path`.
+
+If a non-NULL value is specified for the optional `dir` parameter and `path` is a relative path, then `path` is interpreted relative to `dir`. And the paths returned in the `name` column of the table are also relative to directory `dir`.
+
 ```
 sqlite> select name, mode, mtime, length(data) from fsdir('fileio.sql', 'test');
 ┌────────────┬───────┬────────────┬──────────────┐
@@ -79,17 +138,6 @@ sqlite> select name, mode, mtime, length(data) from fsdir('fileio.sql', 'test');
 │ fileio.sql │ 33188 │ 1639336273 │ 349          │
 └────────────┴───────┴────────────┴──────────────┘
 ```
-
-Parameter `path` is an absolute or relative pathname. If the file that it refers to does not exist, it is an error. If the path refers to a regular file or symbolic link, it returns a single row. Or, if the path refers to a directory, it returns one row for the directory, and one row for each file within the hierarchy rooted at `path`.
-
-Each row has the following columns:
-
--   `name`: Path to file or directory (text value).
--   `mode`: Value of `stat.st_mode` for directory entry (an integer).
--   `mtime`: Value of stat.st_mtime for directory entry (an integer).
--   `data`: For a regular file, a blob containing the file data. For a symlink, a text value containing the text of the link. For a directory, NULL.
-
-If a non-NULL value is specified for the optional `dir` parameter and `path` is a relative path, then `path` is interpreted relative to `dir`. And the paths returned in the `name` column of the table are also relative to directory `dir`.
 
 ## Usage
 

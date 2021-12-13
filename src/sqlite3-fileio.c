@@ -1,77 +1,20 @@
 // Originally from the fileio SQLite exension, Public Domain
 // https://www.sqlite.org/src/file/ext/misc/fileio.c
-// Modified by Anton Zhiyanov, https://github.com/nalgeon/sqlean/, MIT License
+
+// Modified by Anton Zhiyanov, MIT License
+// https://github.com/nalgeon/sqlean/
 
 /*
-**
-** This SQLite extension implements SQL functions readfile() and
-** writefile(), and eponymous virtual type "fsdir".
-**
-** WRITEFILE(FILE, DATA [, MODE [, MTIME]]):
-**
-**   If neither of the optional arguments is present, then this UDF
-**   function writes blob DATA to file FILE. If successful, the number
-**   of bytes written is returned. If an error occurs, NULL is returned.
-**
-**   If the first option argument - MODE - is present, then it must
-**   be passed an integer value that corresponds to a POSIX mode
-**   value (file type + permissions, as returned in the stat.st_mode
-**   field by the stat() system call). Three types of files may
-**   be written/created:
-**
-**     regular files:  (mode & 0170000)==0100000
-**     symbolic links: (mode & 0170000)==0120000
-**     directories:    (mode & 0170000)==0040000
-**
-**   For a directory, the DATA is ignored. For a symbolic link, it is
-**   interpreted as text and used as the target of the link. For a
-**   regular file, it is interpreted as a blob and written into the
-**   named file. Regardless of the type of file, its permissions are
-**   set to (mode & 0777) before returning.
-**
-**   If the optional MTIME argument is present, then it is interpreted
-**   as an integer - the number of seconds since the unix epoch. The
-**   modification-time of the target file is set to this value before
-**   returning.
-**
-**   If three or more arguments are passed to this function and an
-**   error is encountered, an exception is raised.
-**
-** READFILE(FILE):
-**
-**   Read and return the contents of file FILE (type blob) from disk.
-**
-** FSDIR:
-**
-**   Used as follows:
-**
-**     SELECT * FROM fsdir($path [, $dir]);
-**
-**   Parameter $path is an absolute or relative pathname. If the file that it
-**   refers to does not exist, it is an error. If the path refers to a regular
-**   file or symbolic link, it returns a single row. Or, if the path refers
-**   to a directory, it returns one row for the directory, and one row for each
-**   file within the hierarchy rooted at $path.
-**
-**   Each row has the following columns:
-**
-**     name:  Path to file or directory (text value).
-**     mode:  Value of stat.st_mode for directory entry (an integer).
-**     mtime: Value of stat.st_mtime for directory entry (an integer).
-**     data:  For a regular file, a blob containing the file data. For a
-**            symlink, a text value containing the text of the link. For a
-**            directory, NULL.
-**
-**   If a non-NULL value is specified for the optional $dir parameter and
-**   $path is a relative path, then $path is interpreted relative to $dir.
-**   And the paths returned in the "name" column of the table are also
-**   relative to directory $dir.
-**
-** Notes on building this extension for Windows:
-**   Unless linked statically with the SQLite library, a preprocessor
-**   symbol, FILEIO_WIN32_DLL, must be #define'd to create a stand-alone
-**   DLL form of this extension for WIN32. See its use below for details.
-*/
+ * This SQLite extension implements SQL functions
+ * for reading, writing and listing files and folders.
+ *
+ *
+ * Notes on building the extension for Windows:
+ * Unless linked statically with the SQLite library, a preprocessor
+ * symbol, FILEIO_WIN32_DLL, must be #define'd to create a stand-alone
+ * DLL form of this extension for WIN32. See its use below for details.
+ */
+
 #include "sqlite3ext.h"
 SQLITE_EXTENSION_INIT1
 #include <assert.h>
@@ -302,7 +245,7 @@ static int fileLinkStat(const char* zPath, struct stat* pStatBuf) {
 ** SQLITE_OK is returned if the directory is successfully created, or
 ** SQLITE_ERROR otherwise.
 */
-static int makeDirectory(const char* zFile) {
+static int makeParentDirectory(const char* zFile) {
     char* zCopy = sqlite3_mprintf("%s", zFile);
     int rc = SQLITE_OK;
 
@@ -341,59 +284,69 @@ static int makeDirectory(const char* zFile) {
 }
 
 /*
-** This function does the work for the writefile() UDF. Refer to
-** header comments at the top of this file for details.
-*/
-static int writeFile(sqlite3_context* pCtx, /* Context to return bytes written in */
-                     const char* zFile,     /* File to write */
-                     sqlite3_value* pData,  /* Data to write */
-                     mode_t mode,           /* MODE parameter passed to writefile() */
-                     sqlite3_int64 mtime    /* MTIME parameter (or -1 to not set time) */
-) {
-#if !defined(_WIN32) && !defined(WIN32)
-    if (S_ISLNK(mode)) {
-        const char* zTo = (const char*)sqlite3_value_text(pData);
-        if (symlink(zTo, zFile) < 0)
+ * Creates a directory named `path` with permission bits `mode`.
+ */
+static int makeDirectory(sqlite3_context* ctx, const char* path, mode_t mode) {
+    int res = mkdir(path, mode);
+    if (res != 0) {
+        /* The mkdir() call to create the directory failed. This might not
+        ** be an error though - if there is already a directory at the same
+        ** path and either the permissions already match or can be changed
+        ** to do so using chmod(), it is not an error.  */
+        struct stat sStat;
+        if (errno != EEXIST || 0 != fileStat(path, &sStat) || !S_ISDIR(sStat.st_mode) ||
+            ((sStat.st_mode & 0777) != (mode & 0777) && 0 != chmod(path, mode & 0777))) {
             return 1;
-    } else
-#endif
-    {
-        if (S_ISDIR(mode)) {
-            if (mkdir(zFile, mode)) {
-                /* The mkdir() call to create the directory failed. This might not
-                ** be an error though - if there is already a directory at the same
-                ** path and either the permissions already match or can be changed
-                ** to do so using chmod(), it is not an error.  */
-                struct stat sStat;
-                if (errno != EEXIST || 0 != fileStat(zFile, &sStat) || !S_ISDIR(sStat.st_mode) ||
-                    ((sStat.st_mode & 0777) != (mode & 0777) && 0 != chmod(zFile, mode & 0777))) {
-                    return 1;
-                }
-            }
-        } else {
-            sqlite3_int64 nWrite = 0;
-            const char* z;
-            int rc = 0;
-            FILE* out = fopen(zFile, "wb");
-            if (out == 0)
-                return 1;
-            z = (const char*)sqlite3_value_blob(pData);
-            if (z) {
-                sqlite3_int64 n = fwrite(z, 1, sqlite3_value_bytes(pData), out);
-                nWrite = sqlite3_value_bytes(pData);
-                if (nWrite != n) {
-                    rc = 1;
-                }
-            }
-            fclose(out);
-            if (rc == 0 && mode && chmod(zFile, mode & 0777)) {
-                rc = 1;
-            }
-            if (rc)
-                return 2;
-            sqlite3_result_int64(pCtx, nWrite);
         }
     }
+    return 0;
+}
+
+/*
+ * Creates a symbolic link named `dst`, pointing to `src`.
+ */
+static int createSymlink(sqlite3_context* ctx, const char* src, const char* dst) {
+#if defined(_WIN32) || defined(WIN32)
+    return 0;
+#endif
+    int res = symlink(src, dst) < 0;
+    if (res < 0) {
+        return 1;
+    }
+    return 0;
+}
+
+/*
+ * Writes blob `pData` to a file specified by `zFile`,
+ * with permission bits `mode` and modification time `mtime` (-1 to not set).
+ * Returns the number of written bytes.
+ */
+static int writeFile(sqlite3_context* pCtx,
+                     const char* zFile,
+                     sqlite3_value* pData,
+                     mode_t mode,
+                     sqlite3_int64 mtime) {
+    sqlite3_int64 nWrite = 0;
+    const char* z;
+    int rc = 0;
+    FILE* out = fopen(zFile, "wb");
+    if (out == 0)
+        return 1;
+    z = (const char*)sqlite3_value_blob(pData);
+    if (z) {
+        sqlite3_int64 n = fwrite(z, 1, sqlite3_value_bytes(pData), out);
+        nWrite = sqlite3_value_bytes(pData);
+        if (nWrite != n) {
+            rc = 1;
+        }
+    }
+    fclose(out);
+    if (rc == 0 && mode && chmod(zFile, mode)) {
+        rc = 1;
+    }
+    if (rc)
+        return 2;
+    sqlite3_result_int64(pCtx, nWrite);
 
     if (mtime >= 0) {
 #if defined(_WIN32)
@@ -451,14 +404,9 @@ static int writeFile(sqlite3_context* pCtx, /* Context to return bytes written i
     return 0;
 }
 
-/*
-** Implementation of the "writefile(W,X[,Y[,Z]]])" SQL function.
-** Refer to header comments at the top of this file for details.
-*/
+// Writes data to a file.
+// writefile(path, data[, perm[, mtime]])
 static void sqlite3_writefile(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    const char* zFile;
-    mode_t mode = 0;
-    int res;
     sqlite3_int64 mtime = -1;
 
     if (argc < 2 || argc > 4) {
@@ -466,40 +414,80 @@ static void sqlite3_writefile(sqlite3_context* context, int argc, sqlite3_value*
         return;
     }
 
-    zFile = (const char*)sqlite3_value_text(argv[0]);
-    if (zFile == 0)
+    const char* zFile = (const char*)sqlite3_value_text(argv[0]);
+    if (zFile == 0) {
         return;
-    if (argc >= 3) {
-        mode = (mode_t)sqlite3_value_int(argv[2]);
     }
+
+    mode_t perm = 0666;
+    if (argc >= 3) {
+        perm = (mode_t)sqlite3_value_int(argv[2]);
+    }
+
     if (argc == 4) {
         mtime = sqlite3_value_int64(argv[3]);
     }
 
-    res = writeFile(context, zFile, argv[1], mode, mtime);
+    int res = writeFile(context, zFile, argv[1], perm, mtime);
     if (res == 1 && errno == ENOENT) {
-        if (makeDirectory(zFile) == SQLITE_OK) {
-            res = writeFile(context, zFile, argv[1], mode, mtime);
+        if (makeParentDirectory(zFile) == SQLITE_OK) {
+            res = writeFile(context, zFile, argv[1], perm, mtime);
         }
     }
 
     if (argc > 2 && res != 0) {
-        if (S_ISLNK(mode)) {
-            ctxErrorMsg(context, "failed to create symlink: %s", zFile);
-        } else if (S_ISDIR(mode)) {
-            ctxErrorMsg(context, "failed to create directory: %s", zFile);
-        } else {
-            ctxErrorMsg(context, "failed to write file: %s", zFile);
-        }
+        ctxErrorMsg(context, "failed to write file: %s", zFile);
     }
 }
 
-/*
-** SQL function:   lsmode(MODE)
-**
-** Given a numberic st_mode from stat(), convert it into a human-readable
-** text string in the style of "ls -l".
-*/
+// Creates a symlink.
+// symlink(src, dst)
+static void sqlite3_symlink(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    if (argc != 2) {
+        sqlite3_result_error(context, "wrong number of arguments to function symlink()", -1);
+        return;
+    }
+
+    const char* src = (const char*)sqlite3_value_text(argv[0]);
+    if (src == 0) {
+        return;
+    }
+    const char* dst = (const char*)sqlite3_value_text(argv[1]);
+
+    int res = createSymlink(context, src, dst);
+    if (res != 0) {
+        ctxErrorMsg(context, "failed to create symlink to: %s", src);
+    }
+}
+
+// Creates a directory.
+// mkdir(path, perm)
+static void sqlite3_mkdir(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    if (argc != 1 && argc != 2) {
+        sqlite3_result_error(context, "wrong number of arguments to function mkdir()", -1);
+        return;
+    }
+
+    const char* path = (const char*)sqlite3_value_text(argv[0]);
+    if (path == 0) {
+        return;
+    }
+
+    mode_t perm = 0777;
+    if (argc == 2) {
+        perm = (mode_t)sqlite3_value_int(argv[1]);
+    }
+
+    int res = makeDirectory(context, path, perm);
+
+    if (res != 0) {
+        ctxErrorMsg(context, "failed to create directory: %s", path);
+    }
+}
+
+// Given a numberic st_mode from stat(), convert it into a human-readable
+// text string in the style of "ls -l".
+// lsmode(mode)
 static void sqlite3_lsmode(sqlite3_context* context, int argc, sqlite3_value** argv) {
     int i;
     int iMode = sqlite3_value_int(argv[0]);
@@ -973,9 +961,11 @@ __declspec(dllexport)
     int sqlite3_fileio_init(sqlite3* db, char** pzErrMsg, const sqlite3_api_routines* pApi) {
     SQLITE_EXTENSION_INIT2(pApi);
     static const int flags = SQLITE_UTF8 | SQLITE_DIRECTONLY;
-    sqlite3_create_function(db, "readfile", 1, flags, 0, sqlite3_readfile, 0, 0);
-    sqlite3_create_function(db, "writefile", -1, flags, 0, sqlite3_writefile, 0, 0);
     sqlite3_create_function(db, "lsmode", 1, SQLITE_UTF8, 0, sqlite3_lsmode, 0, 0);
+    sqlite3_create_function(db, "mkdir", -1, flags, 0, sqlite3_mkdir, 0, 0);
+    sqlite3_create_function(db, "readfile", 1, flags, 0, sqlite3_readfile, 0, 0);
+    sqlite3_create_function(db, "symlink", 2, flags, 0, sqlite3_symlink, 0, 0);
+    sqlite3_create_function(db, "writefile", -1, flags, 0, sqlite3_writefile, 0, 0);
     fsdirRegister(db);
     return SQLITE_OK;
 }
