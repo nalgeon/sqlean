@@ -1,35 +1,24 @@
-// Unknown Author, Public Domain
+// Originally by Unknown Author, Public Domain
 // https://github.com/Zensey/sqlite3_unicode
 
-/**
-**
-** This file implements true UNICODE functionality for SQLite in regards of case-insensitive
-*comparison
-** of unicode data and SQLite. It uses UNICODE mapping tables to provide the following to SQLite:
-**
-**   * An implementation of SQL scalar upper(), lower(), title(), fold() functions to normalize
-*strings
-**     for comparison by case folding.
-**
-**   * An implementation of SQL scalar unaccent() function to normalize strings for comparison by
-*removing accents.
-**
-**   * An implementation of the LIKE operator that uses casefolding to provide case-independent
-*matching.
-**
-** Compile the project with the following preprocessor definitions in order to enable the code
-*below.
-**   * SQLITE_ENABLE_UNICODE and SQLITE_CORE for static  library, (building sqlite3.a  | lib)
-**   * SQLITE_ENABLE_UNICODE                 for dynamic library, (building sqlite3.so | dll)
-**
-**
-** The following function needs to be called at program startup to initialise unicode functionality
-**   * sqlite3_unicode_load();
-**
-** The following function needs to be called before program exit to correctly uninitialise unicode
-*functionality
-**   * sqlite3_unicode_free();
-*/
+// Modified by Anton Zhiyanov, MIT License
+// https://github.com/nalgeon/sqlean
+
+/*
+ * Implements case-insensitive string comparison for Unicode strings.
+ * Provides the following Unicode features:
+ *
+ *   - upper(), lower() and casefold() functions to normalize case.
+ *   - like() function and LIKE operator with case-independent matching.
+ *   - unaccent() function to normalize strings by removing accents.
+ *
+ * Tries to override the default NOCASE case-insensitive collation sequence
+ * to support UTF-8 characters (available in SQLite CLI and C API only).
+ *
+ * Compile the project with the SQLITE_ENABLE_UNICODE preprocessor definition
+ * in order to enable the code below.
+ */
+
 #pragma warning(disable : 4305 13 90)
 
 /*
@@ -38,7 +27,7 @@
 #define SQLITE3_UNICODE_FOLD   // ~ 10KB increase
 #define SQLITE3_UNICODE_LOWER  // ~ 10KB increase
 #define SQLITE3_UNICODE_UPPER  // ~ 10KB increase
-#define SQLITE3_UNICODE_TITLE  // ~ 10KB increase
+// #define SQLITE3_UNICODE_TITLE  // ~ 10KB increase
 #define SQLITE3_UNICODE_UNACC  // ~ 30KB increase \
                                // _______________ \
                                // ~ 70KB increase
@@ -5375,41 +5364,43 @@ SQLITE_EXPORT int sqlite3_unicode_init_impl(sqlite3* db) {
 
 #ifdef SQLITE3_UNICODE_FOLD
         {"like", 2, SQLITE_ANY, (void*)&likeInfoNorm, likeFunc},
+        {"nlike", 2, SQLITE_ANY, (void*)&likeInfoNorm, likeFunc},
         {"like", 3, SQLITE_ANY, (void*)&likeInfoNorm, likeFunc},
+        {"nlike", 3, SQLITE_ANY, (void*)&likeInfoNorm, likeFunc},
 
-        {"fold", 1, SQLITE_ANY, (void*)sqlite3_unicode_fold, caseFunc},
+        {"casefold", 1, SQLITE_ANY, (void*)sqlite3_unicode_fold, caseFunc},
 #endif
 #ifdef SQLITE3_UNICODE_LOWER
         {"lower", 1, SQLITE_ANY, (void*)sqlite3_unicode_lower, caseFunc},
+        {"nlower", 1, SQLITE_ANY, (void*)sqlite3_unicode_lower, caseFunc},
 #endif
 #ifdef SQLITE3_UNICODE_UPPER
         {"upper", 1, SQLITE_ANY, (void*)sqlite3_unicode_upper, caseFunc},
+        {"nupper", 1, SQLITE_ANY, (void*)sqlite3_unicode_upper, caseFunc},
 #endif
 #ifdef SQLITE3_UNICODE_TITLE
-        {"title", 1, SQLITE_ANY, (void*)sqlite3_unicode_title, caseFunc},
+        // {"title", 1, SQLITE_ANY, (void*)sqlite3_unicode_title, caseFunc},
+        // {"ntitle", 1, SQLITE_ANY, (void*)sqlite3_unicode_title, caseFunc},
 #endif
 #ifdef SQLITE3_UNICODE_UNACC
         {"unaccent", 1, SQLITE_ANY, 0, unaccFunc},
 #endif
     };
 
-    int rc = SQLITE_OK;
-    int i;
-
-    for (i = 0; rc == SQLITE_OK && i < (sizeof(scalars) / sizeof(struct FuncScalar)); i++) {
+    for (int i = 0; i < (sizeof(scalars) / sizeof(struct FuncScalar)); i++) {
         struct FuncScalar* p = &scalars[i];
-        rc = sqlite3_create_function(db, p->zName, p->nArg, p->enc, p->pContext, p->xFunc, 0, 0);
+        sqlite3_create_function(db, p->zName, p->nArg, p->enc, p->pContext, p->xFunc, 0, 0);
     }
 
 #if defined(SQLITE3_UNICODE_COLLATE) && defined(SQLITE3_UNICODE_FOLD)
     /* Also override the default NOCASE UTF-8 case-insensitive collation sequence. */
-    rc = sqlite3_create_collation(db, "NOCASE", SQLITE_UTF8, (void*)SQLITE_UTF8,
-                                  sqlite3_unicode_collate);
-    rc = sqlite3_create_collation(db, "NOCASE", SQLITE_UTF16, (void*)SQLITE_UTF16,
-                                  sqlite3_unicode_collate);
+    sqlite3_create_collation(db, "NOCASE", SQLITE_UTF8, (void*)SQLITE_UTF8,
+                             sqlite3_unicode_collate);
+    sqlite3_create_collation(db, "NOCASE", SQLITE_UTF16, (void*)SQLITE_UTF16,
+                             sqlite3_unicode_collate);
 #endif
 
-    return rc;
+    return SQLITE_OK;
 }
 
 /*
