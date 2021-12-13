@@ -70,4 +70,4 @@ The software is available under the MIT License.
 
 ## Stay tuned
 
-_Follow [@ohmypy](https://twitter.com/ohmypy) on Twitter to keep up with new features 🚀_
+Follow [**@ohmypy**](https://twitter.com/ohmypy) on Twitter to keep up with new features 🚀

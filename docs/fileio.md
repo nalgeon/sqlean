@@ -2,9 +2,7 @@
 
 Read and write files directly from SQL. Adapted from [fileio.c](https://sqlite.org/src/file/ext/misc/fileio.c) by D. Richard Hipp.
 
-### Write to file
-
-`writefile(path, data [,perm [,mtime]])`
+### writefile(path, data [,perm [,mtime]])
 
 Writes blob `data` to a file specified by `path`. Returns the number of written bytes. If an error occurs, returns NULL.
 
@@ -31,9 +29,7 @@ sqlite> select writefile('hello.txt', 'hello world', 436);
 
 If the optional `mtime` argument is present, it expects an integer — the number of seconds since the unix epoch. The modification-time of the target file is set to this value before returning.
 
-### Read from file
-
-`readfile(path)`
+### readfile(path)
 
 Reads the file specified by `path` and returns its contents as `blob`.
 
@@ -48,9 +44,7 @@ sqlite> select length(readfile('hello.txt'));
 11
 ```
 
-### Create a directory
-
-`mkdir(path[, perm])`
+### mkdir(path[, perm])
 
 Creates a directory named `path` with permission bits `perm` (octal `777` by default).
 
@@ -58,9 +52,7 @@ Creates a directory named `path` with permission bits `perm` (octal `777` by def
 sqlite> mkdir('hellodir')
 ```
 
-### Create a symlink
-
-`symlink(src, dst)`
+### symlink(src, dst)
 
 Creates a symbolic link named `dst`, pointing to `src`.
 
@@ -68,11 +60,11 @@ Creates a symbolic link named `dst`, pointing to `src`.
 select symlink('hello.txt', 'hello.lnk');
 ```
 
-### List files and directories
+### fsdir(path[, dir])
 
-`fsdir(path[, dir])`
+Lists files and directories. Not a function, but a virtual table.
 
-Not a function, but a virtual table. Lists a single file specified by `path`:
+List a single file specified by `path`:
 
 ```
 sqlite> select name, mode, mtime, length(data) from fsdir('hello.txt');

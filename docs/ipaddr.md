@@ -1,6 +1,6 @@
 # ipaddr: IP address manipulation in SQLite
 
-Functions to manipulate IPs and subnets.
+Functions to manipulate IPs and subnets. Created by [Vincent Bernat](https://github.com/vincentbernat).
 
 ⚠️ This extension is not available on Windows.
 
