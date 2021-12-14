@@ -18,6 +18,7 @@
 #include "sqlite3ext.h"
 SQLITE_EXTENSION_INIT1
 #include <assert.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -529,6 +530,8 @@ struct FsdirLevel {
 struct fsdir_cursor {
     sqlite3_vtab_cursor base; /* Base class - must be first */
 
+    bool recursive; /* true to traverse dirs recursively, false otherwise */
+
     int nLvl;         /* Number of entries in aLvl[] array */
     int iLvl;         /* Index of current entry */
     FsdirLevel* aLvl; /* Hierarchy of directories being traversed */
@@ -644,7 +647,7 @@ static int fsdirNext(sqlite3_vtab_cursor* cur) {
     mode_t m = pCur->sStat.st_mode;
 
     pCur->iRowid++;
-    if (S_ISDIR(m)) {
+    if (S_ISDIR(m) && (pCur->iLvl == -1 || pCur->recursive) ) {
         /* Descend into this directory */
         int iNew = pCur->iLvl + 1;
         FsdirLevel* pLvl;
@@ -771,23 +774,28 @@ static int fsdirFilter(sqlite3_vtab_cursor* cur,
                        const char* idxStr,
                        int argc,
                        sqlite3_value** argv) {
-    const char* zDir = 0;
     fsdir_cursor* pCur = (fsdir_cursor*)cur;
     (void)idxStr;
     fsdirResetCursor(pCur);
 
-    if (idxNum == 0) {
+    if (argc == 0) {
         fsdirSetErrmsg(pCur, "table function fsdir requires an argument");
         return SQLITE_ERROR;
     }
 
-    assert(argc == idxNum && (argc == 1 || argc == 2));
-    zDir = (const char*)sqlite3_value_text(argv[0]);
-    if (zDir == 0) {
+    assert(argc == 1 || argc == 2);
+    const char* zPath = (const char*)sqlite3_value_text(argv[0]);
+    if (zPath == 0) {
         fsdirSetErrmsg(pCur, "table function fsdir requires a non-NULL argument");
         return SQLITE_ERROR;
     }
-    pCur->zPath = sqlite3_mprintf("%s", zDir);
+    pCur->zPath = sqlite3_mprintf("%s", zPath);
+
+    bool recursive = false;
+    if (argc == 2) {
+        recursive = (bool)sqlite3_value_int(argv[1]);
+    }
+    pCur->recursive = recursive;
 
     if (pCur->zPath == 0) {
         return SQLITE_NOMEM;

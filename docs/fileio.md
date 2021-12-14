@@ -60,7 +60,7 @@ Creates a symbolic link named `dst`, pointing to `src`.
 select symlink('hello.txt', 'hello.lnk');
 ```
 
-### lsdir(path)
+### lsdir(path[, recursive])
 
 Lists files and directories as a virtual table.
 
@@ -75,7 +75,7 @@ sqlite> select * from lsdir('hello.txt');
 └───────────┴───────┴────────────┴──────┘
 ```
 
-Or a whole directory (recursively with subdirectories):
+List a whole directory. Lists only the direct children by default:
 
 ```
 sqlite> select * from lsdir('test') order by name;
@@ -88,6 +88,12 @@ sqlite> select * from lsdir('test') order by name;
 │ test/fuzzy.sql  │ 33188 │ 1639349290 │ 2957 │
 │ ...             │ ...   │ ...        │ ...  │
 └─────────────────┴───────┴────────────┴──────┘
+```
+
+List a whole directory recursively. When `recursive = true`, lists all the descendants:
+
+```
+sqlite> select * from lsdir('src', true);
 ```
 
 Each row has the following columns:
@@ -116,7 +122,7 @@ Parameter `path` is an absolute or relative pathname:
 
 -   If the path refers to a file that does not exist — `lsdir()` returns zero rows.
 -   If the path refers to a regular file or symbolic link — it returns a single row.
--   If the path refers to a directory — it returns one row for the directory, and one row for each file within the hierarchy rooted at `path`.
+-   If the path refers to a directory — it returns one row for the directory and one row for each direct child. Optionally returns a row for every descendant, if `recursive = true`.
 
 ## Usage
 

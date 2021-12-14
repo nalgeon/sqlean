@@ -7,6 +7,14 @@
 select '01', (name, mode, size) = ('LICENSE', 33188, 1105) from lsdir('LICENSE');
 select '02', count(*) >= 10 from lsdir('test');
 select '03', count(*) = 0 from lsdir('whatever.txt');
+.shell mkdir parentdir
+.shell touch parentdir/parent.txt
+.shell mkdir parentdir/subdir
+.shell touch parentdir/subdir/child.txt
+select '04', count(*) = 3 from lsdir('parentdir');
+select '05', count(*) = 3 from lsdir('parentdir', false);
+select '06', count(*) = 4 from lsdir('parentdir', true);
+.shell rm -rf parentdir
 
 -- lsmode
 select '11', lsmode(16877) = 'drwxr-xr-x';
