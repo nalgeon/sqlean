@@ -1,6 +1,6 @@
 # fileio: Read and write files in SQLite
 
-Read and write files directly from SQL. Adapted from [fileio.c](https://sqlite.org/src/file/ext/misc/fileio.c) by D. Richard Hipp.
+Access the file system directly from SQL. Adapted from [fileio.c](https://sqlite.org/src/file/ext/misc/fileio.c) by D. Richard Hipp.
 
 ### writefile(path, data [,perm [,mtime]])
 
@@ -60,76 +60,63 @@ Creates a symbolic link named `dst`, pointing to `src`.
 select symlink('hello.txt', 'hello.lnk');
 ```
 
-### fsdir(path[, dir])
+### lsdir(path)
 
-Lists files and directories. Not a function, but a virtual table.
+Lists files and directories as a virtual table.
 
 List a single file specified by `path`:
 
 ```
-sqlite> select name, mode, mtime, length(data) from fsdir('hello.txt');
-┌───────────┬───────┬────────────┬──────────────┐
-│   name    │ mode  │   mtime    │ length(data) │
-├───────────┼───────┼────────────┼──────────────┤
-│ hello.txt │ 33188 │ 1639336214 │ 11           │
-└───────────┴───────┴────────────┴──────────────┘
+sqlite> select * from lsdir('hello.txt');
+┌───────────┬───────┬────────────┬──────┐
+│   name    │ mode  │   mtime    │ size │
+├───────────┼───────┼────────────┼──────┤
+│ hello.txt │ 33206 │ 1639516692 │ 11   │
+└───────────┴───────┴────────────┴──────┘
 ```
 
-Or a whole directory (with subdirectories):
+Or a whole directory (recursively with subdirectories):
 
 ```
-sqlite> select name, mode, mtime, length(data) from fsdir('test');
-┌───────────────────┬───────┬────────────┬──────────────┐
-│       name        │ mode  │   mtime    │ length(data) │
-├───────────────────┼───────┼────────────┼──────────────┤
-│ test              │ 16877 │ 1639338455 │              │
-│ test/stats.sql    │ 33188 │ 1618771137 │ 939          │
-│ test/math.sql     │ 33188 │ 1617645238 │ 1112         │
-│ test/ipaddr.sql   │ 33188 │ 1633001481 │ 1704         │
-│ test/fileio.sql   │ 33188 │ 1639337954 │ 392          │
-│ test/text.sql     │ 33188 │ 1637171984 │ 990          │
-│ test/crypto.sql   │ 33188 │ 1618769096 │ 1338         │
-│ test/fuzzy.sql    │ 33188 │ 1638018849 │ 2869         │
-│ test/spellfix.sql │ 33188 │ 1637516200 │ 230          │
-│ test/re.sql       │ 33188 │ 1633001328 │ 836          │
-│ test/uuid.sql     │ 33188 │ 1636919312 │ 1122         │
-└───────────────────┴───────┴────────────┴──────────────┘
+sqlite> select * from lsdir('test') order by name;
+┌─────────────────┬───────┬────────────┬──────┐
+│      name       │ mode  │   mtime    │ size │
+├─────────────────┼───────┼────────────┼──────┤
+│ test            │ 16877 │ 1639514106 │ 384  │
+│ test/crypto.sql │ 33188 │ 1639349274 │ 1426 │
+│ test/fileio.sql │ 33188 │ 1639516282 │ 1606 │
+│ test/fuzzy.sql  │ 33188 │ 1639349290 │ 2957 │
+│ ...             │ ...   │ ...        │ ...  │
+└─────────────────┴───────┴────────────┴──────┘
 ```
 
 Each row has the following columns:
 
 -   `name`: Path to file or directory (text value).
--   `mode`: Value of `stat.st_mode` for directory entry (an integer).
--   `mtime`: Value of `stat.st_mtime` for directory entry (an integer).
--   `data`: For a regular file, a blob containing the file data. For a symlink, a text value containing the text of the link. For a directory, NULL.
+-   `mode`: File mode (`stat.st_mode`, integer value).
+-   `mtime`: Last modification time (`stat.st_mtime`, integer number of seconds since the epoch).
+-   `size`: Total size in bytes (`stat.st_size`, integer value).
 
 Use `lsmode()` helper function to get a human-readable representation of the `mode`:
 
 ```
 sqlite> select name, lsmode(mode) from fsdir('test');
-┌───────────────────┬──────────────┐
-│       name        │ lsmode(mode) │
-├───────────────────┼──────────────┤
-│ test              │ drwxr-xr-x   │
-│ test/stats.sql    │ -rw-r--r--   │
-│ test/ipaddr.sql   │ -rw-r--r--   │
-│ test/fileio.sql   │ -rw-r--r--   │
-│ ...               │ ...          │
-└───────────────────┴──────────────┘
+┌─────────────────┬──────────────┐
+│      name       │ lsmode(mode) │
+├─────────────────┼──────────────┤
+│ test            │ drwxr-xr-x   │
+│ test/crypto.sq  │ -rw-r--r--   │
+│ test/fileio.sql │ -rw-r--r--   │
+│ test/fuzzy.sql  │ -rw-r--r--   │
+│ ...             │ ...          │
+└─────────────────┴──────────────┘
 ```
 
-Parameter `path` is an absolute or relative pathname. If the file that it refers to does not exist, it is an error. If the path refers to a regular file or symbolic link, it returns a single row. Or, if the path refers to a directory, it returns one row for the directory, and one row for each file within the hierarchy rooted at `path`.
+Parameter `path` is an absolute or relative pathname:
 
-If a non-NULL value is specified for the optional `dir` parameter and `path` is a relative path, then `path` is interpreted relative to `dir`. And the paths returned in the `name` column of the table are also relative to directory `dir`.
-
-```
-sqlite> select name, mode, mtime, length(data) from fsdir('fileio.sql', 'test');
-┌────────────┬───────┬────────────┬──────────────┐
-│    name    │ mode  │   mtime    │ length(data) │
-├────────────┼───────┼────────────┼──────────────┤
-│ fileio.sql │ 33188 │ 1639336273 │ 349          │
-└────────────┴───────┴────────────┴──────────────┘
-```
+-   If the path refers to a file that does not exist — `lsdir()` returns zero rows.
+-   If the path refers to a regular file or symbolic link — it returns a single row.
+-   If the path refers to a directory — it returns one row for the directory, and one row for each file within the hierarchy rooted at `path`.
 
 ## Usage
 

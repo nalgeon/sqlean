@@ -1,4 +1,4 @@
-// Originally from the fileio SQLite exension, Public Domain
+// Originally by D. Richard Hipp, Public Domain
 // https://www.sqlite.org/src/file/ext/misc/fileio.c
 
 // Modified by Anton Zhiyanov, MIT License
@@ -53,11 +53,11 @@ SQLITE_EXTENSION_INIT1
 ** Structure of the fsdir() table-valued function
 */
 /*    0    1    2     3    4           5             */
-#define FSDIR_SCHEMA "(name,mode,mtime,data,path HIDDEN,dir HIDDEN)"
+#define FSDIR_SCHEMA "(name,mode,mtime,size,path HIDDEN,dir HIDDEN)"
 #define FSDIR_COLUMN_NAME 0  /* Name of the file */
 #define FSDIR_COLUMN_MODE 1  /* Access mode */
 #define FSDIR_COLUMN_MTIME 2 /* Last modification time */
-#define FSDIR_COLUMN_DATA 3  /* File content */
+#define FSDIR_COLUMN_SIZE 3  /* File size */
 #define FSDIR_COLUMN_PATH 4  /* Path to top of search */
 #define FSDIR_COLUMN_DIR 5   /* Path is relative to this directory */
 
@@ -533,9 +533,6 @@ struct fsdir_cursor {
     int iLvl;         /* Index of current entry */
     FsdirLevel* aLvl; /* Hierarchy of directories being traversed */
 
-    const char* zBase;
-    int nBase;
-
     struct stat sStat;    /* Current lstat() results */
     char* zPath;          /* Path to current entry */
     sqlite3_int64 iRowid; /* Current rowid */
@@ -612,8 +609,6 @@ static void fsdirResetCursor(fsdir_cursor* pCur) {
     sqlite3_free(pCur->aLvl);
     pCur->aLvl = 0;
     pCur->zPath = 0;
-    pCur->zBase = 0;
-    pCur->nBase = 0;
     pCur->nLvl = 0;
     pCur->iLvl = -1;
     pCur->iRowid = 1;
@@ -719,7 +714,7 @@ static int fsdirColumn(sqlite3_vtab_cursor* cur, /* The cursor */
     fsdir_cursor* pCur = (fsdir_cursor*)cur;
     switch (i) {
         case FSDIR_COLUMN_NAME: {
-            sqlite3_result_text(ctx, &pCur->zPath[pCur->nBase], -1, SQLITE_TRANSIENT);
+            sqlite3_result_text(ctx, pCur->zPath, -1, SQLITE_TRANSIENT);
             break;
         }
 
@@ -731,38 +726,9 @@ static int fsdirColumn(sqlite3_vtab_cursor* cur, /* The cursor */
             sqlite3_result_int64(ctx, pCur->sStat.st_mtime);
             break;
 
-        case FSDIR_COLUMN_DATA: {
-            mode_t m = pCur->sStat.st_mode;
-            if (S_ISDIR(m)) {
-                sqlite3_result_null(ctx);
-#if !defined(_WIN32) && !defined(WIN32)
-            } else if (S_ISLNK(m)) {
-                char aStatic[64];
-                char* aBuf = aStatic;
-                sqlite3_int64 nBuf = 64;
-                int n;
-
-                while (1) {
-                    n = readlink(pCur->zPath, aBuf, nBuf);
-                    if (n < nBuf)
-                        break;
-                    if (aBuf != aStatic)
-                        sqlite3_free(aBuf);
-                    nBuf = nBuf * 2;
-                    aBuf = sqlite3_malloc64(nBuf);
-                    if (aBuf == 0) {
-                        sqlite3_result_error_nomem(ctx);
-                        return SQLITE_NOMEM;
-                    }
-                }
-
-                sqlite3_result_text(ctx, aBuf, n, SQLITE_TRANSIENT);
-                if (aBuf != aStatic)
-                    sqlite3_free(aBuf);
-#endif
-            } else {
-                readFileContents(ctx, pCur->zPath);
-            }
+        case FSDIR_COLUMN_SIZE: {
+            sqlite3_result_int64(ctx, pCur->sStat.st_size);
+            break;
         }
         case FSDIR_COLUMN_PATH:
         default: {
@@ -821,22 +787,14 @@ static int fsdirFilter(sqlite3_vtab_cursor* cur,
         fsdirSetErrmsg(pCur, "table function fsdir requires a non-NULL argument");
         return SQLITE_ERROR;
     }
-    if (argc == 2) {
-        pCur->zBase = (const char*)sqlite3_value_text(argv[1]);
-    }
-    if (pCur->zBase) {
-        pCur->nBase = (int)strlen(pCur->zBase) + 1;
-        pCur->zPath = sqlite3_mprintf("%s/%s", pCur->zBase, zDir);
-    } else {
-        pCur->zPath = sqlite3_mprintf("%s", zDir);
-    }
+    pCur->zPath = sqlite3_mprintf("%s", zDir);
 
     if (pCur->zPath == 0) {
         return SQLITE_NOMEM;
     }
     if (fileLinkStat(pCur->zPath, &pCur->sStat)) {
-        fsdirSetErrmsg(pCur, "cannot stat file: %s", pCur->zPath);
-        return SQLITE_ERROR;
+        // file does not exist, terminate via subsequent call to fsdirEof
+        pCur->zPath = 0;
     }
 
     return SQLITE_OK;
@@ -948,7 +906,7 @@ static int fsdirRegister(sqlite3* db) {
         0,               /* xShadowName */
     };
 
-    int rc = sqlite3_create_module(db, "fsdir", &fsdirModule, 0);
+    int rc = sqlite3_create_module(db, "lsdir", &fsdirModule, 0);
     return rc;
 }
 #else /* SQLITE_OMIT_VIRTUALTABLE */

@@ -3,9 +3,10 @@
 
 .load dist/fileio
 
--- fsdir
-select '01', (name, mode) = ('LICENSE', 33188) from fsdir('LICENSE');
-select '02', count(*) >= 10 from fsdir('test');
+-- lsdir
+select '01', (name, mode, size) = ('LICENSE', 33188, 1105) from lsdir('LICENSE');
+select '02', count(*) >= 10 from lsdir('test');
+select '03', count(*) = 0 from lsdir('whatever.txt');
 
 -- lsmode
 select '11', lsmode(16877) = 'drwxr-xr-x';
