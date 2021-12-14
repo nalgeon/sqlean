@@ -28,3 +28,8 @@ select '23', round(stddev_pop(value), 1) = 28.6 from generate_series(1, 99);
 select '31', variance(value) = 825 from generate_series(1, 99);
 select '32', var_samp(value) = 825 from generate_series(1, 99);
 select '33', round(var_pop(value), 0) = 817 from generate_series(1, 99);
+
+select '41', (count(*), min(value), max(value)) = (99, 1, 99) from generate_series(1, 99);
+select '42', (count(*), min(value), max(value)) = (20, 0, 95) from generate_series(0, 99, 5);
+with tmp as (select * from generate_series(20) limit 10)
+select '43', (count(*), min(value), max(value)) = (10, 20, 29) from tmp;
