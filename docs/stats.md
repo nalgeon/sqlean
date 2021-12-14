@@ -1,27 +1,27 @@
 # stats: Mathematical statistics in SQLite
 
-Common statistical functions.
-Adapted from [extension-functions.c](https://sqlite.org/contrib/) by Liam Healy.
+Common statistical functions. Adapted from [extension-functions.c](https://sqlite.org/contrib/) by Liam Healy
+and [percentile.c](https://sqlite.org/src/file/ext/misc/percentile.c) by D. Richard Hipp.
 
-Provides following functions:
+Provides following aggregate functions:
 
--   `mode` - mode,
--   `median` - median (50th percentile),
--   `percentile_25` - 25th percentile,
--   `percentile_75` - 75th percentile,
--   `percentile_90` - 90th percentile,
--   `percentile_95` - 95th percentile,
--   `percentile_99` - 99th percentile,
--   `stddev` or `stddev_samp` - sample standard deviation,
--   `stddev_pop` - population standard deviation,
--   `variance` or `var_samp` - sample variance,
--   `var_pop` - population variance.
+-   `median(x)` — median (50th percentile),
+-   `percentile_25(x)` — 25th percentile,
+-   `percentile_75(x)` — 75th percentile,
+-   `percentile_90(x)` — 90th percentile,
+-   `percentile_95(x)` — 95th percentile,
+-   `percentile_99(x)` — 99th percentile,
+-   `percentile(x, perc)` — custom percentile (`perc` between 0 and 100),
+-   `stddev(x)` or `stddev_samp(x)` — sample standard deviation,
+-   `stddev_pop(x)` — population standard deviation,
+-   `variance(x)` or `var_samp(x)` — sample variance,
+-   `var_pop(x)` — population variance.
 
 ## Usage
 
 ```
 sqlite> .load ./stats
-sqlite> select median(value) from generate_series(1, 100);
+sqlite> select median(value) from generate_series(1, 99);
 ```
 
 [Download](https://github.com/nalgeon/sqlean/releases/latest)
