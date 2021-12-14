@@ -1,10 +1,10 @@
 # All the missing SQLite functions
 
-SQLite has very few functions compared to other DBMS. SQLite authors see this as a feature rather than a bug, because SQLite has extension mechanism in place.
+SQLite has few functions compared to other database management systems. SQLite authors see this as a feature rather than a problem, because SQLite has an extension mechanism in place.
 
 There are a lot of SQLite extensions out there, but they are incomplete, inconsistent and scattered across the internet.
 
-`sqlean` brings them all together, neatly packaged into domain modules, tested, and built for Linux, Windows and macOS.
+`sqlean` brings them all together, neatly packaged into domain modules, documented, tested, and built for Linux, Windows and macOS.
 
 Here is what we've got right now:
 
@@ -38,14 +38,14 @@ CLI usage:
 
 ```
 sqlite> .load ./stats
-sqlite> select median(value) from generate_series(1, 100);
+sqlite> select median(value) from generate_series(1, 99);
 ```
 
 IDE usage:
 
 ```
 select load_extension('/path/to/extension/stats');
-select median(value) from generate_series(1, 100);
+select median(value) from generate_series(1, 99);
 ```
 
 In-app usage:
@@ -56,7 +56,7 @@ import sqlite3
 connection = sqlite3.connect(":memory:")
 connection.enable_load_extension(True)
 connection.load_extension("./stats.so")
-connection.execute("select median(value) from generate_series(1, 100)")
+connection.execute("select median(value) from generate_series(1, 99)")
 connection.close()
 ```
 
