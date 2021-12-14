@@ -60,7 +60,7 @@ SQLITE_EXTENSION_INIT1
 #define FSDIR_COLUMN_MTIME 2 /* Last modification time */
 #define FSDIR_COLUMN_SIZE 3  /* File size */
 #define FSDIR_COLUMN_PATH 4  /* Path to top of search */
-#define FSDIR_COLUMN_DIR 5   /* Path is relative to this directory */
+#define FSDIR_COLUMN_REC 5   /* Recursive flag */
 
 /*
 ** Set the result stored by context ctx to a blob containing the
@@ -647,7 +647,7 @@ static int fsdirNext(sqlite3_vtab_cursor* cur) {
     mode_t m = pCur->sStat.st_mode;
 
     pCur->iRowid++;
-    if (S_ISDIR(m) && (pCur->iLvl == -1 || pCur->recursive) ) {
+    if (S_ISDIR(m) && (pCur->iLvl == -1 || pCur->recursive)) {
         /* Descend into this directory */
         int iNew = pCur->iLvl + 1;
         FsdirLevel* pLvl;
@@ -735,7 +735,7 @@ static int fsdirColumn(sqlite3_vtab_cursor* cur, /* The cursor */
         }
         case FSDIR_COLUMN_PATH:
         default: {
-            /* The FSDIR_COLUMN_PATH and FSDIR_COLUMN_DIR are input parameters.
+            /* The FSDIR_COLUMN_PATH and FSDIR_COLUMN_REC are input parameters.
             ** always return their values as NULL */
             break;
         }
@@ -766,8 +766,8 @@ static int fsdirEof(sqlite3_vtab_cursor* cur) {
 /*
 ** xFilter callback.
 **
-** idxNum==1   PATH parameter only
-** idxNum==2   Both PATH and DIR supplied
+** idxNum==0   PATH was not supplied (invalid function call)
+** idxNum==1   PATH was supplied
 */
 static int fsdirFilter(sqlite3_vtab_cursor* cur,
                        int idxNum,
@@ -778,15 +778,15 @@ static int fsdirFilter(sqlite3_vtab_cursor* cur,
     (void)idxStr;
     fsdirResetCursor(pCur);
 
-    if (argc == 0) {
-        fsdirSetErrmsg(pCur, "table function fsdir requires an argument");
+    if (idxNum == 0) {
+        fsdirSetErrmsg(pCur, "table function lsdir requires an argument");
         return SQLITE_ERROR;
     }
 
-    assert(argc == 1 || argc == 2);
+    assert(idxNum == 1 && (argc == 1 || argc == 2));
     const char* zPath = (const char*)sqlite3_value_text(argv[0]);
     if (zPath == 0) {
-        fsdirSetErrmsg(pCur, "table function fsdir requires a non-NULL argument");
+        fsdirSetErrmsg(pCur, "table function lsdir requires a non-NULL argument");
         return SQLITE_ERROR;
     }
     pCur->zPath = sqlite3_mprintf("%s", zPath);
@@ -820,14 +820,13 @@ static int fsdirFilter(sqlite3_vtab_cursor* cur,
 ** The query plan is represented by values of idxNum:
 **
 **  (1)  The path value is supplied by argv[0]
-**  (2)  Path is in argv[0] and dir is in argv[1]
 */
 static int fsdirBestIndex(sqlite3_vtab* tab, sqlite3_index_info* pIdxInfo) {
     int i;            /* Loop over constraints */
     int idxPath = -1; /* Index in pIdxInfo->aConstraint of PATH= */
-    int idxDir = -1;  /* Index in pIdxInfo->aConstraint of DIR= */
+    int idxRec = -1;  /* Index in pIdxInfo->aConstraint of REC= */
     int seenPath = 0; /* True if an unusable PATH= constraint is seen */
-    int seenDir = 0;  /* True if an unusable DIR= constraint is seen */
+    int seenRec = 0;  /* True if an unusable REC= constraint is seen */
     const struct sqlite3_index_constraint* pConstraint;
 
     (void)tab;
@@ -845,18 +844,18 @@ static int fsdirBestIndex(sqlite3_vtab* tab, sqlite3_index_info* pIdxInfo) {
                 }
                 break;
             }
-            case FSDIR_COLUMN_DIR: {
+            case FSDIR_COLUMN_REC: {
                 if (pConstraint->usable) {
-                    idxDir = i;
-                    seenDir = 0;
-                } else if (idxDir < 0) {
-                    seenDir = 1;
+                    idxRec = i;
+                    seenRec = 0;
+                } else if (idxRec < 0) {
+                    seenRec = 1;
                 }
                 break;
             }
         }
     }
-    if (seenPath || seenDir) {
+    if (seenPath || seenRec) {
         /* If input parameters are unusable, disallow this plan */
         return SQLITE_CONSTRAINT;
     }
@@ -869,15 +868,12 @@ static int fsdirBestIndex(sqlite3_vtab* tab, sqlite3_index_info* pIdxInfo) {
     } else {
         pIdxInfo->aConstraintUsage[idxPath].omit = 1;
         pIdxInfo->aConstraintUsage[idxPath].argvIndex = 1;
-        if (idxDir >= 0) {
-            pIdxInfo->aConstraintUsage[idxDir].omit = 1;
-            pIdxInfo->aConstraintUsage[idxDir].argvIndex = 2;
-            pIdxInfo->idxNum = 2;
-            pIdxInfo->estimatedCost = 10.0;
-        } else {
-            pIdxInfo->idxNum = 1;
-            pIdxInfo->estimatedCost = 100.0;
+        if (idxRec >= 0) {
+            pIdxInfo->aConstraintUsage[idxRec].omit = 1;
+            pIdxInfo->aConstraintUsage[idxRec].argvIndex = 2;
         }
+        pIdxInfo->idxNum = 1;
+        pIdxInfo->estimatedCost = 100.0;
     }
 
     return SQLITE_OK;
