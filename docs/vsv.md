@@ -4,14 +4,41 @@ Provides virtual table for working directly with CSV files, without importing da
 
 Adapted from [vsv.c](http://www.dessus.com/files/vsv.c) by Keith Medcalf.
 
-## Usage
+## Example
 
-```sql
+For the `people.csv` file with the following data:
+
+```csv
+11,Diane,London
+22,Grace,Berlin
+33,Alice,Paris
+```
+
+The `vsv` virtual table could look like this:
+
+```
 .load ./vsv
 
-create virtual table temp.vsv using vsv(...);
-select * from vsv;
+create virtual table people using vsv(
+    filename=people.csv,
+    schema="create table people(id integer, name text, city text)",
+    columns=3,
+    affinity=integer
+);
 ```
+
+```
+select * from people;
+┌────┬───────┬────────┐
+│ id │ name  │  city  │
+├────┼───────┼────────┤
+│ 11 │ Diane │ London │
+│ 22 │ Grace │ Berlin │
+│ 33 │ Alice │ Paris  │
+└────┴───────┴────────┘
+```
+
+## Parameters
 
 The parameters to the vsv module (the vsv(...) part) are as follows:
 
@@ -25,11 +52,11 @@ skip=N              number of leading data rows to skip
 rsep=STRING         record separator
 fsep=STRING         field separator
 validatetext=BOOL   validate UTF-8 encoding of text fields
-affinity=AFFINITY    affinity to apply to each returned value
+affinity=AFFINITY   affinity to apply to each returned value
 nulls=BOOL          empty fields are returned as NULL
 ```
 
-Defaults:
+### Defaults
 
 ```
 filename / data     nothing.  You must provide one or the other
@@ -57,29 +84,7 @@ affinity=none       do not apply affinity to each returned value
 nulls=off           empty fields returned as zero-length
 ```
 
-Parameter types:
-
--   `STRING` means a quoted string
--   `N` means a whole number not containing a sign
--   `BOOL` means something that evaluates as true or false. Case insensitive: `yes`, `no`, `true`, `false`, `1`, `0`. Defaults to `true`
--   `AFFINITY` means an SQLite3 type specification. Case insensitive: `none`, `blob`, `text`, `integer`, `real`, `numeric`
--   STRING means a quoted string. The quote character may be either
-    a single quote or a double quote. Two quote characters in a row
-    will be replaced with a single quote character. STRINGS do not
-    need to be quoted if it is obvious where they begin and end
-    (that is, they do not contain a comma). Leading and trailing
-    spaces will be trimmed from unquoted strings.
-
-The `separator` string containing exactly one character, or a valid
-escape sequence. Recognized escape sequences are:
-
-```
-\t horizontal tab, ascii character 9 (0x09)
-\n linefeed, ascii character 10 (0x0a)
-\v vertical tab, ascii character 11 (0x0b)
-\f form feed, ascii character 12 (0x0c)
-\xhh specific byte where hh is hexadecimal
-```
+### Options
 
 The `validatetext` setting will cause the validity of the field
 encoding (not its contents) to be verified. It effects how
@@ -133,5 +138,38 @@ each value returned by the VSV virtual table:
     (see real above) then the number will
     returned as an integer if it has no
     fractional part; otherwise a double will be returned
+
+### Parameter types
+
+-   `STRING` means a quoted string
+-   `N` means a whole number not containing a sign
+-   `BOOL` means something that evaluates as true or false. Case insensitive: `yes`, `no`, `true`, `false`, `1`, `0`. Defaults to `true`
+-   `AFFINITY` means an SQLite3 type specification. Case insensitive: `none`, `blob`, `text`, `integer`, `real`, `numeric`
+-   STRING means a quoted string. The quote character may be either
+    a single quote or a double quote. Two quote characters in a row
+    will be replaced with a single quote character. STRINGS do not
+    need to be quoted if it is obvious where they begin and end
+    (that is, they do not contain a comma). Leading and trailing
+    spaces will be trimmed from unquoted strings.
+
+The `separator` string containing exactly one character, or a valid
+escape sequence. Recognized escape sequences are:
+
+```
+\t horizontal tab, ascii character 9 (0x09)
+\n linefeed, ascii character 10 (0x0a)
+\v vertical tab, ascii character 11 (0x0b)
+\f form feed, ascii character 12 (0x0c)
+\xhh specific byte where hh is hexadecimal
+```
+
+## Usage
+
+```sql
+.load ./vsv
+
+create virtual table temp.vsv using vsv(...);
+select * from vsv;
+```
 
 [Download](https://github.com/nalgeon/sqlean/releases/latest)
