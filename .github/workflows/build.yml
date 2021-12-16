@@ -2,13 +2,13 @@ name: build
 
 on:
     push:
-        branches: [main]
+        branches: [incubator]
         paths:
             - src/**
             - test/**
             - Makefile
     pull_request:
-        branches: [main]
+        branches: [incubator]
     workflow_dispatch:
 
 env:
@@ -50,3 +50,12 @@ jobs:
             - name: Build for macOS
               if: matrix.os == 'macos-latest'
               run: make compile-macos
+            
+            - name: Upload binaries to release
+              uses: svenstaro/upload-release-action@v2
+              with:
+                  repo_token: ${{ secrets.GITHUB_TOKEN }}
+                  file: dist/*
+                  file_glob: true
+                  overwrite: true
+                  tag: incubator

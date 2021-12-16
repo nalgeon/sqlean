@@ -1,30 +1,14 @@
-# All the missing SQLite functions
+# SQLite extensions incubator
 
-SQLite has few functions compared to other database management systems. SQLite authors see this as a feature rather than a problem, because SQLite has an extension mechanism in place.
+The incubator contains SQLite extensions which haven't yet made their way to the main extension set. They may be untested, poorly documented, and without a well-thought API.
 
-There are a lot of SQLite extensions out there, but they are incomplete, inconsistent and scattered across the internet.
+See the full extension list and vote for your favorites! We'll merge the most popular ones into the main extension set.
 
-`sqlean` brings them all together, neatly packaged into domain modules, documented, tested, and built for Linux, Windows and macOS.
-
-Here is what we've got right now:
-
--   [crypto](docs/crypto.md): secure hashes
--   [fileio](docs/fileio.md): read and write files
--   [fuzzy](docs/fuzzy.md): fuzzy string matching and phonetics
--   [ipaddr](docs/ipaddr.md): IP address manipulation
--   [json1](docs/json1.md): JSON functions
--   [math](docs/math.md): math functions
--   [re](docs/re.md): regular expressions
--   [spellfix](docs/spellfix.md): similarity search for large tables
--   [stats](docs/stats.md): math statistics
--   [text](docs/text.md): string functions
--   [unicode](docs/unicode.md): Unicode support
--   [uuid](docs/uuid.md): Universally Unique IDentifiers
--   [vsv](docs/vsv.md): CSV files as virtual tables
+Meanwhile, you can use download compiled incubator extensions as they are and use them if you like.
 
 ## Download
 
-There are [precompiled binaries](https://github.com/nalgeon/sqlean/releases/latest) for every OS:
+There are [precompiled binaries](https://github.com/nalgeon/sqlean/releases/tag/incubator) for every OS:
 
 -   `*.dll` - for Windows
 -   `*.so` - for Linux
@@ -37,14 +21,14 @@ Binaries are 64-bit and require a 64-bit SQLite version. If you are using SQLite
 CLI usage:
 
 ```
-sqlite> .load ./stats
-sqlite> select median(value) from generate_series(1, 99);
+sqlite> .load ./hello
+sqlite> select hello('world');
 ```
 
 IDE usage:
 
 ```
-select load_extension('/path/to/extension/stats');
+select load_extension('/path/to/extension/hello');
 select median(value) from generate_series(1, 99);
 ```
 
@@ -55,16 +39,16 @@ import sqlite3
 
 connection = sqlite3.connect(":memory:")
 connection.enable_load_extension(True)
-connection.load_extension("./stats.so")
-connection.execute("select median(value) from generate_series(1, 99)")
+connection.load_extension("./hello.so")
+connection.execute("select hello('world')")
 connection.close()
 ```
 
-You can specify any other supported extension instead of `stats`.
+You can specify any other supported extension instead of `hello`.
 
 ## License
 
-Copyright (c) 2021 [Anton Zhiyanov](https://antonz.org/), [Contributors](https://github.com/nalgeon/sqlean/graphs/contributors) and [Third-party Authors](docs/third-party.md).
+Copyright (c) 2021 [Anton Zhiyanov](https://antonz.org/), [Contributors](https://github.com/nalgeon/sqlean/graphs/contributors) and [Third-party Authors]([docs/third-party.md](https://github.com/nalgeon/sqlean/releases/tag/incubator)).
 
 The software is available under the MIT License.
 
