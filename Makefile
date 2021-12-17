@@ -1,7 +1,7 @@
 # Copyright (c) 2021 Anton Zhiyanov, MIT License
 # https://github.com/nalgeon/sqlean
 
-.PHONY: prepare-dist download-sqlite download-native compile-linux compile-windows compile-macos test test-all
+.PHONY: prepare-dist download-sqlite download-external compile-linux compile-windows compile-macos test test-all
 
 prepare-dist:
 	mkdir -p dist
@@ -12,10 +12,10 @@ download-sqlite:
 	unzip src.zip
 	mv sqlite-amalgamation-$(SQLITE_VERSION)/* src
 
-download-native:
-	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/json1.c --output src/sqlite3-json1.c
-	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/spellfix.c --output src/sqlite3-spellfix.c
-	curl -L https://github.com/mackyle/sqlite/raw/master/src/test_windirent.h --output src/test_windirent.h
+download-external:
+	curl -L https://github.com/sqlite/sqlite/raw/branch-3.36/ext/misc/json1.c --output src/sqlite3-json1.c
+	curl -L https://github.com/sqlite/sqlite/raw/branch-3.36/ext/misc/spellfix.c --output src/sqlite3-spellfix.c
+	curl -L https://github.com/mackyle/sqlite/raw/branch-3.36/src/test_windirent.h --output src/test_windirent.h
 
 compile-linux:
 	gcc -fPIC -shared src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.so
