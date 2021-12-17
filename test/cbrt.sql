@@ -3,8 +3,8 @@
 
 .load dist/cbrt
 
-select '01', cbrt(27) = 3.0;
-select '02', cbrt(-27) = -3.0;
+select '01', round(cbrt(27), 1) = 3.0;
+select '02', round(cbrt(-27), 1) = -3.0;
 select '03', cbrt(8.0) = 2.0;
 select '04', cbrt(1) = 1;
 select '05', cbrt(0) = 0;
