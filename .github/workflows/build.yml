@@ -15,6 +15,7 @@ on:
 env:
     SQLITE_RELEASE_YEAR: "2021"
     SQLITE_VERSION: "3360000"
+    SQLITE_BRANCH: "3.36"
 
 jobs:
     build:

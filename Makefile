@@ -13,9 +13,9 @@ download-sqlite:
 	mv sqlite-amalgamation-$(SQLITE_VERSION)/* src
 
 download-external:
-	curl -L https://github.com/sqlite/sqlite/raw/branch-3.36/ext/misc/json1.c --output src/sqlite3-json1.c
-	curl -L https://github.com/sqlite/sqlite/raw/branch-3.36/ext/misc/spellfix.c --output src/sqlite3-spellfix.c
-	curl -L https://github.com/mackyle/sqlite/raw/branch-3.36/src/test_windirent.h --output src/test_windirent.h
+	curl -L https://github.com/sqlite/sqlite/raw/branch-$(SQLITE_BRANCH)/ext/misc/json1.c --output src/sqlite3-json1.c
+	curl -L https://github.com/sqlite/sqlite/raw/branch-$(SQLITE_BRANCH)/ext/misc/spellfix.c --output src/sqlite3-spellfix.c
+	curl -L https://github.com/mackyle/sqlite/raw/branch-$(SQLITE_BRANCH)/src/test_windirent.h --output src/test_windirent.h
 
 compile-linux:
 	gcc -fPIC -shared src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.so
