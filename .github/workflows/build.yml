@@ -34,7 +34,7 @@ jobs:
               run: |
                   make prepare-dist
                   make download-sqlite
-                  make download-native
+                  make download-external
 
             - name: Build for Linux
               if: matrix.os == 'ubuntu-latest'
