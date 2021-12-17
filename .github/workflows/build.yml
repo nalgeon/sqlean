@@ -4,6 +4,7 @@ on:
     push:
         branches: [incubator]
         paths:
+            - .github/**
             - src/**
             - test/**
             - Makefile
