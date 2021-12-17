@@ -12,15 +12,19 @@ download-sqlite:
 	unzip src.zip
 	mv sqlite-amalgamation-$(SQLITE_VERSION)/* src
 
-download-external: ;
+download-external:
+	curl -L https://github.com/sqlite/sqlite/raw/branch-$(SQLITE_BRANCH)/ext/misc/eval.c --output src/eval.c
 
 compile-linux:
+	gcc -fPIC -shared src/eval.c -o dist/eval.so
 	gcc -fPIC -shared src/cbrt.c -o dist/cbrt.so -lm
 
 compile-windows:
+	gcc -shared -I. src/eval.c -o dist/eval.dll
 	gcc -shared -I. src/cbrt.c -o dist/cbrt.dll -lm
 
 compile-macos:
+	gcc -fPIC -dynamiclib -I src src/eval.c -o dist/eval.dylib
 	gcc -fPIC -dynamiclib -I src src/cbrt.c -o dist/cbrt.dylib -lm
 
 # fails if grep does find a failed test case
