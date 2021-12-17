@@ -2,9 +2,9 @@
 
 The incubator contains SQLite extensions which haven't yet made their way to the main extension set. They may be untested, poorly documented, and without a well-thought API.
 
-See the full extension list and vote for your favorites! We'll merge the most popular ones into the main extension set.
+See the [full extension list](https://github.com/nalgeon/sqlean/issues/27) and vote for your favorites! We'll merge the most popular ones into the main extension set.
 
-Meanwhile, you can use download compiled incubator extensions as they are and use them if you like.
+Meanwhile, you can download compiled incubator extensions as they are and use them if you like.
 
 ## Download
 
