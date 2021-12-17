@@ -1,17 +1,21 @@
 # math: Mathematics in SQLite
 
 Common math functions for SQLite versions before 3.35.
-Extracted from SQLite 3.35.4 source code (`func.c`).
+Extracted from SQLite 3.35.4 source code ([func.c](https://sqlite.org/src/file/src/func.c)).
 
 Provides following functions:
 
--   trigonometric: `sin`, `cos`, `tan` etc,
--   logarithmic: `ln`, `log10`, `log2`, `log`,
--   rounding: `ceil`, `floor`, `trunk`,
--   arithmetic: `pow`, `sqrt` and `mod`,
+-   rounding: `ceil`, `floor`, `trunc`;
+-   logarithmic: `ln`, `log10`, `log2`, `log`;
+-   arithmetic: `pow`, `sqrt`, `mod`;
+-   trigonometric: `cos`, `sin`, `tan`;
+-   hyperbolic: `cosh`, `sinh`, `tanh`;
+-   inverse trigonometric: `acos`, `asin`, `atan`, `atan2`;
+-   inverse hyperbolic: `acosh`, `asinh`, `atanh`;
+-   angular measures: `radians`, `degrees`;
 -   `pi`.
 
-[Full functions list](https://sqlite.org/lang_mathfunc.html)
+[Full description](https://sqlite.org/lang_mathfunc.html)
 
 ## Usage
 
