@@ -1,12 +1,16 @@
 # All the missing SQLite functions
 
-SQLite has few functions compared to other database management systems. SQLite authors see this as a feature rather than a problem, because SQLite has an extension mechanism in place.
+SQLite has few functions compared to other database management systems. SQLite authors see this as a feature rather than a problem, because SQLite has an extension mechanism in place. There are a lot of SQLite extensions out there, but they are incomplete, inconsistent and scattered across the internet.
 
-There are a lot of SQLite extensions out there, but they are incomplete, inconsistent and scattered across the internet.
+`sqlean` brings them together, neatly packaged into domain modules, documented, tested, and built for Linux, Windows and macOS.
 
-`sqlean` brings them all together, neatly packaged into domain modules, documented, tested, and built for Linux, Windows and macOS.
+We do not try to combine all the existing extensions into one giant pile — that would not be very useful. The goal is to create a well-thought set of domain modules with a convenient API. A kind of standard library for SQLite.
 
-Here is what we've got right now:
+## The main set
+
+These are the most popular functions. They are tested, documented and organized into the domain modules with clear API.
+
+Think of them as of the extended standard library for SQLite:
 
 -   [crypto](docs/crypto.md): secure hashes
 -   [fileio](docs/fileio.md): read and write files
@@ -22,6 +26,12 @@ Here is what we've got right now:
 -   [uuid](docs/uuid.md): Universally Unique IDentifiers
 -   [vsv](docs/vsv.md): CSV files as virtual tables
 
+## The incubator
+
+These functions haven't yet made their way to the main extension set. They may be untested, poorly documented, and without a well-thought API. Think of them as of candidates for the standard library.
+
+See the [full extension list](https://github.com/nalgeon/sqlean/issues/27) and vote for your favorites! We'll merge popular ones into the main set.
+
 ## Download
 
 There are [precompiled binaries](https://github.com/nalgeon/sqlean/releases/latest) for every OS:
@@ -31,6 +41,8 @@ There are [precompiled binaries](https://github.com/nalgeon/sqlean/releases/late
 -   `*.dylib` - for macOS
 
 Binaries are 64-bit and require a 64-bit SQLite version. If you are using SQLite shell on Windows (`sqlite.exe`), its 64-bit version is available at https://github.com/nalgeon/sqlite.
+
+Incubator extensions are [also available](https://github.com/nalgeon/sqlean/releases/tag/incubator).
 
 ## Usage
 
