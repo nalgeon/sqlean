@@ -4,6 +4,7 @@ on:
     push:
         branches: [main]
         paths:
+            - .github/**
             - src/**
             - test/**
             - Makefile
