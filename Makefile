@@ -14,6 +14,7 @@ download-sqlite:
 
 download-external:
 	curl -L https://github.com/sqlite/sqlite/raw/branch-$(SQLITE_BRANCH)/ext/misc/eval.c --output src/eval.c
+	curl -L https://github.com/jakethaw/pivot_vtab/raw/main/pivot_vtab.c --output src/pivotvtab.c
 	curl -L https://github.com/jakethaw/xml_to_json/raw/master/xml_to_json.c --output src/xmltojson.c
 
 compile-linux:
@@ -29,6 +30,7 @@ compile-windows:
 compile-macos:
 	gcc -fPIC -dynamiclib -I src src/cbrt.c -o dist/cbrt.dylib -lm
 	gcc -fPIC -dynamiclib -I src src/eval.c -o dist/eval.dylib
+	gcc -fPIC -dynamiclib -I src src/pivotvtab.c -o dist/pivotvtab.dylib
 	gcc -fPIC -dynamiclib -I src src/xmltojson.c -o dist/xmltojson.dylib -DSQLITE
 
 # fails if grep does find a failed test case
