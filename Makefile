@@ -14,11 +14,14 @@ download-sqlite:
 
 download-external: ;
 
-compile-linux: ;
+compile-linux:
+	gcc -fPIC -shared src/cbrt.c -o dist/cbrt.so -lm
 
-compile-windows: ;
+compile-windows:
+	gcc -shared -I. src/cbrt.c -o dist/cbrt.dll -lm
 
-compile-macos: ;
+compile-macos:
+	gcc -fPIC -dynamiclib -I src src/cbrt.c -o dist/cbrt.dylib -lm
 
 # fails if grep does find a failed test case
 # https://stackoverflow.com/questions/15367674/bash-one-liner-to-exit-with-the-opposite-status-of-a-grep-command/21788642
