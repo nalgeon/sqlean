@@ -54,9 +54,11 @@ Contributions are welcome! Submit your own or third-party extension to the incub
 - [How to submit your extension](docs/submit.md)
 - [How to submit a third-party extension](docs/external.md)
 
+Please note that we accept only extensions with permissive licenses (MIT License, Apache License etc) or public domain. Copyleft licenses like GPL won't do.
+
 ## License
 
-Copyright (c) 2021 [Anton Zhiyanov](https://antonz.org/), [Contributors](https://github.com/nalgeon/sqlean/graphs/contributors) and [Third-party Authors](<[docs/third-party.md](https://github.com/nalgeon/sqlean/releases/tag/incubator)>).
+Copyright (c) 2021 [Anton Zhiyanov](https://antonz.org/), [Contributors](https://github.com/nalgeon/sqlean/graphs/contributors) and [Third-party Authors](https://github.com/nalgeon/sqlean/issues/27).
 
 The software is available under the MIT License.
 

@@ -73,3 +73,12 @@ make test suite=cbrt
 > Cube root function.
 >
 > Created by [Anton Zhiyanov](https://github.com/nalgeon), MIT License.
+
+## Code style
+
+Please follow these rules:
+
+-   Auto-format the code according to the provided [clang-format specification](../.clang-format).
+-   Use descriptive names. No `z`, `cc`, `pSvRt` and other cryptic variables, please.
+-   Use `snake_case` for variable and function names.
+
