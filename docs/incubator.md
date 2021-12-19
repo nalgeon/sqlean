@@ -54,6 +54,50 @@ sqlite> select eval('select 42');
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/eval.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/eval.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/eval.dylib)
 
+## fcmp
+
+Floating point numbers comparison and rounding.
+
+Created by [Keith Medcalf](http://www.dessus.com/files/sqlfcmp.c), Public Domain.
+
+```sql
+sqlite> select 0.1*3 = 0.3;
+0
+sqlite> .load dist/fcmp
+sqlite> select feq(0.1*3, 0.3);
+1
+```
+
+Floating point numbers comparison:
+
+```
+flt(x[, y[, u]])   -> x less than y
+fle(x[, y[, u]])   -> x less or equal y
+feq(x[, y[, u]])   -> x equal y
+fge(x[, y[, u]])   -> x greater or equal y
+fgt(x[, y[, u]])   -> x greater than y
+fne(x[, y[, u]])   -> x not equal y
+```
+
+Rounding:
+
+```
+roundho(x)   -> Half to Odd
+roundhe(x)   -> Half to Even
+roundhu(x)   -> Half Up
+roundhd(x)   -> Half Down
+roundha(x)   -> Half Away from 0
+roundht(x)   -> Half Towards 0
+money(x)     -> Money (Half to Even, 4 digits)
+
+rounddu(x)   -> Directed Up
+rounddd(x)   -> Directed Down
+roundda(x)   -> Directed Away from 0
+rounddt(x)   -> Directed Towards 0
+```
+
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/fcmp.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/fcmp.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/fcmp.dylib)
+
 ## pearson
 
 Returns Pearson correlation coefficient between two data sets.
