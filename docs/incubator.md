@@ -12,6 +12,20 @@ sqlite> select cbrt(27);
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/cbrt.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/cbrt.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/cbrt.dylib)
 
+## cron
+
+Compares dates against cron patterns, whether they match or not.
+
+Created by [David Schramm ](https://github.com/daschr/sqlite3_extensions/blob/master/cron.c), MIT License.
+
+```sql
+sqlite> .load dist/cron
+sqlite> select cron_match('2006-01-02 15:04:05','4 15 * * *');
+1
+```
+
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/cron.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/cron.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/cron.dylib)
+
 ## envfuncs
 
 Returns the value of the environment variable.

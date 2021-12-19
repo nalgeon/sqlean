@@ -13,6 +13,7 @@ download-sqlite:
 	mv sqlite-amalgamation-$(SQLITE_VERSION)/* src
 
 download-external:
+	curl -L https://github.com/daschr/sqlite3_extensions/raw/master/cron.c --output src/cron.c
 	curl -L https://github.com/sqlite/sqlite/raw/branch-$(SQLITE_BRANCH)/ext/misc/eval.c --output src/eval.c
 	curl -L https://github.com/jhowie/sqlite3-ext/raw/main/envfuncs.c --output src/envfuncs.c
 	curl -L https://github.com/jakethaw/pivot_vtab/raw/main/pivot_vtab.c --output src/pivotvtab.c
@@ -20,6 +21,7 @@ download-external:
 
 compile-linux:
 	gcc -fPIC -shared src/cbrt.c -o dist/cbrt.so -lm
+	gcc -fPIC -shared src/cron.c -o dist/cron.so
 	gcc -fPIC -shared src/envfuncs.c -o dist/envfuncs.so
 	gcc -fPIC -shared src/eval.c -o dist/eval.so
 	gcc -fPIC -shared src/pearson.c -o dist/pearson.so
@@ -28,6 +30,7 @@ compile-linux:
 
 compile-windows:
 	gcc -shared -I. src/cbrt.c -o dist/cbrt.dll -lm
+	gcc -shared -I. src/cron.c -o dist/cron.dll
 	gcc -shared -I. src/envfuncs.c -o dist/envfuncs.dll
 	gcc -shared -I. src/eval.c -o dist/eval.dll
 	gcc -shared -I. src/pearson.c -o dist/pearson.dll
@@ -36,6 +39,7 @@ compile-windows:
 
 compile-macos:
 	gcc -fPIC -dynamiclib -I src src/cbrt.c -o dist/cbrt.dylib -lm
+	gcc -fPIC -dynamiclib -I src src/cron.c -o dist/cron.dylib
 	gcc -fPIC -dynamiclib -I src src/envfuncs.c -o dist/envfuncs.dylib
 	gcc -fPIC -dynamiclib -I src src/eval.c -o dist/eval.dylib
 	gcc -fPIC -dynamiclib -I src src/pearson.c -o dist/pearson.dylib
