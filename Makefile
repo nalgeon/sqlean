@@ -26,6 +26,7 @@ compile-linux:
 	gcc -fPIC -shared src/eval.c -o dist/eval.so
 	gcc -fPIC -shared src/pearson.c -o dist/pearson.so
 	gcc -fPIC -shared src/pivotvtab.c -o dist/pivotvtab.so
+	gcc -fPIC -shared src/unhex.c -o dist/unhex.so
 	gcc -fPIC -shared src/xmltojson.c -o dist/xmltojson.so -DSQLITE
 
 compile-windows:
@@ -35,6 +36,7 @@ compile-windows:
 	gcc -shared -I. src/eval.c -o dist/eval.dll
 	gcc -shared -I. src/pearson.c -o dist/pearson.dll
 	gcc -shared -I. src/pivotvtab.c -o dist/pivotvtab.dll
+	gcc -shared -I. src/unhex.c -o dist/unhex.dll
 	gcc -shared -I. src/xmltojson.c -o dist/xmltojson.dll -DSQLITE
 
 compile-macos:
@@ -44,6 +46,7 @@ compile-macos:
 	gcc -fPIC -dynamiclib -I src src/eval.c -o dist/eval.dylib
 	gcc -fPIC -dynamiclib -I src src/pearson.c -o dist/pearson.dylib
 	gcc -fPIC -dynamiclib -I src src/pivotvtab.c -o dist/pivotvtab.dylib
+	gcc -fPIC -dynamiclib -I src src/unhex.c -o dist/unhex.dylib
 	gcc -fPIC -dynamiclib -I src src/xmltojson.c -o dist/xmltojson.dylib -DSQLITE
 
 # fails if grep does find a failed test case

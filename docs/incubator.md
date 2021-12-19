@@ -153,6 +153,20 @@ select * from sales_by_year;
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/pivotvtab.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/pivotvtab.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/pivotvtab.dylib)
 
+## unhex
+
+Reverse function for `hex()`. Decodes the previously hex-encoded blob and returns it.
+
+Created by [Keith Medcalf](https://sqlite.org/forum/forumpost/dd104572f2833e48?t=h).
+
+```sql
+sqlite> .load dist/unhex
+sqlite> select unhex(hex('hello'));
+hello
+```
+
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/unhex.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/unhex.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/unhex.dylib)
+
 ## xmltojson
 
 Converts an XML string to the corresponding JSON string.
