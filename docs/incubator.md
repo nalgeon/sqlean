@@ -12,6 +12,20 @@ sqlite> select cbrt(27);
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/cbrt.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/cbrt.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/cbrt.dylib)
 
+## envfuncs
+
+Returns the value of the environment variable.
+
+Created by [John Howie](https://github.com/jhowie/sqlite3-ext/blob/main/envfuncs.c), BSD-3-Clause License.
+
+```sql
+sqlite> .load dist/envfuncs
+sqlite> select getenv('USER');
+antonz
+```
+
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/envfuncs.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/envfuncs.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/envfuncs.dylib)
+
 ## eval
 
 Dinamically runs arbitrary SQL statements.
