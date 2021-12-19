@@ -20,18 +20,21 @@ download-external:
 compile-linux:
 	gcc -fPIC -shared src/cbrt.c -o dist/cbrt.so -lm
 	gcc -fPIC -shared src/eval.c -o dist/eval.so
+	gcc -fPIC -shared src/pearson.c -o dist/pearson.so
 	gcc -fPIC -shared src/pivotvtab.c -o dist/pivotvtab.so
 	gcc -fPIC -shared src/xmltojson.c -o dist/xmltojson.so -DSQLITE
 
 compile-windows:
 	gcc -shared -I. src/cbrt.c -o dist/cbrt.dll -lm
 	gcc -shared -I. src/eval.c -o dist/eval.dll
+	gcc -shared -I. src/pearson.c -o dist/pearson.dll
 	gcc -shared -I. src/pivotvtab.c -o dist/pivotvtab.dll
 	gcc -shared -I. src/xmltojson.c -o dist/xmltojson.dll -DSQLITE
 
 compile-macos:
 	gcc -fPIC -dynamiclib -I src src/cbrt.c -o dist/cbrt.dylib -lm
 	gcc -fPIC -dynamiclib -I src src/eval.c -o dist/eval.dylib
+	gcc -fPIC -dynamiclib -I src src/pearson.c -o dist/pearson.dylib
 	gcc -fPIC -dynamiclib -I src src/pivotvtab.c -o dist/pivotvtab.dylib
 	gcc -fPIC -dynamiclib -I src src/xmltojson.c -o dist/xmltojson.dylib -DSQLITE
 

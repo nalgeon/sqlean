@@ -26,6 +26,21 @@ sqlite> select eval('select 42');
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/eval.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/eval.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/eval.dylib)
 
+## pearson
+
+Returns Pearson correlation coefficient between two data sets.
+
+Created by [Alex Wilson](https://github.com/mrwilson/squib/blob/master/pearson.c), MIT License.
+
+```sql
+sqlite> .load dist/pearson
+sqlite> create table data as select value as x, value*2 as y from generate_series(1, 8);
+sqlite> select pearson(x, y) from data;
+1.0
+```
+
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/pearson.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/pearson.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/pearson.dylib)
+
 ## pivotvtab
 
 Creates a pivot table from a regular one.
