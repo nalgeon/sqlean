@@ -98,6 +98,29 @@ rounddt(x)   -> Directed Towards 0
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/fcmp.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/fcmp.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/fcmp.dylib)
 
+## isodate
+
+Additional date and time functions:
+
+- Extract date parts according to ISO 8601: week day, week of a year, year
+- Convert ISO 8601 datetime to unix timestamp
+
+Created by [Harald Hanche-Olsen](https://sqlite.org/forum/forumpost/cb8923cb4db72f2e?t=h) and [Richard Hipp](https://sqlite.org/src/artifact/d0f09f7924a27e0d?ln=968-984), Public Domain.
+
+```sql
+sqlite> .load dist/isodate
+sqlite> select iso_weekday('2021-12-22');
+3
+sqlite> select iso_week('2021-12-22');
+51
+sqlite> select iso_year('2021-12-22');
+2021
+sqlite> select unixepoch('2021-12-22 12:34:45');
+1640176485
+```
+
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/isodate.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/isodate.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/isodate.dylib)
+
 ## pearson
 
 Returns Pearson correlation coefficient between two data sets.
