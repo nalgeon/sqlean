@@ -12,7 +12,7 @@ To achieve it, we split extensions that are too broad, merge the ones that are t
 
 These are the most popular functions. They are tested, documented and organized into the domain modules with clear API.
 
-Think of them as of the extended standard library for SQLite:
+Think of them as the extended standard library for SQLite:
 
 -   [crypto](docs/crypto.md): secure hashes
 -   [fileio](docs/fileio.md): read and write files
@@ -30,9 +30,21 @@ Think of them as of the extended standard library for SQLite:
 
 ## The incubator
 
-These extensions haven't yet made their way to the main set. They may be untested, poorly documented, too broad, too narrow, or without a well-thought API. Think of them as candidates for the standard library.
+These extensions haven't yet made their way to the main set. They may be untested, poorly documented, too broad, too narrow, or without a well-thought API.
 
-See the [full extension list](https://github.com/nalgeon/sqlean/issues/27) and vote for your favorites! We'll merge popular ones into the main set.
+Think of them as candidates for the standard library:
+
+- [cbrt](https://github.com/nalgeon/sqlean/issues/27#issuecomment-996605444): cube root function
+- [cron](https://github.com/nalgeon/sqlean/issues/27#issuecomment-997427979): match dates against cron patterns
+- [envfuncs](https://github.com/nalgeon/sqlean/issues/27#issuecomment-997423609): read environment variables
+- [eval](https://github.com/nalgeon/sqlean/issues/27#issuecomment-996432840): run arbitrary SQL statements
+- [fcmp](https://github.com/nalgeon/sqlean/issues/27#issuecomment-997482625): floating point numbers comparison and rounding
+- [pearson](https://github.com/nalgeon/sqlean/issues/27#issuecomment-997417836): Pearson correlation coefficient between two data sets
+- [pivotvtab](https://github.com/nalgeon/sqlean/issues/27#issuecomment-997052157): pivot tables
+- [unhex](https://github.com/nalgeon/sqlean/issues/27#issuecomment-997432989): reverse for `hex()`
+- [xmltojson](https://github.com/nalgeon/sqlean/issues/27#issuecomment-997018486): convert XML to JSON string
+
+[Vote for your favorites](https://github.com/nalgeon/sqlean/issues/27)! We'll refactor and merge popular ones into the main set.
 
 ## Download
 
@@ -83,7 +95,7 @@ Contributions are welcome! Submit your own or third-party extension to the incub
 - [How to submit your extension](https://github.com/nalgeon/sqlean/blob/incubator/docs/submit.md)
 - [How to submit a third-party extension](https://github.com/nalgeon/sqlean/blob/incubator/docs/external.md)
 
-Please note that we accept only extensions with permissive licenses (MIT License, Apache License etc) or public domain. Copyleft licenses like GPL won't do.
+Please note that we only accept extensions with permissive licenses (MIT License, Apache License etc) or public domain. Copyleft licenses like GPL won't do.
 
 ## License
 
