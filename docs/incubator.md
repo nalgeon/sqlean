@@ -102,8 +102,8 @@ Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/
 
 Additional date and time functions:
 
-- Extract date parts according to ISO 8601: week day, week of a year, year
-- Convert ISO 8601 datetime to unix timestamp
+-   Extract date parts according to ISO 8601: week day, week of a year, year
+-   Convert ISO 8601 datetime to unix timestamp
 
 Created by [Harald Hanche-Olsen](https://sqlite.org/forum/forumpost/cb8923cb4db72f2e?t=h) and [Richard Hipp](https://sqlite.org/src/artifact/d0f09f7924a27e0d?ln=968-984), Public Domain.
 
@@ -120,6 +120,86 @@ sqlite> select unixepoch('2021-12-22 12:34:45');
 ```
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/isodate.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/isodate.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/isodate.dylib)
+
+## mathsec
+
+Even more math functions and bit arithmetics.
+
+Created by [Keith Medcalf](http://www.dessus.com/files/sqlmath.c), Public Domain.
+
+```sql
+sqlite> select round(m_e(), 3)
+2.718
+```
+
+Constants:
+
+```
+m_e()           -> Euler's number (e)
+m_log2e()       -> log2(e)
+m_log10e()      -> log10(e)
+m_ln2()         -> ln(2)
+m_ln10()        -> ln(10)
+m_pi()          -> Pi number
+m_pi_2()        -> pi/2
+m_pi_4()        -> pi/4
+m_1_pi()        -> 1/pi
+m_2_pi()        -> 2/pi
+m_2_sqrtpi()    -> 2/sqrt(pi)
+m_sqrt2()       -> sqrt(2)
+m_sqrt1_2()     -> sqrt(0.5)
+m_deg2rad()     -> radians(1)
+m_rad2deg()     -> degrees(1)
+```
+
+Bit arithmetics:
+
+```
+isset(value, bit, bit, bit ...)
+-> true if all bits are set in value
+
+isclr(value, bit, bit, bit ...)
+-> true if all bits are clr in value
+
+ismaskset(value, mask)
+-> true if all set bits in mask set in value
+
+ismaskclr(value, mask)
+-> true if all set bits set in mask are clr in value
+
+bitmask(bit, bit, bit ...)
+-> value of bitmask with bits set
+
+setbits(value, bit, bit, ...)
+-> value with bits set
+
+clrbits(value, bit, bit, ...)
+-> value with bits cleared
+
+bitmask(bit)
+-> aggregate function, set bits and return resulting mask
+```
+
+Other functions:
+
+```
+fabs(x)
+-> abs value
+
+ldexp(x, y)
+-> x * 2^y
+
+mantissa(x), exponent(x)
+-> x = mantissa * 2^exponent
+
+trunc(x), frac(x)
+-> integer and fractional parts
+
+fromhex(hex_str)
+-> hexadecimal to decimal
+```
+
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/mathsec.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/mathsec.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/mathsec.dylib)
 
 ## pearson
 
