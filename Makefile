@@ -27,6 +27,7 @@ compile-linux:
 	gcc -fPIC -shared src/fcmp.c -o dist/fcmp.so
 	gcc -fPIC -shared src/isodate.c -o dist/isodate.so
 	gcc -fPIC -shared src/mathsec.c -o dist/mathsec.so
+	gcc -fPIC -shared src/numeric.c -o dist/numeric.so
 	gcc -fPIC -shared src/pearson.c -o dist/pearson.so
 	gcc -fPIC -shared src/pivotvtab.c -o dist/pivotvtab.so
 	gcc -fPIC -shared src/unhex.c -o dist/unhex.so
@@ -40,6 +41,7 @@ compile-windows:
 	gcc -shared -I. src/fcmp.c -o dist/fcmp.dll
 	gcc -shared -I. src/isodate.c -o dist/isodate.dll
 	gcc -shared -I. src/mathsec.c -o dist/mathsec.dll
+	gcc -shared -I. src/numeric.c -o dist/numeric.dll
 	gcc -shared -I. src/pearson.c -o dist/pearson.dll
 	gcc -shared -I. src/pivotvtab.c -o dist/pivotvtab.dll
 	gcc -shared -I. src/unhex.c -o dist/unhex.dll
@@ -53,6 +55,7 @@ compile-macos:
 	gcc -fPIC -dynamiclib -I src src/fcmp.c -o dist/fcmp.dylib
 	gcc -fPIC -dynamiclib -I src src/isodate.c -o dist/isodate.dylib
 	gcc -fPIC -dynamiclib -I src src/mathsec.c -o dist/mathsec.dylib
+	gcc -fPIC -dynamiclib -I src src/numeric.c -o dist/numeric.dylib
 	gcc -fPIC -dynamiclib -I src src/pearson.c -o dist/pearson.dylib
 	gcc -fPIC -dynamiclib -I src src/pivotvtab.c -o dist/pivotvtab.dylib
 	gcc -fPIC -dynamiclib -I src src/unhex.c -o dist/unhex.dylib

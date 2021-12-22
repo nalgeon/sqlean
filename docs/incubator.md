@@ -201,6 +201,25 @@ fromhex(hex_str)
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/mathsec.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/mathsec.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/mathsec.dylib)
 
+## numeric
+
+Implements `ToBestType(x)` function:
+
+-   NULL returns NULL
+-   TEXT/BLOB that "looks like a number" returns the number as Integer or Real as appropriate
+-   TEXT/BLOB that is zero-length returns NULL
+-   Otherwise returns what was given
+
+Created by [Keith Medcalf](http://www.dessus.com/files/sqlnumeric.c), Public Domain.
+
+```sql
+sqlite> .load dist/numeric
+sqlite> select tobesttype('42.13');
+42.13
+```
+
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/numeric.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/numeric.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/numeric.dylib)
+
 ## pearson
 
 Returns Pearson correlation coefficient between two data sets.
