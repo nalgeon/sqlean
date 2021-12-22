@@ -357,27 +357,27 @@ __declspec(dllexport)
                                            _bitmaskFinal, _bitmaskFinal, _bitmaskInverse, 0);
 
 #if !defined(SQLITE_ENABLE_MATH_FUNCTIONS)
-    nErr += sqlite3_create_function(db, "ceil", 1, flags, ceil, _dfd, 0, 0);
-    nErr += sqlite3_create_function(db, "floor", 1, flags, floor, _dfd, 0, 0);
-    nErr += sqlite3_create_function(db, "ln", 1, flags, log, _dfd, 0, 0);
-    nErr += sqlite3_create_function(db, "log", 1, flags, log10, _dfd, 0, 0);
-    nErr += sqlite3_create_function(db, "exp", 1, flags, exp, _dfd, 0, 0);
-    nErr += sqlite3_create_function(db, "pow", 2, flags, pow, _dfdd, 0, 0);
-    nErr += sqlite3_create_function(db, "fmod", 2, flags, fmod, _dfdd, 0, 0);
-    nErr += sqlite3_create_function(db, "acos", 1, flags, acos, _dfd, 0, 0);
-    nErr += sqlite3_create_function(db, "asin", 1, flags, asin, _dfd, 0, 0);
-    nErr += sqlite3_create_function(db, "atan", 1, flags, atan, _dfd, 0, 0);
-    nErr += sqlite3_create_function(db, "atan2", 2, flags, atan2, _dfdd, 0, 0);
-    nErr += sqlite3_create_function(db, "cos", 1, flags, cos, _dfd, 0, 0);
-    nErr += sqlite3_create_function(db, "sin", 1, flags, sin, _dfd, 0, 0);
-    nErr += sqlite3_create_function(db, "tan", 1, flags, tan, _dfd, 0, 0);
-    nErr += sqlite3_create_function(db, "cosh", 1, flags, cosh, _dfd, 0, 0);
-    nErr += sqlite3_create_function(db, "sinh", 1, flags, sinh, _dfd, 0, 0);
-    nErr += sqlite3_create_function(db, "tanh", 1, flags, tanh, _dfd, 0, 0);
-    nErr += sqlite3_create_function(db, "sqrt", 1, flags, sqrt, _dfd, 0, 0);
-    nErr += sqlite3_create_function(db, "radians", 1, flags, 0, _radians, 0, 0);
-    nErr += sqlite3_create_function(db, "degrees", 1, flags, 0, _degrees, 0, 0);
-    nErr += sqlite3_create_function(db, "sign", 1, flags, 0, _sign, 0, 0);
+    sqlite3_create_function(db, "ceil", 1, flags, ceil, _dfd, 0, 0);
+    sqlite3_create_function(db, "floor", 1, flags, floor, _dfd, 0, 0);
+    sqlite3_create_function(db, "ln", 1, flags, log, _dfd, 0, 0);
+    sqlite3_create_function(db, "log", 1, flags, log10, _dfd, 0, 0);
+    sqlite3_create_function(db, "exp", 1, flags, exp, _dfd, 0, 0);
+    sqlite3_create_function(db, "pow", 2, flags, pow, _dfdd, 0, 0);
+    sqlite3_create_function(db, "fmod", 2, flags, fmod, _dfdd, 0, 0);
+    sqlite3_create_function(db, "acos", 1, flags, acos, _dfd, 0, 0);
+    sqlite3_create_function(db, "asin", 1, flags, asin, _dfd, 0, 0);
+    sqlite3_create_function(db, "atan", 1, flags, atan, _dfd, 0, 0);
+    sqlite3_create_function(db, "atan2", 2, flags, atan2, _dfdd, 0, 0);
+    sqlite3_create_function(db, "cos", 1, flags, cos, _dfd, 0, 0);
+    sqlite3_create_function(db, "sin", 1, flags, sin, _dfd, 0, 0);
+    sqlite3_create_function(db, "tan", 1, flags, tan, _dfd, 0, 0);
+    sqlite3_create_function(db, "cosh", 1, flags, cosh, _dfd, 0, 0);
+    sqlite3_create_function(db, "sinh", 1, flags, sinh, _dfd, 0, 0);
+    sqlite3_create_function(db, "tanh", 1, flags, tanh, _dfd, 0, 0);
+    sqlite3_create_function(db, "sqrt", 1, flags, sqrt, _dfd, 0, 0);
+    sqlite3_create_function(db, "radians", 1, flags, 0, _radians, 0, 0);
+    sqlite3_create_function(db, "degrees", 1, flags, 0, _degrees, 0, 0);
+    sqlite3_create_function(db, "sign", 1, flags, 0, _sign, 0, 0);
 #endif
 
     {

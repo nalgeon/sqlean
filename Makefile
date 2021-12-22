@@ -26,7 +26,7 @@ compile-linux:
 	gcc -fPIC -shared src/eval.c -o dist/eval.so
 	gcc -fPIC -shared src/fcmp.c -o dist/fcmp.so
 	gcc -fPIC -shared src/isodate.c -o dist/isodate.so
-	gcc -fPIC -shared src/mathsec.c -o dist/mathsec.so -DSQLITE_ENABLE_MATH_FUNCTIONS
+	gcc -fPIC -shared src/mathsec.c -o dist/mathsec.so
 	gcc -fPIC -shared src/pearson.c -o dist/pearson.so
 	gcc -fPIC -shared src/pivotvtab.c -o dist/pivotvtab.so
 	gcc -fPIC -shared src/unhex.c -o dist/unhex.so
@@ -39,7 +39,7 @@ compile-windows:
 	gcc -shared -I. src/eval.c -o dist/eval.dll
 	gcc -shared -I. src/fcmp.c -o dist/fcmp.dll
 	gcc -shared -I. src/isodate.c -o dist/isodate.dll
-	gcc -shared -I. src/mathsec.c -o dist/mathsec.dll -DSQLITE_ENABLE_MATH_FUNCTIONS
+	gcc -shared -I. src/mathsec.c -o dist/mathsec.dll
 	gcc -shared -I. src/pearson.c -o dist/pearson.dll
 	gcc -shared -I. src/pivotvtab.c -o dist/pivotvtab.dll
 	gcc -shared -I. src/unhex.c -o dist/unhex.dll
@@ -52,7 +52,7 @@ compile-macos:
 	gcc -fPIC -dynamiclib -I src src/eval.c -o dist/eval.dylib
 	gcc -fPIC -dynamiclib -I src src/fcmp.c -o dist/fcmp.dylib
 	gcc -fPIC -dynamiclib -I src src/isodate.c -o dist/isodate.dylib
-	gcc -fPIC -dynamiclib -I src src/mathsec.c -o dist/mathsec.dylib -DSQLITE_ENABLE_MATH_FUNCTIONS
+	gcc -fPIC -dynamiclib -I src src/mathsec.c -o dist/mathsec.dylib
 	gcc -fPIC -dynamiclib -I src src/pearson.c -o dist/pearson.dylib
 	gcc -fPIC -dynamiclib -I src src/pivotvtab.c -o dist/pivotvtab.dylib
 	gcc -fPIC -dynamiclib -I src src/unhex.c -o dist/unhex.dylib
