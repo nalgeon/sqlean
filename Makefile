@@ -30,6 +30,7 @@ compile-linux:
 	gcc -fPIC -shared src/numeric.c -o dist/numeric.so
 	gcc -fPIC -shared src/pearson.c -o dist/pearson.so
 	gcc -fPIC -shared src/pivotvtab.c -o dist/pivotvtab.so
+	gcc -fPIC -shared src/recsize.c -o dist/recsize.so
 	gcc -fPIC -shared src/unhex.c -o dist/unhex.so
 	gcc -fPIC -shared src/xmltojson.c -o dist/xmltojson.so -DSQLITE
 
@@ -44,6 +45,7 @@ compile-windows:
 	gcc -shared -I. src/numeric.c -o dist/numeric.dll
 	gcc -shared -I. src/pearson.c -o dist/pearson.dll
 	gcc -shared -I. src/pivotvtab.c -o dist/pivotvtab.dll
+	gcc -shared -I. src/recsize.c -o dist/recsize.dll
 	gcc -shared -I. src/unhex.c -o dist/unhex.dll
 	gcc -shared -I. src/xmltojson.c -o dist/xmltojson.dll -DSQLITE
 
@@ -58,6 +60,7 @@ compile-macos:
 	gcc -fPIC -dynamiclib -I src src/numeric.c -o dist/numeric.dylib
 	gcc -fPIC -dynamiclib -I src src/pearson.c -o dist/pearson.dylib
 	gcc -fPIC -dynamiclib -I src src/pivotvtab.c -o dist/pivotvtab.dylib
+	gcc -fPIC -dynamiclib -I src src/recsize.c -o dist/recsize.dylib
 	gcc -fPIC -dynamiclib -I src src/unhex.c -o dist/unhex.dylib
 	gcc -fPIC -dynamiclib -I src src/xmltojson.c -o dist/xmltojson.dylib -DSQLITE
 

@@ -319,11 +319,27 @@ select * from sales_by_year;
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/pivotvtab.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/pivotvtab.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/pivotvtab.dylib)
 
+## recsize
+
+Еstimates total record size.
+
+Created by [Keith Medcalf](http://www.dessus.com/files/sqlsize.c), Public Domain.
+
+```sql
+sqlite> .load dist/recsize
+sqlite> select recsize(10);
+3
+sqlite> select recsize(10, 20, 30);
+7
+```
+
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/recsize.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/recsize.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/recsize.dylib)
+
 ## unhex
 
 Reverse function for `hex()`. Decodes the previously hex-encoded blob and returns it.
 
-Created by [Keith Medcalf](https://sqlite.org/forum/forumpost/dd104572f2833e48?t=h).
+Created by [Keith Medcalf](http://www.dessus.com/files/sqlunhex.c), Public Domain.
 
 ```sql
 sqlite> .load dist/unhex
