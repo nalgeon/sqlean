@@ -351,6 +351,27 @@ sqlite> select recsize(10, 20, 30);
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/recsize.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/recsize.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/recsize.dylib)
 
+## sqlar
+
+Compress / uncompress data with zlib using the SQL Archive approach:
+
+- Only compress the value if it yields a smaller blob.
+- Uncompress the value if needed given the orizinal value size.
+
+Doesn't work on Windows.
+
+Created by [D. Richard Hipp](https://sqlite.org/src/file/ext/misc/sqlar.c), Public Domain.
+
+```sql
+sqlite> .load dist/sqlar
+sqlite> select length(sqlar_compress(zeroblob(1024)));
+17
+sqlite> select sqlar_uncompress( sqlar_compress(zeroblob(1024)), 1024 ) = zeroblob(1024);
+1
+```
+
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/sqlar.so) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/sqlar.dylib)
+
 ## stats2
 
 Even more math statistics functions.

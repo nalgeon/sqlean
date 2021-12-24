@@ -18,6 +18,7 @@ download-external:
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/eval.c --output src/eval.c
 	curl -L https://github.com/jhowie/sqlite3-ext/raw/main/envfuncs.c --output src/envfuncs.c
 	curl -L https://github.com/jakethaw/pivot_vtab/raw/main/pivot_vtab.c --output src/pivotvtab.c
+	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/sqlar.c --output src/sqlar.c
 	curl -L https://github.com/jakethaw/xml_to_json/raw/master/xml_to_json.c --output src/xmltojson.c
 
 compile-linux:
@@ -33,6 +34,7 @@ compile-linux:
 	gcc -fPIC -shared src/pearson.c -o dist/pearson.so
 	gcc -fPIC -shared src/pivotvtab.c -o dist/pivotvtab.so
 	gcc -fPIC -shared src/recsize.c -o dist/recsize.so
+	gcc -fPIC -shared src/sqlar.c -o dist/sqlar.so -lz
 	gcc -fPIC -shared src/stats2.c -o dist/stats2.so
 	gcc -fPIC -shared src/unhex.c -o dist/unhex.so
 	gcc -fPIC -shared src/xmltojson.c -o dist/xmltojson.so -DSQLITE
@@ -50,6 +52,7 @@ compile-windows:
 	gcc -shared -I. src/pearson.c -o dist/pearson.dll
 	gcc -shared -I. src/pivotvtab.c -o dist/pivotvtab.dll
 	gcc -shared -I. src/recsize.c -o dist/recsize.dll
+	# gcc -shared -I. src/sqlar.c -o dist/sqlar.dll -lz
 	gcc -shared -I. src/stats2.c -o dist/stats2.dll
 	gcc -shared -I. src/unhex.c -o dist/unhex.dll
 	gcc -shared -I. src/xmltojson.c -o dist/xmltojson.dll -DSQLITE
@@ -67,6 +70,7 @@ compile-macos:
 	gcc -fPIC -dynamiclib -I src src/pearson.c -o dist/pearson.dylib
 	gcc -fPIC -dynamiclib -I src src/pivotvtab.c -o dist/pivotvtab.dylib
 	gcc -fPIC -dynamiclib -I src src/recsize.c -o dist/recsize.dylib
+	gcc -fPIC -dynamiclib -I src src/sqlar.c -o dist/sqlar.dylib -lz
 	gcc -fPIC -dynamiclib -I src src/stats2.c -o dist/stats2.dylib
 	gcc -fPIC -dynamiclib -I src src/unhex.c -o dist/unhex.dylib
 	gcc -fPIC -dynamiclib -I src src/xmltojson.c -o dist/xmltojson.dylib -DSQLITE
