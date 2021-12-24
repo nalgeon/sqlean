@@ -20,6 +20,7 @@ download-external:
 	curl -L https://github.com/jakethaw/xml_to_json/raw/master/xml_to_json.c --output src/xmltojson.c
 
 compile-linux:
+	gcc -fPIC -shared src/besttype.c -o dist/besttype.so
 	gcc -fPIC -shared src/cbrt.c -o dist/cbrt.so -lm
 	gcc -fPIC -shared src/cron.c -o dist/cron.so
 	gcc -fPIC -shared src/envfuncs.c -o dist/envfuncs.so
@@ -27,14 +28,15 @@ compile-linux:
 	gcc -fPIC -shared src/fcmp.c -o dist/fcmp.so
 	gcc -fPIC -shared src/isodate.c -o dist/isodate.so
 	gcc -fPIC -shared src/mathsec.c -o dist/mathsec.so
-	gcc -fPIC -shared src/besttype.c -o dist/besttype.so
 	gcc -fPIC -shared src/pearson.c -o dist/pearson.so
 	gcc -fPIC -shared src/pivotvtab.c -o dist/pivotvtab.so
 	gcc -fPIC -shared src/recsize.c -o dist/recsize.so
+	gcc -fPIC -shared src/stats2.c -o dist/stats2.so
 	gcc -fPIC -shared src/unhex.c -o dist/unhex.so
 	gcc -fPIC -shared src/xmltojson.c -o dist/xmltojson.so -DSQLITE
 
 compile-windows:
+	gcc -shared -I. src/besttype.c -o dist/besttype.dll
 	gcc -shared -I. src/cbrt.c -o dist/cbrt.dll -lm
 	gcc -shared -I. src/cron.c -o dist/cron.dll
 	gcc -shared -I. src/envfuncs.c -o dist/envfuncs.dll
@@ -42,14 +44,15 @@ compile-windows:
 	gcc -shared -I. src/fcmp.c -o dist/fcmp.dll
 	gcc -shared -I. src/isodate.c -o dist/isodate.dll
 	gcc -shared -I. src/mathsec.c -o dist/mathsec.dll
-	gcc -shared -I. src/besttype.c -o dist/besttype.dll
 	gcc -shared -I. src/pearson.c -o dist/pearson.dll
 	gcc -shared -I. src/pivotvtab.c -o dist/pivotvtab.dll
 	gcc -shared -I. src/recsize.c -o dist/recsize.dll
+	gcc -shared -I. src/stats2.c -o dist/stats2.dll
 	gcc -shared -I. src/unhex.c -o dist/unhex.dll
 	gcc -shared -I. src/xmltojson.c -o dist/xmltojson.dll -DSQLITE
 
 compile-macos:
+	gcc -fPIC -dynamiclib -I src src/besttype.c -o dist/besttype.dylib
 	gcc -fPIC -dynamiclib -I src src/cbrt.c -o dist/cbrt.dylib -lm
 	gcc -fPIC -dynamiclib -I src src/cron.c -o dist/cron.dylib
 	gcc -fPIC -dynamiclib -I src src/envfuncs.c -o dist/envfuncs.dylib
@@ -57,10 +60,10 @@ compile-macos:
 	gcc -fPIC -dynamiclib -I src src/fcmp.c -o dist/fcmp.dylib
 	gcc -fPIC -dynamiclib -I src src/isodate.c -o dist/isodate.dylib
 	gcc -fPIC -dynamiclib -I src src/mathsec.c -o dist/mathsec.dylib
-	gcc -fPIC -dynamiclib -I src src/besttype.c -o dist/besttype.dylib
 	gcc -fPIC -dynamiclib -I src src/pearson.c -o dist/pearson.dylib
 	gcc -fPIC -dynamiclib -I src src/pivotvtab.c -o dist/pivotvtab.dylib
 	gcc -fPIC -dynamiclib -I src src/recsize.c -o dist/recsize.dylib
+	gcc -fPIC -dynamiclib -I src src/stats2.c -o dist/stats2.dylib
 	gcc -fPIC -dynamiclib -I src src/unhex.c -o dist/unhex.dylib
 	gcc -fPIC -dynamiclib -I src src/xmltojson.c -o dist/xmltojson.dylib -DSQLITE
 

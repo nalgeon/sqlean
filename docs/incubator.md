@@ -1,3 +1,22 @@
+## besttype
+
+Implements `ToBestType(x)` function:
+
+-   NULL returns NULL
+-   TEXT/BLOB that "looks like a number" returns the number as Integer or Real as appropriate
+-   TEXT/BLOB that is zero-length returns NULL
+-   Otherwise returns what was given
+
+Created by [Keith Medcalf](http://www.dessus.com/files/sqlnumeric.c), Public Domain.
+
+```sql
+sqlite> .load dist/besttype
+sqlite> select tobesttype('42.13');
+42.13
+```
+
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/besttype.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/besttype.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/besttype.dylib)
+
 ## cbrt
 
 Cube root function.
@@ -201,25 +220,6 @@ fromhex(hex_str)
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/mathsec.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/mathsec.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/mathsec.dylib)
 
-## besttype
-
-Implements `ToBestType(x)` function:
-
--   NULL returns NULL
--   TEXT/BLOB that "looks like a number" returns the number as Integer or Real as appropriate
--   TEXT/BLOB that is zero-length returns NULL
--   Otherwise returns what was given
-
-Created by [Keith Medcalf](http://www.dessus.com/files/sqlnumeric.c), Public Domain.
-
-```sql
-sqlite> .load dist/besttype
-sqlite> select tobesttype('42.13');
-42.13
-```
-
-Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/besttype.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/besttype.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/besttype.dylib)
-
 ## pearson
 
 Returns Pearson correlation coefficient between two data sets.
@@ -334,6 +334,66 @@ sqlite> select recsize(10, 20, 30);
 ```
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/recsize.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/recsize.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/recsize.dylib)
+
+## stats2
+
+Even more math statistics functions.
+
+Created by [Keith Medcalf](http://www.dessus.com/files/sqlfunc.c), Public Domain.
+
+```sql
+sqlite> .load dist/stats2
+sqlite> select sem(value) from generate_series(1, 99);
+2.88675134594813
+```
+
+Aggregate functions (also available as window aggregates):
+
+```
+avg(v)
+aavg(v)
+gavg(v)
+rms(v)
+stdev(v)
+stdevp(v)
+var(v)
+varp(v)
+sem(v)
+ci(v)
+skew(v)
+skewp(v)
+kurt(v)
+kurtp(v)
+```
+
+Weighted aggregate functions (also available as weighted window aggregates):
+
+```
+avg(v, w)
+stdev(v, w)
+stdevp(v, w)
+var(v, w)
+varp(v, w)
+sem(v, w)
+ci(v, w)
+```
+
+Other aggregate window functions:
+
+```
+FirstNotNull(v)
+LastNotNull(v)
+```
+
+Other aggregate non-window functions:
+
+```
+range(v)
+median(v)
+covar(x, y)
+```
+
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/stats2.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/stats2.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/stats2.dylib)
 
 ## unhex
 
