@@ -3,12 +3,19 @@
 
 .load dist/compress
 
-select '01', length(compress('ooo')) = 12;
-select '02', length(compress('oooooooooo')) = 12;
-select '03', length(compress('oooooooooooooooooooo')) = 12;
-select '04', length(compress('oooooooooooooooooooooooooooooo')) = 12;
+select '01', length(compress(printf('%.3c', 'o'))) = 12;
+select '02', length(compress(printf('%.10c', 'o'))) = 12;
+select '03', length(compress(printf('%.20c', 'o'))) = 12;
+select '04', length(compress(printf('%.30c', 'o'))) = 12;
+select '05', length(compress(zeroblob(1024))) = 19;
 
-select '05', cast(uncompress(compress('ooo')) as text) = 'ooo';
-select '06', cast(uncompress(compress('oooooooooo')) as text) = 'oooooooooo';
-select '07', cast(uncompress(compress('oooooooooooooooooooo')) as text) = 'oooooooooooooooooooo';
-select '08', cast(uncompress(compress('oooooooooooooooooooooooooooooo')) as text) = 'oooooooooooooooooooooooooooooo';
+select '11', uncompress(compress(printf('%.3c', 'o')))
+    = cast('ooo' as blob);
+select '12', uncompress(compress(printf('%.10c', 'o')))
+    = cast('oooooooooo' as blob);
+select '13', uncompress(compress(printf('%.20c', 'o')))
+    = cast('oooooooooooooooooooo' as blob);
+select '14', uncompress(compress(printf('%.30c', 'o')))
+    = cast('oooooooooooooooooooooooooooooo' as blob);
+select '15', uncompress(compress(zeroblob(1024)))
+    = zeroblob(1024);
