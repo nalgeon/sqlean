@@ -1,7 +1,7 @@
 -- Copyright (c) 2021 Anton Zhiyanov, MIT License
 -- https://github.com/nalgeon/sqlean
 
-.load dist/mathsec
+.load dist/math2
 
 -- constants
 select '01', round(m_e(), 3) = 2.718;

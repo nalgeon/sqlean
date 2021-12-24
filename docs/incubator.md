@@ -140,7 +140,7 @@ sqlite> select unixepoch('2021-12-22 12:34:45');
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/isodate.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/isodate.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/isodate.dylib)
 
-## mathsec
+## math2
 
 Even more math functions and bit arithmetics.
 
@@ -218,7 +218,7 @@ fromhex(hex_str)
 -> hexadecimal to decimal
 ```
 
-Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/mathsec.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/mathsec.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/mathsec.dylib)
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/math2.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/math2.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/math2.dylib)
 
 ## pearson
 

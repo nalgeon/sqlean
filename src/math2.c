@@ -313,7 +313,7 @@ static void _bitmaskInverse(sqlite3_context* context, int argc, sqlite3_value** 
 __declspec(dllexport)
 #endif
 #endif
-    int sqlite3_mathsec_init(sqlite3* db, char** pzErrMsg, const sqlite3_api_routines* pApi) {
+    int sqlite3_math_init(sqlite3* db, char** pzErrMsg, const sqlite3_api_routines* pApi) {
     int nErr = 0;
 
     SQLITE_EXTENSION_INIT2(pApi);
