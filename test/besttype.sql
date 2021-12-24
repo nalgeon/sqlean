@@ -1,7 +1,7 @@
 -- Copyright (c) 2021 Anton Zhiyanov, MIT License
 -- https://github.com/nalgeon/sqlean
 
-.load dist/numeric
+.load dist/besttype
 
 -- null returns null
 select '01', tobesttype(null) is null;

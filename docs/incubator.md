@@ -201,7 +201,7 @@ fromhex(hex_str)
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/mathsec.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/mathsec.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/mathsec.dylib)
 
-## numeric
+## besttype
 
 Implements `ToBestType(x)` function:
 
@@ -213,12 +213,12 @@ Implements `ToBestType(x)` function:
 Created by [Keith Medcalf](http://www.dessus.com/files/sqlnumeric.c), Public Domain.
 
 ```sql
-sqlite> .load dist/numeric
+sqlite> .load dist/besttype
 sqlite> select tobesttype('42.13');
 42.13
 ```
 
-Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/numeric.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/numeric.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/numeric.dylib)
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/besttype.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/besttype.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/besttype.dylib)
 
 ## pearson
 
