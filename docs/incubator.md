@@ -31,6 +31,22 @@ sqlite> select cbrt(27);
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/cbrt.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/cbrt.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/cbrt.dylib)
 
+## compress
+
+Compress / uncompress data using zlib. Doesn't work on Windows.
+
+Created by [D. Richard Hipp](https://sqlite.org/src/file/ext/misc/compress.c), Public Domain.
+
+```sql
+sqlite> .load dist/compress
+sqlite> select hex(compress('hello world'));
+8B789CCB48CDC9C95728CF2FCA4901001A0B045D
+sqlite> select uncompress(compress('hello world'));
+hello world
+```
+
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/compress.so) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/compress.dylib)
+
 ## cron
 
 Compares dates against cron patterns, whether they match or not.

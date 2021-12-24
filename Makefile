@@ -13,6 +13,7 @@ download-sqlite:
 	mv sqlite-amalgamation-$(SQLITE_VERSION)/* src
 
 download-external:
+	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/compress.c --output src/compress.c
 	curl -L https://github.com/daschr/sqlite3_extensions/raw/master/cron.c --output src/cron.c
 	curl -L https://github.com/sqlite/sqlite/raw/branch-$(SQLITE_BRANCH)/ext/misc/eval.c --output src/eval.c
 	curl -L https://github.com/jhowie/sqlite3-ext/raw/main/envfuncs.c --output src/envfuncs.c
@@ -22,6 +23,7 @@ download-external:
 compile-linux:
 	gcc -fPIC -shared src/besttype.c -o dist/besttype.so
 	gcc -fPIC -shared src/cbrt.c -o dist/cbrt.so -lm
+	gcc -fPIC -shared src/compress.c -o dist/compress.so -lz
 	gcc -fPIC -shared src/cron.c -o dist/cron.so
 	gcc -fPIC -shared src/envfuncs.c -o dist/envfuncs.so
 	gcc -fPIC -shared src/eval.c -o dist/eval.so
@@ -38,6 +40,7 @@ compile-linux:
 compile-windows:
 	gcc -shared -I. src/besttype.c -o dist/besttype.dll
 	gcc -shared -I. src/cbrt.c -o dist/cbrt.dll -lm
+	# gcc -shared -I. src/compress.c -o dist/compress.dll -lz
 	gcc -shared -I. src/cron.c -o dist/cron.dll
 	gcc -shared -I. src/envfuncs.c -o dist/envfuncs.dll
 	gcc -shared -I. src/eval.c -o dist/eval.dll
@@ -54,6 +57,7 @@ compile-windows:
 compile-macos:
 	gcc -fPIC -dynamiclib -I src src/besttype.c -o dist/besttype.dylib
 	gcc -fPIC -dynamiclib -I src src/cbrt.c -o dist/cbrt.dylib -lm
+	gcc -fPIC -dynamiclib -I src src/compress.c -o dist/compress.dylib -lz
 	gcc -fPIC -dynamiclib -I src src/cron.c -o dist/cron.dylib
 	gcc -fPIC -dynamiclib -I src src/envfuncs.c -o dist/envfuncs.dylib
 	gcc -fPIC -dynamiclib -I src src/eval.c -o dist/eval.dylib
