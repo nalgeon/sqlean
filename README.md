@@ -34,15 +34,22 @@ These extensions haven't yet made their way to the main set. They may be unteste
 
 Think of them as candidates for the standard library:
 
+- [besttype](https://github.com/nalgeon/sqlean/issues/27#issuecomment-999732640): convert string value to numeric
 - [cbrt](https://github.com/nalgeon/sqlean/issues/27#issuecomment-996605444): cube root function
+- [compress](https://github.com/nalgeon/sqlean/issues/27#issuecomment-1000937999) and [sqlar](https://github.com/nalgeon/sqlean/issues/27#issuecomment-1000938046): compress / uncompress data
 - [cron](https://github.com/nalgeon/sqlean/issues/27#issuecomment-997427979): match dates against cron patterns
 - [envfuncs](https://github.com/nalgeon/sqlean/issues/27#issuecomment-997423609): read environment variables
 - [eval](https://github.com/nalgeon/sqlean/issues/27#issuecomment-996432840): run arbitrary SQL statements
 - [fcmp](https://github.com/nalgeon/sqlean/issues/27#issuecomment-997482625): floating point numbers comparison and rounding
+- [isodate](https://github.com/nalgeon/sqlean/issues/27#issuecomment-998138191): additional date and time functions
+- [math2](https://github.com/nalgeon/sqlean/issues/27#issuecomment-999128539): even more math functions and bit arithmetics
 - [pearson](https://github.com/nalgeon/sqlean/issues/27#issuecomment-997417836): Pearson correlation coefficient between two data sets
 - [pivotvtab](https://github.com/nalgeon/sqlean/issues/27#issuecomment-997052157): pivot tables
+- [recsize](https://github.com/nalgeon/sqlean/issues/27#issuecomment-999732907): estimate total record size
+- [stats2](https://github.com/nalgeon/sqlean/issues/27#issuecomment-1000902666): even more math statistics functions
 - [unhex](https://github.com/nalgeon/sqlean/issues/27#issuecomment-997432989): reverse for `hex()`
 - [xmltojson](https://github.com/nalgeon/sqlean/issues/27#issuecomment-997018486): convert XML to JSON string
+- [zipfile](https://github.com/nalgeon/sqlean/issues/27#issuecomment-1001190336): read and write zip files
 
 [Vote for your favorites](https://github.com/nalgeon/sqlean/issues/27)! We'll refactor and merge popular ones into the main set.
 
