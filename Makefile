@@ -79,13 +79,27 @@ compile-macos:
 	gcc -fPIC -dynamiclib -I src src/xmltojson.c -o dist/xmltojson.dylib -DSQLITE
 	gcc -fPIC -dynamiclib -I src src/zipfile.c -o dist/zipfile.dylib -lz
 
+test-all:
+	make test suite=besttype
+	make test suite=cbrt
+	make test suite=compress
+	make test suite=cron
+	make test suite=envfuncs
+	make test suite=eval
+	make test suite=fcmp
+	make test suite=isodate
+	make test suite=math2
+	make test suite=pearson
+	make test suite=pivotvtab
+	make test suite=recsize
+	make test suite=sqlar
+	make test suite=stats2
+	make test suite=unhex
+	make test suite=xmltojson
+	make test suite=zipfile
+
 # fails if grep does find a failed test case
 # https://stackoverflow.com/questions/15367674/bash-one-liner-to-exit-with-the-opposite-status-of-a-grep-command/21788642
 test:
 	sqlite3 < test/$(suite).sql | (! grep -Ex "[0-9]+.0")
 
-test-all:
-	@for suite in test/*.sql; do\
-		echo $${suite};\
-		sqlite3 < $${suite} | (! grep -Ex "[0-9]+.0");\
-    done
