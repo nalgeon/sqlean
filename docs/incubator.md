@@ -459,3 +459,23 @@ sqlite> select xml_to_json('<answer>42</answer>');
 ```
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/xmltojson.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/xmltojson.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/xmltojson.dylib)
+
+## zipfile
+
+Read and write zip files, both in memory and on disk. Doesn't work on Windows.
+
+Created by [D. Richard Hipp](https://sqlite.org/src/file/ext/misc/zipfile.c), Public Domain.
+
+[Documentation](https://sqlite.org/zipfile.html)
+
+```sql
+sqlite> .load dist/zipfile
+
+sqlite> create virtual table temp.zip using zipfile('test.zip');
+sqlite> insert into temp.zip(name, data) values('readme.txt', 'a glorious zip file');
+
+sqlite> select name, data from zipfile('test.zip');
+readme.txt|a glorious zip file
+```
+
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/zipfile.so) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/zipfile.dylib)

@@ -20,6 +20,7 @@ download-external:
 	curl -L https://github.com/jakethaw/pivot_vtab/raw/main/pivot_vtab.c --output src/pivotvtab.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/sqlar.c --output src/sqlar.c
 	curl -L https://github.com/jakethaw/xml_to_json/raw/master/xml_to_json.c --output src/xmltojson.c
+	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/zipfile.c --output src/zipfile.c
 
 compile-linux:
 	gcc -fPIC -shared src/besttype.c -o dist/besttype.so
@@ -38,6 +39,7 @@ compile-linux:
 	gcc -fPIC -shared src/stats2.c -o dist/stats2.so
 	gcc -fPIC -shared src/unhex.c -o dist/unhex.so
 	gcc -fPIC -shared src/xmltojson.c -o dist/xmltojson.so -DSQLITE
+	gcc -fPIC -shared src/zipfile.c -o dist/zipfile.so -lz
 
 compile-windows:
 	gcc -shared -I. src/besttype.c -o dist/besttype.dll
@@ -56,6 +58,7 @@ compile-windows:
 	gcc -shared -I. src/stats2.c -o dist/stats2.dll
 	gcc -shared -I. src/unhex.c -o dist/unhex.dll
 	gcc -shared -I. src/xmltojson.c -o dist/xmltojson.dll -DSQLITE
+	# gcc -shared -I. src/zipfile.c -o dist/zipfile.dll -lz
 
 compile-macos:
 	gcc -fPIC -dynamiclib -I src src/besttype.c -o dist/besttype.dylib
@@ -74,6 +77,7 @@ compile-macos:
 	gcc -fPIC -dynamiclib -I src src/stats2.c -o dist/stats2.dylib
 	gcc -fPIC -dynamiclib -I src src/unhex.c -o dist/unhex.dylib
 	gcc -fPIC -dynamiclib -I src src/xmltojson.c -o dist/xmltojson.dylib -DSQLITE
+	gcc -fPIC -dynamiclib -I src src/zipfile.c -o dist/zipfile.dylib -lz
 
 # fails if grep does find a failed test case
 # https://stackoverflow.com/questions/15367674/bash-one-liner-to-exit-with-the-opposite-status-of-a-grep-command/21788642
