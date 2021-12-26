@@ -31,6 +31,23 @@ sqlite> select cbrt(27);
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/cbrt.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/cbrt.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/cbrt.dylib)
 
+## classifier
+
+Binary classifier via logistic regression.
+
+Created by [Alex Wilson](https://github.com/mrwilson/squib/blob/master/classifier.c), MIT License.
+
+```sql
+sqlite> .load dist/classifier
+sqlite> select train(feature1, feature2, feature3, label) from data;
+sqlite> select classify(1, 1, 0);
+0.763584749816848
+sqlite> select classify(0, 0, 1);
+0.225364243341812
+```
+
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/classifier.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/classifier.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/classifier.dylib)
+
 ## compress
 
 Compress / uncompress data using zlib. Doesn't work on Windows.

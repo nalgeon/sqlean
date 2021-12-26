@@ -25,6 +25,7 @@ download-external:
 compile-linux:
 	gcc -fPIC -shared src/besttype.c -o dist/besttype.so
 	gcc -fPIC -shared src/cbrt.c -o dist/cbrt.so -lm
+	gcc -fPIC -shared src/classifier.c -o dist/classifier.so
 	gcc -fPIC -shared src/compress.c -o dist/compress.so -lz
 	gcc -fPIC -shared src/cron.c -o dist/cron.so
 	gcc -fPIC -shared src/envfuncs.c -o dist/envfuncs.so
@@ -45,6 +46,7 @@ compile-linux:
 compile-windows:
 	gcc -shared -I. src/besttype.c -o dist/besttype.dll
 	gcc -shared -I. src/cbrt.c -o dist/cbrt.dll -lm
+	gcc -shared -I. src/classifier.c -o dist/classifier.dll
 	# gcc -shared -I. src/compress.c -o dist/compress.dll -lz
 	gcc -shared -I. src/cron.c -o dist/cron.dll
 	gcc -shared -I. src/envfuncs.c -o dist/envfuncs.dll
@@ -65,6 +67,7 @@ compile-windows:
 compile-macos:
 	gcc -fPIC -dynamiclib -I src src/besttype.c -o dist/besttype.dylib
 	gcc -fPIC -dynamiclib -I src src/cbrt.c -o dist/cbrt.dylib -lm
+	gcc -fPIC -dynamiclib -I src src/classifier.c -o dist/classifier.dylib
 	gcc -fPIC -dynamiclib -I src src/compress.c -o dist/compress.dylib -lz
 	gcc -fPIC -dynamiclib -I src src/cron.c -o dist/cron.dylib
 	gcc -fPIC -dynamiclib -I src src/envfuncs.c -o dist/envfuncs.dylib
@@ -85,6 +88,7 @@ compile-macos:
 test-all:
 	make test suite=besttype
 	make test suite=cbrt
+	make test suite=classifier
 	make test suite=compress
 	make test suite=cron
 	make test suite=envfuncs
