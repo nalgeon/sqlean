@@ -355,8 +355,8 @@ Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/
 
 Compress / uncompress data with zlib using the SQL Archive approach:
 
-- Only compress the value if it yields a smaller blob.
-- Uncompress the value if needed given the orizinal value size.
+-   Only compress the value if it yields a smaller blob.
+-   Uncompress the value if needed given the orizinal value size.
 
 Doesn't work on Windows.
 
@@ -431,6 +431,22 @@ covar(x, y)
 ```
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/stats2.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/stats2.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/stats2.dylib)
+
+## unit
+
+[Natural](https://en.wikipedia.org/wiki/Natural_sort_order) string sorting and comparison.
+
+Created by [D. Richard Hipp](https://sqlite.org/src/file/ext/misc/uint.c), Public Domain.
+
+```sql
+sqlite> .load dist/uint
+sqlite> select '2' < '10' collate uint;
+1
+sqlite> select '01' = '1' collate uint;
+1
+```
+
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/uint.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/uint.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/uint.dylib)
 
 ## unhex
 

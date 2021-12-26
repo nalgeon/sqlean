@@ -18,6 +18,7 @@ download-external:
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/eval.c --output src/eval.c
 	curl -L https://github.com/jakethaw/pivot_vtab/raw/main/pivot_vtab.c --output src/pivotvtab.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/sqlar.c --output src/sqlar.c
+	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/uint.c --output src/uint.c
 	curl -L https://github.com/jakethaw/xml_to_json/raw/master/xml_to_json.c --output src/xmltojson.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/zipfile.c --output src/zipfile.c
 
@@ -36,6 +37,7 @@ compile-linux:
 	gcc -fPIC -shared src/recsize.c -o dist/recsize.so
 	gcc -fPIC -shared src/sqlar.c -o dist/sqlar.so -lz
 	gcc -fPIC -shared src/stats2.c -o dist/stats2.so
+	gcc -fPIC -shared src/uint.c -o dist/uint.so
 	gcc -fPIC -shared src/unhex.c -o dist/unhex.so
 	gcc -fPIC -shared src/xmltojson.c -o dist/xmltojson.so -DSQLITE
 	gcc -fPIC -shared src/zipfile.c -o dist/zipfile.so -lz
@@ -55,6 +57,7 @@ compile-windows:
 	gcc -shared -I. src/recsize.c -o dist/recsize.dll
 	# gcc -shared -I. src/sqlar.c -o dist/sqlar.dll -lz
 	gcc -shared -I. src/stats2.c -o dist/stats2.dll
+	gcc -shared -I. src/uint.c -o dist/uint.dll
 	gcc -shared -I. src/unhex.c -o dist/unhex.dll
 	gcc -shared -I. src/xmltojson.c -o dist/xmltojson.dll -DSQLITE
 	# gcc -shared -I. src/zipfile.c -o dist/zipfile.dll -lz
@@ -74,6 +77,7 @@ compile-macos:
 	gcc -fPIC -dynamiclib -I src src/recsize.c -o dist/recsize.dylib
 	gcc -fPIC -dynamiclib -I src src/sqlar.c -o dist/sqlar.dylib -lz
 	gcc -fPIC -dynamiclib -I src src/stats2.c -o dist/stats2.dylib
+	gcc -fPIC -dynamiclib -I src src/uint.c -o dist/uint.dylib
 	gcc -fPIC -dynamiclib -I src src/unhex.c -o dist/unhex.dylib
 	gcc -fPIC -dynamiclib -I src src/xmltojson.c -o dist/xmltojson.dylib -DSQLITE
 	gcc -fPIC -dynamiclib -I src src/zipfile.c -o dist/zipfile.dylib -lz
@@ -93,6 +97,7 @@ test-all:
 	make test suite=recsize
 	make test suite=sqlar
 	make test suite=stats2
+	make test suite=uint
 	make test suite=unhex
 	make test suite=xmltojson
 	make test suite=zipfile
