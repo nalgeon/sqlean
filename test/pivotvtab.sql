@@ -27,11 +27,13 @@ insert into sales values
 (2021, 3, 42000),
 (2021, 4, 39000);
 
-create table years as
-select value as year from generate_series(2018, 2021);
+create table years(year integer);
+insert into years(year) values
+(2018), (2019), (2020), (2021);
 
-create table quarters as
-select value as quarter, 'Q'||value as name from generate_series(1, 4);
+create table quarters(quarter integer, name text);
+insert into quarters(quarter, name) values
+(1, 'Q1'), (2, 'Q2'), (3, 'Q3'), (4, 'Q4');
 
 create virtual table sales_by_year using pivot_vtab (
     (select year from years),
