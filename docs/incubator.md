@@ -17,6 +17,24 @@ sqlite> select tobesttype('42.13');
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/besttype.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/besttype.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/besttype.dylib)
 
+## bloom
+
+Bloom filter — a fast index to tell if a value is probably in a table or certainly isn't.
+
+Created by [Shawn Wagner](https://github.com/shawnw/useful_sqlite_extensions/blob/master/src/bloom_filter.c), MIT License.
+
+```sql
+sqlite> .load dist/bloom
+sqlite> create virtual table plants using bloom_filter(20);
+sqlite> insert into plants values ('apple'), ('asparagus'), ('cabbage'), ('grass');
+sqlite> select count(*) from plants('apple');
+1
+sqlite> select count(*) from plants('lemon');
+0
+```
+
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/bloom.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/bloom.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/bloom.dylib)
+
 ## cbrt
 
 Cube root function.

@@ -24,6 +24,7 @@ download-external:
 
 compile-linux:
 	gcc -fPIC -shared src/besttype.c -o dist/besttype.so
+	gcc -fPIC -shared src/bloom.c -o dist/bloom.so
 	gcc -fPIC -shared src/cbrt.c -o dist/cbrt.so -lm
 	gcc -fPIC -shared src/classifier.c -o dist/classifier.so
 	gcc -fPIC -shared src/compress.c -o dist/compress.so -lz
@@ -45,6 +46,7 @@ compile-linux:
 
 compile-windows:
 	gcc -shared -I. src/besttype.c -o dist/besttype.dll
+	gcc -shared -I. src/bloom.c -o dist/bloom.dll
 	gcc -shared -I. src/cbrt.c -o dist/cbrt.dll -lm
 	gcc -shared -I. src/classifier.c -o dist/classifier.dll
 	# gcc -shared -I. src/compress.c -o dist/compress.dll -lz
@@ -66,6 +68,7 @@ compile-windows:
 
 compile-macos:
 	gcc -fPIC -dynamiclib -I src src/besttype.c -o dist/besttype.dylib
+	gcc -fPIC -dynamiclib -I src src/bloom.c -o dist/bloom.dylib
 	gcc -fPIC -dynamiclib -I src src/cbrt.c -o dist/cbrt.dylib -lm
 	gcc -fPIC -dynamiclib -I src src/classifier.c -o dist/classifier.dylib
 	gcc -fPIC -dynamiclib -I src src/compress.c -o dist/compress.dylib -lz
@@ -87,6 +90,7 @@ compile-macos:
 
 test-all:
 	make test suite=besttype
+	make test suite=bloom
 	make test suite=cbrt
 	make test suite=classifier
 	make test suite=compress
