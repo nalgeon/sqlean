@@ -191,6 +191,39 @@ sqlite> select unixepoch('2021-12-22 12:34:45');
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/isodate.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/isodate.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/isodate.dylib)
 
+## json2
+
+Even more JSON functions.
+
+Created by [Shawn Wagner](https://github.com/shawnw/useful_sqlite_extensions/blob/master/src/json_funcs.c), MIT License.
+
+```sql
+sqlite> .load dist/json2
+sqlite> select json_keys('{"a":1, "b":2, "c":3}');
+["a","b","c"]
+```
+
+```
+json_pretty(json)
+-> pretty-print json for readability
+
+json_equal(json, json)
+-> check if two JSONs are equal
+
+json_length(json)
+json_length(json, path)
+-> number of array elements or object keys
+
+json_keys(json)
+json_keys(json, path)
+-> keys of the given object
+
+json_contains_path(json, path)
+-> check if the object has data at the given path
+```
+
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/json2.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/json2.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/json2.dylib)
+
 ## math2
 
 Even more math functions and bit arithmetics.
