@@ -680,7 +680,7 @@ static int bf_rename(sqlite3_vtab* pVTab, const char* zNew) {
 }
 
 #ifdef _WIN32
-_declspec(dllexport)
+__declspec(dllexport)
 #endif
     int sqlite3_bloom_init(sqlite3* db, char** pzErrMsg, const sqlite3_api_routines* pApi) {
     SQLITE_EXTENSION_INIT2(pApi);
