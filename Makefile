@@ -19,6 +19,7 @@ download-external:
 	curl -L https://github.com/daschr/sqlite3_extensions/raw/master/cron.c --output src/cron.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/eval.c --output src/eval.c
 	curl -L https://github.com/jakethaw/pivot_vtab/raw/main/pivot_vtab.c --output src/pivotvtab.c
+	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/spellfix.c --output src/spellfix.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/sqlar.c --output src/sqlar.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/uint.c --output src/uint.c
 	curl -L https://github.com/jakethaw/xml_to_json/raw/master/xml_to_json.c --output src/xmltojson.c
@@ -40,6 +41,7 @@ compile-linux:
 	gcc -fPIC -shared src/pearson.c -o dist/pearson.so
 	gcc -fPIC -shared src/pivotvtab.c -o dist/pivotvtab.so
 	gcc -fPIC -shared src/recsize.c -o dist/recsize.so
+	gcc -fPIC -shared src/spellfix.c -o dist/spellfix.so
 	gcc -fPIC -shared src/sqlar.c -o dist/sqlar.so -lz
 	gcc -fPIC -shared src/stats2.c -o dist/stats2.so
 	gcc -fPIC -shared src/uint.c -o dist/uint.so
@@ -63,6 +65,7 @@ compile-windows:
 	gcc -shared -I. src/pearson.c -o dist/pearson.dll
 	gcc -shared -I. src/pivotvtab.c -o dist/pivotvtab.dll
 	gcc -shared -I. src/recsize.c -o dist/recsize.dll
+	gcc -shared -I. src/spellfix.c -o dist/spellfix.dll
 	# gcc -shared -I. src/sqlar.c -o dist/sqlar.dll -lz
 	gcc -shared -I. src/stats2.c -o dist/stats2.dll
 	gcc -shared -I. src/uint.c -o dist/uint.dll
@@ -86,6 +89,7 @@ compile-macos:
 	gcc -fPIC -dynamiclib -I src src/pearson.c -o dist/pearson.dylib
 	gcc -fPIC -dynamiclib -I src src/pivotvtab.c -o dist/pivotvtab.dylib
 	gcc -fPIC -dynamiclib -I src src/recsize.c -o dist/recsize.dylib
+	gcc -fPIC -dynamiclib -I src src/spellfix.c -o dist/spellfix.dylib
 	gcc -fPIC -dynamiclib -I src src/sqlar.c -o dist/sqlar.dylib -lz
 	gcc -fPIC -dynamiclib -I src src/stats2.c -o dist/stats2.dylib
 	gcc -fPIC -dynamiclib -I src src/uint.c -o dist/uint.dylib
@@ -109,6 +113,7 @@ test-all:
 	make test suite=pearson
 	make test suite=pivotvtab
 	make test suite=recsize
+	make test suite=spellfix
 	make test suite=sqlar
 	make test suite=stats2
 	make test suite=uint

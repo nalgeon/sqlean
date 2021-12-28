@@ -419,6 +419,25 @@ sqlite> select recsize(10, 20, 30);
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/recsize.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/recsize.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/recsize.dylib)
 
+## spellfix
+
+Provides a mechanism to search a large vocabulary for close matches.
+
+Created by [D. Richard Hipp](https://sqlite.org/src/file/ext/misc/spellfix.c), Public Domain.
+
+[Documentation](https://sqlite.org/spellfix1.html)
+
+```sql
+sqlite> .load dist/spellfix
+sqlite> create virtual table dictionary using spellfix1;
+sqlite> insert into dictionary(word)
+values ('similarity'), ('search'), ('is'), ('awesome');
+sqlite> select word from dictionary where word match 'awesoem';
+awesome
+```
+
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/spellfix.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/spellfix.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/spellfix.dylib)
+
 ## sqlar
 
 Compress / uncompress data with zlib using the SQL Archive approach:
