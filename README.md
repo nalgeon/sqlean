@@ -21,7 +21,6 @@ Think of them as the extended standard library for SQLite:
 -   [json1](docs/json1.md): JSON functions
 -   [math](docs/math.md): math functions
 -   [re](docs/re.md): regular expressions
--   [spellfix](docs/spellfix.md): similarity search for large tables
 -   [stats](docs/stats.md): math statistics
 -   [text](docs/text.md): string functions
 -   [unicode](docs/unicode.md): Unicode support

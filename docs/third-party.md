@@ -13,7 +13,6 @@ SQLean relies heavily on third-party SQLite extensions and open source libraries
 | [series.c](https://sqlite.org/src/file/ext/misc/series.c) | D. Richard Hipp | Public Domain |
 | [sha1.c](https://sqlite.org/src/file/ext/misc/sha1.c) | D. Richard Hipp | Public Domain |
 | sha2.c | [Aaron D. Gifford](https://aarongifford.com/) | 3-Clause BSD License |
-| [spellfix.c](https://www.sqlite.org/src/file/ext/misc/spellfix.c) | D. Richard Hipp | Public Domain |
 | [sqlite3_unicode](https://github.com/Zensey/sqlite3_unicode) | Unknow Author | Public Domain |
 | [uuid.c](https://sqlite.org/src/file/ext/misc/uuid.c) | D. Richard Hipp | Public Domain |
 | [vsv.c](http://www.dessus.com/files/vsv.c) | Keith Medcalf | Public Domain |

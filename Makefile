@@ -14,7 +14,6 @@ download-sqlite:
 
 download-external:
 	curl -L https://github.com/sqlite/sqlite/raw/branch-$(SQLITE_BRANCH)/ext/misc/json1.c --output src/sqlite3-json1.c
-	curl -L https://github.com/sqlite/sqlite/raw/branch-$(SQLITE_BRANCH)/ext/misc/spellfix.c --output src/sqlite3-spellfix.c
 	curl -L https://github.com/mackyle/sqlite/raw/branch-$(SQLITE_BRANCH)/src/test_windirent.h --output src/test_windirent.h
 
 compile-linux:
@@ -25,7 +24,6 @@ compile-linux:
 	gcc -fPIC -shared src/sqlite3-json1.c -o dist/json1.so
 	gcc -fPIC -shared src/sqlite3-math.c -o dist/math.so -lm
 	gcc -fPIC -shared src/sqlite3-re.c src/re.c -o dist/re.so
-	gcc -fPIC -shared src/sqlite3-spellfix.c -o dist/spellfix.so
 	gcc -fPIC -shared src/sqlite3-stats.c -o dist/stats.so -lm
 	gcc -fPIC -shared src/sqlite3-text.c -o dist/text.so
 	gcc -fPIC -shared src/sqlite3-unicode.c -o dist/unicode.so
@@ -39,7 +37,6 @@ compile-windows:
 	gcc -shared -I. src/sqlite3-json1.c -o dist/json1.dll
 	gcc -shared -I. src/sqlite3-math.c -o dist/math.dll -lm
 	gcc -shared -I. src/sqlite3-re.c src/re.c -o dist/re.dll
-	gcc -shared -I. src/sqlite3-spellfix.c -o dist/spellfix.dll
 	gcc -shared -I. src/sqlite3-stats.c -o dist/stats.dll -lm
 	gcc -shared -I. src/sqlite3-text.c -o dist/text.dll
 	gcc -shared -I. src/sqlite3-unicode.c -o dist/unicode.dll
@@ -54,7 +51,6 @@ compile-macos:
 	gcc -fPIC -dynamiclib -I src src/sqlite3-json1.c -o dist/json1.dylib
 	gcc -fPIC -dynamiclib -I src src/sqlite3-math.c -o dist/math.dylib -lm
 	gcc -fPIC -dynamiclib -I src src/sqlite3-re.c src/re.c -o dist/re.dylib
-	gcc -fPIC -dynamiclib -I src src/sqlite3-spellfix.c -o dist/spellfix.dylib
 	gcc -fPIC -dynamiclib -I src src/sqlite3-stats.c -o dist/stats.dylib -lm
 	gcc -fPIC -dynamiclib -I src src/sqlite3-text.c -o dist/text.dylib
 	gcc -fPIC -dynamiclib -I src src/sqlite3-unicode.c -o dist/unicode.dylib
@@ -69,7 +65,6 @@ test-all:
 	make test suite=json1
 	make test suite=math
 	make test suite=re
-	make test suite=spellfix
 	make test suite=stats
 	make test suite=text
 	make test suite=unicode
