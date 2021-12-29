@@ -44,6 +44,7 @@ compile-linux:
 	gcc -fPIC -shared src/spellfix.c -o dist/spellfix.so
 	gcc -fPIC -shared src/sqlar.c -o dist/sqlar.so -lz
 	gcc -fPIC -shared src/stats2.c -o dist/stats2.so
+	gcc -fPIC -shared src/stats3.c -o dist/stats3.so
 	gcc -fPIC -shared src/uint.c -o dist/uint.so
 	gcc -fPIC -shared src/unhex.c -o dist/unhex.so
 	gcc -fPIC -shared src/xmltojson.c -o dist/xmltojson.so -DSQLITE
@@ -68,6 +69,7 @@ compile-windows:
 	gcc -shared -I. src/spellfix.c -o dist/spellfix.dll
 	# gcc -shared -I. src/sqlar.c -o dist/sqlar.dll -lz
 	gcc -shared -I. src/stats2.c -o dist/stats2.dll
+	gcc -shared -I. src/stats3.c -o dist/stats3.dll
 	gcc -shared -I. src/uint.c -o dist/uint.dll
 	gcc -shared -I. src/unhex.c -o dist/unhex.dll
 	gcc -shared -I. src/xmltojson.c -o dist/xmltojson.dll -DSQLITE
@@ -92,6 +94,7 @@ compile-macos:
 	gcc -fPIC -dynamiclib -I src src/spellfix.c -o dist/spellfix.dylib
 	gcc -fPIC -dynamiclib -I src src/sqlar.c -o dist/sqlar.dylib -lz
 	gcc -fPIC -dynamiclib -I src src/stats2.c -o dist/stats2.dylib
+	gcc -fPIC -dynamiclib -I src src/stats3.c -o dist/stats3.dylib
 	gcc -fPIC -dynamiclib -I src src/uint.c -o dist/uint.dylib
 	gcc -fPIC -dynamiclib -I src src/unhex.c -o dist/unhex.dylib
 	gcc -fPIC -dynamiclib -I src src/xmltojson.c -o dist/xmltojson.dylib -DSQLITE
@@ -116,6 +119,7 @@ test-all:
 	make test suite=spellfix
 	make test suite=sqlar
 	make test suite=stats2
+	make test suite=stats3
 	make test suite=uint
 	make test suite=unhex
 	make test suite=xmltojson

@@ -519,7 +519,48 @@ covar(x, y)
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/stats2.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/stats2.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/stats2.dylib)
 
-## unit
+## stats3
+
+And even more math statistics functions.
+
+Created by [Shawn Wagner](https://github.com/shawnw/useful_sqlite_extensions/blob/master/src/math_funcs.c), MIT License.
+
+```sql
+sqlite> .load dist/stats3
+sqlite> select geo_mean(value) from generate_series(1, 99);
+37.6231004740974
+```
+
+```
+corr(x, y)
+-> correlation coefficient
+
+covar_samp(x, y)
+covar_pop(x, y)
+-> sample and population covariance
+
+geo_mean(v)
+harm_mean(v)
+median(v)
+mode(v)
+-> mean values
+
+q1(v)
+q3(v)
+-> 1st and 3rd quartile values
+
+iqr(v)
+-> interquartile range
+
+product(v)
+-> product of values
+```
+
+All functions are also available as window aggregates.
+
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/stats3.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/stats3.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/stats3.dylib)
+
+## uint
 
 [Natural](https://en.wikipedia.org/wiki/Natural_sort_order) string sorting and comparison.
 
