@@ -560,6 +560,24 @@ All functions are also available as window aggregates.
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/stats3.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/stats3.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/stats3.dylib)
 
+## text2
+
+Even more string functions.
+
+Created by [Shawn Wagner](https://github.com/shawnw/useful_sqlite_extensions/blob/master/src/more_str_funcs.c), MIT License.
+
+-   `repeat(string, count)` - repeat the `string` `count` times
+-   `concat(string, ...)` - concatenate strings
+-   `concat_ws(sep, string, ...)` - concatenate strings using `sep` as a separator
+
+```sql
+sqlite> .load dist/text2
+sqlite> select repeat('*', 3);
+***
+```
+
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/text2.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/text2.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/text2.dylib)
+
 ## uint
 
 [Natural](https://en.wikipedia.org/wiki/Natural_sort_order) string sorting and comparison.
