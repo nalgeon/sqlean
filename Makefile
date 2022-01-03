@@ -13,8 +13,8 @@ download-sqlite:
 	mv sqlite-amalgamation-$(SQLITE_VERSION)/* src
 
 download-external:
-	curl -L https://github.com/davegamble/cjson/raw/master/cJSON.c --output src/cJSON.c
-	curl -L https://github.com/davegamble/cjson/raw/master/cJSON.h --output src/cJSON.h
+	# curl -L https://github.com/davegamble/cjson/raw/master/cJSON.c --output src/cJSON.c
+	# curl -L https://github.com/davegamble/cjson/raw/master/cJSON.h --output src/cJSON.h
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/compress.c --output src/compress.c
 	curl -L https://github.com/daschr/sqlite3_extensions/raw/master/cron.c --output src/cron.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/eval.c --output src/eval.c
@@ -37,7 +37,7 @@ compile-linux:
 	gcc -fPIC -shared src/eval.c -o dist/eval.so
 	gcc -fPIC -shared src/fcmp.c -o dist/fcmp.so
 	gcc -fPIC -shared src/isodate.c -o dist/isodate.so
-	gcc -fPIC -shared src/json2.c src/cJSON.c -o dist/json2.so
+	# gcc -fPIC -shared src/json2.c src/cJSON.c -o dist/json2.so
 	gcc -fPIC -shared src/math2.c -o dist/math2.so
 	gcc -fPIC -shared src/pearson.c -o dist/pearson.so
 	gcc -fPIC -shared src/pivotvtab.c -o dist/pivotvtab.so
@@ -64,7 +64,7 @@ compile-windows:
 	gcc -shared -I. src/eval.c -o dist/eval.dll
 	gcc -shared -I. src/fcmp.c -o dist/fcmp.dll
 	gcc -shared -I. src/isodate.c -o dist/isodate.dll
-	gcc -shared -I. src/json2.c src/cJSON.c -o dist/json2.dll
+	# gcc -shared -I. src/json2.c src/cJSON.c -o dist/json2.dll
 	gcc -shared -I. src/math2.c -o dist/math2.dll
 	gcc -shared -I. src/pearson.c -o dist/pearson.dll
 	gcc -shared -I. src/pivotvtab.c -o dist/pivotvtab.dll
@@ -91,7 +91,7 @@ compile-macos:
 	gcc -fPIC -dynamiclib -I src src/eval.c -o dist/eval.dylib
 	gcc -fPIC -dynamiclib -I src src/fcmp.c -o dist/fcmp.dylib
 	gcc -fPIC -dynamiclib -I src src/isodate.c -o dist/isodate.dylib
-	gcc -fPIC -dynamiclib -I src src/json2.c src/cJSON.c -o dist/json2.dylib
+	# gcc -fPIC -dynamiclib -I src src/json2.c src/cJSON.c -o dist/json2.dylib
 	gcc -fPIC -dynamiclib -I src src/math2.c -o dist/math2.dylib
 	gcc -fPIC -dynamiclib -I src src/pearson.c -o dist/pearson.dylib
 	gcc -fPIC -dynamiclib -I src src/pivotvtab.c -o dist/pivotvtab.dylib
@@ -118,7 +118,7 @@ test-all:
 	make test suite=eval
 	make test suite=fcmp
 	make test suite=isodate
-	make test suite=json2
+	# make test suite=json2
 	make test suite=math2
 	make test suite=pearson
 	make test suite=pivotvtab
