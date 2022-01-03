@@ -44,7 +44,7 @@ static uint8_t* fix_width(const uint8_t* str, size_t width) {
         fixed[idx] = chr;
     }
     for (size_t i = idx; i <= width; i++) {
-        fixed[idx] = 0;
+        fixed[i] = 0;
     }
     return fixed;
 }
