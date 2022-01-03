@@ -33,6 +33,7 @@ These extensions haven't yet made their way to the main set. They may be unteste
 
 Think of them as candidates for the standard library:
 
+- [array](https://github.com/nalgeon/sqlean/issues/27#issuecomment-1004109889): one-dimensional arrays
 - [besttype](https://github.com/nalgeon/sqlean/issues/27#issuecomment-999732640): convert string value to numeric
 - [bloom](https://github.com/nalgeon/sqlean/issues/27#issuecomment-1002267134): a fast way to tell if a value is already in a table
 - [cbrt](https://github.com/nalgeon/sqlean/issues/27#issuecomment-996605444): cube root function
@@ -43,13 +44,13 @@ Think of them as candidates for the standard library:
 - [eval](https://github.com/nalgeon/sqlean/issues/27#issuecomment-996432840): run arbitrary SQL statements
 - [fcmp](https://github.com/nalgeon/sqlean/issues/27#issuecomment-997482625): floating point numbers comparison and rounding
 - [isodate](https://github.com/nalgeon/sqlean/issues/27#issuecomment-998138191): additional date and time functions
-- [json2](https://github.com/nalgeon/sqlean/issues/27#issuecomment-1002278294): even more JSON functions
 - [math2](https://github.com/nalgeon/sqlean/issues/27#issuecomment-999128539): even more math functions and bit arithmetics
 - [pearson](https://github.com/nalgeon/sqlean/issues/27#issuecomment-997417836): Pearson correlation coefficient between two data sets
 - [pivotvtab](https://github.com/nalgeon/sqlean/issues/27#issuecomment-997052157): pivot tables
 - [recsize](https://github.com/nalgeon/sqlean/issues/27#issuecomment-999732907): estimate total record size
 - [spellfix](https://github.com/nalgeon/sqlean/issues/27#issuecomment-1002297477): search a large vocabulary for close matches
-- [stats2](https://github.com/nalgeon/sqlean/issues/27#issuecomment-1000902666): even more math statistics functions
+- [stats2](https://github.com/nalgeon/sqlean/issues/27#issuecomment-1000902666) and [stats3](https://github.com/nalgeon/sqlean/issues/27#issuecomment-1002703581): even more math statistics functions
+- [text2](https://github.com/nalgeon/sqlean/issues/27#issuecomment-1003105288): even more string functions
 - [uint](https://github.com/nalgeon/sqlean/issues/27#issuecomment-1001232670): natural string sorting and comparison
 - [unhex](https://github.com/nalgeon/sqlean/issues/27#issuecomment-997432989): reverse for `hex()`
 - [xmltojson](https://github.com/nalgeon/sqlean/issues/27#issuecomment-997018486): convert XML to JSON string
