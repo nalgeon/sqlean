@@ -57,4 +57,4 @@ select '39', setbits(32, 1, 3) = 42;
 select '40', clrbits(42, 1, 3) = 32;
 
 -- 111b = 7
-select '41', aggbitmask(v) from (select 0 as v union select 1 union select 2);
+select '41', aggbitmask(v) = 7 from (select 0 as v union select 1 union select 2);
