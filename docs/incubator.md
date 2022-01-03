@@ -179,7 +179,7 @@ Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/
 
 Compares dates against cron patterns, whether they match or not.
 
-Created by [David Schramm ](https://github.com/daschr/sqlite3_extensions/blob/master/cron.c), MIT License.
+Created by [David Schramm](https://github.com/daschr/sqlite3_extensions/blob/master/cron.c), MIT License.
 
 ```sql
 sqlite> .load dist/cron
@@ -188,6 +188,42 @@ sqlite> select cron_match('2006-01-02 15:04:05','4 15 * * *');
 ```
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/cron.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/cron.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/cron.dylib)
+
+## define
+
+Create scalar and table-valued functions from SQL.
+
+Created by [0x09](https://github.com/0x09/sqlite-statement-vtab/blob/master/statement_vtab.c), Public Domain.
+
+Define a scalar function to calculate the sum of numbers 1..n:
+
+```sql
+sqlite> .load dist/define
+sqlite> select create_function("sumn", "?1 * (?1 + 1) / 2");
+sqlite> select sumn(5);
+15
+```
+
+Define a table-valued function to split the string into two by the separator:
+
+```sql
+create virtual table split using statement((
+  select
+    substr(:str, 1, instr(:str, :sep) - 1) as left_part,
+    :sep as separator,
+    substr(:str, instr(:str, :sep) + 1) as right_part
+));
+
+select * from split('one;two', ';');
+select * from split('one;two', ';');
+┌───────────┬───────────┬────────────┐
+│ left_part │ separator │ right_part │
+├───────────┼───────────┼────────────┤
+│ one       │ ;         │ two        │
+└───────────┴───────────┴────────────┘
+```
+
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/define.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/define.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/define.dylib)
 
 ## envfuncs
 
