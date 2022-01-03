@@ -7,7 +7,7 @@ with data as (select randomblob(8) as value)
 select '01', unhex(hex(data.value)) = data.value from data;
 select '02', unhex(hex('hello')) = cast('hello' as blob);
 select '03', hex(unhex('AABBCC')) = 'AABBCC';
-select '04', unhex('ZZ') = zeroblob(1);
+select '04', unhex('ZZ') is null;
 select '05', unhex('AAAAA') is null;
 select '06', unhex('A') is null;
 select '07', unhex(null) is null;
