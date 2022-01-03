@@ -26,6 +26,7 @@ download-external:
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/zipfile.c --output src/zipfile.c
 
 compile-linux:
+	gcc -fPIC -shared src/array.c src/array/*.c -o dist/array.so
 	gcc -fPIC -shared src/besttype.c -o dist/besttype.so
 	gcc -fPIC -shared src/bloom.c -o dist/bloom.so
 	gcc -fPIC -shared src/cbrt.c -o dist/cbrt.so -lm
@@ -52,6 +53,7 @@ compile-linux:
 	gcc -fPIC -shared src/zipfile.c -o dist/zipfile.so -lz
 
 compile-windows:
+	gcc -shared -I. src/array.c src/array/*.c -o dist/array.dll
 	gcc -shared -I. src/besttype.c -o dist/besttype.dll
 	gcc -shared -I. src/bloom.c -o dist/bloom.dll
 	gcc -shared -I. src/cbrt.c -o dist/cbrt.dll -lm
@@ -78,6 +80,7 @@ compile-windows:
 	# gcc -shared -I. src/zipfile.c -o dist/zipfile.dll -lz
 
 compile-macos:
+	gcc -fPIC -dynamiclib -I src src/array.c src/array/*.c -o dist/array.dylib
 	gcc -fPIC -dynamiclib -I src src/besttype.c -o dist/besttype.dylib
 	gcc -fPIC -dynamiclib -I src src/bloom.c -o dist/bloom.dylib
 	gcc -fPIC -dynamiclib -I src src/cbrt.c -o dist/cbrt.dylib -lm
@@ -104,6 +107,7 @@ compile-macos:
 	gcc -fPIC -dynamiclib -I src src/zipfile.c -o dist/zipfile.dylib -lz
 
 test-all:
+	make test suite=array
 	make test suite=besttype
 	make test suite=bloom
 	make test suite=cbrt
@@ -132,5 +136,5 @@ test-all:
 # fails if grep does find a failed test case
 # https://stackoverflow.com/questions/15367674/bash-one-liner-to-exit-with-the-opposite-status-of-a-grep-command/21788642
 test:
-	sqlite3 < test/$(suite).sql | (! grep -Ex "[0-9]+.0")
-
+	@sqlite3 < test/$(suite).sql > test.log
+	@cat test.log | (! grep -Ex "[0-9]+.[^1]")

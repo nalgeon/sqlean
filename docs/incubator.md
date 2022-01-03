@@ -1,3 +1,96 @@
+## array
+
+One-dimensional arrays for SQLite.
+
+Supports integers, real numbers and strings (with limited max size). Uses 1-based indexing. Stores itself as a blob value.
+
+```sql
+sqlite> .load dist/array
+sqlite> create table data(arr blob);
+sqlite> insert into data(arr) values (array(11, 12, 13));
+
+sqlite> select array_length(arr) from data;
+3
+sqlite> select array_at(arr, 2) from data;
+12
+sqlite> select value from data, unnest(data.arr);
+11
+12
+13
+```
+
+Provides a lot of features you'd expect from arrays:
+
+-   indexing and search,
+-   adding and removing values,
+-   slicing and concatenation,
+-   aggregation (rows → array),
+-   unnesting (array → rows),
+-   and some more.
+
+```
+intarray()
+-> Creates an empty 64-bit integer array.
+
+realarray()
+-> Creates an empty 64-bit real array.
+
+textarray(width)
+-> Creates an empty text array. Each string has a maximum size of `width` bytes.
+   Shorter strings are fine, but longer ones will be truncated to `width` bytes.
+
+array(value, ...)
+-> Creates an array filled with provided values.
+   Infers array type from the first value. If the value is a string,
+   sets max width to the maximum size among provided strings.
+
+array_length(arr)
+-> Returns array elements count.
+
+array_at(arr, index)
+-> Returns the array element at the specified index (1-based).
+
+array_index(arr, value)
+-> Returns the index of the specified value, or 0 if there is no such value.
+
+array_contains(arr, value)
+-> Returns 1 if the value if found in the array, 0 otherwise.
+
+array_append(arr, value)
+-> Appends the value to the end of the array.
+
+array_insert(arr, index, value)
+-> Inserts the value at the specified index,
+   shifting following elements to the right.
+
+array_remove_at(arr, index)
+-> Removes the element at the specified index,
+   shifting following elements to the left.
+
+array_remove(arr, value)
+-> Removes the value from the array. If there are multiple such values,
+   only removes the first one.
+
+array_clear(arr)
+-> Removes all elements from the array.
+
+array_slice(arr, start[, end])
+-> Returns a slice of the array from the `start` index inclusive
+   to the `end` index non-inclusive (or to the end of the array).
+
+array_concat(arr, other)
+-> Concatenates two arrays.
+
+array_agg(expr)
+-> Aggregates a set of values into the array (reverse operation for unnest()).
+
+unnest(arr)
+-> Expands the array to a set of values (reverse operation for array_agg()).
+   Implemented as a table-valued function.
+```
+
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/array.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/array.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/array.dylib)
+
 ## besttype
 
 Implements `ToBestType(x)` function:
