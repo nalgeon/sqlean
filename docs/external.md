@@ -21,7 +21,7 @@ download-external:
 	curl -L https://github.com/sqlite/sqlite/raw/branch-$(SQLITE_BRANCH)/ext/misc/eval.c --output src/eval.c
 ```
 
-4. Add compilation steps to the Makefile:
+4. Add compilation and test steps to the Makefile:
 
 ```Makefile
 compile-linux:
@@ -32,6 +32,9 @@ compile-windows:
 
 compile-macos:
 	gcc -fPIC -dynamiclib -I src src/eval.c -o dist/eval.dylib
+
+test-all:
+	make test suite=cbrt
 ```
 
 5. Compile for you OS and run tests to verify that everything is OK:

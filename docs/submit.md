@@ -46,7 +46,7 @@ select '05', cbrt(0) = 0;
 select '06', cbrt('whatever') is null;
 ```
 
-4. Add compilation steps to the Makefile:
+4. Add compilation and test steps to the Makefile:
 
 ```Makefile
 compile-linux:
@@ -57,6 +57,9 @@ compile-windows:
 
 compile-macos:
 	gcc -fPIC -dynamiclib -I src src/cbrt.c -o dist/cbrt.dylib -lm
+
+test-all:
+	make test suite=cbrt
 ```
 
 5. Compile for you OS and run tests to verify that everything is OK:
@@ -81,4 +84,3 @@ Please follow these rules:
 -   Auto-format the code according to the provided [clang-format specification](../.clang-format).
 -   Use descriptive names. No `z`, `cc`, `pSvRt` and other cryptic variables, please.
 -   Use `snake_case` for variable and function names.
-
