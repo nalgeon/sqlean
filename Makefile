@@ -120,7 +120,8 @@ compile-macos:
 test-all:
 	make test suite=array
 	make test suite=besttype
-	make test suite=btreeinfo
+	# requires sqlite_dbpage, which is missing on github actions servers
+	# make test suite=btreeinfo
 	make test suite=bloom
 	make test suite=cbrt
 	make test suite=classifier
@@ -132,6 +133,7 @@ test-all:
 	make test suite=eval
 	make test suite=fcmp
 	make test suite=isodate
+	# tests fail on ubuntu with segmentation fault
 	# make test suite=json2
 	make test suite=math2
 	make test suite=pearson

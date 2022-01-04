@@ -137,6 +137,8 @@ Shows information about all btrees (tables and indexes) in an SQLite database fi
 -   estimated number of pages,
 -   depth of the btree.
 
+Requires [sqlite_dbpage](https://sqlite.org/dbpage.html) virtual table.
+
 Created by [D. Richard Hipp](https://sqlite.org/src/file/ext/misc/btreeinfo.c), Public Domain.
 
 ```sql
@@ -186,7 +188,7 @@ Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/
 
 ## closure
 
-Navigate hierarchic table with parent/child relationship.
+Navigate hierarchic tables with parent/child relationship.
 
 Created by [D. Richard Hipp](https://sqlite.org/src/file/ext/misc/closure.c), Public Domain.
 
