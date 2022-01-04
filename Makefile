@@ -13,6 +13,7 @@ download-sqlite:
 	mv sqlite-amalgamation-$(SQLITE_VERSION)/* src
 
 download-external:
+	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/btreeinfo.c --output src/btreeinfo.c
 	# curl -L https://github.com/davegamble/cjson/raw/master/cJSON.c --output src/cJSON.c
 	# curl -L https://github.com/davegamble/cjson/raw/master/cJSON.h --output src/cJSON.h
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/compress.c --output src/compress.c
@@ -29,6 +30,7 @@ compile-linux:
 	gcc -fPIC -shared src/array.c src/array/*.c -o dist/array.so
 	gcc -fPIC -shared src/besttype.c -o dist/besttype.so
 	gcc -fPIC -shared src/bloom.c -o dist/bloom.so
+	gcc -fPIC -shared src/btreeinfo.c -o dist/btreeinfo.so
 	gcc -fPIC -shared src/cbrt.c -o dist/cbrt.so -lm
 	gcc -fPIC -shared src/classifier.c -o dist/classifier.so
 	gcc -fPIC -shared src/compress.c -o dist/compress.so -lz
@@ -57,6 +59,7 @@ compile-windows:
 	gcc -shared -I. src/array.c src/array/*.c -o dist/array.dll
 	gcc -shared -I. src/besttype.c -o dist/besttype.dll
 	gcc -shared -I. src/bloom.c -o dist/bloom.dll
+	gcc -shared -I. src/btreeinfo.c -o dist/btreeinfo.dll
 	gcc -shared -I. src/cbrt.c -o dist/cbrt.dll -lm
 	gcc -shared -I. src/classifier.c -o dist/classifier.dll
 	# gcc -shared -I. src/compress.c -o dist/compress.dll -lz
@@ -85,6 +88,7 @@ compile-macos:
 	gcc -fPIC -dynamiclib -I src src/array.c src/array/*.c -o dist/array.dylib
 	gcc -fPIC -dynamiclib -I src src/besttype.c -o dist/besttype.dylib
 	gcc -fPIC -dynamiclib -I src src/bloom.c -o dist/bloom.dylib
+	gcc -fPIC -dynamiclib -I src src/btreeinfo.c -o dist/btreeinfo.dylib
 	gcc -fPIC -dynamiclib -I src src/cbrt.c -o dist/cbrt.dylib -lm
 	gcc -fPIC -dynamiclib -I src src/classifier.c -o dist/classifier.dylib
 	gcc -fPIC -dynamiclib -I src src/compress.c -o dist/compress.dylib -lz

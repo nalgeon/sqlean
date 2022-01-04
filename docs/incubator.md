@@ -128,6 +128,31 @@ sqlite> select count(*) from plants('lemon');
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/bloom.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/bloom.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/bloom.dylib)
 
+## btreeinfo
+
+Shows information about all btrees (tables and indexes) in an SQLite database file:
+
+-   if the btree has a rowid,
+-   estimated number of entries,
+-   estimated number of pages,
+-   depth of the btree.
+
+Created by [D. Richard Hipp](https://sqlite.org/src/file/ext/misc/btreeinfo.c), Public Domain.
+
+```sql
+sqlite> .load dist/btreeinfo
+sqlite> create table data as select * from generate_series(1, 9999);
+sqlite> select type, name, hasrowid, nentry, npage, depth from sqlite_btreeinfo;
+┌───────┬───────────────┬──────────┬────────┬───────┬───────┐
+│ type  │     name      │ hasRowid │ nEntry │ nPage │ depth │
+├───────┼───────────────┼──────────┼────────┼───────┼───────┤
+│ table │ sqlite_schema │ 1        │ 2      │ 1     │ 1     │
+│ table │ data          │ 1        │ 10010  │ 22    │ 2     │
+└───────┴───────────────┴──────────┴────────┴───────┴───────┘
+```
+
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/btreeinfo.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/btreeinfo.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/btreeinfo.dylib)
+
 ## cbrt
 
 Cube root function.
