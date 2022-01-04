@@ -34,7 +34,7 @@ compile-macos:
 	gcc -fPIC -dynamiclib -I src src/eval.c -o dist/eval.dylib
 
 test-all:
-	make test suite=cbrt
+	make test suite=eval
 ```
 
 5. Compile for you OS and run tests to verify that everything is OK:
