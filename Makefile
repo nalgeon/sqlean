@@ -16,6 +16,7 @@ download-external:
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/btreeinfo.c --output src/btreeinfo.c
 	# curl -L https://github.com/davegamble/cjson/raw/master/cJSON.c --output src/cJSON.c
 	# curl -L https://github.com/davegamble/cjson/raw/master/cJSON.h --output src/cJSON.h
+	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/closure.c --output src/closure.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/compress.c --output src/compress.c
 	curl -L https://github.com/daschr/sqlite3_extensions/raw/master/cron.c --output src/cron.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/eval.c --output src/eval.c
@@ -33,6 +34,7 @@ compile-linux:
 	gcc -fPIC -shared src/btreeinfo.c -o dist/btreeinfo.so
 	gcc -fPIC -shared src/cbrt.c -o dist/cbrt.so -lm
 	gcc -fPIC -shared src/classifier.c -o dist/classifier.so
+	gcc -fPIC -shared src/closure.c -o dist/closure.so
 	gcc -fPIC -shared src/compress.c -o dist/compress.so -lz
 	gcc -fPIC -shared src/cron.c -o dist/cron.so
 	gcc -fPIC -shared src/define.c -o dist/define.so
@@ -62,6 +64,7 @@ compile-windows:
 	gcc -shared -I. src/btreeinfo.c -o dist/btreeinfo.dll
 	gcc -shared -I. src/cbrt.c -o dist/cbrt.dll -lm
 	gcc -shared -I. src/classifier.c -o dist/classifier.dll
+	gcc -shared -I. src/closure.c -o dist/closure.dll
 	# gcc -shared -I. src/compress.c -o dist/compress.dll -lz
 	gcc -shared -I. src/cron.c -o dist/cron.dll
 	gcc -shared -I. src/define.c -o dist/define.dll
@@ -91,6 +94,7 @@ compile-macos:
 	gcc -fPIC -dynamiclib -I src src/btreeinfo.c -o dist/btreeinfo.dylib
 	gcc -fPIC -dynamiclib -I src src/cbrt.c -o dist/cbrt.dylib -lm
 	gcc -fPIC -dynamiclib -I src src/classifier.c -o dist/classifier.dylib
+	gcc -fPIC -dynamiclib -I src src/closure.c -o dist/closure.dylib
 	gcc -fPIC -dynamiclib -I src src/compress.c -o dist/compress.dylib -lz
 	gcc -fPIC -dynamiclib -I src src/cron.c -o dist/cron.dylib
 	gcc -fPIC -dynamiclib -I src src/define.c -o dist/define.dylib
@@ -116,9 +120,11 @@ compile-macos:
 test-all:
 	make test suite=array
 	make test suite=besttype
+	make test suite=btreeinfo
 	make test suite=bloom
 	make test suite=cbrt
 	make test suite=classifier
+	make test suite=closure
 	make test suite=compress
 	make test suite=cron
 	make test suite=define

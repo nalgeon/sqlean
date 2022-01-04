@@ -184,6 +184,72 @@ sqlite> select classify(0, 0, 1);
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/classifier.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/classifier.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/classifier.dylib)
 
+## closure
+
+Navigate hierarchic table with parent/child relationship.
+
+Created by [D. Richard Hipp](https://sqlite.org/src/file/ext/misc/closure.c), Public Domain.
+
+```sql
+.load dist/closure
+
+-- create a parent/child table
+create table employees (
+    id integer primary key,
+    parent_id integer,
+    name varchar(50)
+);
+create index employees_parent_idx on employees(parent_id);
+insert into employees
+(id, parent_id, name)
+values
+(11, null, 'Diane'),
+(12, 11, 'Bob'),
+(21, 11, 'Emma'),
+(22, 21, 'Grace'),
+(23, 21, 'Henry'),
+(24, 21, 'Irene'),
+(25, 21, 'Frank'),
+(31, 11, 'Cindy'),
+(32, 31, 'Dave'),
+(33, 31, 'Alice');
+```
+
+```
+Diane
+└ Bob
+└ Emma
+  ├ Grace
+  ├ Henry
+  ├ Irene
+  └ Frank
+└ Cindy
+  ├ Dave
+  └ Alice
+```
+
+```sql
+-- create a virtual hierarchy table
+create virtual table hierarchy using transitive_closure(
+    tablename = "employees",
+    idcolumn = "id",
+    parentcolumn = "parent_id"
+);
+
+-- select hierarchy branch rooted at Cindy
+select employees.id, name from employees, hierarchy
+where employees.id = hierarchy.id and hierarchy.root = 31;
+┌────┬───────┐
+│ id │ name  │
+├────┼───────┤
+│ 31 │ Cindy │
+│ 32 │ Dave  │
+│ 33 │ Alice │
+└────┴───────┘
+```
+
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/closure.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/closure.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/closure.dylib)
+
 ## compress
 
 Compress / uncompress data using zlib. Doesn't work on Windows.
