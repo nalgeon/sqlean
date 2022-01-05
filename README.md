@@ -36,10 +36,13 @@ Think of them as candidates for the standard library:
 - [array](https://github.com/nalgeon/sqlean/issues/27#issuecomment-1004109889): one-dimensional arrays
 - [besttype](https://github.com/nalgeon/sqlean/issues/27#issuecomment-999732640): convert string value to numeric
 - [bloom](https://github.com/nalgeon/sqlean/issues/27#issuecomment-1002267134): a fast way to tell if a value is already in a table
+- [btreeinfo](https://github.com/nalgeon/sqlean/issues/27#issuecomment-1004896027): information about the b-trees in the database
 - [cbrt](https://github.com/nalgeon/sqlean/issues/27#issuecomment-996605444): cube root function
 - [classifier](https://github.com/nalgeon/sqlean/issues/27#issuecomment-1001239676): binary classifier via logistic regression
+- [closure](https://github.com/nalgeon/sqlean/issues/27#issuecomment-1004931771): navigate hierarchic tables with parent/child relationships
 - [compress](https://github.com/nalgeon/sqlean/issues/27#issuecomment-1000937999) and [sqlar](https://github.com/nalgeon/sqlean/issues/27#issuecomment-1000938046): compress / uncompress data
 - [cron](https://github.com/nalgeon/sqlean/issues/27#issuecomment-997427979): match dates against cron patterns
+- [define](https://github.com/nalgeon/sqlean/issues/27#issuecomment-1004347222): create scalar and table-valued functions from SQL
 - [envfuncs](https://github.com/nalgeon/sqlean/issues/27#issuecomment-997423609): read environment variables
 - [eval](https://github.com/nalgeon/sqlean/issues/27#issuecomment-996432840): run arbitrary SQL statements
 - [fcmp](https://github.com/nalgeon/sqlean/issues/27#issuecomment-997482625): floating point numbers comparison and rounding
