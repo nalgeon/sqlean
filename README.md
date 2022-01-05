@@ -110,6 +110,8 @@ Contributions are welcome! Submit your own or third-party extension to the incub
 - [How to submit your extension](https://github.com/nalgeon/sqlean/blob/incubator/docs/submit.md)
 - [How to submit a third-party extension](https://github.com/nalgeon/sqlean/blob/incubator/docs/external.md)
 
+We want every extension to be self-contained. So we limit the project scope to extensions without external dependencies (other than the C standard library and SQLite itself).
+
 Please note that we only accept extensions with permissive licenses (MIT License, Apache License etc) or public domain. Copyleft licenses like GPL won't do.
 
 ## License
