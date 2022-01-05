@@ -54,6 +54,8 @@ Contributions are welcome! Submit your own or third-party extension to the incub
 -   [How to submit your extension](docs/submit.md)
 -   [How to submit a third-party extension](docs/external.md)
 
+We want every extension to be self-contained. So we limit the project scope to extensions without external dependencies (other than the C standard library and SQLite itself).
+
 Please note that we accept only extensions with permissive licenses (MIT License, Apache License etc) or public domain. Copyleft licenses like GPL won't do.
 
 ## License
