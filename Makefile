@@ -121,6 +121,8 @@ compile-macos:
 	gcc -fPIC -dynamiclib -I src src/zipfile.c -o dist/zipfile.dylib -lz
 
 test-all:
+	sqlite3 --version
+	echo 'PRAGMA compile_options;' | sqlite3
 	make test suite=array
 	make test suite=besttype
 	# requires sqlite_dbpage, which is missing on github actions servers
