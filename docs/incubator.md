@@ -282,6 +282,40 @@ sqlite> select cron_match('2006-01-02 15:04:05','4 15 * * *');
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/cron.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/cron.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/cron.dylib)
 
+## dbdump
+
+Export database or table structure and contents into a single UTF-8 string.
+
+Created by [D. Richard Hipp](https://sqlite.org/src/file/ext/misc/dbdump.c), Public Domain.
+
+`dbdump([schema[, table]])`
+
+-   `schema` is the schema to be dumped. Default is "main" but can also be "temp" or any attached database.
+-   `table` is the table to be dumped. If `table` is omitted, then all tables are dumped.
+
+```sql
+.load dist/dbdump
+
+create table employees (id integer primary key, name text);
+insert into employees (name) values ('Diane'), ('Bob');
+
+create table expenses (year integer, month integer, expense integer);
+insert into expenses values (2020, 1, 82), (2020, 2, 75), (2020, 3, 104);
+
+select dbdump('main', 'employees');
+```
+
+```sql
+PRAGMA foreign_keys=OFF;
+BEGIN TRANSACTION;
+CREATE TABLE employees (id integer primary key, name text);
+INSERT INTO employees VALUES(1,'Diane');
+INSERT INTO employees VALUES(2,'Bob');
+COMMIT;
+```
+
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/dbdump.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/dbdump.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/dbdump.dylib)
+
 ## define
 
 Create scalar and table-valued functions from SQL.
