@@ -72,7 +72,7 @@ static Array* array_create_cap(VALUE_TYPE type, size_t el_size, size_t capacity)
     arr->el_size = el_size;
     arr->length = 0;
     arr->capacity = capacity;
-    arr->data = malloc(capacity * el_size);
+    arr->data = calloc(capacity, el_size);
     return arr;
 }
 
@@ -126,6 +126,9 @@ static bool array_grow(Array* arr) {
 
     size_t new_cap = (size_t)(arr->capacity * GROWTH_FACTOR) + 1;
     uint8_t* data = realloc(arr->data, new_cap * arr->el_size);
+    // zero-out new memory
+    uint8_t* at = data + arr->capacity * arr->el_size;
+    memset(at, 0, (new_cap - arr->capacity) * arr->el_size);
     if (data == NULL) {
         return false;
     }
