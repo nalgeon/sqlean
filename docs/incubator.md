@@ -316,6 +316,34 @@ COMMIT;
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/dbdump.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/dbdump.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/dbdump.dylib)
 
+## decimal
+
+Arbitrary-precision decimal arithmetic on numbers stored as text strings. Because the numbers are stored to arbitrary precision and as text, no approximations are needed. Computations can be done exactly.
+
+Created by [D. Richard Hipp](https://sqlite.org/src/file/ext/misc/decimal.c), Public Domain.
+
+There are three math functions available:
+
+-   `decimal_add(A,B)`
+-   `decimal_sub(A,B)`
+-   `decimal_mul(A,B)`
+
+These functions respectively add, subtract, and multiply their arguments and return a new text string that is the decimal representation of the result. There is no division operator at this time.
+
+Use the `decimal_cmp(A,B)` to compare two decimal values. The result will be negative, zero, or positive if A is less than, equal to, or greater than B, respectively.
+
+The `decimal_sum(X)` function is an aggregate, like the built-in `sum()` aggregate function, except that `decimal_sum()` computes its result to arbitrary precision and is therefore precise.
+
+```sql
+sqlite> .load dist/decimal
+sqlite> select 0.1 + 0.2 = 0.3;
+0
+sqlite> select decimal_add(decimal('0.1'), decimal('0.2')) = decimal('0.3');
+1
+```
+
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/eval.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/eval.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/eval.dylib)
+
 ## define
 
 Create scalar and table-valued functions from SQL.

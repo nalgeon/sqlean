@@ -19,6 +19,7 @@ download-external:
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/closure.c --output src/closure.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/compress.c --output src/compress.c
 	curl -L https://github.com/daschr/sqlite3_extensions/raw/master/cron.c --output src/cron.c
+	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/decimal.c --output src/decimal.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/eval.c --output src/eval.c
 	curl -L https://github.com/jakethaw/pivot_vtab/raw/main/pivot_vtab.c --output src/pivotvtab.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/spellfix.c --output src/spellfix.c
@@ -38,6 +39,7 @@ compile-linux:
 	gcc -fPIC -shared src/compress.c -o dist/compress.so -lz
 	gcc -fPIC -shared src/cron.c -o dist/cron.so
 	gcc -fPIC -shared src/dbdump.c -o dist/dbdump.so
+	gcc -fPIC -shared src/decimal.c -o dist/decimal.so
 	gcc -fPIC -shared src/define.c -o dist/define.so
 	gcc -fPIC -shared src/envfuncs.c -o dist/envfuncs.so
 	gcc -fPIC -shared src/eval.c -o dist/eval.so
@@ -69,6 +71,7 @@ compile-windows:
 	# gcc -shared -I. src/compress.c -o dist/compress.dll -lz
 	gcc -shared -I. src/cron.c -o dist/cron.dll
 	gcc -shared -I. src/dbdump.c -o dist/dbdump.dll
+	gcc -shared -I. src/decimal.c -o dist/decimal.dll
 	gcc -shared -I. src/define.c -o dist/define.dll
 	gcc -shared -I. src/envfuncs.c -o dist/envfuncs.dll
 	gcc -shared -I. src/eval.c -o dist/eval.dll
@@ -100,6 +103,7 @@ compile-macos:
 	gcc -fPIC -dynamiclib -I src src/compress.c -o dist/compress.dylib -lz
 	gcc -fPIC -dynamiclib -I src src/cron.c -o dist/cron.dylib
 	gcc -fPIC -dynamiclib -I src src/dbdump.c -o dist/dbdump.dylib
+	gcc -fPIC -dynamiclib -I src src/decimal.c -o dist/decimal.dylib
 	gcc -fPIC -dynamiclib -I src src/define.c -o dist/define.dylib
 	gcc -fPIC -dynamiclib -I src src/envfuncs.c -o dist/envfuncs.dylib
 	gcc -fPIC -dynamiclib -I src src/eval.c -o dist/eval.dylib
@@ -134,6 +138,7 @@ test-all:
 	make test suite=compress
 	make test suite=cron
 	make test suite=define
+	make test suite=decimal
 	make test suite=dbdump
 	make test suite=envfuncs
 	make test suite=eval
