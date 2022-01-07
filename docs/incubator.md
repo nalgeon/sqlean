@@ -753,6 +753,25 @@ select * from sales_by_year;
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/pivotvtab.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/pivotvtab.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/pivotvtab.dylib)
 
+## prefixes
+
+Generates all prefixes of the input string, including an empty string and the input string itself. The order of prefixes is from longest to shortest.
+
+Created by [D. Richard Hipp](https://sqlite.org/src/file/ext/misc/prefixes.c), Public Domain.
+
+```sql
+sqlite> .load dist/prefixes
+sqlite> select * from prefixes('hello');
+hello
+hell
+hel
+he
+h
+
+```
+
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/prefixes.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/prefixes.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/prefixes.dylib)
+
 ## recsize
 
 Еstimates total record size.

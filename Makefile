@@ -24,6 +24,7 @@ download-external:
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/ieee754.c --output src/ieee754.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/memstat.c --output src/memstat.c
 	curl -L https://github.com/jakethaw/pivot_vtab/raw/main/pivot_vtab.c --output src/pivotvtab.c
+	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/prefixes.c --output src/prefixes.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/spellfix.c --output src/spellfix.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/sqlar.c --output src/sqlar.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/uint.c --output src/uint.c
@@ -53,6 +54,7 @@ compile-linux:
 	gcc -fPIC -shared src/memstat.c -o dist/memstat.so
 	gcc -fPIC -shared src/pearson.c -o dist/pearson.so
 	gcc -fPIC -shared src/pivotvtab.c -o dist/pivotvtab.so
+	gcc -fPIC -shared src/prefixes.c -o dist/prefixes.so
 	gcc -fPIC -shared src/recsize.c -o dist/recsize.so
 	gcc -fPIC -shared src/spellfix.c -o dist/spellfix.so
 	gcc -fPIC -shared src/sqlar.c -o dist/sqlar.so -lz
@@ -87,6 +89,7 @@ compile-windows:
 	gcc -shared -I. src/memstat.c -o dist/memstat.dll
 	gcc -shared -I. src/pearson.c -o dist/pearson.dll
 	gcc -shared -I. src/pivotvtab.c -o dist/pivotvtab.dll
+	gcc -shared -I. src/prefixes.c -o dist/prefixes.dll
 	gcc -shared -I. src/recsize.c -o dist/recsize.dll
 	gcc -shared -I. src/spellfix.c -o dist/spellfix.dll
 	# gcc -shared -I. src/sqlar.c -o dist/sqlar.dll -lz
@@ -121,6 +124,7 @@ compile-macos:
 	gcc -fPIC -dynamiclib -I src src/memstat.c -o dist/memstat.dylib
 	gcc -fPIC -dynamiclib -I src src/pearson.c -o dist/pearson.dylib
 	gcc -fPIC -dynamiclib -I src src/pivotvtab.c -o dist/pivotvtab.dylib
+	gcc -fPIC -dynamiclib -I src src/prefixes.c -o dist/prefixes.dylib
 	gcc -fPIC -dynamiclib -I src src/recsize.c -o dist/recsize.dylib
 	gcc -fPIC -dynamiclib -I src src/spellfix.c -o dist/spellfix.dylib
 	gcc -fPIC -dynamiclib -I src src/sqlar.c -o dist/sqlar.dylib -lz
@@ -159,6 +163,7 @@ test-all:
 	make test suite=memstat
 	make test suite=pearson
 	make test suite=pivotvtab
+	make test suite=prefixes
 	make test suite=recsize
 	make test suite=spellfix
 	make test suite=sqlar
