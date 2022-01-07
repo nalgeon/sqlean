@@ -32,6 +32,7 @@ download-external:
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/unionvtab.c --output src/unionvtab.c
 	curl -L https://github.com/jakethaw/xml_to_json/raw/master/xml_to_json.c --output src/xmltojson.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/zipfile.c --output src/zipfile.c
+	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/zorder.c --output src/zorder.c
 
 compile-linux:
 	gcc -fPIC -shared src/array.c src/array/*.c -o dist/array.so
@@ -70,6 +71,7 @@ compile-linux:
 	gcc -fPIC -shared src/unionvtab.c -o dist/unionvtab.so
 	gcc -fPIC -shared src/xmltojson.c -o dist/xmltojson.so -DSQLITE
 	gcc -fPIC -shared src/zipfile.c -o dist/zipfile.so -lz
+	gcc -fPIC -shared src/zorder.c -o dist/zorder.so
 
 compile-windows:
 	gcc -shared -I. src/array.c src/array/*.c -o dist/array.dll
@@ -108,6 +110,7 @@ compile-windows:
 	gcc -shared -I. src/unionvtab.c -o dist/unionvtab.dll
 	gcc -shared -I. src/xmltojson.c -o dist/xmltojson.dll -DSQLITE
 	# gcc -shared -I. src/zipfile.c -o dist/zipfile.dll -lz
+	gcc -shared -I. src/zorder.c -o dist/zorder.dll
 
 compile-macos:
 	gcc -fPIC -dynamiclib -I src src/array.c src/array/*.c -o dist/array.dylib
@@ -146,6 +149,7 @@ compile-macos:
 	gcc -fPIC -dynamiclib -I src src/unionvtab.c -o dist/unionvtab.dylib
 	gcc -fPIC -dynamiclib -I src src/xmltojson.c -o dist/xmltojson.dylib -DSQLITE
 	gcc -fPIC -dynamiclib -I src src/zipfile.c -o dist/zipfile.dylib -lz
+	gcc -fPIC -dynamiclib -I src src/zorder.c -o dist/zorder.dylib
 
 test-all:
 	sqlite3 --version
@@ -188,6 +192,7 @@ test-all:
 	make test suite=unionvtab
 	make test suite=xmltojson
 	make test suite=zipfile
+	make test suite=zorder
 
 # fails if grep does find a failed test case
 # https://stackoverflow.com/questions/15367674/bash-one-liner-to-exit-with-the-opposite-status-of-a-grep-command/21788642

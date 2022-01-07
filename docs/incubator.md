@@ -1103,3 +1103,39 @@ readme.txt|a glorious zip file
 ```
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/zipfile.so) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/zipfile.dylib)
+
+## zorder
+
+Maps multidimensional data to the single dimension using z-ordering (Morton codes).
+
+Created by [D. Richard Hipp](https://sqlite.org/src/file/ext/misc/zorder.c), Public Domain.
+
+Z-ordering is a technique that allows you to map multidimensional data to a single dimension. For example, imagine that you have a collection of (X, Y) coordinate pairs laid out on a 2-dimensional plane. Using Z-ordering, you could arrange those 2D pairs on a 1-dimensional line.
+
+Importantly, values that were close together in the 2D plane would still be close to each other on the line. That allows using a single database index for range search in 2D data. See [AWS article for details](https://aws.amazon.com/ru/blogs/database/z-order-indexing-for-multifaceted-queries-in-amazon-dynamodb-part-1/).
+
+This extension provides two functions:
+
+- `zorder(x0,x1,...,xN)`. Generate an N+1 dimension Morton code.
+- `unzorder(Z, N, I)`. Extract the I-th dimension from N-dimensional Morton code Z.
+
+```sql
+sqlite> .load dist/zorder
+sqlite> select zorder(2, 3);
+14
+sqlite> select zorder(4, 5);
+50
+sqlite> select zorder(3, 4) between zorder(2, 3) and zorder(4, 5);
+1
+sqlite> select zorder(2, 2) not between zorder(2, 3) and zorder(4, 5);
+1
+```
+
+```sql
+sqlite> select unzorder(zorder(3, 4), 2, 0);
+3
+sqlite> select unzorder(zorder(3, 4), 2, 1);
+4
+```
+
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/zorder.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/zorder.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/zorder.dylib)
