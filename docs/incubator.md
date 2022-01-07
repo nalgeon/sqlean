@@ -410,7 +410,7 @@ Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/
 
 ## fcmp
 
-Floating point numbers comparison and rounding.
+Floating-point numbers comparison and rounding.
 
 Created by [Keith Medcalf](http://www.dessus.com/files/sqlfcmp.c), Public Domain.
 
@@ -422,7 +422,7 @@ sqlite> select feq(0.1*3, 0.3);
 1
 ```
 
-Floating point numbers comparison:
+Floating-point numbers comparison:
 
 ```
 flt(x[, y[, u]])   -> x less than y
@@ -451,6 +451,33 @@ rounddt(x)   -> Directed Towards 0
 ```
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/fcmp.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/fcmp.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/fcmp.dylib)
+
+## ieee754
+
+Converts a floating-point number F between its binary64 representation and the M×2^E format (`F = M × 2^E`).
+
+Created by [D. Richard Hipp](https://sqlite.org/src/file/ext/misc/ieee754.c), Public Domain.
+
+-   `ieee754(F)`. Converts a floating-point number to the mantissa/exponent string representation.
+-   `ieee754(M,E)`. Converts a mantissa/exponent combination to the floating-point number.
+-   `ieee754_mantissa(F)`. Given a floating-point number, extracts the mantissa component.
+-   `ieee754_exponent(F)`. Given a floating-point number, extracts the exponent component.
+-   `ieee754_to_blob(F)`. Converts a floating-point number into an 8-byte blob that is the big-endian binary64 encoding of that number.
+-   `ieee754_from_blob(B)`. Converts an 8-byte blob into the floating-point value that the binary64 encoding represents.
+
+```sql
+sqlite> .load dist/ieee754
+sqlite> select ieee754(45.25);
+ieee754(181,-2)
+sqlite> select ieee754_mantissa(45.25);
+181
+sqlite> select ieee754_exponent(45.25);
+-2
+sqlite> select ieee754(181,-2);
+45.25
+```
+
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/ieee754.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/ieee754.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/ieee754.dylib)
 
 ## isodate
 
