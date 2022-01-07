@@ -16,6 +16,7 @@ env:
     SQLITE_RELEASE_YEAR: "2021"
     SQLITE_VERSION: "3360000"
     SQLITE_BRANCH: "3.36"
+    SQLITE_EXTENSIONS: "{memstat}"
 
 jobs:
     build:
@@ -52,12 +53,12 @@ jobs:
             - name: Build for macOS
               if: matrix.os == 'macos-latest'
               run: make compile-macos
-            
+
             - name: Upload binaries to release
               uses: svenstaro/upload-release-action@v2
               with:
                   repo_token: ${{ secrets.GITHUB_TOKEN }}
-                  file: dist/*
+                  file: dist/${{ env.SQLITE_EXTENSIONS }}.*
                   file_glob: true
                   overwrite: true
                   tag: incubator
