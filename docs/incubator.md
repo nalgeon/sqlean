@@ -342,7 +342,7 @@ sqlite> select decimal_add(decimal('0.1'), decimal('0.2')) = decimal('0.3');
 1
 ```
 
-Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/eval.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/eval.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/eval.dylib)
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/decimal.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/decimal.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/decimal.dylib)
 
 ## define
 
