@@ -617,7 +617,7 @@ Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/
 
 ## memstat
 
-A read-only table with performance characteristics of the current SQLite instance.
+Lists performance characteristics of the current SQLite instance.
 
 Created by [D. Richard Hipp](https://sqlite.org/src/file/ext/misc/memstat.c), Public Domain.
 
@@ -944,6 +944,27 @@ product(v)
 All functions are also available as window aggregates.
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/stats3.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/stats3.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/stats3.dylib)
+
+## stmt
+
+Lists all prepared statements associated with the database connection.
+
+Created by [D. Richard Hipp](https://sqlite.org/src/file/ext/misc/stmt.c), Public Domain.
+
+[Documentation](https://www.sqlite.org/stmt.html)
+
+```sql
+sqlite> .load dist/stmt
+sqlite> select * from sqlite_stmt;
+sqlite> select sql, busy, run, mem from sqlite_stmt;
+┌──────────────────────────────────────────────┬──────┬─────┬──────┐
+│                     sql                      │ busy │ run │ mem  │
+├──────────────────────────────────────────────┼──────┼─────┼──────┤
+│ select sql, busy, run, mem from sqlite_stmt; │ 1    │ 1   │ 6416 │
+└──────────────────────────────────────────────┴──────┴─────┴──────┘
+```
+
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/stmt.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/stmt.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/stmt.dylib)
 
 ## text2
 

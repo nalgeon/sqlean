@@ -27,6 +27,7 @@ download-external:
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/prefixes.c --output src/prefixes.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/spellfix.c --output src/spellfix.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/sqlar.c --output src/sqlar.c
+	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/stmt.c --output src/stmt.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/uint.c --output src/uint.c
 	curl -L https://github.com/jakethaw/xml_to_json/raw/master/xml_to_json.c --output src/xmltojson.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/zipfile.c --output src/zipfile.c
@@ -61,6 +62,7 @@ compile-linux:
 	gcc -fPIC -shared src/sqlar.c -o dist/sqlar.so -lz
 	gcc -fPIC -shared src/stats2.c -o dist/stats2.so
 	gcc -fPIC -shared src/stats3.c -o dist/stats3.so
+	gcc -fPIC -shared src/stmt.c -o dist/stmt.so
 	gcc -fPIC -shared src/text2.c -o dist/text2.so
 	gcc -fPIC -shared src/uint.c -o dist/uint.so
 	gcc -fPIC -shared src/unhex.c -o dist/unhex.so
@@ -97,6 +99,7 @@ compile-windows:
 	# gcc -shared -I. src/sqlar.c -o dist/sqlar.dll -lz
 	gcc -shared -I. src/stats2.c -o dist/stats2.dll
 	gcc -shared -I. src/stats3.c -o dist/stats3.dll
+	gcc -shared -I. src/stmt.c -o dist/stmt.dll
 	gcc -shared -I. src/text2.c -o dist/text2.dll
 	gcc -shared -I. src/uint.c -o dist/uint.dll
 	gcc -shared -I. src/unhex.c -o dist/unhex.dll
@@ -133,6 +136,7 @@ compile-macos:
 	gcc -fPIC -dynamiclib -I src src/sqlar.c -o dist/sqlar.dylib -lz
 	gcc -fPIC -dynamiclib -I src src/stats2.c -o dist/stats2.dylib
 	gcc -fPIC -dynamiclib -I src src/stats3.c -o dist/stats3.dylib
+	gcc -fPIC -dynamiclib -I src src/stmt.c -o dist/stmt.dylib
 	gcc -fPIC -dynamiclib -I src src/text2.c -o dist/text2.dylib
 	gcc -fPIC -dynamiclib -I src src/uint.c -o dist/uint.dylib
 	gcc -fPIC -dynamiclib -I src src/unhex.c -o dist/unhex.dylib
@@ -173,6 +177,7 @@ test-all:
 	make test suite=sqlar
 	make test suite=stats2
 	make test suite=stats3
+	make test suite=stmt
 	make test suite=text2
 	make test suite=uint
 	make test suite=unhex
