@@ -29,6 +29,7 @@ download-external:
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/sqlar.c --output src/sqlar.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/stmt.c --output src/stmt.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/uint.c --output src/uint.c
+	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/unionvtab.c --output src/unionvtab.c
 	curl -L https://github.com/jakethaw/xml_to_json/raw/master/xml_to_json.c --output src/xmltojson.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/zipfile.c --output src/zipfile.c
 
@@ -66,6 +67,7 @@ compile-linux:
 	gcc -fPIC -shared src/text2.c -o dist/text2.so
 	gcc -fPIC -shared src/uint.c -o dist/uint.so
 	gcc -fPIC -shared src/unhex.c -o dist/unhex.so
+	gcc -fPIC -shared src/unionvtab.c -o dist/unionvtab.so
 	gcc -fPIC -shared src/xmltojson.c -o dist/xmltojson.so -DSQLITE
 	gcc -fPIC -shared src/zipfile.c -o dist/zipfile.so -lz
 
@@ -103,6 +105,7 @@ compile-windows:
 	gcc -shared -I. src/text2.c -o dist/text2.dll
 	gcc -shared -I. src/uint.c -o dist/uint.dll
 	gcc -shared -I. src/unhex.c -o dist/unhex.dll
+	gcc -shared -I. src/unionvtab.c -o dist/unionvtab.dll
 	gcc -shared -I. src/xmltojson.c -o dist/xmltojson.dll -DSQLITE
 	# gcc -shared -I. src/zipfile.c -o dist/zipfile.dll -lz
 
@@ -140,6 +143,7 @@ compile-macos:
 	gcc -fPIC -dynamiclib -I src src/text2.c -o dist/text2.dylib
 	gcc -fPIC -dynamiclib -I src src/uint.c -o dist/uint.dylib
 	gcc -fPIC -dynamiclib -I src src/unhex.c -o dist/unhex.dylib
+	gcc -fPIC -dynamiclib -I src src/unionvtab.c -o dist/unionvtab.dylib
 	gcc -fPIC -dynamiclib -I src src/xmltojson.c -o dist/xmltojson.dylib -DSQLITE
 	gcc -fPIC -dynamiclib -I src src/zipfile.c -o dist/zipfile.dylib -lz
 
@@ -181,6 +185,7 @@ test-all:
 	make test suite=text2
 	make test suite=uint
 	make test suite=unhex
+	make test suite=unionvtab
 	make test suite=xmltojson
 	make test suite=zipfile
 

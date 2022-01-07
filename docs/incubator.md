@@ -1014,6 +1014,62 @@ hello
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/unhex.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/unhex.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/unhex.dylib)
 
+## unionvtab
+
+Unions multiple similar tables into one.
+
+Created by [D. Richard Hipp](https://sqlite.org/src/file/ext/misc/unionvtab.c), Public Domain.
+
+There are two types of unions — `unionvtab` and `swarmvtab` virtual tables. The difference between them is that for `unionvtab`, all source tables must be located in the main database or in databases ATTACHed to the main database by the user. For `swarmvtab`, the tables may be located in any database file on disk. The `swarmvtab` implementation takes care of opening and closing database files automatically.
+
+The source tables must have the following characteristics:
+
+- They must all be rowid tables (not VIRTUAL or WITHOUT ROWID tables or views).
+- Each table must have the same set of columns, declared in the same order and with the same declared types.
+- The tables must not feature a user-defined column named `_rowid_`.
+- Each table must contain a distinct range of rowid values.
+
+Documentation: [unionvtab](https://sqlite.org/unionvtab.html), [swarmvtab](https://sqlite.org/swarmvtab.html).
+
+```sql
+.load dist/unionvtab
+
+create table empl_london(id integer primary key, name text);
+insert into empl_london(id, name)
+values (11, 'Diane'), (12, 'Bob'), (13, 'Emma'), (14, 'Henry'), (15, 'Dave');
+
+create table empl_berlin(id integer primary key, name text);
+insert into empl_berlin(id, name)
+values (21, 'Grace'), (22, 'Irene'), (23, 'Frank'), (24, 'Cindy'), (25, 'Alice');
+
+create virtual table temp.employees using unionvtab("
+    values
+    ('main', 'empl_london', 10, 19),
+    ('main', 'empl_berlin', 20, 29)
+");
+
+select * from employees;
+```
+
+```
+┌────┬───────┐
+│ id │ name  │
+├────┼───────┤
+│ 11 │ Diane │
+│ 12 │ Bob   │
+│ 13 │ Emma  │
+│ 14 │ Henry │
+│ 15 │ Dave  │
+│ 21 │ Grace │
+│ 22 │ Irene │
+│ 23 │ Frank │
+│ 24 │ Cindy │
+│ 25 │ Alice │
+└────┴───────┘
+```
+
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/unionvtab.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/unionvtab.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/unionvtab.dylib)
+
 ## xmltojson
 
 Converts an XML string to the corresponding JSON string.
