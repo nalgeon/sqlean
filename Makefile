@@ -22,6 +22,7 @@ download-external:
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/decimal.c --output src/decimal.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/eval.c --output src/eval.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/ieee754.c --output src/ieee754.c
+	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/memstat.c --output src/memstat.c
 	curl -L https://github.com/jakethaw/pivot_vtab/raw/main/pivot_vtab.c --output src/pivotvtab.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/spellfix.c --output src/spellfix.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/sqlar.c --output src/sqlar.c
@@ -49,6 +50,7 @@ compile-linux:
 	gcc -fPIC -shared src/isodate.c -o dist/isodate.so
 	# gcc -fPIC -shared src/json2.c src/cJSON.c -o dist/json2.so
 	gcc -fPIC -shared src/math2.c -o dist/math2.so
+	gcc -fPIC -shared src/memstat.c -o dist/memstat.so
 	gcc -fPIC -shared src/pearson.c -o dist/pearson.so
 	gcc -fPIC -shared src/pivotvtab.c -o dist/pivotvtab.so
 	gcc -fPIC -shared src/recsize.c -o dist/recsize.so
@@ -82,6 +84,7 @@ compile-windows:
 	gcc -shared -I. src/isodate.c -o dist/isodate.dll
 	# gcc -shared -I. src/json2.c src/cJSON.c -o dist/json2.dll
 	gcc -shared -I. src/math2.c -o dist/math2.dll
+	gcc -shared -I. src/memstat.c -o dist/memstat.dll
 	gcc -shared -I. src/pearson.c -o dist/pearson.dll
 	gcc -shared -I. src/pivotvtab.c -o dist/pivotvtab.dll
 	gcc -shared -I. src/recsize.c -o dist/recsize.dll
@@ -115,6 +118,7 @@ compile-macos:
 	gcc -fPIC -dynamiclib -I src src/isodate.c -o dist/isodate.dylib
 	# gcc -fPIC -dynamiclib -I src src/json2.c src/cJSON.c -o dist/json2.dylib
 	gcc -fPIC -dynamiclib -I src src/math2.c -o dist/math2.dylib
+	gcc -fPIC -dynamiclib -I src src/memstat.c -o dist/memstat.dylib
 	gcc -fPIC -dynamiclib -I src src/pearson.c -o dist/pearson.dylib
 	gcc -fPIC -dynamiclib -I src src/pivotvtab.c -o dist/pivotvtab.dylib
 	gcc -fPIC -dynamiclib -I src src/recsize.c -o dist/recsize.dylib
@@ -152,6 +156,7 @@ test-all:
 	# tests fail on ubuntu with segmentation fault
 	# make test suite=json2
 	make test suite=math2
+	make test suite=memstat
 	make test suite=pearson
 	make test suite=pivotvtab
 	make test suite=recsize

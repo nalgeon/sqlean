@@ -615,6 +615,45 @@ fromhex(hex_str)
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/math2.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/math2.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/math2.dylib)
 
+## memstat
+
+A read-only table with performance characteristics of the current SQLite instance.
+
+Created by [D. Richard Hipp](https://sqlite.org/src/file/ext/misc/eval.c), Public Domain.
+
+```sql
+sqlite> .load dist/memstat
+sqlite> select * from sqlite_memstat;
+┌────────────────────────┬────────┬────────┬────────┐
+│          name          │ schema │ value  │ hiwtr  │
+├────────────────────────┼────────┼────────┼────────┤
+│ MEMORY_USED            │        │ 105424 │ 109744 │
+│ MALLOC_SIZE            │        │        │ 48000  │
+│ MALLOC_COUNT           │        │ 255    │ 281    │
+│ PAGECACHE_USED         │        │ 0      │ 0      │
+│ PAGECACHE_OVERFLOW     │        │ 9216   │ 9216   │
+│ PAGECACHE_SIZE         │        │        │ 4360   │
+│ PARSER_STACK           │        │        │ 0      │
+│ DB_LOOKASIDE_USED      │        │ 70     │ 96     │
+│ DB_LOOKASIDE_HIT       │        │        │ 240    │
+│ DB_LOOKASIDE_MISS_SIZE │        │        │ 1      │
+│ DB_LOOKASIDE_MISS_FULL │        │        │ 0      │
+│ DB_CACHE_USED          │        │ 9256   │        │
+│ DB_SCHEMA_USED         │        │ 1056   │        │
+│ DB_STMT_USED           │        │ 6416   │        │
+│ DB_CACHE_HIT           │        │ 5      │        │
+│ DB_CACHE_MISS          │        │ 0      │        │
+│ DB_CACHE_WRITE         │        │ 0      │        │
+│ DB_DEFERRED_FKS        │        │ 0      │        │
+└────────────────────────┴────────┴────────┴────────┘
+```
+
+The `value` and `hiwtr` columns report the current value of the measure and its "high-water mark". The high-water mark is the highest value ever seen for the measurement, at least since the last reset.
+
+Depending on which parameter is being interrogated, one of the `value` or `hiwtr` mark measurements might be undefined. For example, only the high-water mark is meaningful for `MALLOC_SIZE`, and only the current value is meaningful for `DB_CACHE_USED`. For rows where one or the other of `value` or `hiwtr` is not meaningful, that value is returned as NULL.
+
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/memstat.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/memstat.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/memstat.dylib)
+
 ## pearson
 
 Returns Pearson correlation coefficient between two data sets.
