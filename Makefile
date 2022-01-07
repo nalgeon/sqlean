@@ -56,6 +56,7 @@ compile-linux:
 	gcc -fPIC -shared src/pivotvtab.c -o dist/pivotvtab.so
 	gcc -fPIC -shared src/prefixes.c -o dist/prefixes.so
 	gcc -fPIC -shared src/recsize.c -o dist/recsize.so
+	gcc -fPIC -shared src/rotate.c -o dist/rotate.so
 	gcc -fPIC -shared src/spellfix.c -o dist/spellfix.so
 	gcc -fPIC -shared src/sqlar.c -o dist/sqlar.so -lz
 	gcc -fPIC -shared src/stats2.c -o dist/stats2.so
@@ -91,6 +92,7 @@ compile-windows:
 	gcc -shared -I. src/pivotvtab.c -o dist/pivotvtab.dll
 	gcc -shared -I. src/prefixes.c -o dist/prefixes.dll
 	gcc -shared -I. src/recsize.c -o dist/recsize.dll
+	gcc -shared -I. src/rotate.c -o dist/rotate.dll
 	gcc -shared -I. src/spellfix.c -o dist/spellfix.dll
 	# gcc -shared -I. src/sqlar.c -o dist/sqlar.dll -lz
 	gcc -shared -I. src/stats2.c -o dist/stats2.dll
@@ -126,6 +128,7 @@ compile-macos:
 	gcc -fPIC -dynamiclib -I src src/pivotvtab.c -o dist/pivotvtab.dylib
 	gcc -fPIC -dynamiclib -I src src/prefixes.c -o dist/prefixes.dylib
 	gcc -fPIC -dynamiclib -I src src/recsize.c -o dist/recsize.dylib
+	gcc -fPIC -dynamiclib -I src src/rotate.c -o dist/rotate.dylib
 	gcc -fPIC -dynamiclib -I src src/spellfix.c -o dist/spellfix.dylib
 	gcc -fPIC -dynamiclib -I src src/sqlar.c -o dist/sqlar.dylib -lz
 	gcc -fPIC -dynamiclib -I src src/stats2.c -o dist/stats2.dylib
@@ -165,6 +168,7 @@ test-all:
 	make test suite=pivotvtab
 	make test suite=prefixes
 	make test suite=recsize
+	make test suite=rotate
 	make test suite=spellfix
 	make test suite=sqlar
 	make test suite=stats2

@@ -788,6 +788,22 @@ sqlite> select recsize(10, 20, 30);
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/recsize.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/recsize.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/recsize.dylib)
 
+## rotate
+
+String obfuscation algorithms [ROT13](https://en.wikipedia.org/wiki/ROT13) and ROT47.
+
+Created by [D. Richard Hipp](https://sqlite.org/src/file/ext/misc/rot13.c) (Public Domain) and [CompuRoot](https://github.com/CompuRoot/static-sqlite3) (BSD 0-Clause License).
+
+```sql
+sqlite> .load dist/rotate
+sqlite> select rot13('hello world');
+uryyb jbeyq
+sqlite> select rot47('hello world');
+96==@ H@C=5
+```
+
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/rotate.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/rotate.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/rotate.dylib)
+
 ## spellfix
 
 Provides a mechanism to search a large vocabulary for close matches.
