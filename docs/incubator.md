@@ -619,7 +619,7 @@ Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/
 
 A read-only table with performance characteristics of the current SQLite instance.
 
-Created by [D. Richard Hipp](https://sqlite.org/src/file/ext/misc/eval.c), Public Domain.
+Created by [D. Richard Hipp](https://sqlite.org/src/file/ext/misc/memstat.c), Public Domain.
 
 ```sql
 sqlite> .load dist/memstat
