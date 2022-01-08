@@ -51,6 +51,7 @@ compile-linux:
 	gcc -fPIC -shared src/eval.c -o dist/eval.so
 	gcc -fPIC -shared src/fcmp.c -o dist/fcmp.so
 	gcc -fPIC -shared src/ieee754.c -o dist/ieee754.so
+	gcc -fPIC -shared src/interpolate.c -o dist/interpolate.so
 	gcc -fPIC -shared src/isodate.c -o dist/isodate.so
 	# gcc -fPIC -shared src/json2.c src/cJSON.c -o dist/json2.so
 	gcc -fPIC -shared src/math2.c -o dist/math2.so
@@ -90,6 +91,7 @@ compile-windows:
 	gcc -shared -I. src/eval.c -o dist/eval.dll
 	gcc -shared -I. src/fcmp.c -o dist/fcmp.dll
 	gcc -shared -I. src/ieee754.c -o dist/ieee754.dll
+	gcc -shared -I. src/interpolate.c -o dist/interpolate.dll
 	gcc -shared -I. src/isodate.c -o dist/isodate.dll
 	# gcc -shared -I. src/json2.c src/cJSON.c -o dist/json2.dll
 	gcc -shared -I. src/math2.c -o dist/math2.dll
@@ -129,6 +131,7 @@ compile-macos:
 	gcc -fPIC -dynamiclib -I src src/eval.c -o dist/eval.dylib
 	gcc -fPIC -dynamiclib -I src src/fcmp.c -o dist/fcmp.dylib
 	gcc -fPIC -dynamiclib -I src src/ieee754.c -o dist/ieee754.dylib
+	gcc -fPIC -dynamiclib -I src src/interpolate.c -o dist/interpolate.dylib
 	gcc -fPIC -dynamiclib -I src src/isodate.c -o dist/isodate.dylib
 	# gcc -fPIC -dynamiclib -I src src/json2.c src/cJSON.c -o dist/json2.dylib
 	gcc -fPIC -dynamiclib -I src src/math2.c -o dist/math2.dylib
@@ -171,6 +174,7 @@ test-all:
 	make test suite=eval
 	make test suite=fcmp
 	make test suite=ieee754
+	make test suite=interpolate
 	make test suite=isodate
 	# tests fail on ubuntu with segmentation fault
 	# make test suite=json2

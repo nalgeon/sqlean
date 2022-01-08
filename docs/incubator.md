@@ -479,6 +479,35 @@ sqlite> select ieee754(181,-2);
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/ieee754.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/ieee754.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/ieee754.dylib)
 
+## interpolate
+
+Interpolates missing values for timestamped measurements.
+
+Created by [Steinar Midtskogen](http://voksenlia.net/sqlite3/interpolate.c), Public Domain.
+
+```sql
+.load dist/interpolate
+
+create table measurements(timestamp integer primary key, value real);
+insert into measurements(timestamp, value) values
+(100, 20), (150, null), (200, 30), (300, 40);
+
+create virtual table temp.interpolated using interpolate(measurements);
+```
+
+```sql
+sqlite> select value from interpolated where timestamp = 100;
+20
+sqlite> select value from interpolated where timestamp = 150;
+25
+sqlite> select value from interpolated where timestamp = 190;
+29
+```
+
+See [interpolate.c](../src/interpolate.c) and [interpolate.sql](../test/interpolate.sql) for documentation and samples.
+
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/interpolate.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/interpolate.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/interpolate.dylib)
+
 ## isodate
 
 Additional date and time functions:
@@ -1024,10 +1053,10 @@ There are two types of unions — `unionvtab` and `swarmvtab` virtual tables. Th
 
 The source tables must have the following characteristics:
 
-- They must all be rowid tables (not VIRTUAL or WITHOUT ROWID tables or views).
-- Each table must have the same set of columns, declared in the same order and with the same declared types.
-- The tables must not feature a user-defined column named `_rowid_`.
-- Each table must contain a distinct range of rowid values.
+-   They must all be rowid tables (not VIRTUAL or WITHOUT ROWID tables or views).
+-   Each table must have the same set of columns, declared in the same order and with the same declared types.
+-   The tables must not feature a user-defined column named `_rowid_`.
+-   Each table must contain a distinct range of rowid values.
 
 Documentation: [unionvtab](https://sqlite.org/unionvtab.html), [swarmvtab](https://sqlite.org/swarmvtab.html).
 
@@ -1116,8 +1145,8 @@ Importantly, values that were close together in the 2D plane would still be clos
 
 This extension provides two functions:
 
-- `zorder(x0,x1,...,xN)`. Generate an N+1 dimension Morton code.
-- `unzorder(Z, N, I)`. Extract the I-th dimension from N-dimensional Morton code Z.
+-   `zorder(x0,x1,...,xN)`. Generate an N+1 dimension Morton code.
+-   `unzorder(Z, N, I)`. Extract the I-th dimension from N-dimensional Morton code Z.
 
 ```sql
 sqlite> .load dist/zorder
