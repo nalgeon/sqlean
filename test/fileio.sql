@@ -4,7 +4,7 @@
 .load dist/fileio
 
 -- lsdir
-select '01', (name, mode, size) = ('LICENSE', 33188, 1105) from lsdir('LICENSE');
+select '01', (name, mode, size) = ('LICENSE', 33188, 1108) from lsdir('LICENSE');
 select '02', count(*) >= 10 from lsdir('test');
 select '03', count(*) = 0 from lsdir('whatever.txt');
 .shell mkdir parentdir
