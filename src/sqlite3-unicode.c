@@ -5363,19 +5363,19 @@ SQLITE_EXPORT int sqlite3_unicode_init_impl(sqlite3* db) {
         {"unicode_version", 0, SQLITE_ANY, 0, versionFunc},
 
 #ifdef SQLITE3_UNICODE_FOLD
-        {"like", 2, SQLITE_ANY, (void*)&likeInfoNorm, likeFunc},
+        {"like", 2, SQLITE_UTF16, (void*)&likeInfoNorm, likeFunc},
         {"nlike", 2, SQLITE_ANY, (void*)&likeInfoNorm, likeFunc},
-        {"like", 3, SQLITE_ANY, (void*)&likeInfoNorm, likeFunc},
+        {"like", 3, SQLITE_UTF16, (void*)&likeInfoNorm, likeFunc},
         {"nlike", 3, SQLITE_ANY, (void*)&likeInfoNorm, likeFunc},
 
         {"casefold", 1, SQLITE_ANY, (void*)sqlite3_unicode_fold, caseFunc},
 #endif
 #ifdef SQLITE3_UNICODE_LOWER
-        {"lower", 1, SQLITE_ANY, (void*)sqlite3_unicode_lower, caseFunc},
+        {"lower", 1, SQLITE_UTF16, (void*)sqlite3_unicode_lower, caseFunc},
         {"nlower", 1, SQLITE_ANY, (void*)sqlite3_unicode_lower, caseFunc},
 #endif
 #ifdef SQLITE3_UNICODE_UPPER
-        {"upper", 1, SQLITE_ANY, (void*)sqlite3_unicode_upper, caseFunc},
+        {"upper", 1, SQLITE_UTF16, (void*)sqlite3_unicode_upper, caseFunc},
         {"nupper", 1, SQLITE_ANY, (void*)sqlite3_unicode_upper, caseFunc},
 #endif
 #ifdef SQLITE3_UNICODE_TITLE
