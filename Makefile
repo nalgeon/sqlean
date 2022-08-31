@@ -29,6 +29,8 @@ compile-linux:
 	gcc -fPIC -shared src/sqlite3-unicode.c -o dist/unicode.so
 	gcc -fPIC -shared src/sqlite3-uuid.c -o dist/uuid.so
 	gcc -fPIC -shared src/sqlite3-vsv.c -o dist/vsv.so -lm
+
+pack-linux:
 	zip -j dist/sqlean-linux-x86.zip dist/*.so
 
 compile-windows:
@@ -43,7 +45,9 @@ compile-windows:
 	gcc -shared -I. src/sqlite3-unicode.c -o dist/unicode.dll
 	gcc -shared -I. src/sqlite3-uuid.c -o dist/uuid.dll
 	gcc -shared -I. src/sqlite3-vsv.c -o dist/vsv.dll -lm
-	zip -j dist/sqlean-win-x64.zip dist/*.dll
+
+pack-windows:
+	7z a -tzip dist/sqlean-win-x64.zip ./dist/*.dll
 
 compile-macos:
 	gcc -fPIC -dynamiclib -I src src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.dylib
@@ -58,6 +62,8 @@ compile-macos:
 	gcc -fPIC -dynamiclib -I src src/sqlite3-unicode.c -o dist/unicode.dylib
 	gcc -fPIC -dynamiclib -I src src/sqlite3-uuid.c -o dist/uuid.dylib
 	gcc -fPIC -dynamiclib -I src src/sqlite3-vsv.c -o dist/vsv.dylib -lm
+
+pack-macos:
 	zip -j dist/sqlean-macos-x86.zip dist/*.dylib
 
 test-all:
