@@ -255,9 +255,10 @@ __declspec(dllexport)
 #endif
     int sqlite3_re_init(sqlite3* db, char** pzErrMsg, const sqlite3_api_routines* pApi) {
     SQLITE_EXTENSION_INIT2(pApi);
-    sqlite3_create_function(db, "regexp", 2, SQLITE_UTF8, 0, regexp_statement, 0, 0);
-    sqlite3_create_function(db, "regexp_like", 2, SQLITE_UTF8, 0, regexp_like, 0, 0);
-    sqlite3_create_function(db, "regexp_substr", 2, SQLITE_UTF8, 0, regexp_substr, 0, 0);
-    sqlite3_create_function(db, "regexp_replace", 3, SQLITE_UTF8, 0, regexp_replace, 0, 0);
+    static const int flags = SQLITE_UTF8 | SQLITE_DETERMINISTIC;
+    sqlite3_create_function(db, "regexp", 2, flags, 0, regexp_statement, 0, 0);
+    sqlite3_create_function(db, "regexp_like", 2, flags, 0, regexp_like, 0, 0);
+    sqlite3_create_function(db, "regexp_substr", 2, flags, 0, regexp_substr, 0, 0);
+    sqlite3_create_function(db, "regexp_replace", 3, flags, 0, regexp_replace, 0, 0);
     return SQLITE_OK;
 }
