@@ -48,7 +48,8 @@ jobs:
             - name: Build for macOS
               if: matrix.os == 'macos-latest'
               run: |
-                  make compile-macos
+                  make compile-macos-x86
+                  make compile-macos-arm64
                   make pack-macos
 
             - name: Upload binaries to release

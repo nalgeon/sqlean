@@ -1,11 +1,11 @@
 # Copyright (c) 2021 Anton Zhiyanov, MIT License
 # https://github.com/nalgeon/sqlean
 
-.PHONY: prepare-dist download-sqlite download-external compile-linux compile-windows compile-macos test test-all
+.PHONY: test
 
 prepare-dist:
 	mkdir -p dist
-	rm -f dist/*
+	rm -rf dist/*
 
 download-sqlite:
 	curl -L http://sqlite.org/$(SQLITE_RELEASE_YEAR)/sqlite-amalgamation-$(SQLITE_VERSION).zip --output src.zip
@@ -63,8 +63,39 @@ compile-macos:
 	gcc -fPIC -dynamiclib -I src src/sqlite3-uuid.c -o dist/uuid.dylib
 	gcc -fPIC -dynamiclib -I src src/sqlite3-vsv.c -o dist/vsv.dylib -lm
 
+compile-macos-x86:
+	mkdir -p dist/x86
+	gcc -fPIC -dynamiclib -I src src/sqlite3-crypto.c src/crypto/*.c -o dist/x86/crypto.dylib -target x86_64-apple-macos10.12
+	gcc -fPIC -dynamiclib -I src src/sqlite3-fileio.c -o dist/x86/fileio.dylib -target x86_64-apple-macos10.12
+	gcc -fPIC -dynamiclib -I src src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/x86/fuzzy.dylib -target x86_64-apple-macos10.12
+	gcc -fPIC -dynamiclib -I src src/sqlite3-ipaddr.c -o dist/x86/ipaddr.dylib -target x86_64-apple-macos10.12
+	gcc -fPIC -dynamiclib -I src src/sqlite3-json1.c -o dist/x86/json1.dylib -target x86_64-apple-macos10.12
+	gcc -fPIC -dynamiclib -I src src/sqlite3-math.c -o dist/x86/math.dylib -target x86_64-apple-macos10.12 -lm
+	gcc -fPIC -dynamiclib -I src src/sqlite3-re.c src/re.c -o dist/x86/re.dylib -target x86_64-apple-macos10.12
+	gcc -fPIC -dynamiclib -I src src/sqlite3-stats.c -o dist/x86/stats.dylib -target x86_64-apple-macos10.12 -lm
+	gcc -fPIC -dynamiclib -I src src/sqlite3-text.c -o dist/x86/text.dylib -target x86_64-apple-macos10.12
+	gcc -fPIC -dynamiclib -I src src/sqlite3-unicode.c -o dist/x86/unicode.dylib -target x86_64-apple-macos10.12
+	gcc -fPIC -dynamiclib -I src src/sqlite3-uuid.c -o dist/x86/uuid.dylib -target x86_64-apple-macos10.12
+	gcc -fPIC -dynamiclib -I src src/sqlite3-vsv.c -o dist/x86/vsv.dylib -target x86_64-apple-macos10.12 -lm
+
+compile-macos-arm64:
+	mkdir -p dist/arm64
+	gcc -fPIC -dynamiclib -I src src/sqlite3-crypto.c src/crypto/*.c -o dist/arm64/crypto.dylib -target arm64-apple-macos11
+	gcc -fPIC -dynamiclib -I src src/sqlite3-fileio.c -o dist/arm64/fileio.dylib -target arm64-apple-macos11
+	gcc -fPIC -dynamiclib -I src src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/arm64/fuzzy.dylib -target arm64-apple-macos11
+	gcc -fPIC -dynamiclib -I src src/sqlite3-ipaddr.c -o dist/arm64/ipaddr.dylib -target arm64-apple-macos11
+	gcc -fPIC -dynamiclib -I src src/sqlite3-json1.c -o dist/arm64/json1.dylib -target arm64-apple-macos11
+	gcc -fPIC -dynamiclib -I src src/sqlite3-math.c -o dist/arm64/math.dylib -target arm64-apple-macos11 -lm
+	gcc -fPIC -dynamiclib -I src src/sqlite3-re.c src/re.c -o dist/arm64/re.dylib -target arm64-apple-macos11
+	gcc -fPIC -dynamiclib -I src src/sqlite3-stats.c -o dist/arm64/stats.dylib -target arm64-apple-macos11 -lm
+	gcc -fPIC -dynamiclib -I src src/sqlite3-text.c -o dist/arm64/text.dylib -target arm64-apple-macos11
+	gcc -fPIC -dynamiclib -I src src/sqlite3-unicode.c -o dist/arm64/unicode.dylib -target arm64-apple-macos11
+	gcc -fPIC -dynamiclib -I src src/sqlite3-uuid.c -o dist/arm64/uuid.dylib -target arm64-apple-macos11
+	gcc -fPIC -dynamiclib -I src src/sqlite3-vsv.c -o dist/arm64/vsv.dylib -target arm64-apple-macos11 -lm
+
 pack-macos:
-	zip -j dist/sqlean-macos-x86.zip dist/*.dylib
+	zip -j dist/sqlean-macos-x86.zip dist/x86/*.dylib
+	zip -j dist/sqlean-macos-arm64.zip dist/arm64/*.dylib
 
 test-all:
 	make test suite=crypto
