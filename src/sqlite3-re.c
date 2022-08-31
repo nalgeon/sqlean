@@ -38,55 +38,6 @@
 SQLITE_EXTENSION_INIT1
 
 /*
- * Replaces `rep` substring of the `orig` string with `with` substring.
- */
-static char* str_replace(char* orig, char* rep, char* with) {
-    char* result;   // the return string
-    char* ins;      // the next insert point
-    char* tmp;      // varies
-    int len_rep;    // length of rep (the string to remove)
-    int len_with;   // length of with (the string to replace rep with)
-    int len_front;  // distance between rep and end of last rep
-    int count;      // number of replacements
-
-    // sanity checks and initialization
-    if (!orig || !rep)
-        return NULL;
-    len_rep = strlen(rep);
-    if (len_rep == 0)
-        return NULL;  // empty rep causes infinite loop during count
-    if (!with)
-        with = "";
-    len_with = strlen(with);
-
-    // count the number of replacements needed
-    ins = orig;
-    for (count = 0; (tmp = strstr(ins, rep)); ++count) {
-        ins = tmp + len_rep;
-    }
-
-    tmp = result = sqlite3_malloc(strlen(orig) + (len_with - len_rep) * count + 1);
-
-    if (!result)
-        return NULL;
-
-    // first time through the loop, all the variable are set correctly
-    // from here on,
-    //    tmp points to the end of the result string
-    //    ins points to the next occurrence of rep in orig
-    //    orig points to the remainder of orig after "end of rep"
-    while (count--) {
-        ins = strstr(orig, rep);
-        len_front = ins - orig;
-        tmp = strncpy(tmp, orig, len_front) + len_front;
-        tmp = strcpy(tmp, with) + len_with;
-        orig += len_front + len_rep;  // move to next "end of rep"
-    }
-    strcpy(tmp, orig);
-    return result;
-}
-
-/*
  * Checks if source string matches pattern.
  * regexp_statement(pattern, source)
  * E.g.:
@@ -264,11 +215,6 @@ static void regexp_replace(sqlite3_context* context, int argc, sqlite3_value** a
         return;
     }
 
-    int matched_len = r->endp[0] - r->startp[0];
-    char* matched_str = sqlite3_malloc(matched_len + 1);
-    (void)strncpy(matched_str, r->startp[0], matched_len);
-    matched_str[matched_len] = '\0';
-
     char replacement_str[BUFSIZ];
     int err = re_substitute(r, replacement, replacement_str);
     if (err) {
@@ -277,38 +223,27 @@ static void regexp_replace(sqlite3_context* context, int argc, sqlite3_value** a
     }
 
     int head_len = r->startp[0] - source;
-    char* head_str = sqlite3_malloc(head_len + 1);
-    (void)strncpy(head_str, source, head_len);
-    head_str[head_len] = '\0';
-
     int tail_len = source + strlen(source) - r->endp[0];
-    char* tail_str = sqlite3_malloc(tail_len + 1);
-    (void)strncpy(tail_str, r->endp[0], tail_len);
-    tail_str[tail_len] = '\0';
-
     int replacement_len = strlen(replacement_str);
 
     int result_len = head_len + replacement_len + tail_len;
     result = sqlite3_malloc(result_len + 1);
-    strcat(result, head_str);
-    strcat(result, replacement_str);
-    strcat(result, tail_str);
+    char* at = result;
+    memcpy(at, source, head_len);
+    at += head_len;
+    memcpy(at, replacement_str, replacement_len);
+    at += replacement_len;
+    memcpy(at, r->endp[0], tail_len);
     result[result_len] = '\0';
 
 #ifdef DEBUG
-    fprintf(stderr, "head string (%d) = '%s'\n", head_len, head_str);
-    fprintf(stderr, "matched string (%d) = '%s'\n", matched_len, matched_str);
+    fprintf(stderr, "head / tail = %d / %d\n", head_len, tail_len);
     fprintf(stderr, "repl string (%d) = '%s'\n", replacement_len, replacement_str);
-    fprintf(stderr, "tail string (%d) = '%s'\n", tail_len, tail_str);
     fprintf(stderr, "result string (%d) = '%s'\n", result_len, result);
-    fprintf(stderr, "replace('%s', '%s', '%s') = '%s'\n", source, matched_str, replacement_str,
-            result);
+    fprintf(stderr, "replace('%s', '%s', '%s') = '%s'\n", source, pattern, replacement, result);
 #endif
 
     sqlite3_result_text(context, (char*)result, -1, sqlite3_free);
-    sqlite3_free(head_str);
-    sqlite3_free(matched_str);
-    sqlite3_free(tail_str);
     free((char*)r);
 }
 
