@@ -40,7 +40,7 @@ select '41', (type, body) = ('scalar', ':n - :m') from sqlean_define where name 
 select '42', type = 'table' from sqlean_define where name = 'strcut';
 select '43', count(*) = 6 from sqlean_define where type = 'scalar';
 select '44', count(*) = 1 from sqlean_define where type = 'table';
-select '45', count(*) = 1 from sqlite_schema where type = 'table' and name = 'strcut';
+select '45', count(*) = 1 from sqlite_master where type = 'table' and name = 'strcut';
 select '46', count(*) = 7 from sqlean_define;
 
 select undefine('subnm');
@@ -48,5 +48,5 @@ select '51', count(*) = 0 from sqlean_define where name = 'subnm';
 select '52', count(*) = 6 from sqlean_define;
 select undefine('strcut');
 select '53', count(*) = 0 from sqlean_define where name = 'strcut';
-select '54', count(*) = 0 from sqlite_schema where type = 'table' and name = 'strcut';
+select '54', count(*) = 0 from sqlite_master where type = 'table' and name = 'strcut';
 select '55', count(*) = 5 from sqlean_define;
