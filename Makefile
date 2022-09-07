@@ -46,7 +46,6 @@ compile-linux:
 	gcc -fPIC -shared src/cron.c -o dist/cron.so
 	gcc -fPIC -shared src/dbdump.c -o dist/dbdump.so
 	gcc -fPIC -shared src/decimal.c -o dist/decimal.so
-	gcc -fPIC -shared src/define.c -o dist/define.so
 	gcc -fPIC -shared src/envfuncs.c -o dist/envfuncs.so
 	gcc -fPIC -shared src/eval.c -o dist/eval.so
 	gcc -fPIC -shared src/fcmp.c -o dist/fcmp.so
@@ -86,7 +85,6 @@ compile-windows:
 	gcc -shared -I. src/cron.c -o dist/cron.dll
 	gcc -shared -I. src/dbdump.c -o dist/dbdump.dll
 	gcc -shared -I. src/decimal.c -o dist/decimal.dll
-	gcc -shared -I. src/define.c -o dist/define.dll
 	gcc -shared -I. src/envfuncs.c -o dist/envfuncs.dll
 	gcc -shared -I. src/eval.c -o dist/eval.dll
 	gcc -shared -I. src/fcmp.c -o dist/fcmp.dll
@@ -126,7 +124,6 @@ compile-macos:
 	gcc -fPIC -dynamiclib -I src src/cron.c -o dist/cron.dylib
 	gcc -fPIC -dynamiclib -I src src/dbdump.c -o dist/dbdump.dylib
 	gcc -fPIC -dynamiclib -I src src/decimal.c -o dist/decimal.dylib
-	gcc -fPIC -dynamiclib -I src src/define.c -o dist/define.dylib
 	gcc -fPIC -dynamiclib -I src src/envfuncs.c -o dist/envfuncs.dylib
 	gcc -fPIC -dynamiclib -I src src/eval.c -o dist/eval.dylib
 	gcc -fPIC -dynamiclib -I src src/fcmp.c -o dist/fcmp.dylib
@@ -167,7 +164,6 @@ test-all:
 	make test suite=closure
 	make test suite=compress
 	make test suite=cron
-	make test suite=define
 	make test suite=decimal
 	make test suite=dbdump
 	make test suite=envfuncs
