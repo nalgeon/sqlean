@@ -18,6 +18,7 @@ download-external:
 
 compile-linux:
 	gcc -fPIC -shared src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.so
+	gcc -fPIC -shared src/sqlite3-define.c -o dist/define.so
 	gcc -fPIC -shared src/sqlite3-fileio.c -o dist/fileio.so
 	gcc -fPIC -shared src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/fuzzy.so
 	gcc -fPIC -shared src/sqlite3-ipaddr.c -o dist/ipaddr.so
@@ -35,6 +36,7 @@ pack-linux:
 
 compile-windows:
 	gcc -shared -I. src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.dll
+	gcc -shared -I. src/sqlite3-define.c -o dist/define.dll
 	gcc -shared -I. src/sqlite3-fileio.c -o dist/fileio.dll
 	gcc -shared -I. src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/fuzzy.dll
 	gcc -shared -I. src/sqlite3-json1.c -o dist/json1.dll
@@ -51,6 +53,7 @@ pack-windows:
 
 compile-macos:
 	gcc -fPIC -dynamiclib -I src src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.dylib
+	gcc -fPIC -dynamiclib -I src src/sqlite3-define.c -o dist/define.dylib
 	gcc -fPIC -dynamiclib -I src src/sqlite3-fileio.c -o dist/fileio.dylib
 	gcc -fPIC -dynamiclib -I src src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/fuzzy.dylib
 	gcc -fPIC -dynamiclib -I src src/sqlite3-ipaddr.c -o dist/ipaddr.dylib
@@ -66,6 +69,7 @@ compile-macos:
 compile-macos-x86:
 	mkdir -p dist/x86
 	gcc -fPIC -dynamiclib -I src src/sqlite3-crypto.c src/crypto/*.c -o dist/x86/crypto.dylib -target x86_64-apple-macos10.12
+	gcc -fPIC -dynamiclib -I src src/sqlite3-define.c -o dist/x86/define.dylib -target x86_64-apple-macos10.12
 	gcc -fPIC -dynamiclib -I src src/sqlite3-fileio.c -o dist/x86/fileio.dylib -target x86_64-apple-macos10.12
 	gcc -fPIC -dynamiclib -I src src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/x86/fuzzy.dylib -target x86_64-apple-macos10.12
 	gcc -fPIC -dynamiclib -I src src/sqlite3-ipaddr.c -o dist/x86/ipaddr.dylib -target x86_64-apple-macos10.12
@@ -81,6 +85,7 @@ compile-macos-x86:
 compile-macos-arm64:
 	mkdir -p dist/arm64
 	gcc -fPIC -dynamiclib -I src src/sqlite3-crypto.c src/crypto/*.c -o dist/arm64/crypto.dylib -target arm64-apple-macos11
+	gcc -fPIC -dynamiclib -I src src/sqlite3-define.c -o dist/arm64/define.dylib -target arm64-apple-macos11
 	gcc -fPIC -dynamiclib -I src src/sqlite3-fileio.c -o dist/arm64/fileio.dylib -target arm64-apple-macos11
 	gcc -fPIC -dynamiclib -I src src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/arm64/fuzzy.dylib -target arm64-apple-macos11
 	gcc -fPIC -dynamiclib -I src src/sqlite3-ipaddr.c -o dist/arm64/ipaddr.dylib -target arm64-apple-macos11
@@ -99,6 +104,7 @@ pack-macos:
 
 test-all:
 	make test suite=crypto
+	make test suite=define
 	make test suite=fileio
 	make test suite=fuzzy
 	make test suite=ipaddr

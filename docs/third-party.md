@@ -6,6 +6,7 @@ SQLean relies heavily on third-party SQLite extensions and open source libraries
 | ------- | ------ | ------- |
 | [crypto-algorithms](https://github.com/B-Con/crypto-algorithms) | Brad Conte | Public Domain |
 | extension-functions.c | Liam Healy | Public Domain |
+| [statement_vtab.c](https://github.com/0x09/sqlite-statement-vtab/blob/master/statement_vtab.c) | 0x09 | Public Domain |
 | [fileio.c](https://www.sqlite.org/src/file/ext/misc/fileio.c) | D. Richard Hipp | Public Domain |
 | [libstrcmp](https://github.com/Rostepher/libstrcmp) | Ross Bayer | MIT License |
 | [percentile.c](https://sqlite.org/src/file/ext/misc/percentile.c) | D. Richard Hipp | Public Domain |
