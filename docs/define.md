@@ -144,6 +144,43 @@ sqlite> select * from strcut('one;two', ';');
 Parse error: no such table: strcut
 ```
 
+## Performance
+
+Due to their dynamic nature, user-defined functions run rather slowly on large datasets.
+
+Given 1M rows table with random data:
+
+```sql
+create table data as
+select random() as x
+from generate_series(1, 1000000);
+```
+
+Regular SQL query:
+
+```sql
+select max(x+1) from data;
+Run Time: real 0.114 user 0.096000 sys 0.020000
+```
+
+Scalar function is 30x slower:
+
+```sql
+select define('plus', ':x + 1');
+select max(plus(x)) from data;
+Run Time: real 3.747 user 3.720000 sys 0.024000
+```
+
+Table-valued function is 5x slower:
+
+```sql
+create virtual table plus using define((select :x + 1 as value));
+select max(value) from data, plus(data.x);
+Run Time: real 0.512 user 0.508000 sys 0.004000
+```
+
+The scalar function is so slow because it has to prepare an SQL statement for each value from scratch. There may be some way around this, but I haven't figured it out yet.
+
 ## Usage
 
 ```
