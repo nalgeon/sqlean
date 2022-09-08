@@ -4,9 +4,9 @@ Implements case-insensitive string comparison for Unicode strings. Has no extern
 
 Provides the following unicode features:
 
-- `upper()` and `lower()` functions to normalize case.
-- `like()` function and `LIKE` operator with case-independent matching.
-- `unaccent()` function to normalize strings by removing accents.
+-   `upper()` and `lower()` functions to normalize case.
+-   `like()` function and `LIKE` operator with case-independent matching.
+-   `unaccent()` function to normalize strings by removing accents.
 
 Tries to override the default NOCASE case-insensitive collation sequence to support UTF-8 characters (available in SQLite CLI and C API only).
 
@@ -74,4 +74,6 @@ sqlite> select upper('привет');
 ПРИВЕТ
 ```
 
-[Download](https://github.com/nalgeon/sqlean/releases/latest)
+[⬇️ Download](https://github.com/nalgeon/sqlean/releases/latest) •
+[✨ Explore](https://github.com/nalgeon/sqlean) •
+[🚀 Follow](https://twitter.com/ohmypy)

@@ -2,8 +2,8 @@
 
 Limited support for [RFC 4122](https://www.ietf.org/rfc/rfc4122.txt) compliant UUIDs:
 
-- Generate a version 4 (random) UUID.
-- Convert a 16-byte blob into a well-formed UUID string and vice versa.
+-   Generate a version 4 (random) UUID.
+-   Convert a 16-byte blob into a well-formed UUID string and vice versa.
 
 Adapted from [uuid.c](https://sqlite.org/src/file/ext/misc/uuid.c) by D. Richard Hipp.
 
@@ -46,4 +46,6 @@ sqlite> .load ./uuid
 sqlite> select uuid4();
 ```
 
-[Download](https://github.com/nalgeon/sqlean/releases/latest)
+[⬇️ Download](https://github.com/nalgeon/sqlean/releases/latest) •
+[✨ Explore](https://github.com/nalgeon/sqlean) •
+[🚀 Follow](https://twitter.com/ohmypy)

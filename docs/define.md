@@ -4,7 +4,7 @@ Write arbitrary functions in SQL (as opposed to [application-defined functions](
 
 Adapted from [statement_vtab.c](https://github.com/0x09/sqlite-statement-vtab/blob/master/statement_vtab.c) by 0x09.
 
-### Scalar functions
+## Scalar functions
 
 `select define(NAME, BODY)`
 
@@ -74,7 +74,7 @@ sqlite> select sumn(5);
 Parse error: no such function: sumn
 ```
 
-### Table-valued functions
+## Table-valued functions
 
 `create virtual table NAME using define((BODY))`
 
@@ -152,4 +152,6 @@ sqlite> select define('sumn', ':n * (:n + 1) / 2');
 sqlite> select sumn(5);
 ```
 
-[Download](https://github.com/nalgeon/sqlean/releases/latest)
+[⬇️ Download](https://github.com/nalgeon/sqlean/releases/latest) •
+[✨ Explore](https://github.com/nalgeon/sqlean) •
+[🚀 Follow](https://twitter.com/ohmypy)
