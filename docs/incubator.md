@@ -358,20 +358,6 @@ antonz
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/envfuncs.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/envfuncs.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/envfuncs.dylib)
 
-## eval
-
-Dinamically runs arbitrary SQL statements.
-
-Created by [D. Richard Hipp](https://sqlite.org/src/file/ext/misc/eval.c), Public Domain.
-
-```sql
-sqlite> .load dist/eval
-sqlite> select eval('select 42');
-42
-```
-
-Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/eval.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/eval.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/eval.dylib)
-
 ## fcmp
 
 Floating-point numbers comparison and rounding.

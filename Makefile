@@ -20,7 +20,6 @@ download-external:
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/compress.c --output src/compress.c
 	curl -L https://github.com/daschr/sqlite3_extensions/raw/master/cron.c --output src/cron.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/decimal.c --output src/decimal.c
-	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/eval.c --output src/eval.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/ieee754.c --output src/ieee754.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/memstat.c --output src/memstat.c
 	# curl -L https://github.com/jakethaw/pivot_vtab/raw/main/pivot_vtab.c --output src/pivotvtab.c
@@ -47,7 +46,6 @@ compile-linux:
 	gcc -fPIC -shared src/dbdump.c -o dist/dbdump.so
 	gcc -fPIC -shared src/decimal.c -o dist/decimal.so
 	gcc -fPIC -shared src/envfuncs.c -o dist/envfuncs.so
-	gcc -fPIC -shared src/eval.c -o dist/eval.so
 	gcc -fPIC -shared src/fcmp.c -o dist/fcmp.so
 	gcc -fPIC -shared src/ieee754.c -o dist/ieee754.so
 	gcc -fPIC -shared src/interpolate.c -o dist/interpolate.so
@@ -86,7 +84,6 @@ compile-windows:
 	gcc -shared -I. src/dbdump.c -o dist/dbdump.dll
 	gcc -shared -I. src/decimal.c -o dist/decimal.dll
 	gcc -shared -I. src/envfuncs.c -o dist/envfuncs.dll
-	gcc -shared -I. src/eval.c -o dist/eval.dll
 	gcc -shared -I. src/fcmp.c -o dist/fcmp.dll
 	gcc -shared -I. src/ieee754.c -o dist/ieee754.dll
 	gcc -shared -I. src/interpolate.c -o dist/interpolate.dll
@@ -125,7 +122,6 @@ compile-macos:
 	gcc -fPIC -dynamiclib -I src src/dbdump.c -o dist/dbdump.dylib
 	gcc -fPIC -dynamiclib -I src src/decimal.c -o dist/decimal.dylib
 	gcc -fPIC -dynamiclib -I src src/envfuncs.c -o dist/envfuncs.dylib
-	gcc -fPIC -dynamiclib -I src src/eval.c -o dist/eval.dylib
 	gcc -fPIC -dynamiclib -I src src/fcmp.c -o dist/fcmp.dylib
 	gcc -fPIC -dynamiclib -I src src/ieee754.c -o dist/ieee754.dylib
 	gcc -fPIC -dynamiclib -I src src/interpolate.c -o dist/interpolate.dylib
@@ -167,7 +163,6 @@ test-all:
 	make test suite=decimal
 	make test suite=dbdump
 	make test suite=envfuncs
-	make test suite=eval
 	make test suite=fcmp
 	make test suite=ieee754
 	make test suite=interpolate
