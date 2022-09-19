@@ -2,7 +2,7 @@
 
 Write arbitrary functions in SQL (as opposed to [application-defined functions](https://sqlite.org/appfunc.html), which require programming in C, Python, or another language).
 
-Adapted from [statement_vtab.c](https://github.com/0x09/sqlite-statement-vtab/blob/master/statement_vtab.c) by 0x09.
+Adapted from [statement_vtab.c](https://github.com/0x09/sqlite-statement-vtab/blob/master/statement_vtab.c) by 0x09 and [eval.c](https://www.sqlite.org/src/file/ext/misc/eval.c) by D. Richard Hipp.
 
 ## Scalar functions
 
@@ -155,6 +155,53 @@ sqlite> select * from strcut('one;two', ';');
 Parse error: no such table: strcut
 ```
 
+## Arbitrary SQL statements
+
+`eval(SQL[, SEPARATOR])`
+
+Executes arbitrary SQL and returns the result as string (if any):
+
+```sql
+select eval('select 42');
+42
+select eval('select 10 + 32');
+42
+select eval('select abs(-42)');
+42
+select eval('select ''hello''');
+hello
+```
+
+Joins multiple result values via space or custom separator:
+
+```sql
+select eval('select 1, 2, 3');
+1 2 3
+select eval('select 1, 2, 3', '|');
+1|2|3
+```
+
+Joins multiple result rows into a single string:
+
+```sql
+select eval('select 1; select 2; select 3;');
+1 2 3
+select eval('select 1, 2, 3; select 4, 5, 6; select 7, 8, 9;');
+1 2 3 4 5 6 7 8 9
+```
+
+Supports DDL and DML statements:
+
+```sql
+select eval('create table tmp(value int)');
+select eval('insert into tmp(value) values (1), (2), (3)');
+select count(*) from tmp;
+3
+select eval('select value from tmp');
+1 2 3
+select eval('drop table tmp');
+```
+
 ## Performance
 
 User-defined functions are compiled into prepared statements, so they are pretty fast even on large datasets.
@@ -189,6 +236,28 @@ create virtual table plus using define((select :x + 1 as value));
 select max(value) from data, plus(data.x);
 Run Time: real 0.336 user 0.330145 sys 0.005352
 ```
+
+## Reference
+
+`define(NAME, BODY)`
+
+Defines a scalar function and stores it in the `sqlean_define` table.
+
+`create virtual table NAME using define((BODY))`
+
+Defines a table-valued function and stores it in the `sqlean_define` table.
+
+`define_free()`
+
+Frees up occupied resources (compiled statements cache). Should always be called before disconnecting.
+
+`eval(SQL[, SEPARATOR])`
+
+Executes arbitrary SQL and returns the result as string (if any).
+
+`undefine(NAME)`
+
+Deletes a previously defined function (scalar or table-valued).
 
 ## Usage
 

@@ -52,3 +52,20 @@ select '54', count(*) = 0 from sqlite_master where type = 'table' and name = 'st
 select '55', count(*) = 5 from sqlean_define;
 
 select define_free();
+
+select '61', eval('select 42') = '42';
+select '62', eval('select 1, 2, 3') = '1 2 3';
+select '63', eval('select 1, 2, 3', ', ') = '1, 2, 3';
+select '64', eval('select abs(-42)') = '42';
+select '65', eval('select 10 + 32') = '42';
+select '66', eval('select ''hello''') = 'hello';
+select '67', eval('select null') = '';
+select '68', eval('select 1; select 2; select 3;') = '1 2 3';
+
+select '71', eval('create table tmp(value int)') is null;
+select '72', count(*) = 1 from sqlite_master where type = 'table' and name = 'tmp';
+select '73', eval('insert into tmp(value) values (1), (2), (3)') is null;
+select '74', count(*) = 3 from tmp;
+select '75', eval('select value from tmp') = '1 2 3';
+select '76', eval('drop table tmp') is null;
+select '77', count(*) = 0 from sqlite_master where type = 'table' and name = 'tmp';

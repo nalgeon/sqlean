@@ -5,6 +5,7 @@ SQLean relies heavily on third-party SQLite extensions and open source libraries
 | Library | Author | License |
 | ------- | ------ | ------- |
 | [crypto-algorithms](https://github.com/B-Con/crypto-algorithms) | Brad Conte | Public Domain |
+| [eval.c](https://www.sqlite.org/src/file/ext/misc/eval.c) | D. Richard Hipp | Public Domain |
 | extension-functions.c | Liam Healy | Public Domain |
 | [fileio.c](https://www.sqlite.org/src/file/ext/misc/fileio.c) | D. Richard Hipp | Public Domain |
 | [libstrcmp](https://github.com/Rostepher/libstrcmp) | Ross Bayer | MIT License |
@@ -13,7 +14,7 @@ SQLean relies heavily on third-party SQLite extensions and open source libraries
 | [series.c](https://sqlite.org/src/file/ext/misc/series.c) | D. Richard Hipp | Public Domain |
 | [sha1.c](https://sqlite.org/src/file/ext/misc/sha1.c) | D. Richard Hipp | Public Domain |
 | sha2.c | [Aaron D. Gifford](https://aarongifford.com/) | 3-Clause BSD License |
-| [sqlite3_unicode](https://github.com/Zensey/sqlite3_unicode) | Unknow Author | Public Domain |
+| [sqlite3_unicode](https://github.com/Zensey/sqlite3_unicode) | Unknown Author | Public Domain |
 | [statement_vtab.c](https://github.com/0x09/sqlite-statement-vtab/blob/master/statement_vtab.c) | 0x09 | Public Domain |
 | [uuid.c](https://sqlite.org/src/file/ext/misc/uuid.c) | D. Richard Hipp | Public Domain |
 | [vsv.c](http://www.dessus.com/files/vsv.c) | Keith Medcalf | Public Domain |
