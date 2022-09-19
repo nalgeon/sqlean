@@ -65,10 +65,21 @@ select name, body from sqlean_define where type = 'scalar';
 └───────┴───────────────────┘
 ```
 
+Scalar functions are compiled into prepared statements. SQLite requires these statements to be freed before the connection is closed. Unfortunately, there is no way to free them automatically. Therefore, always execute `define_free()` before disconnecting:
+
+```
+sqlite> .load dist/define
+sqlite> select define('subxy', '? - ?');
+...
+sqlite> select define_free();
+sqlite> .exit
+```
+
 To delete a scalar function, execute `undefine()`, then reconnect to the database:
 
 ```
 sqlite> select undefine('sumn');
+sqlite> select define_free();
 ... reconnect
 sqlite> select sumn(5);
 Parse error: no such function: sumn
@@ -146,7 +157,7 @@ Parse error: no such table: strcut
 
 ## Performance
 
-Due to their dynamic nature, user-defined functions run rather slowly on large datasets.
+User-defined functions are compiled into prepared statements, so they are pretty fast even on large datasets.
 
 Given 1M rows table with random data:
 
@@ -160,26 +171,24 @@ Regular SQL query:
 
 ```sql
 select max(x+1) from data;
-Run Time: real 0.114 user 0.096000 sys 0.020000
+Run Time: real 0.130 user 0.123171 sys 0.006865
 ```
 
-Scalar function is 30x slower:
+Scalar function is 2x slower:
 
 ```sql
 select define('plus', ':x + 1');
 select max(plus(x)) from data;
-Run Time: real 3.747 user 3.720000 sys 0.024000
+Run Time: real 0.249 user 0.243840 sys 0.005304
 ```
 
-Table-valued function is 5x slower:
+Table-valued function is 2.5x slower:
 
 ```sql
 create virtual table plus using define((select :x + 1 as value));
 select max(value) from data, plus(data.x);
-Run Time: real 0.512 user 0.508000 sys 0.004000
+Run Time: real 0.336 user 0.330145 sys 0.005352
 ```
-
-The scalar function is so slow because it has to prepare an SQL statement for each value from scratch. There may be some way around this, but I haven't figured it out yet.
 
 ## Usage
 

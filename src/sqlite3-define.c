@@ -12,6 +12,66 @@
 #include "sqlite3ext.h"
 SQLITE_EXTENSION_INIT1
 
+#pragma region statement cache
+
+typedef struct cache_node {
+    sqlite3_stmt* stmt;
+    struct cache_node* next;
+} cache_node;
+
+cache_node* cache_head = NULL;
+cache_node* cache_tail = NULL;
+
+static int cache_add(sqlite3_stmt* stmt) {
+    if (cache_head == NULL) {
+        cache_head = (cache_node*)malloc(sizeof(cache_node));
+        if (cache_head == NULL) {
+            return SQLITE_ERROR;
+        }
+        cache_head->stmt = stmt;
+        cache_head->next = NULL;
+        cache_tail = cache_head;
+        return SQLITE_OK;
+    }
+    cache_tail->next = (cache_node*)malloc(sizeof(cache_node));
+    if (cache_tail->next == NULL) {
+        return SQLITE_ERROR;
+    }
+    cache_tail = cache_tail->next;
+    cache_tail->stmt = stmt;
+    cache_tail->next = NULL;
+    return SQLITE_OK;
+}
+
+static void cache_print() {
+    if (cache_head == NULL) {
+        printf("cache is empty");
+        return;
+    }
+    cache_node* curr = cache_head;
+    while (curr != NULL) {
+        printf("%s\n", sqlite3_sql(curr->stmt));
+        curr = curr->next;
+    }
+}
+
+static void cache_free() {
+    if (cache_head == NULL) {
+        return;
+    }
+    cache_node* prev;
+    cache_node* curr = cache_head;
+    while (curr != NULL) {
+        sqlite3_finalize(curr->stmt);
+        prev = curr;
+        curr = curr->next;
+        free(prev);
+    }
+    cache_head = cache_tail = NULL;
+}
+
+#pragma endregion
+
 #pragma region define scalar function
 
 /*
@@ -45,6 +105,31 @@ end:
 }
 
 /*
+ * Executes compiled prepared statement from the context.
+ */
+static void exec_compiled(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
+    int ret = SQLITE_OK;
+    sqlite3_stmt* stmt = sqlite3_user_data(ctx);
+    for (int i = 0; i < argc; i++) {
+        if ((ret = sqlite3_bind_value(stmt, i + 1, argv[i])) != SQLITE_OK) {
+            sqlite3_reset(stmt);
+            sqlite3_result_error_code(ctx, ret);
+            return;
+        }
+    }
+    if ((ret = sqlite3_step(stmt)) != SQLITE_ROW) {
+        if (ret == SQLITE_DONE) {
+            ret = SQLITE_MISUSE;
+        }
+        sqlite3_reset(stmt);
+        sqlite3_result_error_code(ctx, ret);
+        return;
+    }
+    sqlite3_result_value(ctx, sqlite3_column_value(stmt, 0));
+    sqlite3_reset(stmt);
+}
+
+/*
  * Saves user-defined function into the database.
  */
 static int save_function(sqlite3* db, const char* name, const char* type, const char* body) {
@@ -68,7 +153,7 @@ static int save_function(sqlite3* db, const char* name, const char* type, const 
 }
 
 /*
- * Creates user-defined function.
+ * Creates user-defined function without caching the prepared statement.
  */
 static int create_function(sqlite3* db, const char* name, const char* body) {
     char* sql = sqlite3_mprintf("select %s", body);
@@ -87,6 +172,29 @@ static int create_function(sqlite3* db, const char* name, const char* body) {
 
     return sqlite3_create_function_v2(db, name, nparams, SQLITE_UTF8, sql, exec_function, NULL,
                                       NULL, sqlite3_free);
+}
+
+/*
+ * Creates user-defined function and caches the prepared statement.
+ */
+static int create_compiled(sqlite3* db, const char* name, const char* body) {
+    char* sql = sqlite3_mprintf("select %s", body);
+    if (!sql) {
+        return SQLITE_NOMEM;
+    }
+
+    sqlite3_stmt* stmt;
+    int ret = sqlite3_prepare_v3(db, sql, -1, SQLITE_PREPARE_PERSISTENT, &stmt, NULL);
+    sqlite3_free(sql);
+    if (ret != SQLITE_OK) {
+        return ret;
+    }
+    int nparams = sqlite3_bind_parameter_count(stmt);
+    if ((ret = cache_add(stmt)) != SQLITE_OK) {
+        return ret;
+    }
+
+    return sqlite3_create_function(db, name, nparams, SQLITE_UTF8, stmt, exec_compiled, NULL, NULL);
 }
 
 /*
@@ -112,7 +220,7 @@ static int load_functions(sqlite3* db) {
     while (sqlite3_step(stmt) != SQLITE_DONE) {
         name = (const char*)sqlite3_column_text(stmt, 0);
         body = (const char*)sqlite3_column_text(stmt, 1);
-        ret = create_function(db, name, body);
+        ret = create_compiled(db, name, body);
         if (ret != SQLITE_OK) {
             break;
         }
@@ -136,6 +244,38 @@ static void define_function(sqlite3_context* ctx, int argc, sqlite3_value** argv
         sqlite3_result_error_code(ctx, ret);
         return;
     }
+}
+
+/*
+ * Creates compiled user-defined function and saves it to the database.
+ */
+static void define_compiled(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
+    sqlite3* db = sqlite3_context_db_handle(ctx);
+    const char* name = (const char*)sqlite3_value_text(argv[0]);
+    const char* body = (const char*)sqlite3_value_text(argv[1]);
+    int ret;
+    if ((ret = create_compiled(db, name, body)) != SQLITE_OK) {
+        sqlite3_result_error_code(ctx, ret);
+        return;
+    }
+    if ((ret = save_function(db, name, "scalar", body)) != SQLITE_OK) {
+        sqlite3_result_error_code(ctx, ret);
+        return;
+    }
+}
+
+/*
+ * Frees prepared statements compiled by user-defined functions.
+ */
+static void free_compiled(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
+    cache_free();
+}
+
+/*
+ * Prints prepared statements cache contents.
+ */
+static void print_cache(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
+    cache_print();
 }
 
 #pragma endregion
@@ -461,7 +601,9 @@ __declspec(dllexport)
     int sqlite3_define_init(sqlite3* db, char** pzErrMsg, const sqlite3_api_routines* pApi) {
     SQLITE_EXTENSION_INIT2(pApi);
     const int flags = SQLITE_UTF8 | SQLITE_DETERMINISTIC;
-    sqlite3_create_function(db, "define", 2, flags, NULL, define_function, NULL, NULL);
+    sqlite3_create_function(db, "define", 2, flags, NULL, define_compiled, NULL, NULL);
+    sqlite3_create_function(db, "define_free", 0, flags, NULL, free_compiled, NULL, NULL);
+    sqlite3_create_function(db, "define_cache", 0, flags, NULL, print_cache, NULL, NULL);
     sqlite3_create_function(db, "undefine", 1, flags, NULL, undefine_function, NULL, NULL);
     sqlite3_create_module(db, "define", &define_module, NULL);
     return load_functions(db);

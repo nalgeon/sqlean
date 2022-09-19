@@ -50,3 +50,5 @@ select undefine('strcut');
 select '53', count(*) = 0 from sqlean_define where name = 'strcut';
 select '54', count(*) = 0 from sqlite_master where type = 'table' and name = 'strcut';
 select '55', count(*) = 5 from sqlean_define;
+
+select define_free();
