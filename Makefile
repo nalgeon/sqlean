@@ -40,127 +40,133 @@ download-external:
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/zorder.c --output src/zorder.c
 
 compile-linux:
-	gcc -fPIC -shared src/array.c src/array/*.c -o dist/array.so
-	gcc -fPIC -shared src/besttype.c -o dist/besttype.so
-	gcc -fPIC -shared src/bloom.c -o dist/bloom.so
-	gcc -fPIC -shared src/btreeinfo.c -o dist/btreeinfo.so
-	gcc -fPIC -shared src/cbrt.c -o dist/cbrt.so -lm
-	gcc -fPIC -shared src/classifier.c -o dist/classifier.so
-	gcc -fPIC -shared src/closure.c -o dist/closure.so
-	gcc -fPIC -shared src/compress.c -o dist/compress.so -lz
-	gcc -fPIC -shared src/cron.c -o dist/cron.so
-	gcc -fPIC -shared src/dbdump.c -o dist/dbdump.so
-	gcc -fPIC -shared src/decimal.c -o dist/decimal.so
-	gcc -fPIC -shared src/envfuncs.c -o dist/envfuncs.so
-	gcc -fPIC -shared src/fcmp.c -o dist/fcmp.so
-	gcc -fPIC -shared src/ieee754.c -o dist/ieee754.so
-	gcc -fPIC -shared src/interpolate.c -o dist/interpolate.so
-	gcc -fPIC -shared src/isodate.c -o dist/isodate.so
-	# gcc -fPIC -shared src/json2.c src/cJSON.c -o dist/json2.so
-	gcc -fPIC -shared src/lines.c -o dist/lines.so
-	gcc -fPIC -shared src/math2.c -o dist/math2.so
-	gcc -fPIC -shared src/memstat.c -o dist/memstat.so
-	gcc -fPIC -shared -Isrc src/path.c src/cwalk.c -o dist/path.so
-	gcc -fPIC -shared src/pearson.c -o dist/pearson.so
-	# gcc -fPIC -shared src/pivotvtab.c -o dist/pivotvtab.so
-	gcc -fPIC -shared src/prefixes.c -o dist/prefixes.so
-	gcc -fPIC -shared src/recsize.c -o dist/recsize.so
-	gcc -fPIC -shared src/rotate.c -o dist/rotate.so
-	gcc -fPIC -shared src/spellfix.c -o dist/spellfix.so
-	gcc -fPIC -shared src/sqlar.c -o dist/sqlar.so -lz
-	gcc -fPIC -shared src/stats2.c -o dist/stats2.so
-	gcc -fPIC -shared src/stats3.c -o dist/stats3.so
-	gcc -fPIC -shared src/stmt.c -o dist/stmt.so
-	gcc -fPIC -shared src/text2.c -o dist/text2.so
-	gcc -fPIC -shared src/uint.c -o dist/uint.so
-	gcc -fPIC -shared src/unhex.c -o dist/unhex.so
-	gcc -fPIC -shared src/unionvtab.c -o dist/unionvtab.so
-	gcc -fPIC -shared src/xmltojson.c -o dist/xmltojson.so -DSQLITE
-	gcc -fPIC -shared src/zipfile.c -o dist/zipfile.so -lz
-	gcc -fPIC -shared src/zorder.c -o dist/zorder.so
+	make compile-linux-extension name=array src="src/array/*.c"
+	make compile-linux-extension name=besttype
+	make compile-linux-extension name=bloom
+	make compile-linux-extension name=btreeinfo
+	make compile-linux-extension name=cbrt args="-lm"
+	make compile-linux-extension name=classifier
+	make compile-linux-extension name=closure
+	make compile-linux-extension name=compress args="-lz"
+	make compile-linux-extension name=cron
+	make compile-linux-extension name=dbdump
+	make compile-linux-extension name=decimal
+	make compile-linux-extension name=envfuncs
+	make compile-linux-extension name=fcmp
+	make compile-linux-extension name=ieee754
+	make compile-linux-extension name=interpolate
+	make compile-linux-extension name=isodate
+	# make compile-linux-extension name=json2 src="src/cJSON.c"
+	make compile-linux-extension name=lines
+	make compile-linux-extension name=math2
+	make compile-linux-extension name=memstat
+	make compile-linux-extension name=path src="src/cwalk.c"
+	make compile-linux-extension name=pearson
+	# make compile-linux-extension name=pivotvtab
+	make compile-linux-extension name=prefixes
+	make compile-linux-extension name=recsize
+	make compile-linux-extension name=rotate
+	make compile-linux-extension name=spellfix
+	make compile-linux-extension name=sqlar args="-lz"
+	make compile-linux-extension name=stats2
+	make compile-linux-extension name=stats3
+	make compile-linux-extension name=stmt
+	make compile-linux-extension name=text2
+	make compile-linux-extension name=uint
+	make compile-linux-extension name=unhex
+	make compile-linux-extension name=unionvtab
+	make compile-linux-extension name=xmltojson args="-DSQLITE"
+	make compile-linux-extension name=zipfile args="-lz"
+	make compile-linux-extension name=zorder
+
+compile-linux-extension:
+	gcc -fPIC -shared -Isrc src/$(name).c $(src) -o dist/$(name).so $(args)
 
 compile-windows:
-	gcc -shared -I. src/array.c src/array/*.c -o dist/array.dll
-	gcc -shared -I. src/besttype.c -o dist/besttype.dll
-	gcc -shared -I. src/bloom.c -o dist/bloom.dll
-	gcc -shared -I. src/btreeinfo.c -o dist/btreeinfo.dll
-	gcc -shared -I. src/cbrt.c -o dist/cbrt.dll -lm
-	gcc -shared -I. src/classifier.c -o dist/classifier.dll
-	gcc -shared -I. src/closure.c -o dist/closure.dll
-	# gcc -shared -I. src/compress.c -o dist/compress.dll -lz
-	gcc -shared -I. src/cron.c -o dist/cron.dll
-	gcc -shared -I. src/dbdump.c -o dist/dbdump.dll
-	gcc -shared -I. src/decimal.c -o dist/decimal.dll
-	gcc -shared -I. src/envfuncs.c -o dist/envfuncs.dll
-	gcc -shared -I. src/fcmp.c -o dist/fcmp.dll
-	gcc -shared -I. src/ieee754.c -o dist/ieee754.dll
-	gcc -shared -I. src/interpolate.c -o dist/interpolate.dll
-	gcc -shared -I. src/isodate.c -o dist/isodate.dll
-	# gcc -shared -I. src/json2.c src/cJSON.c -o dist/json2.dll
-	gcc -shared -I. src/math2.c -o dist/math2.dll
-	gcc -shared -I. src/memstat.c -o dist/memstat.dll
-	gcc -fPIC -shared -Isrc src/path.c src/cwalk.c -o dist/path.dll
-	gcc -shared -I. src/pearson.c -o dist/pearson.dll
-	# gcc -shared -I. src/pivotvtab.c -o dist/pivotvtab.dll
-	gcc -shared -I. src/prefixes.c -o dist/prefixes.dll
-	gcc -shared -I. src/recsize.c -o dist/recsize.dll
-	gcc -shared -I. src/rotate.c -o dist/rotate.dll
-	gcc -shared -I. src/spellfix.c -o dist/spellfix.dll
-	# gcc -shared -I. src/sqlar.c -o dist/sqlar.dll -lz
-	gcc -shared -I. src/stats2.c -o dist/stats2.dll
-	gcc -shared -I. src/stats3.c -o dist/stats3.dll
-	gcc -shared -I. src/stmt.c -o dist/stmt.dll
-	gcc -shared -I. src/text2.c -o dist/text2.dll
-	gcc -shared -I. src/uint.c -o dist/uint.dll
-	gcc -shared -I. src/unhex.c -o dist/unhex.dll
-	gcc -shared -I. src/unionvtab.c -o dist/unionvtab.dll
-	gcc -shared -I. src/xmltojson.c -o dist/xmltojson.dll -DSQLITE
-	# gcc -shared -I. src/zipfile.c -o dist/zipfile.dll -lz
-	gcc -shared -I. src/zorder.c -o dist/zorder.dll
+	make compile-windows-extension name=array src="src/array/*.c"
+	make compile-windows-extension name=besttype
+	make compile-windows-extension name=bloom
+	make compile-windows-extension name=btreeinfo
+	make compile-windows-extension name=cbrt args="-lm"
+	make compile-windows-extension name=classifier
+	make compile-windows-extension name=closure
+	# make compile-windows-extension name=compress args="-lz"
+	make compile-windows-extension name=cron
+	make compile-windows-extension name=dbdump
+	make compile-windows-extension name=decimal
+	make compile-windows-extension name=envfuncs
+	make compile-windows-extension name=fcmp
+	make compile-windows-extension name=ieee754
+	make compile-windows-extension name=interpolate
+	make compile-windows-extension name=isodate
+	# make compile-windows-extension name=json2 src="src/cJSON.c"
+	make compile-windows-extension name=math2
+	make compile-windows-extension name=memstat
+	make compile-windows-extension name=path src="src/cwalk.c"
+	make compile-windows-extension name=pearson
+	# make compile-windows-extension name=pivotvtab
+	make compile-windows-extension name=prefixes
+	make compile-windows-extension name=recsize
+	make compile-windows-extension name=rotate
+	make compile-windows-extension name=spellfix
+	# make compile-windows-extension name=sqlar args="-lz"
+	make compile-windows-extension name=stats2
+	make compile-windows-extension name=stats3
+	make compile-windows-extension name=stmt
+	make compile-windows-extension name=text2
+	make compile-windows-extension name=uint
+	make compile-windows-extension name=unhex
+	make compile-windows-extension name=unionvtab
+	make compile-windows-extension name=xmltojson args="-DSQLITE"
+	# make compile-windows-extension name=zipfile args="-lz"
+	make compile-windows-extension name=zorder
+
+compile-windows-extension:
+	gcc -fPIC -shared -Isrc src/$(name).c $(src) -o dist/$(name).dll $(args)
 
 compile-macos:
-	gcc -fPIC -dynamiclib -I src src/array.c src/array/*.c -o dist/array.dylib
-	gcc -fPIC -dynamiclib -I src src/besttype.c -o dist/besttype.dylib
-	gcc -fPIC -dynamiclib -I src src/bloom.c -o dist/bloom.dylib
-	gcc -fPIC -dynamiclib -I src src/btreeinfo.c -o dist/btreeinfo.dylib
-	gcc -fPIC -dynamiclib -I src src/cbrt.c -o dist/cbrt.dylib -lm
-	gcc -fPIC -dynamiclib -I src src/classifier.c -o dist/classifier.dylib
-	gcc -fPIC -dynamiclib -I src src/closure.c -o dist/closure.dylib
-	gcc -fPIC -dynamiclib -I src src/compress.c -o dist/compress.dylib -lz
-	gcc -fPIC -dynamiclib -I src src/cron.c -o dist/cron.dylib
-	gcc -fPIC -dynamiclib -I src src/dbdump.c -o dist/dbdump.dylib
-	gcc -fPIC -dynamiclib -I src src/decimal.c -o dist/decimal.dylib
-	gcc -fPIC -dynamiclib -I src src/envfuncs.c -o dist/envfuncs.dylib
-	gcc -fPIC -dynamiclib -I src src/fcmp.c -o dist/fcmp.dylib
-	gcc -fPIC -dynamiclib -I src src/ieee754.c -o dist/ieee754.dylib
-	gcc -fPIC -dynamiclib -I src src/interpolate.c -o dist/interpolate.dylib
-	gcc -fPIC -dynamiclib -I src src/isodate.c -o dist/isodate.dylib
-	# gcc -fPIC -dynamiclib -I src src/json2.c src/cJSON.c -o dist/json2.dylib
+	make compile-macos-extension name=array src="src/array/*.c"
+	make compile-macos-extension name=besttype
+	make compile-macos-extension name=bloom
+	make compile-macos-extension name=btreeinfo
+	make compile-macos-extension name=cbrt
+	make compile-macos-extension name=classifier
+	make compile-macos-extension name=closure
+	make compile-macos-extension name=compress args="-lz"
+	make compile-macos-extension name=cron
+	make compile-macos-extension name=dbdump
+	make compile-macos-extension name=decimal
+	make compile-macos-extension name=envfuncs
+	make compile-macos-extension name=fcmp
+	make compile-macos-extension name=ieee754
+	make compile-macos-extension name=interpolate
+	make compile-macos-extension name=isodate
+	# make compile-macos-extension name=json2 src="src/cJSON.c"
 	make compile-macos-extension name=lines
-	gcc -fPIC -dynamiclib -I src src/math2.c -o dist/math2.dylib
-	gcc -fPIC -dynamiclib -I src src/memstat.c -o dist/memstat.dylib
+	make compile-macos-extension name=math2
+	make compile-macos-extension name=memstat
 	make compile-macos-extension name=path src="src/cwalk.c"
-	gcc -fPIC -dynamiclib -I src src/pearson.c -o dist/pearson.dylib
-	# gcc -fPIC -dynamiclib -I src src/pivotvtab.c -o dist/pivotvtab.dylib
-	gcc -fPIC -dynamiclib -I src src/prefixes.c -o dist/prefixes.dylib
-	gcc -fPIC -dynamiclib -I src src/recsize.c -o dist/recsize.dylib
-	gcc -fPIC -dynamiclib -I src src/rotate.c -o dist/rotate.dylib
-	gcc -fPIC -dynamiclib -I src src/spellfix.c -o dist/spellfix.dylib
-	gcc -fPIC -dynamiclib -I src src/sqlar.c -o dist/sqlar.dylib -lz
-	gcc -fPIC -dynamiclib -I src src/stats2.c -o dist/stats2.dylib
-	gcc -fPIC -dynamiclib -I src src/stats3.c -o dist/stats3.dylib
-	gcc -fPIC -dynamiclib -I src src/stmt.c -o dist/stmt.dylib
-	gcc -fPIC -dynamiclib -I src src/text2.c -o dist/text2.dylib
-	gcc -fPIC -dynamiclib -I src src/uint.c -o dist/uint.dylib
-	gcc -fPIC -dynamiclib -I src src/unhex.c -o dist/unhex.dylib
-	gcc -fPIC -dynamiclib -I src src/unionvtab.c -o dist/unionvtab.dylib
-	gcc -fPIC -dynamiclib -I src src/xmltojson.c -o dist/xmltojson.dylib -DSQLITE
-	gcc -fPIC -dynamiclib -I src src/zipfile.c -o dist/zipfile.dylib -lz
-	gcc -fPIC -dynamiclib -I src src/zorder.c -o dist/zorder.dylib
+	make compile-macos-extension name=pearson
+	# make compile-macos-extension name=pivotvtab
+	make compile-macos-extension name=prefixes
+	make compile-macos-extension name=recsize
+	make compile-macos-extension name=rotate
+	make compile-macos-extension name=spellfix
+	make compile-macos-extension name=sqlar args="-lz"
+	make compile-macos-extension name=stats2
+	make compile-macos-extension name=stats3
+	make compile-macos-extension name=stmt
+	make compile-macos-extension name=text2
+	make compile-macos-extension name=uint
+	make compile-macos-extension name=unhex
+	make compile-macos-extension name=unionvtab
+	make compile-macos-extension name=xmltojson args="-DSQLITE"
+	make compile-macos-extension name=zipfile args="-lz"
+	make compile-macos-extension name=zorder
 
 compile-macos-extension:
-	gcc -fPIC -shared -Isrc src/$(name).c $(src) -o dist/$(name).x86_64.dylib -target x86_64-apple-macos10.13
-	gcc -fPIC -shared -Isrc src/$(name).c $(src) -o dist/$(name).arm64.dylib -target arm64-apple-macos11
+	gcc -fPIC -shared -Isrc src/$(name).c $(src) -o dist/$(name).x86_64.dylib -target x86_64-apple-macos10.13 $(args)
+	gcc -fPIC -shared -Isrc src/$(name).c $(src) -o dist/$(name).arm64.dylib -target arm64-apple-macos11 $(args)
 	lipo -create -output dist/$(name).dylib dist/$(name).x86_64.dylib dist/$(name).arm64.dylib
 	rm -f dist/$(name).x86_64.dylib dist/$(name).arm64.dylib
 
