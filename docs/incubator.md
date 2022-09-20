@@ -514,6 +514,26 @@ json_contains_path(json, path)
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/json2.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/json2.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/json2.dylib)
 
+## lines
+
+Read files line-by-line. Doesn't work on Windows.
+
+Created by [Alex Garcia](https://github.com/asg017/sqlite-lines), MIT License.
+
+```sql
+sqlite> .load dist/lines
+sqlite> select * from lines_read('test/lines.txt');
+┌───────┐
+│ line  │
+├───────┤
+│ one   │
+│ two   │
+│ three │
+└───────┘
+```
+
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/lines.so) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/lines.dylib)
+
 ## math2
 
 Even more math functions and bit arithmetics.

@@ -21,6 +21,8 @@ download-external:
 	curl -L https://github.com/daschr/sqlite3_extensions/raw/master/cron.c --output src/cron.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/decimal.c --output src/decimal.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/ieee754.c --output src/ieee754.c
+	cat src/lines.h > src/lines.c
+	curl -L https://github.com/asg017/sqlite-lines/raw/main/sqlite-lines.c >> src/lines.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/memstat.c --output src/memstat.c
 	# curl -L https://github.com/jakethaw/pivot_vtab/raw/main/pivot_vtab.c --output src/pivotvtab.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/prefixes.c --output src/prefixes.c
@@ -51,6 +53,7 @@ compile-linux:
 	gcc -fPIC -shared src/interpolate.c -o dist/interpolate.so
 	gcc -fPIC -shared src/isodate.c -o dist/isodate.so
 	# gcc -fPIC -shared src/json2.c src/cJSON.c -o dist/json2.so
+	gcc -fPIC -shared src/lines.c -o dist/lines.so
 	gcc -fPIC -shared src/math2.c -o dist/math2.so
 	gcc -fPIC -shared src/memstat.c -o dist/memstat.so
 	gcc -fPIC -shared src/pearson.c -o dist/pearson.so
@@ -127,6 +130,7 @@ compile-macos:
 	gcc -fPIC -dynamiclib -I src src/interpolate.c -o dist/interpolate.dylib
 	gcc -fPIC -dynamiclib -I src src/isodate.c -o dist/isodate.dylib
 	# gcc -fPIC -dynamiclib -I src src/json2.c src/cJSON.c -o dist/json2.dylib
+	make compile-macos-extension name=lines
 	gcc -fPIC -dynamiclib -I src src/math2.c -o dist/math2.dylib
 	gcc -fPIC -dynamiclib -I src src/memstat.c -o dist/memstat.dylib
 	gcc -fPIC -dynamiclib -I src src/pearson.c -o dist/pearson.dylib
@@ -146,6 +150,12 @@ compile-macos:
 	gcc -fPIC -dynamiclib -I src src/xmltojson.c -o dist/xmltojson.dylib -DSQLITE
 	gcc -fPIC -dynamiclib -I src src/zipfile.c -o dist/zipfile.dylib -lz
 	gcc -fPIC -dynamiclib -I src src/zorder.c -o dist/zorder.dylib
+
+compile-macos-extension:
+	gcc -fPIC -dynamiclib -I src src/$(name).c -o dist/$(name).x86_64.dylib -target x86_64-apple-macos10.13
+	gcc -fPIC -dynamiclib -I src src/$(name).c -o dist/$(name).arm64.dylib -target arm64-apple-macos11
+	lipo -create -output dist/$(name).dylib dist/$(name).x86_64.dylib dist/$(name).arm64.dylib
+	rm -f dist/$(name).x86_64.dylib dist/$(name).arm64.dylib
 
 test-all:
 	sqlite3 --version
@@ -169,6 +179,7 @@ test-all:
 	make test suite=isodate
 	# tests fail on ubuntu with segmentation fault
 	# make test suite=json2
+	make test suite=lines
 	make test suite=math2
 	make test suite=memstat
 	make test suite=pearson
