@@ -15,7 +15,7 @@ These are the most popular functions. They are tested, documented and organized 
 Think of them as the extended standard library for SQLite:
 
 -   [crypto](docs/crypto.md): secure hashes
--   [define](docs/define.md): user-defined functions
+-   [define](docs/define.md): user-defined functions and dynamic sql
 -   [fileio](docs/fileio.md): read and write files
 -   [fuzzy](docs/fuzzy.md): fuzzy string matching and phonetics
 -   [ipaddr](docs/ipaddr.md): IP address manipulation
