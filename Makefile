@@ -24,6 +24,10 @@ download-external:
 	cat src/lines.h > src/lines.c
 	curl -L https://github.com/asg017/sqlite-lines/raw/main/sqlite-lines.c >> src/lines.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/memstat.c --output src/memstat.c
+	cat src/path.h > src/path.c
+	curl -L https://github.com/asg017/sqlite-path/raw/main/sqlite-path.c >> src/path.c
+	curl -L https://github.com/likle/cwalk/raw/master/include/cwalk.h --output src/cwalk.h
+	curl -L https://github.com/likle/cwalk/raw/master/src/cwalk.c --output src/cwalk.c
 	# curl -L https://github.com/jakethaw/pivot_vtab/raw/main/pivot_vtab.c --output src/pivotvtab.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/prefixes.c --output src/prefixes.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/spellfix.c --output src/spellfix.c
@@ -56,6 +60,7 @@ compile-linux:
 	gcc -fPIC -shared src/lines.c -o dist/lines.so
 	gcc -fPIC -shared src/math2.c -o dist/math2.so
 	gcc -fPIC -shared src/memstat.c -o dist/memstat.so
+	gcc -fPIC -shared -Isrc src/path.c src/cwalk.c -o dist/path.so
 	gcc -fPIC -shared src/pearson.c -o dist/pearson.so
 	# gcc -fPIC -shared src/pivotvtab.c -o dist/pivotvtab.so
 	gcc -fPIC -shared src/prefixes.c -o dist/prefixes.so
@@ -94,6 +99,7 @@ compile-windows:
 	# gcc -shared -I. src/json2.c src/cJSON.c -o dist/json2.dll
 	gcc -shared -I. src/math2.c -o dist/math2.dll
 	gcc -shared -I. src/memstat.c -o dist/memstat.dll
+	gcc -fPIC -shared -Isrc src/path.c src/cwalk.c -o dist/path.dll
 	gcc -shared -I. src/pearson.c -o dist/pearson.dll
 	# gcc -shared -I. src/pivotvtab.c -o dist/pivotvtab.dll
 	gcc -shared -I. src/prefixes.c -o dist/prefixes.dll
@@ -133,6 +139,7 @@ compile-macos:
 	make compile-macos-extension name=lines
 	gcc -fPIC -dynamiclib -I src src/math2.c -o dist/math2.dylib
 	gcc -fPIC -dynamiclib -I src src/memstat.c -o dist/memstat.dylib
+	make compile-macos-extension name=path src="src/cwalk.c"
 	gcc -fPIC -dynamiclib -I src src/pearson.c -o dist/pearson.dylib
 	# gcc -fPIC -dynamiclib -I src src/pivotvtab.c -o dist/pivotvtab.dylib
 	gcc -fPIC -dynamiclib -I src src/prefixes.c -o dist/prefixes.dylib
@@ -152,8 +159,8 @@ compile-macos:
 	gcc -fPIC -dynamiclib -I src src/zorder.c -o dist/zorder.dylib
 
 compile-macos-extension:
-	gcc -fPIC -dynamiclib -I src src/$(name).c -o dist/$(name).x86_64.dylib -target x86_64-apple-macos10.13
-	gcc -fPIC -dynamiclib -I src src/$(name).c -o dist/$(name).arm64.dylib -target arm64-apple-macos11
+	gcc -fPIC -shared -Isrc src/$(name).c $(src) -o dist/$(name).x86_64.dylib -target x86_64-apple-macos10.13
+	gcc -fPIC -shared -Isrc src/$(name).c $(src) -o dist/$(name).arm64.dylib -target arm64-apple-macos11
 	lipo -create -output dist/$(name).dylib dist/$(name).x86_64.dylib dist/$(name).arm64.dylib
 	rm -f dist/$(name).x86_64.dylib dist/$(name).arm64.dylib
 

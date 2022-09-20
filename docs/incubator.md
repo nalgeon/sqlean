@@ -653,6 +653,49 @@ Depending on which parameter is being interrogated, one of the `value` or `hiwtr
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/memstat.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/memstat.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/memstat.dylib)
 
+## path
+
+Parsing, generating, and querying paths.
+
+Created by [Alex Garcia](https://github.com/asg017/sqlite-path), MIT License.
+
+```
+path_absolute(path)
+-> 1 if the given path is absolute, 0 otherwise
+
+path_basename(path)
+-> basename of the given path
+
+path_dirname(path)
+-> dirname of the given path
+
+path_extension(path)
+-> extension of the given path
+
+path_name(path)
+-> name of the given path
+
+path_intersection(path1, path2)
+-> common portions between two paths
+
+path_join(path1, path2, [...pathN])
+-> join two or more paths together
+
+path_normalize(path)
+-> normalized version of the given path
+
+path_root(path)
+-> root portion of the given path
+
+path_part_at(path, at)
+-> path segment in the given path at the specified index.
+
+select * from path_parts(path)
+-> table function that returns each part of the given path
+```
+
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/path.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/path.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/path.dylib)
+
 ## pearson
 
 Returns Pearson correlation coefficient between two data sets.
