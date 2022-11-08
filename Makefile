@@ -51,21 +51,6 @@ compile-windows:
 pack-windows:
 	7z a -tzip dist/sqlean-win-x64.zip ./dist/*.dll
 
-compile-macos:
-	gcc -fPIC -dynamiclib -I src src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.dylib
-	gcc -fPIC -dynamiclib -I src src/sqlite3-define.c -o dist/define.dylib
-	gcc -fPIC -dynamiclib -I src src/sqlite3-fileio.c -o dist/fileio.dylib
-	gcc -fPIC -dynamiclib -I src src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/fuzzy.dylib
-	gcc -fPIC -dynamiclib -I src src/sqlite3-ipaddr.c -o dist/ipaddr.dylib
-	gcc -fPIC -dynamiclib -I src src/sqlite3-json1.c -o dist/json1.dylib
-	gcc -fPIC -dynamiclib -I src src/sqlite3-math.c -o dist/math.dylib -lm
-	gcc -fPIC -dynamiclib -I src src/sqlite3-re.c src/re.c -o dist/re.dylib
-	gcc -fPIC -dynamiclib -I src src/sqlite3-stats.c -o dist/stats.dylib -lm
-	gcc -fPIC -dynamiclib -I src src/sqlite3-text.c -o dist/text.dylib
-	gcc -fPIC -dynamiclib -I src src/sqlite3-unicode.c -o dist/unicode.dylib
-	gcc -fPIC -dynamiclib -I src src/sqlite3-uuid.c -o dist/uuid.dylib
-	gcc -fPIC -dynamiclib -I src src/sqlite3-vsv.c -o dist/vsv.dylib -lm
-
 compile-macos-x86:
 	mkdir -p dist/x86
 	gcc -fPIC -dynamiclib -I src src/sqlite3-crypto.c src/crypto/*.c -o dist/x86/crypto.dylib -target x86_64-apple-macos10.12
@@ -98,7 +83,24 @@ compile-macos-arm64:
 	gcc -fPIC -dynamiclib -I src src/sqlite3-uuid.c -o dist/arm64/uuid.dylib -target arm64-apple-macos11
 	gcc -fPIC -dynamiclib -I src src/sqlite3-vsv.c -o dist/arm64/vsv.dylib -target arm64-apple-macos11 -lm
 
+compile-macos: compile-macos-x86 compile-macos-arm64
+	lipo -create -output dist/crypto.dylib dist/x86/crypto.dylib dist/arm64/crypto.dylib
+	lipo -create -output dist/define.dylib dist/x86/define.dylib dist/arm64/define.dylib
+	lipo -create -output dist/fileio.dylib dist/x86/fileio.dylib dist/arm64/fileio.dylib
+	lipo -create -output dist/fuzzy.dylib dist/x86/fuzzy.dylib dist/arm64/fuzzy.dylib
+	lipo -create -output dist/ipaddr.dylib dist/x86/ipaddr.dylib dist/arm64/ipaddr.dylib
+	lipo -create -output dist/json1.dylib dist/x86/json1.dylib dist/arm64/json1.dylib
+	lipo -create -output dist/math.dylib dist/x86/math.dylib dist/arm64/math.dylib
+	lipo -create -output dist/re.dylib dist/x86/re.dylib dist/arm64/re.dylib
+	lipo -create -output dist/stats.dylib dist/x86/stats.dylib dist/arm64/stats.dylib
+	lipo -create -output dist/text.dylib dist/x86/text.dylib dist/arm64/text.dylib
+	lipo -create -output dist/unicode.dylib dist/x86/unicode.dylib dist/arm64/unicode.dylib
+	lipo -create -output dist/uuid.dylib dist/x86/uuid.dylib dist/arm64/uuid.dylib
+	lipo -create -output dist/vsv.dylib dist/x86/vsv.dylib dist/arm64/vsv.dylib
+
+
 pack-macos:
+	zip -j dist/sqlean-macos-universal.zip dist/*.dylib
 	zip -j dist/sqlean-macos-x86.zip dist/x86/*.dylib
 	zip -j dist/sqlean-macos-arm64.zip dist/arm64/*.dylib
 
