@@ -13,6 +13,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef __FreeBSD__
+#include <netinet/in.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#endif
+
 #include "sqlite3ext.h"
 
 SQLITE_EXTENSION_INIT1
