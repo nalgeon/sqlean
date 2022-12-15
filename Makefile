@@ -22,6 +22,7 @@ compile-linux:
 	gcc -fPIC -shared src/sqlite3-fileio.c -o dist/fileio.so
 	gcc -fPIC -shared src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/fuzzy.so
 	gcc -fPIC -shared src/sqlite3-ipaddr.c -o dist/ipaddr.so
+	gcc -fPIC -shared src/sqlite3-json1.c -o dist/json1.so
 	gcc -fPIC -shared src/sqlite3-math.c -o dist/math.so -lm
 	gcc -fPIC -shared src/sqlite3-re.c src/re.c -o dist/re.so
 	gcc -fPIC -shared src/sqlite3-stats.c -o dist/stats.so -lm
