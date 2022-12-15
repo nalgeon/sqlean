@@ -52,7 +52,7 @@ void md5_transform(MD5_CTX* ctx, const BYTE data[]) {
     // endian byte order CPU. Reverse all the bytes upon input, and re-reverse them
     // on output (in md5_final()).
     for (i = 0, j = 0; i < 16; ++i, j += 4)
-        m[i] = (data[j]) + (data[j + 1] << 8) + (data[j + 2] << 16) + (data[j + 3] << 24);
+        m[i] = (data[j]) + (data[j + 1] << 8) + (data[j + 2] << 16) + ((WORD)data[j + 3] << 24);
 
     a = ctx->state[0];
     b = ctx->state[1];
