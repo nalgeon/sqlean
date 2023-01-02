@@ -26,6 +26,7 @@
 **  skip=N              number of leading data rows to skip
 **  rsep=STRING         record separator
 **  fsep=STRING         field separator
+**  dsep=STRING         decimal separator
 **  validatetext=BOOL   validate UTF-8 encoding of text fields
 **  affinity=AFFINITY   affinity to apply to each returned value
 **  nulls=BOOL          empty fields are returned as NULL
@@ -50,6 +51,7 @@
 **  skip=0              do not skip any data rows in the VSV file
 **  fsep=','            default field separator is a comma
 **  rsep='\n'           default record separator is a newline
+**  dsep='.'            default decimal separator is a dot
 **  validatetext=no     do not validate text field encoding
 **  affinity=none       do not apply affinity to each returned value
 **  nulls=off           empty fields returned as zero-length
@@ -267,6 +269,7 @@ struct VsvReader {
     int cTerm;            /* Character that terminated the most recent field */
     int fsep;             /* Field Seperator Character */
     int rsep;             /* Record Seperator Character */
+    int dsep;             /* Decimal Seperator Character */
     int affinity;         /* Perform Affinity Conversions */
     int notNull;          /* Have we seen data for field */
     size_t iIn;           /* Next unread character in the input buffer */
@@ -543,6 +546,7 @@ typedef struct VsvTable {
     int nCol;              /* Number of columns in the VSV file */
     int fsep;              /* The field seperator for this VSV file */
     int rsep;              /* The record seperator for this VSV file */
+    int dsep;              /* The record decimal for this VSV file */
     int affinity;          /* Perform affinity conversions */
     int nulls;             /* Process NULLs */
     int validateUTF8;      /* Validate UTF8 */
@@ -802,6 +806,7 @@ static int vsv_parse_sep_char(char* in, int dflt, int* out) {
 **    columns=N                  Assume the VSV file contains N columns.
 **    fsep=FSET                  Field Seperator
 **    rsep=RSEP                  Record Seperator
+**    dsep=RSEP                  Decimal Seperator
 **    skip=N                     skip N records of file (default 0)
 **    affinity=AFF               affinity to apply to ALL columns
 **                               default:  none
@@ -837,13 +842,14 @@ static int vsvtabConnect(sqlite3* db,
     int bNulls = -1; /* Process Nulls flag */
     VsvReader sRdr;  /* A VSV file reader used to store an error
                       ** message and/or to count the number of columns */
-    static const char* azParam[] = {"filename", "data", "schema", "fsep", "rsep"};
-    char* azPValue[5]; /* Parameter values */
+    static const char* azParam[] = {"filename", "data", "schema", "fsep", "rsep", "dsep"};
+    char* azPValue[6]; /* Parameter values */
 #define VSV_FILENAME (azPValue[0])
 #define VSV_DATA (azPValue[1])
 #define VSV_SCHEMA (azPValue[2])
 #define VSV_FSEP (azPValue[3])
 #define VSV_RSEP (azPValue[4])
+#define VSV_DSEP (azPValue[5])
 
     assert(sizeof(azPValue) == sizeof(azParam));
     memset(&sRdr, 0, sizeof(sRdr));
@@ -951,7 +957,10 @@ static int vsvtabConnect(sqlite3* db,
         vsv_errmsg(&sRdr, "cannot parse rsep: '%s'", VSV_RSEP);
         goto vsvtab_connect_error;
     }
-
+    if (vsv_parse_sep_char(VSV_DSEP, '.', &(sRdr.dsep))) {
+        vsv_errmsg(&sRdr, "cannot parse dsep: '%s'", VSV_DSEP);
+        goto vsvtab_connect_error;
+    }
     if ((nCol <= 0 || bHeader == 1) && vsv_reader_open(&sRdr, VSV_FILENAME, VSV_DATA)) {
         goto vsvtab_connect_error;
     }
@@ -963,6 +972,7 @@ static int vsvtabConnect(sqlite3* db,
     memset(pNew, 0, sizeof(*pNew));
     pNew->fsep = sRdr.fsep;
     pNew->rsep = sRdr.rsep;
+    pNew->dsep = sRdr.dsep;
     pNew->affinity = affinity;
     pNew->validateUTF8 = validateUTF8;
     pNew->nulls = bNulls;
@@ -1147,6 +1157,7 @@ static int vsvtabOpen(sqlite3_vtab* p, sqlite3_vtab_cursor** ppCursor) {
     pCur->dLen = (int*)&pCur->aLen[pTab->nCol];
     pCur->rdr.fsep = pTab->fsep;
     pCur->rdr.rsep = pTab->rsep;
+    pCur->rdr.dsep = pTab->dsep;
     pCur->rdr.affinity = pTab->affinity;
     *ppCursor = &pCur->base;
     if (vsv_reader_open(&pCur->rdr, pTab->zFilename, pTab->zData)) {
@@ -1216,7 +1227,7 @@ static int vsvtabNext(sqlite3_vtab_cursor* cur) {
 ** then may have digits
 ** then may have trailing space
 */
-static int vsv_isValidNumber(char* arg) {
+static int vsv_isValidNumber(int dsep, char* arg) {
     char* start;
     char* stop;
     int isValid = 0;
@@ -1248,9 +1259,13 @@ static int vsv_isValidNumber(char* arg) {
     {
         start++;
     }
-    if (start <= stop && *start == '.')  // may have .
+    if (start <= stop && *start == dsep)  // may have decimal separator
     {
         isValid = 2;
+        if (*start != '.')
+        {
+            *start = '.';
+        }
         start++;
     }
     if (start <= stop && isdigit(*start)) {
@@ -1388,7 +1403,7 @@ static int vsvtabColumn(sqlite3_vtab_cursor* cur, /* The cursor */
                 break;
             }
             case 3: {
-                switch (vsv_isValidNumber(pCur->azVal[i])) {
+                switch (vsv_isValidNumber(pCur->rdr.dsep, pCur->azVal[i])) {
                     case 1: {
                         sqlite3_result_int64(ctx, strtoll(pCur->azVal[i], 0, 10));
                         break;
@@ -1410,7 +1425,7 @@ static int vsvtabColumn(sqlite3_vtab_cursor* cur, /* The cursor */
                 break;
             }
             case 4: {
-                switch (vsv_isValidNumber(pCur->azVal[i])) {
+                switch (vsv_isValidNumber(pCur->rdr.dsep, pCur->azVal[i])) {
                     case 1:
                     case 2: {
                         sqlite3_result_double(ctx, strtod(pCur->azVal[i], 0));
@@ -1433,7 +1448,7 @@ static int vsvtabColumn(sqlite3_vtab_cursor* cur, /* The cursor */
                 break;
             }
             case 5: {
-                switch (vsv_isValidNumber(pCur->azVal[i])) {
+                switch (vsv_isValidNumber(pCur->rdr.dsep, pCur->azVal[i])) {
                     case 1: {
                         sqlite3_result_int64(ctx, strtoll(pCur->azVal[i], 0, 10));
                         break;
