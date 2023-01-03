@@ -35,18 +35,18 @@ pack-linux:
 	zip -j dist/sqlean-linux-x86.zip dist/*.so
 
 compile-windows:
-	gcc -shared -I. src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.dll
-	gcc -shared -I. src/sqlite3-define.c -o dist/define.dll
-	gcc -shared -I. src/sqlite3-fileio.c -o dist/fileio.dll
-	gcc -shared -I. src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/fuzzy.dll
-	gcc -shared -I. src/sqlite3-json1.c -o dist/json1.dll
-	gcc -shared -I. src/sqlite3-math.c -o dist/math.dll -lm
-	gcc -shared -I. src/sqlite3-re.c src/re.c -o dist/re.dll
-	gcc -shared -I. src/sqlite3-stats.c -o dist/stats.dll -lm
-	gcc -shared -I. src/sqlite3-text.c -o dist/text.dll
-	gcc -shared -I. src/sqlite3-unicode.c -o dist/unicode.dll
-	gcc -shared -I. src/sqlite3-uuid.c -o dist/uuid.dll
-	gcc -shared -I. src/sqlite3-vsv.c -o dist/vsv.dll -lm
+	gcc -std=c11 -shared -I. src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.dll
+	gcc -std=c11 -shared -I. src/sqlite3-define.c -o dist/define.dll
+	gcc -std=c11 -shared -I. src/sqlite3-fileio.c -o dist/fileio.dll
+	gcc -std=c11 -shared -I. src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/fuzzy.dll
+	gcc -std=c11 -shared -I. src/sqlite3-json1.c -o dist/json1.dll
+	gcc -std=c11 -shared -I. src/sqlite3-math.c -o dist/math.dll -lm
+	gcc -std=c11 -shared -I. src/sqlite3-re.c src/re.c -o dist/re.dll
+	gcc -std=c11 -shared -I. src/sqlite3-stats.c -o dist/stats.dll -lm
+	gcc -std=c11 -shared -I. src/sqlite3-text.c -o dist/text.dll
+	gcc -std=c11 -shared -I. src/sqlite3-unicode.c -o dist/unicode.dll
+	gcc -std=c11 -shared -I. src/sqlite3-uuid.c -o dist/uuid.dll
+	gcc -std=c11 -shared -I. src/sqlite3-vsv.c -o dist/vsv.dll -lm
 
 pack-windows:
 	7z a -tzip dist/sqlean-win-x64.zip ./dist/*.dll

@@ -51,7 +51,7 @@
 **  skip=0              do not skip any data rows in the VSV file
 **  fsep=','            default field separator is a comma
 **  rsep='\n'           default record separator is a newline
-**  dsep='.'            default decimal separator is a dot
+**  dsep='.'            default decimal separator is a point
 **  validatetext=no     do not validate text field encoding
 **  affinity=none       do not apply affinity to each returned value
 **  nulls=off           empty fields returned as zero-length
@@ -1454,10 +1454,25 @@ static int vsvtabColumn(sqlite3_vtab_cursor* cur, /* The cursor */
                         break;
                     }
                     case 2: {
-                        long double dv, fp, ip;
+                        //long double ldv, lfp, lip;
+                        double dv, fp, ip;
+                        char* end;
 
-                        dv = strtold(pCur->azVal[i], 0);
-                        fp = modfl(dv, &ip);
+                        //printf("dsep = <%c>\n",pCur->rdr.dsep);
+
+                        dv = strtod(pCur->azVal[i], &end);
+                        //printf("str = <%s>\n",pCur->azVal[i]);
+                        //printf("dv = <%f>\n",dv);
+                        fp = modf(dv, &ip);
+                        //printf("fp = <%f>\n",fp);
+                        //printf("ip = <%f>\n",ip);
+
+                        //ldv = strtold(pCur->azVal[i], &end);
+                        //printf("str = <%s>\n",pCur->azVal[i]);
+                        //printf("ldv = <%Lf>\n",ldv);
+                        //lfp = modfl(ldv, &lip);
+                        //printf("lfp = <%f>\n",lfp);
+                        //printf("lip = <%f>\n",lip);
                         if (sizeof(long double) > sizeof(double)) {
                             if (fp == 0.0L && dv >= -9223372036854775808.0L &&
                                 dv <= 9223372036854775807.0L) {
