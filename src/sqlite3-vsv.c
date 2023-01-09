@@ -1454,25 +1454,10 @@ static int vsvtabColumn(sqlite3_vtab_cursor* cur, /* The cursor */
                         break;
                     }
                     case 2: {
-                        //long double ldv, lfp, lip;
-                        double dv, fp, ip;
-                        char* end;
+                        long double dv, fp, ip;
 
-                        //printf("dsep = <%c>\n",pCur->rdr.dsep);
-
-                        dv = strtod(pCur->azVal[i], &end);
-                        //printf("str = <%s>\n",pCur->azVal[i]);
-                        //printf("dv = <%f>\n",dv);
-                        fp = modf(dv, &ip);
-                        //printf("fp = <%f>\n",fp);
-                        //printf("ip = <%f>\n",ip);
-
-                        //ldv = strtold(pCur->azVal[i], &end);
-                        //printf("str = <%s>\n",pCur->azVal[i]);
-                        //printf("ldv = <%Lf>\n",ldv);
-                        //lfp = modfl(ldv, &lip);
-                        //printf("lfp = <%f>\n",lfp);
-                        //printf("lip = <%f>\n",lip);
+                        dv = strtold(pCur->azVal[i], 0);
+                        fp = modfl(dv, &ip);
                         if (sizeof(long double) > sizeof(double)) {
                             if (fp == 0.0L && dv >= -9223372036854775808.0L &&
                                 dv <= 9223372036854775807.0L) {
