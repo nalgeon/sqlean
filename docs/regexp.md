@@ -2,6 +2,8 @@
 
 Regexp search and replace functions. Based on the [PCRE2](https://github.com/pcre2project/pcre2) engine, this extension supports all major regular expression features (see the section on syntax below).
 
+⚠️ This extension is not available on Windows.
+
 Provides the following functions:
 
 ### `REGEXP` statement
