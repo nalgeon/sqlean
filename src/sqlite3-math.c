@@ -83,7 +83,7 @@ static double xFloor(double x) {
 **   log10(X)    - log X base 10
 */
 static void log1Func(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    double x, b, ans;
+    double x, ans;
     assert(argc == 1);
     switch (sqlite3_value_numeric_type(argv[0])) {
         case SQLITE_INTEGER:
