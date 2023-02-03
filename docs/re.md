@@ -1,5 +1,7 @@
 # re: Regular expressions in SQLite
 
+**⛔️ This extension is deprecated. Use [regexp](regexp.md) instead.**
+
 Regexp search and replace functions.
 Adapted from [regexp.old](https://github.com/garyhouston/regexp.old) by Henry Spencer.
 

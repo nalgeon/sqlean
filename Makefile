@@ -24,7 +24,7 @@ compile-linux:
 	gcc -fPIC -shared src/sqlite3-ipaddr.c -o dist/ipaddr.so
 	gcc -fPIC -shared src/sqlite3-json1.c -o dist/json1.so
 	gcc -fPIC -shared src/sqlite3-math.c -o dist/math.so -lm
-	gcc -fPIC -shared src/sqlite3-re.c src/re.c -o dist/re.so
+	gcc -fPIC -shared -DPCRE2_CODE_UNIT_WIDTH=8 -DLINK_SIZE=2 -DHAVE_CONFIG_H src/sqlite3-regexp.c src/regexp/regexp.c src/regexp/pcre2/*.c -o dist/regexp.so
 	gcc -fPIC -shared src/sqlite3-stats.c -o dist/stats.so -lm
 	gcc -fPIC -shared src/sqlite3-text.c -o dist/text.so
 	gcc -fPIC -shared src/sqlite3-unicode.c -o dist/unicode.so
@@ -41,7 +41,7 @@ compile-windows:
 	gcc -shared -I. src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/fuzzy.dll
 	gcc -shared -I. src/sqlite3-json1.c -o dist/json1.dll
 	gcc -shared -I. src/sqlite3-math.c -o dist/math.dll -lm
-	gcc -shared -I. src/sqlite3-re.c src/re.c -o dist/re.dll
+	gcc -shared -DPCRE2_CODE_UNIT_WIDTH=8 -DLINK_SIZE=2 -DHAVE_CONFIG_H -I. src/sqlite3-regexp.c src/regexp/regexp.c src/regexp/pcre2/*.c -o dist/regexp.dll
 	gcc -shared -I. src/sqlite3-stats.c -o dist/stats.dll -lm
 	gcc -shared -I. src/sqlite3-text.c -o dist/text.dll
 	gcc -shared -I. src/sqlite3-unicode.c -o dist/unicode.dll
@@ -59,7 +59,7 @@ compile-macos:
 	gcc -fPIC -dynamiclib -I src src/sqlite3-ipaddr.c -o dist/ipaddr.dylib
 	gcc -fPIC -dynamiclib -I src src/sqlite3-json1.c -o dist/json1.dylib
 	gcc -fPIC -dynamiclib -I src src/sqlite3-math.c -o dist/math.dylib -lm
-	gcc -fPIC -dynamiclib -I src src/sqlite3-re.c src/re.c -o dist/re.dylib
+	gcc -fPIC -dynamiclib -DPCRE2_CODE_UNIT_WIDTH=8 -DLINK_SIZE=2 -DHAVE_CONFIG_H -I src src/sqlite3-regexp.c src/regexp/regexp.c src/regexp/pcre2/*.c -o dist/regexp.dylib
 	gcc -fPIC -dynamiclib -I src src/sqlite3-stats.c -o dist/stats.dylib -lm
 	gcc -fPIC -dynamiclib -I src src/sqlite3-text.c -o dist/text.dylib
 	gcc -fPIC -dynamiclib -I src src/sqlite3-unicode.c -o dist/unicode.dylib
@@ -75,7 +75,7 @@ compile-macos-x86:
 	gcc -fPIC -dynamiclib -I src src/sqlite3-ipaddr.c -o dist/x86/ipaddr.dylib -target x86_64-apple-macos10.12
 	gcc -fPIC -dynamiclib -I src src/sqlite3-json1.c -o dist/x86/json1.dylib -target x86_64-apple-macos10.12
 	gcc -fPIC -dynamiclib -I src src/sqlite3-math.c -o dist/x86/math.dylib -target x86_64-apple-macos10.12 -lm
-	gcc -fPIC -dynamiclib -I src src/sqlite3-re.c src/re.c -o dist/x86/re.dylib -target x86_64-apple-macos10.12
+	gcc -fPIC -dynamiclib -DPCRE2_CODE_UNIT_WIDTH=8 -DLINK_SIZE=2 -DHAVE_CONFIG_H -I src src/sqlite3-regexp.c src/regexp/regexp.c src/regexp/pcre2/*.c -o dist/regexp.dylib -target x86_64-apple-macos10.12
 	gcc -fPIC -dynamiclib -I src src/sqlite3-stats.c -o dist/x86/stats.dylib -target x86_64-apple-macos10.12 -lm
 	gcc -fPIC -dynamiclib -I src src/sqlite3-text.c -o dist/x86/text.dylib -target x86_64-apple-macos10.12
 	gcc -fPIC -dynamiclib -I src src/sqlite3-unicode.c -o dist/x86/unicode.dylib -target x86_64-apple-macos10.12
@@ -91,7 +91,7 @@ compile-macos-arm64:
 	gcc -fPIC -dynamiclib -I src src/sqlite3-ipaddr.c -o dist/arm64/ipaddr.dylib -target arm64-apple-macos11
 	gcc -fPIC -dynamiclib -I src src/sqlite3-json1.c -o dist/arm64/json1.dylib -target arm64-apple-macos11
 	gcc -fPIC -dynamiclib -I src src/sqlite3-math.c -o dist/arm64/math.dylib -target arm64-apple-macos11 -lm
-	gcc -fPIC -dynamiclib -I src src/sqlite3-re.c src/re.c -o dist/arm64/re.dylib -target arm64-apple-macos11
+	gcc -fPIC -dynamiclib -DPCRE2_CODE_UNIT_WIDTH=8 -DLINK_SIZE=2 -DHAVE_CONFIG_H -I src src/sqlite3-regexp.c src/regexp/regexp.c src/regexp/pcre2/*.c -o dist/regexp.dylib -target arm64-apple-macos11
 	gcc -fPIC -dynamiclib -I src src/sqlite3-stats.c -o dist/arm64/stats.dylib -target arm64-apple-macos11 -lm
 	gcc -fPIC -dynamiclib -I src src/sqlite3-text.c -o dist/arm64/text.dylib -target arm64-apple-macos11
 	gcc -fPIC -dynamiclib -I src src/sqlite3-unicode.c -o dist/arm64/unicode.dylib -target arm64-apple-macos11
@@ -110,7 +110,7 @@ test-all:
 	make test suite=ipaddr
 	make test suite=json1
 	make test suite=math
-	make test suite=re
+	make test suite=regexp
 	make test suite=stats
 	make test suite=text
 	make test suite=unicode

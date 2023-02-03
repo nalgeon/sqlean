@@ -21,7 +21,7 @@ Think of them as the extended standard library for SQLite:
 -   [ipaddr](docs/ipaddr.md): IP address manipulation
 -   [json1](docs/json1.md): JSON functions
 -   [math](docs/math.md): math functions
--   [re](docs/re.md): regular expressions
+-   [regexp](docs/regexp.md): regular expressions
 -   [stats](docs/stats.md): math statistics
 -   [text](docs/text.md): string functions
 -   [unicode](docs/unicode.md): Unicode support
