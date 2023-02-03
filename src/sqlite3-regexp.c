@@ -113,7 +113,6 @@ static void regexp_like(sqlite3_context* context, int argc, sqlite3_value** argv
 static void regexp_substr(sqlite3_context* context, int argc, sqlite3_value** argv) {
     const char* source;
     const char* pattern;
-    int is_match = 0;
 
     assert(argc == 2);
 
@@ -157,8 +156,6 @@ static void regexp_replace(sqlite3_context* context, int argc, sqlite3_value** a
     const char* pattern;
     const char* replacement;
     char* result;
-
-    int is_match = 0;
 
     assert(argc == 3);
 
