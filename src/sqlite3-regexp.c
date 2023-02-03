@@ -143,7 +143,8 @@ static void regexp_substr(sqlite3_context* context, int argc, sqlite3_value** ar
     fprintf(stderr, "matched_str = '%s'\n", matched_str);
 #endif
 
-    sqlite3_result_text(context, matched_str, -1, sqlite3_free);
+    sqlite3_result_text(context, matched_str, -1, SQLITE_TRANSIENT);
+    free(matched_str);
 }
 
 /*
@@ -193,7 +194,8 @@ static void regexp_replace(sqlite3_context* context, int argc, sqlite3_value** a
     fprintf(stderr, "result = '%s'\n", result);
 #endif
 
-    sqlite3_result_text(context, result, -1, sqlite3_free);
+    sqlite3_result_text(context, result, -1, SQLITE_TRANSIENT);
+    free(result);
 }
 
 /*
