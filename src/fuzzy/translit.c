@@ -45,21 +45,6 @@ static int utf8Read(const unsigned char* z, int n, int* pSize) {
     return c;
 }
 
-/*
-** Return the number of characters in the utf-8 string in the nIn byte
-** buffer pointed to by zIn.
-*/
-static int utf8Charlen(const char* zIn, int nIn) {
-    int i;
-    int nChar = 0;
-    for (i = 0; i < nIn; nChar++) {
-        int sz;
-        utf8Read((const unsigned char*)&zIn[i], nIn - i, &sz);
-        i += sz;
-    }
-    return nChar;
-}
-
 typedef struct Transliteration Transliteration;
 struct Transliteration {
     unsigned short int cFrom;
