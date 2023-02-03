@@ -13,6 +13,88 @@
 #include "pcre2/pcre2.h"
 #include "regexp.h"
 
+#pragma region Expression cache
+
+#ifdef REGEXP_CACHE
+
+#define SEED 0x12345678
+#define MAX_CACHED_EXPRESSIONS 16
+
+typedef struct CachedExpr {
+    pcre2_code* re;
+    size_t hash;
+} CachedExpr;
+
+CachedExpr regexp_cache[MAX_CACHED_EXPRESSIONS];
+
+static size_t murmur(const unsigned char* str, uint32_t h) {
+    // One-byte-at-a-time hash based on Murmur's mix
+    // Source: https://github.com/aappleby/smhasher/blob/master/src/Hashes.cpp
+    for (; *str; ++str) {
+        h ^= *str;
+        h *= 0x5bd1e995;
+        h ^= h >> 15;
+    }
+    return h;
+}
+
+static pcre2_code* regexp_compile(PCRE2_SPTR pattern, PCRE2_SIZE pattern_length, int options) {
+    size_t pattern_hash = murmur(pattern, SEED);
+
+    // Check if the expression is already in the cache
+    for (int i = 0; i < MAX_CACHED_EXPRESSIONS; i++) {
+        CachedExpr cached = regexp_cache[i];
+        if (cached.hash == 0) {
+            continue;
+        }
+        // Compare the expression to the cached expression
+        if (cached.hash == pattern_hash) {
+            // The expression is already in the cache, return a copy
+            return pcre2_code_copy(cached.re);
+        }
+    }
+
+    // The expression is not in the cache, compile it
+    size_t erroffset;
+    int errcode;
+    pcre2_code* re = pcre2_compile(pattern, pattern_length, options, &errcode, &erroffset, NULL);
+
+    // Cache the expression
+    size_t idx;
+    for (idx = 0; idx < MAX_CACHED_EXPRESSIONS; idx++) {
+        CachedExpr cached = regexp_cache[idx];
+        if (cached.hash == 0) {
+            cached.re = pcre2_code_copy(re);
+            cached.hash = pattern_hash;
+            regexp_cache[idx] = cached;
+            break;
+        }
+    }
+
+    // Free cache space if necessary
+    size_t next_idx = (idx + 1) % MAX_CACHED_EXPRESSIONS;
+    if (regexp_cache[next_idx].hash != 0) {
+        pcre2_code_free(regexp_cache[next_idx].re);
+        CachedExpr empty = {};
+        regexp_cache[next_idx] = empty;
+    }
+
+    return re;
+}
+
+#else
+
+static pcre2_code* regexp_compile(PCRE2_SPTR pattern, PCRE2_SIZE pattern_length, int options) {
+    size_t erroffset;
+    int errcode;
+    pcre2_code* re = pcre2_compile(pattern, pattern_length, options, &errcode, &erroffset, NULL);
+    return re;
+}
+
+#endif /* REGEXP_CACHE */
+
+#pragma endregion
+
 /*
  * regexp_like checks if source string matches pattern.
  * returns:
@@ -21,12 +103,7 @@
  *      1 if there is a match
  */
 static int regexp_like(const char* pattern, const char* source) {
-    pcre2_code* re;
-    size_t erroffset;
-    int errcode;
-
-    re = pcre2_compile((const unsigned char*)pattern, PCRE2_ZERO_TERMINATED, 0, &errcode,
-                       &erroffset, NULL);
+    pcre2_code* re = regexp_compile((const unsigned char*)pattern, PCRE2_ZERO_TERMINATED, 0);
     if (re == NULL) {
         return -1;
     }
@@ -56,12 +133,7 @@ static int regexp_like(const char* pattern, const char* source) {
  *      1 if there is a match
  */
 static int regexp_substr(const char* pattern, const char* source, char** substr) {
-    pcre2_code* re;
-    size_t erroffset;
-    int errcode;
-
-    re = pcre2_compile((const unsigned char*)pattern, PCRE2_ZERO_TERMINATED, 0, &errcode,
-                       &erroffset, NULL);
+    pcre2_code* re = regexp_compile((const unsigned char*)pattern, PCRE2_ZERO_TERMINATED, 0);
     if (re == NULL) {
         return -1;
     }
@@ -100,12 +172,7 @@ static int regexp_substr(const char* pattern, const char* source, char** substr)
  *      1 if there is a match
  */
 static int regexp_replace(const char* pattern, const char* source, const char* repl, char** dest) {
-    pcre2_code* re;
-    size_t erroffset;
-    int errcode;
-
-    re = pcre2_compile((const unsigned char*)pattern, PCRE2_ZERO_TERMINATED, 0, &errcode,
-                       &erroffset, NULL);
+    pcre2_code* re = regexp_compile((const unsigned char*)pattern, PCRE2_ZERO_TERMINATED, 0);
     if (re == NULL) {
         return -1;
     }

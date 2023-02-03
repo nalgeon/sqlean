@@ -95,8 +95,50 @@ void test_replace(void) {
     printf("OK\n");
 }
 
+void test_cache(void) {
+    printf("test_cache...");
+    {
+        char* pattern = "[0-9]+";
+        char* source = "the year is 2021";
+        int rc = regexp.like(pattern, source);
+        assert(rc == 1);
+    }
+    {
+        char* pattern = "[0-9]+";
+        char* source = "the year is 2050";
+        int rc = regexp.like(pattern, source);
+        assert(rc == 1);
+    }
+    {
+        char* pattern = "[0-9]+";
+        char* source = "the year is 1999";
+        int rc = regexp.like(pattern, source);
+        assert(rc == 1);
+    }
+    {
+        char* pattern = "t";
+        char* source = "the year is 2021";
+        int rc = regexp.like(pattern, source);
+        assert(rc == 1);
+    }
+    {
+        char* pattern = "h";
+        char* source = "the year is 2021";
+        int rc = regexp.like(pattern, source);
+        assert(rc == 1);
+    }
+    {
+        char* pattern = "e";
+        char* source = "the year is 2021";
+        int rc = regexp.like(pattern, source);
+        assert(rc == 1);
+    }
+    printf("OK\n");
+}
+
 int main(void) {
     test_like();
     test_substr();
     test_replace();
+    test_cache();
 }
