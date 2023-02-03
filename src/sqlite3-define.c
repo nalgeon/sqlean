@@ -15,6 +15,8 @@
 #include "sqlite3ext.h"
 SQLITE_EXTENSION_INIT1
 
+#define DEFINE_CACHE 1
+
 #pragma region statement cache
 
 typedef struct cache_node {
@@ -165,7 +167,48 @@ static void eval(sqlite3_context* context, int argc, sqlite3_value** argv) {
 
 #pragma endregion
 
-#pragma region define scalar function
+#pragma region define scalar function without caching
+
+#ifndef DEFINE_CACHE
+/*
+ * Creates user-defined function and saves it to the database.
+ */
+static void define_function(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
+    sqlite3* db = sqlite3_context_db_handle(ctx);
+    const char* name = (const char*)sqlite3_value_text(argv[0]);
+    const char* body = (const char*)sqlite3_value_text(argv[1]);
+    int ret;
+    if ((ret = create_function(db, name, body)) != SQLITE_OK) {
+        sqlite3_result_error_code(ctx, ret);
+        return;
+    }
+    if ((ret = save_function(db, name, "scalar", body)) != SQLITE_OK) {
+        sqlite3_result_error_code(ctx, ret);
+        return;
+    }
+}
+
+/*
+ * Creates user-defined function without caching the prepared statement.
+ */
+static int create_function(sqlite3* db, const char* name, const char* body) {
+    char* sql = sqlite3_mprintf("select %s", body);
+    if (!sql) {
+        return SQLITE_NOMEM;
+    }
+
+    sqlite3_stmt* stmt;
+    int ret = sqlite3_prepare_v3(db, sql, -1, SQLITE_PREPARE_PERSISTENT, &stmt, NULL);
+    if (ret != SQLITE_OK) {
+        sqlite3_free(sql);
+        return ret;
+    }
+    int nparams = sqlite3_bind_parameter_count(stmt);
+    sqlite3_finalize(stmt);
+
+    return sqlite3_create_function_v2(db, name, nparams, SQLITE_UTF8, sql, exec_function, NULL,
+                                      NULL, sqlite3_free);
+}
 
 /*
  * Executes user-defined sql from the context.
@@ -196,6 +239,11 @@ end:
     if (ret != SQLITE_ROW)
         sqlite3_result_error_code(ctx, ret);
 }
+#endif
+
+#pragma endregion
+
+#pragma region define scalar function with caching
 
 /*
  * Executes compiled prepared statement from the context.
@@ -243,28 +291,6 @@ static int save_function(sqlite3* db, const char* name, const char* type, const 
         return ret;
     }
     return SQLITE_OK;
-}
-
-/*
- * Creates user-defined function without caching the prepared statement.
- */
-static int create_function(sqlite3* db, const char* name, const char* body) {
-    char* sql = sqlite3_mprintf("select %s", body);
-    if (!sql) {
-        return SQLITE_NOMEM;
-    }
-
-    sqlite3_stmt* stmt;
-    int ret = sqlite3_prepare_v3(db, sql, -1, SQLITE_PREPARE_PERSISTENT, &stmt, NULL);
-    if (ret != SQLITE_OK) {
-        sqlite3_free(sql);
-        return ret;
-    }
-    int nparams = sqlite3_bind_parameter_count(stmt);
-    sqlite3_finalize(stmt);
-
-    return sqlite3_create_function_v2(db, name, nparams, SQLITE_UTF8, sql, exec_function, NULL,
-                                      NULL, sqlite3_free);
 }
 
 /*
@@ -319,24 +345,6 @@ static int load_functions(sqlite3* db) {
         }
     }
     return sqlite3_finalize(stmt);
-}
-
-/*
- * Creates user-defined function and saves it to the database.
- */
-static void define_function(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
-    sqlite3* db = sqlite3_context_db_handle(ctx);
-    const char* name = (const char*)sqlite3_value_text(argv[0]);
-    const char* body = (const char*)sqlite3_value_text(argv[1]);
-    int ret;
-    if ((ret = create_function(db, name, body)) != SQLITE_OK) {
-        sqlite3_result_error_code(ctx, ret);
-        return;
-    }
-    if ((ret = save_function(db, name, "scalar", body)) != SQLITE_OK) {
-        sqlite3_result_error_code(ctx, ret);
-        return;
-    }
 }
 
 /*
