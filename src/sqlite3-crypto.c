@@ -63,7 +63,7 @@ static void sqlite3_hash(sqlite3_context* context, int argc, sqlite3_value** arg
             return;
     }
 
-    void* ctx;
+    void* ctx = NULL;
     if (algo) {
         ctx = init_func();
     }

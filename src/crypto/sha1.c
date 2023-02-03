@@ -223,7 +223,6 @@ void sha1_update(SHA1Context* ctx, const unsigned char* data, size_t len) {
 int sha1_final(SHA1Context* ctx, unsigned char hash[]) {
     unsigned int i;
     unsigned char finalcount[8];
-    static const char zEncode[] = "0123456789abcdef";
 
     for (i = 0; i < 8; i++) {
         finalcount[i] = (unsigned char)((ctx->count[(i >= 4 ? 0 : 1)] >> ((3 - (i & 3)) * 8)) &
