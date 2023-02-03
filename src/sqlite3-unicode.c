@@ -19,8 +19,6 @@
  * in order to enable the code below.
  */
 
-#pragma warning(disable : 4305 13 90)
-
 /*
 ** Un|Comment to provide additional unicode support to SQLite3 or adjust size for unused features
 */
@@ -4908,13 +4906,9 @@ struct compareInfo {
     u8 noCase;
 };
 
-static const struct compareInfo globInfo = {'*', '?', '[', 0};
 /* The correct SQL-92 behavior is for the LIKE operator to ignore
 ** case.  Thus  'a' LIKE 'A' would be true. */
 static const struct compareInfo likeInfoNorm = {'%', '_', 0, 1};
-/* If SQLITE_CASE_SENSITIVE_LIKE is defined, then the LIKE operator
-** is case sensitive causing 'a' LIKE 'A' to be false */
-static const struct compareInfo likeInfoAlt = {'%', '_', 0, 0};
 
 /*
 ** Compare two UTF-8 strings for equality where the first string can
@@ -5275,8 +5269,8 @@ SQLITE_PRIVATE int sqlite3StrNICmp(const unsigned char* zLeft, const unsigned ch
     do {
         ua = sqlite3Utf8Read(a, 0, &a);
         ub = sqlite3Utf8Read(b, 0, &b);
-        ua = GlogUpperToLower(ua);
-        ub = GlogUpperToLower(ub);
+        GlogUpperToLower(ua);
+        GlogUpperToLower(ub);
         Z = (int)max(a - zLeft, b - zRight);
     } while (N > Z && *a != 0 && ua == ub);
     return N < 0 ? 0 : ua - ub;
@@ -5289,8 +5283,8 @@ SQLITE_PRIVATE int sqlite3StrNICmp16(const void* zLeft, const void* zRight, int 
     do {
         ua = *a;
         ub = *b;
-        ua = GlogUpperToLower(ua);
-        ub = GlogUpperToLower(ub);
+        GlogUpperToLower(ua);
+        GlogUpperToLower(ub);
         a++;
         b++;
     } while (--N > 0 && *a != 0 && ua == ub);
@@ -5323,6 +5317,7 @@ SQLITE_EXPORT int sqlite3_unicode_collate(void* encoding,
                                           const void* pKey1,
                                           int nKey2,
                                           const void* pKey2) {
+    (void)sqlite3UpperToLower;
     int r = 0;
 
     if ((void*)SQLITE_UTF8 == encoding)
