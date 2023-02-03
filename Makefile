@@ -17,19 +17,19 @@ download-external:
 	curl -L https://github.com/mackyle/sqlite/raw/branch-$(SQLITE_BRANCH)/src/test_windirent.h --output src/test_windirent.h
 
 compile-linux:
-	gcc -fPIC -shared src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.so
-	gcc -fPIC -shared src/sqlite3-define.c -o dist/define.so
-	gcc -fPIC -shared src/sqlite3-fileio.c -o dist/fileio.so
-	gcc -fPIC -shared src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/fuzzy.so
-	gcc -fPIC -shared src/sqlite3-ipaddr.c -o dist/ipaddr.so
-	gcc -fPIC -shared src/sqlite3-json1.c -o dist/json1.so
-	gcc -fPIC -shared src/sqlite3-math.c -o dist/math.so -lm
-	gcc -fPIC -shared -DPCRE2_CODE_UNIT_WIDTH=8 -DLINK_SIZE=2 -DHAVE_CONFIG_H src/sqlite3-regexp.c src/regexp/regexp.c src/regexp/pcre2/*.c -o dist/regexp.so
-	gcc -fPIC -shared src/sqlite3-stats.c -o dist/stats.so -lm
-	gcc -fPIC -shared src/sqlite3-text.c -o dist/text.so
-	gcc -fPIC -shared src/sqlite3-unicode.c -o dist/unicode.so
-	gcc -fPIC -shared src/sqlite3-uuid.c -o dist/uuid.so
-	gcc -fPIC -shared src/sqlite3-vsv.c -o dist/vsv.so -lm
+	gcc -Wall -fPIC -shared src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.so
+	gcc -Wall -fPIC -shared src/sqlite3-define.c -o dist/define.so
+	gcc -Wall -fPIC -shared src/sqlite3-fileio.c -o dist/fileio.so
+	gcc -Wall -fPIC -shared src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/fuzzy.so
+	gcc -Wall -fPIC -shared src/sqlite3-ipaddr.c -o dist/ipaddr.so
+	gcc -Wall -fPIC -shared src/sqlite3-json1.c -o dist/json1.so
+	gcc -Wall -fPIC -shared src/sqlite3-math.c -o dist/math.so -lm
+	gcc -Wall -fPIC -shared -DPCRE2_CODE_UNIT_WIDTH=8 -DLINK_SIZE=2 -DHAVE_CONFIG_H src/sqlite3-regexp.c src/regexp/regexp.c src/regexp/pcre2/*.c -o dist/regexp.so
+	gcc -Wall -fPIC -shared src/sqlite3-stats.c -o dist/stats.so -lm
+	gcc -Wall -fPIC -shared src/sqlite3-text.c -o dist/text.so
+	gcc -Wall -fPIC -shared src/sqlite3-unicode.c -o dist/unicode.so
+	gcc -Wall -fPIC -shared src/sqlite3-uuid.c -o dist/uuid.so
+	gcc -Wall -fPIC -shared src/sqlite3-vsv.c -o dist/vsv.so -lm
 
 pack-linux:
 	zip -j dist/sqlean-linux-x86.zip dist/*.so
@@ -52,19 +52,19 @@ pack-windows:
 	7z a -tzip dist/sqlean-win-x64.zip ./dist/*.dll
 
 compile-macos:
-	gcc -fPIC -dynamiclib -I src src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.dylib
-	gcc -fPIC -dynamiclib -I src src/sqlite3-define.c -o dist/define.dylib
-	gcc -fPIC -dynamiclib -I src src/sqlite3-fileio.c -o dist/fileio.dylib
-	gcc -fPIC -dynamiclib -I src src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/fuzzy.dylib
-	gcc -fPIC -dynamiclib -I src src/sqlite3-ipaddr.c -o dist/ipaddr.dylib
-	gcc -fPIC -dynamiclib -I src src/sqlite3-json1.c -o dist/json1.dylib
-	gcc -fPIC -dynamiclib -I src src/sqlite3-math.c -o dist/math.dylib -lm
-	gcc -fPIC -dynamiclib -DPCRE2_CODE_UNIT_WIDTH=8 -DLINK_SIZE=2 -DHAVE_CONFIG_H -I src src/sqlite3-regexp.c src/regexp/regexp.c src/regexp/pcre2/*.c -o dist/regexp.dylib
-	gcc -fPIC -dynamiclib -I src src/sqlite3-stats.c -o dist/stats.dylib -lm
-	gcc -fPIC -dynamiclib -I src src/sqlite3-text.c -o dist/text.dylib
-	gcc -fPIC -dynamiclib -I src src/sqlite3-unicode.c -o dist/unicode.dylib
-	gcc -fPIC -dynamiclib -I src src/sqlite3-uuid.c -o dist/uuid.dylib
-	gcc -fPIC -dynamiclib -I src src/sqlite3-vsv.c -o dist/vsv.dylib -lm
+	gcc -Wall -fPIC -dynamiclib -I src src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.dylib
+	gcc -Wall -fPIC -dynamiclib -I src src/sqlite3-define.c -o dist/define.dylib
+	gcc -Wall -fPIC -dynamiclib -I src src/sqlite3-fileio.c -o dist/fileio.dylib
+	gcc -Wall -fPIC -dynamiclib -I src src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/fuzzy.dylib
+	gcc -Wall -fPIC -dynamiclib -I src src/sqlite3-ipaddr.c -o dist/ipaddr.dylib
+	gcc -Wall -fPIC -dynamiclib -I src src/sqlite3-json1.c -o dist/json1.dylib
+	gcc -Wall -fPIC -dynamiclib -I src src/sqlite3-math.c -o dist/math.dylib -lm
+	gcc -Wall -fPIC -dynamiclib -DPCRE2_CODE_UNIT_WIDTH=8 -DLINK_SIZE=2 -DHAVE_CONFIG_H -I src src/sqlite3-regexp.c src/regexp/regexp.c src/regexp/pcre2/*.c -o dist/regexp.dylib
+	gcc -Wall -fPIC -dynamiclib -I src src/sqlite3-stats.c -o dist/stats.dylib -lm
+	gcc -Wall -fPIC -dynamiclib -I src src/sqlite3-text.c -o dist/text.dylib
+	gcc -Wall -fPIC -dynamiclib -I src src/sqlite3-unicode.c -o dist/unicode.dylib
+	gcc -Wall -fPIC -dynamiclib -I src src/sqlite3-uuid.c -o dist/uuid.dylib
+	gcc -Wall -fPIC -dynamiclib -I src src/sqlite3-vsv.c -o dist/vsv.dylib -lm
 
 compile-macos-x86:
 	mkdir -p dist/x86
