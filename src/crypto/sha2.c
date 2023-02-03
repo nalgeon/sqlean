@@ -532,7 +532,7 @@ void sha256_update(SHA256_CTX* context, const sha2_byte* data, size_t len) {
     usedspace = freespace = 0;
 }
 
-int sha256_final(SHA256_CTX* context, sha2_byte digest[]) {
+int sha256_final(SHA256_CTX* context, sha2_byte* digest) {
     sha2_word32* d = (sha2_word32*)digest;
     unsigned int usedspace;
 
@@ -861,7 +861,7 @@ static void SHA512_Last(SHA512_CTX* context) {
     SHA512_Transform(context, (sha2_word64*)context->buffer);
 }
 
-int sha512_final(SHA512_CTX* context, sha2_byte digest[]) {
+int sha512_final(SHA512_CTX* context, sha2_byte* digest) {
     sha2_word64* d = (sha2_word64*)digest;
 
     /* Sanity check: */
@@ -907,7 +907,7 @@ void sha384_update(SHA384_CTX* context, const sha2_byte* data, size_t len) {
     sha512_update((SHA512_CTX*)context, data, len);
 }
 
-int sha384_final(SHA384_CTX* context, sha2_byte digest[]) {
+int sha384_final(SHA384_CTX* context, sha2_byte* digest) {
     sha2_word64* d = (sha2_word64*)digest;
 
     /* Sanity check: */

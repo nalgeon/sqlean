@@ -18,14 +18,14 @@ download-external:
 
 compile-linux:
 	gcc -Wall -fPIC -shared src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.so
-	gcc -Wall -fPIC -shared src/sqlite3-define.c -o dist/define.so
+	gcc -Wall -Wno-unknown-pragmas -fPIC -shared src/sqlite3-define.c -o dist/define.so
 	gcc -Wall -fPIC -shared src/sqlite3-fileio.c -o dist/fileio.so
 	gcc -Wall -fPIC -shared src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/fuzzy.so
 	gcc -Wall -fPIC -shared src/sqlite3-ipaddr.c -o dist/ipaddr.so
 	gcc -Wall -fPIC -shared src/sqlite3-json1.c -o dist/json1.so
 	gcc -Wall -fPIC -shared src/sqlite3-math.c -o dist/math.so -lm
-	gcc -Wall -fPIC -shared -DPCRE2_CODE_UNIT_WIDTH=8 -DLINK_SIZE=2 -DHAVE_CONFIG_H src/sqlite3-regexp.c src/regexp/regexp.c src/regexp/pcre2/*.c -o dist/regexp.so
-	gcc -Wall -fPIC -shared src/sqlite3-stats.c -o dist/stats.so -lm
+	gcc -Wall -Wno-unknown-pragmas -fPIC -shared -DPCRE2_CODE_UNIT_WIDTH=8 -DLINK_SIZE=2 -DHAVE_CONFIG_H src/sqlite3-regexp.c src/regexp/regexp.c src/regexp/pcre2/*.c -o dist/regexp.so
+	gcc -Wall -Wno-unknown-pragmas -fPIC -shared src/sqlite3-stats.c -o dist/stats.so -lm
 	gcc -Wall -fPIC -shared src/sqlite3-text.c -o dist/text.so
 	gcc -Wall -fPIC -shared src/sqlite3-unicode.c -o dist/unicode.so
 	gcc -Wall -fPIC -shared src/sqlite3-uuid.c -o dist/uuid.so
