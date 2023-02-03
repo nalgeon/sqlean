@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Anton Zhiyanov, MIT License
+	# Copyright (c) 2021 Anton Zhiyanov, MIT License
 # https://github.com/nalgeon/sqlean
 
 .PHONY: test
@@ -41,8 +41,7 @@ compile-windows:
 	gcc -shared -I. src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/fuzzy.dll
 	gcc -shared -I. src/sqlite3-json1.c -o dist/json1.dll
 	gcc -shared -I. src/sqlite3-math.c -o dist/math.dll -lm
-	gcc -shared -I. src/sqlite3-re.c src/re.c -o dist/re.dll
-	# gcc -shared -DPCRE2_CODE_UNIT_WIDTH=8 -DLINK_SIZE=2 -DHAVE_CONFIG_H -I. src/sqlite3-regexp.c src/regexp/regexp.c src/regexp/pcre2/*.c -o dist/regexp.dll
+	gcc -shared -DPCRE2_CODE_UNIT_WIDTH=8 -DLINK_SIZE=2 -DHAVE_CONFIG_H -DPCRE2_STATIC -I. src/sqlite3-regexp.c src/regexp/regexp.c src/regexp/pcre2/*.c -o dist/regexp.dll
 	gcc -shared -I. src/sqlite3-stats.c -o dist/stats.dll -lm
 	gcc -shared -I. src/sqlite3-text.c -o dist/text.dll
 	gcc -shared -I. src/sqlite3-unicode.c -o dist/unicode.dll
