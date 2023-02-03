@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "pcre2/pcre2.h"
 #include "regexp.h"
 
 bool eq(const char* str, const char* expected) {

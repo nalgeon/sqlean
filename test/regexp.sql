@@ -32,3 +32,6 @@ select '108', regexp_substr('the year is 2021', '\bis\b') = 'is';
 select '109', regexp_substr('the year is 2021', '^the') = 'the';
 select '110', regexp_substr('the year is 2021', '2021$') = '2021';
 select '111', regexp_substr('the year is 2021', 'y(?=ear)') = 'y';
+
+-- unicode
+select '151', regexp_substr('-- привет --', '\b\w+\b') = 'привет';

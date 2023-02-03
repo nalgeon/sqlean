@@ -84,10 +84,12 @@ static pcre2_code* regexp_compile(PCRE2_SPTR pattern, PCRE2_SIZE pattern_length,
 
 #else
 
-static pcre2_code* regexp_compile(PCRE2_SPTR pattern, PCRE2_SIZE pattern_length, int options) {
+static pcre2_code* regexp_compile(PCRE2_SPTR pattern) {
     size_t erroffset;
     int errcode;
-    pcre2_code* re = pcre2_compile(pattern, pattern_length, options, &errcode, &erroffset, NULL);
+    uint32_t options = PCRE2_UCP | PCRE2_UTF;
+    pcre2_code* re =
+        pcre2_compile(pattern, PCRE2_ZERO_TERMINATED, options, &errcode, &erroffset, NULL);
     return re;
 }
 
@@ -103,7 +105,7 @@ static pcre2_code* regexp_compile(PCRE2_SPTR pattern, PCRE2_SIZE pattern_length,
  *      1 if there is a match
  */
 static int regexp_like(const char* pattern, const char* source) {
-    pcre2_code* re = regexp_compile((const unsigned char*)pattern, PCRE2_ZERO_TERMINATED, 0);
+    pcre2_code* re = regexp_compile((const unsigned char*)pattern);
     if (re == NULL) {
         return -1;
     }
@@ -133,7 +135,7 @@ static int regexp_like(const char* pattern, const char* source) {
  *      1 if there is a match
  */
 static int regexp_substr(const char* pattern, const char* source, char** substr) {
-    pcre2_code* re = regexp_compile((const unsigned char*)pattern, PCRE2_ZERO_TERMINATED, 0);
+    pcre2_code* re = regexp_compile((const unsigned char*)pattern);
     if (re == NULL) {
         return -1;
     }
@@ -172,7 +174,7 @@ static int regexp_substr(const char* pattern, const char* source, char** substr)
  *      1 if there is a match
  */
 static int regexp_replace(const char* pattern, const char* source, const char* repl, char** dest) {
-    pcre2_code* re = regexp_compile((const unsigned char*)pattern, PCRE2_ZERO_TERMINATED, 0);
+    pcre2_code* re = regexp_compile((const unsigned char*)pattern);
     if (re == NULL) {
         return -1;
     }
