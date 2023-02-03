@@ -78,6 +78,13 @@ Quantifiers:
 {n,}     n or more
 ```
 
+Quantifiers are greedy by default (i.e., match as much text as possible). Add `?` to make them lazy (i.e., match as little text as possible):
+
+```
+*?       0 or more (lazy)
++?       1 or more (lazy)
+```
+
 Groups:
 
 ```
