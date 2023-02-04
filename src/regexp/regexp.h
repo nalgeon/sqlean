@@ -4,10 +4,14 @@
 #ifndef REGEXP_H
 #define REGEXP_H
 
+#include "pcre2/pcre2.h"
+
 struct regexp_ns {
-    int (*like)(const char* pattern, const char* source);
-    int (*substr)(const char* pattern, const char* source, char** substr);
-    int (*replace)(const char* pattern, const char* source, const char* repl, char** dest);
+    pcre2_code* (*compile)(const char* pattern);
+    void (*free)(pcre2_code* re);
+    int (*like)(pcre2_code* re, const char* source);
+    int (*substr)(pcre2_code* re, const char* source, char** substr);
+    int (*replace)(pcre2_code* re, const char* source, const char* repl, char** dest);
 };
 
 extern struct regexp_ns regexp;
