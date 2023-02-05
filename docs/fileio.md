@@ -2,6 +2,15 @@
 
 Access the file system directly from SQL. Partly based on the [fileio.c](https://sqlite.org/src/file/ext/misc/fileio.c) by D. Richard Hipp.
 
+Main features:
+
+-   Read file contents as a blob.
+-   Read a file line by line.
+-   Write a blob to a file.
+-   Create a directory.
+-   Create a symlink.
+-   List files in a directory.
+
 ### fileio_read(path)
 
 Reads the file specified by `path` and returns its contents as `blob`.
