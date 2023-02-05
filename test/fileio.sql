@@ -31,19 +31,19 @@ select '19', lsmode(511) = '?rwxrwxrwx';
 .shell rm -rf hellodir
 select '21', mkdir('hellodir') is null;
 select '22', (name, mode) = ('hellodir', 16877) from fsdir('hellodir');
+.shell rm -rf hellodir
 
 -- readfile
-.shell rm -f hello.txt
 .shell printf 'hello world' > hello.txt
 select '31', typeof(readfile('hello.txt')) = 'blob';
 select '32', length(readfile('hello.txt')) = 11;
 select '33', readfile('whatever') is null;
 
 -- symlink
-.shell rm -f hello.txt
 .shell printf 'hello world' > hello.txt
 select '41', symlink('hello.txt', 'hello.lnk') is null;
 select '42', length(readfile('hello.lnk')) = 11;
+.shell rm -f hello.lnk
 
 -- writefile
 .shell rm -f hello.txt
@@ -52,6 +52,13 @@ select '52', (name, mode) = ('hello.txt', 33206) from fsdir('hello.txt');
 select '53', writefile('hello.txt', 'hello world', 420) = 11;
 select '54', (name, mode) = ('hello.txt', 33188) from fsdir('hello.txt');
 
-.shell rm -rf hellodir
+-- scanfile
+.shell printf 'one\\ntwo\\nthr\\n' > hello.txt
+create table hello as select rowid, name, value from scanfile('hello.txt');
+select '61', count(*) = 3 from hello;
+select '62', (name, value) = ('hello.txt', 'one') from hello where rowid = 1;
+select '63', (name, value) = ('hello.txt', 'two') from hello where rowid = 2;
+select '64', (name, value) = ('hello.txt', 'thr') from hello where rowid = 3;
+drop table hello;
+
 .shell rm -f hello.txt
-.shell rm -f hello.lnk

@@ -2,6 +2,46 @@
 
 Access the file system directly from SQL. Adapted from [fileio.c](https://sqlite.org/src/file/ext/misc/fileio.c) by D. Richard Hipp.
 
+### readfile(path)
+
+Reads the file specified by `path` and returns its contents as `blob`.
+
+```
+sqlite> select writefile('hello.txt', 'hello world');
+11
+
+sqlite> select typeof(readfile('hello.txt'));
+blob
+
+sqlite> select length(readfile('hello.txt'));
+11
+```
+
+### scanfile(path)
+
+Reads the file specified by `path` line by line, without loading the whole file into memory.
+
+```
+sqlite> select rowid, value, name from scanfile('hello.txt');
+┌───────┬───────┬───────────┐
+│ rowid │ value │   name    │
+├───────┼───────┼───────────┤
+│ 1     │ one   │ hello.txt │
+│ 2     │ two   │ hello.txt │
+│ 3     │ three │ hello.txt │
+└───────┴───────┴───────────┘
+```
+
+Treats `\n` as a line separator.
+
+Each row has the following columns:
+
+-   `rowid`: line number starting from 1.
+-   `value`: a line from the file.
+-   `name`: a path to the file.
+
+Inspired by [sqlite-lines](https://github.com/asg017/sqlite-lines/) by Alex Garcia.
+
 ### writefile(path, data [,perm [,mtime]])
 
 Writes blob `data` to a file specified by `path`. Returns the number of written bytes. If an error occurs, returns NULL.
@@ -28,21 +68,6 @@ sqlite> select writefile('hello.txt', 'hello world', 436);
 ```
 
 If the optional `mtime` argument is present, it expects an integer — the number of seconds since the unix epoch. The modification-time of the target file is set to this value before returning.
-
-### readfile(path)
-
-Reads the file specified by `path` and returns its contents as `blob`.
-
-```
-sqlite> select writefile('hello.txt', 'hello world');
-11
-
-sqlite> select typeof(readfile('hello.txt'));
-blob
-
-sqlite> select length(readfile('hello.txt'));
-11
-```
 
 ### mkdir(path[, perm])
 
