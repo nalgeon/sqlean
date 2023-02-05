@@ -1,6 +1,6 @@
 # fileio: Read and write files in SQLite
 
-Access the file system directly from SQL. Adapted from [fileio.c](https://sqlite.org/src/file/ext/misc/fileio.c) by D. Richard Hipp.
+Access the file system directly from SQL. Partly based on the [fileio.c](https://sqlite.org/src/file/ext/misc/fileio.c) by D. Richard Hipp.
 
 ### readfile(path)
 
