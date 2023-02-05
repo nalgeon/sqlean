@@ -283,12 +283,13 @@ static int makeDirectory(sqlite3_context* ctx, const char* path, mode_t mode) {
 static int createSymlink(sqlite3_context* ctx, const char* src, const char* dst) {
 #if defined(_WIN32) || defined(WIN32)
     return 0;
-#endif
+#else
     int res = symlink(src, dst) < 0;
     if (res < 0) {
         return 1;
     }
     return 0;
+#endif
 }
 
 /*

@@ -54,6 +54,56 @@
 #include "../sqlite3ext.h"
 SQLITE_EXTENSION_INIT3
 
+#if defined(_WIN32)
+/*
+** This function is designed to convert a Win32 FILETIME structure into the
+** number of seconds since the Unix Epoch (1970-01-01 00:00:00 UTC).
+*/
+static sqlite3_uint64 fileTimeToUnixTime(LPFILETIME pFileTime) {
+    SYSTEMTIME epochSystemTime;
+    ULARGE_INTEGER epochIntervals;
+    FILETIME epochFileTime;
+    ULARGE_INTEGER fileIntervals;
+
+    memset(&epochSystemTime, 0, sizeof(SYSTEMTIME));
+    epochSystemTime.wYear = 1970;
+    epochSystemTime.wMonth = 1;
+    epochSystemTime.wDay = 1;
+    SystemTimeToFileTime(&epochSystemTime, &epochFileTime);
+    epochIntervals.LowPart = epochFileTime.dwLowDateTime;
+    epochIntervals.HighPart = epochFileTime.dwHighDateTime;
+
+    fileIntervals.LowPart = pFileTime->dwLowDateTime;
+    fileIntervals.HighPart = pFileTime->dwHighDateTime;
+
+    return (fileIntervals.QuadPart - epochIntervals.QuadPart) / 10000000;
+}
+
+/*
+** This function attempts to normalize the time values found in the stat()
+** buffer to UTC.  This is necessary on Win32, where the runtime library
+** appears to return these values as local times.
+*/
+static void statTimesToUtc(const char* zPath, struct stat* pStatBuf) {
+    HANDLE hFindFile;
+    WIN32_FIND_DATAW fd;
+    LPWSTR zUnicodeName;
+    extern LPWSTR sqlite3_win32_utf8_to_unicode(const char*);
+    zUnicodeName = sqlite3_win32_utf8_to_unicode(zPath);
+    if (zUnicodeName) {
+        memset(&fd, 0, sizeof(WIN32_FIND_DATAW));
+        hFindFile = FindFirstFileW(zUnicodeName, &fd);
+        if (hFindFile != NULL) {
+            pStatBuf->st_ctime = (time_t)fileTimeToUnixTime(&fd.ftCreationTime);
+            pStatBuf->st_atime = (time_t)fileTimeToUnixTime(&fd.ftLastAccessTime);
+            pStatBuf->st_mtime = (time_t)fileTimeToUnixTime(&fd.ftLastWriteTime);
+            FindClose(hFindFile);
+        }
+        sqlite3_free(zUnicodeName);
+    }
+}
+#endif
+
 /*
 ** This function is used in place of lstat().  On Windows, special handling
 ** is required in order for the included time to be returned as UTC.  On all
