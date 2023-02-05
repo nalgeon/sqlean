@@ -17,7 +17,7 @@ download-external:
 	curl -L https://github.com/mackyle/sqlite/raw/branch-$(SQLITE_BRANCH)/src/test_windirent.h --output src/test_windirent.h
 
 compile-linux:
-	gcc -Wall -Wno-unknown-pragmas -O3 -fPIC -shared src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.so
+	gcc -Wall -Wno-unknown-pragmas -O1 -fPIC -shared src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.so
 	gcc -Wall -Wno-unknown-pragmas -O3 -fPIC -shared src/sqlite3-define.c -o dist/define.so
 	gcc -Wall -Wno-unknown-pragmas -O3 -fPIC -shared src/sqlite3-fileio.c -o dist/fileio.so
 	gcc -Wall -Wno-unknown-pragmas -O3 -fPIC -shared src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/fuzzy.so
@@ -35,7 +35,7 @@ pack-linux:
 	zip -j dist/sqlean-linux-x86.zip dist/*.so
 
 compile-windows:
-	gcc -O3 -shared -I. src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.dll
+	gcc -O1 -shared -I. src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.dll
 	gcc -O3 -shared -I. src/sqlite3-define.c -o dist/define.dll
 	gcc -O3 -shared -I. src/sqlite3-fileio.c -o dist/fileio.dll
 	gcc -O3 -shared -I. src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/fuzzy.dll
@@ -52,7 +52,7 @@ pack-windows:
 	7z a -tzip dist/sqlean-win-x64.zip ./dist/*.dll
 
 compile-macos:
-	gcc -Wall -O3 -fPIC -dynamiclib -I src src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.dylib
+	gcc -Wall -O1 -fPIC -dynamiclib -I src src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.dylib
 	gcc -Wall -O3 -fPIC -dynamiclib -I src src/sqlite3-define.c -o dist/define.dylib
 	gcc -Wall -O3 -fPIC -dynamiclib -I src src/sqlite3-fileio.c -o dist/fileio.dylib
 	gcc -Wall -O3 -fPIC -dynamiclib -I src src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/fuzzy.dylib
@@ -68,7 +68,7 @@ compile-macos:
 
 compile-macos-x86:
 	mkdir -p dist/x86
-	gcc -O3 -fPIC -dynamiclib -I src src/sqlite3-crypto.c src/crypto/*.c -o dist/x86/crypto.dylib -target x86_64-apple-macos10.12
+	gcc -O1 -fPIC -dynamiclib -I src src/sqlite3-crypto.c src/crypto/*.c -o dist/x86/crypto.dylib -target x86_64-apple-macos10.12
 	gcc -O3 -fPIC -dynamiclib -I src src/sqlite3-define.c -o dist/x86/define.dylib -target x86_64-apple-macos10.12
 	gcc -O3 -fPIC -dynamiclib -I src src/sqlite3-fileio.c -o dist/x86/fileio.dylib -target x86_64-apple-macos10.12
 	gcc -O3 -fPIC -dynamiclib -I src src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/x86/fuzzy.dylib -target x86_64-apple-macos10.12
@@ -84,7 +84,7 @@ compile-macos-x86:
 
 compile-macos-arm64:
 	mkdir -p dist/arm64
-	gcc -O3 -fPIC -dynamiclib -I src src/sqlite3-crypto.c src/crypto/*.c -o dist/arm64/crypto.dylib -target arm64-apple-macos11
+	gcc -O1 -fPIC -dynamiclib -I src src/sqlite3-crypto.c src/crypto/*.c -o dist/arm64/crypto.dylib -target arm64-apple-macos11
 	gcc -O3 -fPIC -dynamiclib -I src src/sqlite3-define.c -o dist/arm64/define.dylib -target arm64-apple-macos11
 	gcc -O3 -fPIC -dynamiclib -I src src/sqlite3-fileio.c -o dist/arm64/fileio.dylib -target arm64-apple-macos11
 	gcc -O3 -fPIC -dynamiclib -I src src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/arm64/fuzzy.dylib -target arm64-apple-macos11
@@ -120,5 +120,5 @@ test-all:
 # fails if grep does find a failed test case
 # https://stackoverflow.com/questions/15367674/bash-one-liner-to-exit-with-the-opposite-status-of-a-grep-command/21788642
 test:
-	@sqlite3 < test/$(suite).sql > test.log
+	@~/sqlite3 < test/$(suite).sql > test.log
 	@cat test.log | (! grep -Ex "[0-9]+.[^1]")
