@@ -20,7 +20,7 @@ compile-linux:
 	gcc -Wall -Wno-unknown-pragmas -O1 -fPIC -shared src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.so
 	gcc -Wall -Wno-unknown-pragmas -O3 -fPIC -shared src/sqlite3-define.c -o dist/define.so
 	gcc -Wall -Wno-unknown-pragmas -O3 -fPIC -shared src/sqlite3-fileio.c -o dist/fileio.so
-	gcc -Wall -Wno-unknown-pragmas -O3 -fPIC -shared src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/fuzzy.so
+	gcc -Wall -Wno-unknown-pragmas -O1 -fPIC -shared src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/fuzzy.so
 	gcc -Wall -Wno-unknown-pragmas -O3 -fPIC -shared src/sqlite3-ipaddr.c -o dist/ipaddr.so
 	gcc -Wall -Wno-unknown-pragmas -O3 -fPIC -shared src/sqlite3-json1.c -o dist/json1.so
 	gcc -Wall -Wno-unknown-pragmas -O3 -fPIC -shared src/sqlite3-math.c -o dist/math.so -lm
@@ -38,7 +38,7 @@ compile-windows:
 	gcc -O1 -shared -I. src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.dll
 	gcc -O3 -shared -I. src/sqlite3-define.c -o dist/define.dll
 	gcc -O3 -shared -I. src/sqlite3-fileio.c -o dist/fileio.dll
-	gcc -O3 -shared -I. src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/fuzzy.dll
+	gcc -O1 -shared -I. src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/fuzzy.dll
 	gcc -O3 -shared -I. src/sqlite3-json1.c -o dist/json1.dll
 	gcc -O3 -shared -I. src/sqlite3-math.c -o dist/math.dll -lm
 	gcc -O3 -shared -DPCRE2_CODE_UNIT_WIDTH=8 -DLINK_SIZE=2 -DHAVE_CONFIG_H -DSUPPORT_UNICODE -DPCRE2_STATIC -I. src/sqlite3-regexp.c src/regexp/regexp.c src/regexp/pcre2/*.c -o dist/regexp.dll
@@ -55,7 +55,7 @@ compile-macos:
 	gcc -Wall -O1 -fPIC -dynamiclib -I src src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.dylib
 	gcc -Wall -O3 -fPIC -dynamiclib -I src src/sqlite3-define.c -o dist/define.dylib
 	gcc -Wall -O3 -fPIC -dynamiclib -I src src/sqlite3-fileio.c -o dist/fileio.dylib
-	gcc -Wall -O3 -fPIC -dynamiclib -I src src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/fuzzy.dylib
+	gcc -Wall -O1 -fPIC -dynamiclib -I src src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/fuzzy.dylib
 	gcc -Wall -O3 -fPIC -dynamiclib -I src src/sqlite3-ipaddr.c -o dist/ipaddr.dylib
 	gcc -Wall -O3 -fPIC -dynamiclib -I src src/sqlite3-json1.c -o dist/json1.dylib
 	gcc -Wall -O3 -fPIC -dynamiclib -I src src/sqlite3-math.c -o dist/math.dylib -lm
@@ -71,7 +71,7 @@ compile-macos-x86:
 	gcc -O1 -fPIC -dynamiclib -I src src/sqlite3-crypto.c src/crypto/*.c -o dist/x86/crypto.dylib -target x86_64-apple-macos10.12
 	gcc -O3 -fPIC -dynamiclib -I src src/sqlite3-define.c -o dist/x86/define.dylib -target x86_64-apple-macos10.12
 	gcc -O3 -fPIC -dynamiclib -I src src/sqlite3-fileio.c -o dist/x86/fileio.dylib -target x86_64-apple-macos10.12
-	gcc -O3 -fPIC -dynamiclib -I src src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/x86/fuzzy.dylib -target x86_64-apple-macos10.12
+	gcc -O1 -fPIC -dynamiclib -I src src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/x86/fuzzy.dylib -target x86_64-apple-macos10.12
 	gcc -O3 -fPIC -dynamiclib -I src src/sqlite3-ipaddr.c -o dist/x86/ipaddr.dylib -target x86_64-apple-macos10.12
 	gcc -O3 -fPIC -dynamiclib -I src src/sqlite3-json1.c -o dist/x86/json1.dylib -target x86_64-apple-macos10.12
 	gcc -O3 -fPIC -dynamiclib -I src src/sqlite3-math.c -o dist/x86/math.dylib -target x86_64-apple-macos10.12 -lm
@@ -87,7 +87,7 @@ compile-macos-arm64:
 	gcc -O1 -fPIC -dynamiclib -I src src/sqlite3-crypto.c src/crypto/*.c -o dist/arm64/crypto.dylib -target arm64-apple-macos11
 	gcc -O3 -fPIC -dynamiclib -I src src/sqlite3-define.c -o dist/arm64/define.dylib -target arm64-apple-macos11
 	gcc -O3 -fPIC -dynamiclib -I src src/sqlite3-fileio.c -o dist/arm64/fileio.dylib -target arm64-apple-macos11
-	gcc -O3 -fPIC -dynamiclib -I src src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/arm64/fuzzy.dylib -target arm64-apple-macos11
+	gcc -O1 -fPIC -dynamiclib -I src src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/arm64/fuzzy.dylib -target arm64-apple-macos11
 	gcc -O3 -fPIC -dynamiclib -I src src/sqlite3-ipaddr.c -o dist/arm64/ipaddr.dylib -target arm64-apple-macos11
 	gcc -O3 -fPIC -dynamiclib -I src src/sqlite3-json1.c -o dist/arm64/json1.dylib -target arm64-apple-macos11
 	gcc -O3 -fPIC -dynamiclib -I src src/sqlite3-math.c -o dist/arm64/math.dylib -target arm64-apple-macos11 -lm
