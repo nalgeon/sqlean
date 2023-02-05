@@ -120,5 +120,5 @@ test-all:
 # fails if grep does find a failed test case
 # https://stackoverflow.com/questions/15367674/bash-one-liner-to-exit-with-the-opposite-status-of-a-grep-command/21788642
 test:
-	@~/sqlite3 < test/$(suite).sql > test.log
+	@sqlite3 < test/$(suite).sql > test.log
 	@cat test.log | (! grep -Ex "[0-9]+.[^1]")
