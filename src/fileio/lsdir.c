@@ -29,7 +29,7 @@
 #define FILEIO_WIN32_DLL
 #include <direct.h>
 #include <io.h>
-#include "test_windirent.h"
+#include "../test_windirent.h"
 #include "windows.h"
 #define dirent DIRENT
 
