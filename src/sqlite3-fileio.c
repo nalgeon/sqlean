@@ -26,8 +26,8 @@ __declspec(dllexport)
     int sqlite3_fileio_init(sqlite3* db, char** errmsg_ptr, const sqlite3_api_routines* api) {
     (void)errmsg_ptr;
     SQLITE_EXTENSION_INIT2(api);
-    fileioscalar_init(db);
-    lsdir_init(db);
-    scanfile_init(db);
+    fileio_scalar_init(db);
+    fileio_ls_init(db);
+    fileio_scan_init(db);
     return SQLITE_OK;
 }

@@ -914,20 +914,27 @@ static sqlite3_module fsdirModule = {
     0,               /* xShadowName */
 };
 
-/*
-** Register the "fsdir" virtual table.
-*/
-int lsdir_init(sqlite3* db) {
+int fileio_ls_init(sqlite3* db) {
+    sqlite3_create_module(db, "fileio_ls", &fsdirModule, 0);
     sqlite3_create_module(db, "lsdir", &fsdirModule, 0);
     return SQLITE_OK;
 }
 
-int fileioscalar_init(sqlite3* db) {
+int fileio_scalar_init(sqlite3* db) {
     static const int flags = SQLITE_UTF8 | SQLITE_DIRECTONLY;
+    sqlite3_create_function(db, "fileio_mode", 1, SQLITE_UTF8, 0, sqlite3_lsmode, 0, 0);
     sqlite3_create_function(db, "lsmode", 1, SQLITE_UTF8, 0, sqlite3_lsmode, 0, 0);
+
+    sqlite3_create_function(db, "fileio_mkdir", -1, flags, 0, sqlite3_mkdir, 0, 0);
     sqlite3_create_function(db, "mkdir", -1, flags, 0, sqlite3_mkdir, 0, 0);
+
+    sqlite3_create_function(db, "fileio_read", 1, flags, 0, sqlite3_readfile, 0, 0);
     sqlite3_create_function(db, "readfile", 1, flags, 0, sqlite3_readfile, 0, 0);
+
+    sqlite3_create_function(db, "fileio_symlink", 2, flags, 0, sqlite3_symlink, 0, 0);
     sqlite3_create_function(db, "symlink", 2, flags, 0, sqlite3_symlink, 0, 0);
+
+    sqlite3_create_function(db, "fileio_write", -1, flags, 0, sqlite3_writefile, 0, 0);
     sqlite3_create_function(db, "writefile", -1, flags, 0, sqlite3_writefile, 0, 0);
     return SQLITE_OK;
 }

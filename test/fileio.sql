@@ -3,58 +3,58 @@
 
 .load dist/fileio
 
--- lsdir
-select '01', (name, mode, size) = ('LICENSE', 33188, 1108) from lsdir('LICENSE');
-select '02', count(*) >= 10 from lsdir('test');
-select '03', count(*) = 0 from lsdir('whatever.txt');
+-- fileio_ls
+select '01', (name, mode, size) = ('LICENSE', 33188, 1108) from fileio_ls('LICENSE');
+select '02', count(*) >= 10 from fileio_ls('test');
+select '03', count(*) = 0 from fileio_ls('whatever.txt');
 .shell mkdir parentdir
 .shell touch parentdir/parent.txt
 .shell mkdir parentdir/subdir
 .shell touch parentdir/subdir/child.txt
-select '04', count(*) = 3 from lsdir('parentdir');
-select '05', count(*) = 3 from lsdir('parentdir', false);
-select '06', count(*) = 4 from lsdir('parentdir', true);
+select '04', count(*) = 3 from fileio_ls('parentdir');
+select '05', count(*) = 3 from fileio_ls('parentdir', false);
+select '06', count(*) = 4 from fileio_ls('parentdir', true);
 .shell rm -rf parentdir
 
--- lsmode
-select '11', lsmode(16877) = 'drwxr-xr-x';
-select '12', lsmode(33206) = '-rw-rw-rw-';
-select '13', lsmode(33188) = '-rw-r--r--';
-select '14', lsmode(384) = '?rw-------';
-select '15', lsmode(420) = '?rw-r--r--';
-select '16', lsmode(436) = '?rw-rw-r--';
-select '17', lsmode(438) = '?rw-rw-rw-';
-select '18', lsmode(493) = '?rwxr-xr-x';
-select '19', lsmode(511) = '?rwxrwxrwx';
+-- fileio_mode
+select '11', fileio_mode(16877) = 'drwxr-xr-x';
+select '12', fileio_mode(33206) = '-rw-rw-rw-';
+select '13', fileio_mode(33188) = '-rw-r--r--';
+select '14', fileio_mode(384) = '?rw-------';
+select '15', fileio_mode(420) = '?rw-r--r--';
+select '16', fileio_mode(436) = '?rw-rw-r--';
+select '17', fileio_mode(438) = '?rw-rw-rw-';
+select '18', fileio_mode(493) = '?rwxr-xr-x';
+select '19', fileio_mode(511) = '?rwxrwxrwx';
 
--- mkdir
+-- fileio_mkdir
 .shell rm -rf hellodir
-select '21', mkdir('hellodir') is null;
-select '22', (name, mode) = ('hellodir', 16877) from fsdir('hellodir');
+select '21', fileio_mkdir('hellodir') is null;
+select '22', (name, mode) = ('hellodir', 16877) from fileio_ls('hellodir');
 .shell rm -rf hellodir
 
--- readfile
+-- fileio_read
 .shell printf 'hello world' > hello.txt
-select '31', typeof(readfile('hello.txt')) = 'blob';
-select '32', length(readfile('hello.txt')) = 11;
-select '33', readfile('whatever') is null;
+select '31', typeof(fileio_read('hello.txt')) = 'blob';
+select '32', length(fileio_read('hello.txt')) = 11;
+select '33', fileio_read('whatever') is null;
 
--- symlink
+-- fileio_symlink
 .shell printf 'hello world' > hello.txt
-select '41', symlink('hello.txt', 'hello.lnk') is null;
-select '42', length(readfile('hello.lnk')) = 11;
+select '41', fileio_symlink('hello.txt', 'hello.lnk') is null;
+select '42', length(fileio_read('hello.lnk')) = 11;
 .shell rm -f hello.lnk
 
--- writefile
+-- fileio_write
 .shell rm -f hello.txt
-select '51', writefile('hello.txt', 'hello world') = 11;
-select '52', (name, mode) = ('hello.txt', 33206) from fsdir('hello.txt');
-select '53', writefile('hello.txt', 'hello world', 420) = 11;
-select '54', (name, mode) = ('hello.txt', 33188) from fsdir('hello.txt');
+select '51', fileio_write('hello.txt', 'hello world') = 11;
+select '52', (name, mode) = ('hello.txt', 33206) from fileio_ls('hello.txt');
+select '53', fileio_write('hello.txt', 'hello world', 420) = 11;
+select '54', (name, mode) = ('hello.txt', 33188) from fileio_ls('hello.txt');
 
--- scanfile
+-- fileio_scan
 .shell printf 'one\\ntwo\\nthr\\n' > hello.txt
-create table hello as select rowid, name, value from scanfile('hello.txt');
+create table hello as select rowid, name, value from fileio_scan('hello.txt');
 select '61', count(*) = 3 from hello;
 select '62', (name, value) = ('hello.txt', 'one') from hello where rowid = 1;
 select '63', (name, value) = ('hello.txt', 'two') from hello where rowid = 2;

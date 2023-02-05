@@ -300,7 +300,8 @@ static sqlite3_module module = {.iVersion = 0,
                                 .xRollbackTo = 0,
                                 .xShadowName = 0};
 
-int scanfile_init(sqlite3* db) {
+int fileio_scan_init(sqlite3* db) {
+    sqlite3_create_module(db, "fileio_scan", &module, 0);
     sqlite3_create_module(db, "scanfile", &module, 0);
     return SQLITE_OK;
 }

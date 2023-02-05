@@ -6,8 +6,8 @@
 
 #include "../sqlite3ext.h"
 
-int fileioscalar_init(sqlite3* db);
-int lsdir_init(sqlite3* db);
-int scanfile_init(sqlite3* db);
+int fileio_ls_init(sqlite3* db);
+int fileio_scalar_init(sqlite3* db);
+int fileio_scan_init(sqlite3* db);
 
 #endif /* FILEIO_EXTENSION_H */

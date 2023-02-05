@@ -2,27 +2,27 @@
 
 Access the file system directly from SQL. Partly based on the [fileio.c](https://sqlite.org/src/file/ext/misc/fileio.c) by D. Richard Hipp.
 
-### readfile(path)
+### fileio_read(path)
 
 Reads the file specified by `path` and returns its contents as `blob`.
 
 ```
-sqlite> select writefile('hello.txt', 'hello world');
+sqlite> select fileio_write('hello.txt', 'hello world');
 11
 
-sqlite> select typeof(readfile('hello.txt'));
+sqlite> select typeof(fileio_read('hello.txt'));
 blob
 
-sqlite> select length(readfile('hello.txt'));
+sqlite> select length(fileio_read('hello.txt'));
 11
 ```
 
-### scanfile(path)
+### fileio_scan(path)
 
 Reads the file specified by `path` line by line, without loading the whole file into memory.
 
 ```
-sqlite> select rowid, value, name from scanfile('hello.txt');
+sqlite> select rowid, value, name from fileio_scan('hello.txt');
 ┌───────┬───────┬───────────┐
 │ rowid │ value │   name    │
 ├───────┼───────┼───────────┤
@@ -42,12 +42,12 @@ Each row has the following columns:
 
 Inspired by [sqlite-lines](https://github.com/asg017/sqlite-lines/) by Alex Garcia.
 
-### writefile(path, data [,perm [,mtime]])
+### fileio_write(path, data [,perm [,mtime]])
 
 Writes blob `data` to a file specified by `path`. Returns the number of written bytes. If an error occurs, returns NULL.
 
 ```
-sqlite> select writefile('hello.txt', 'hello world');
+sqlite> select fileio_write('hello.txt', 'hello world');
 11
 ```
 
@@ -63,36 +63,36 @@ The `perm` argument specifies permission bits for the file (octal `666` by defau
 | 777   | 511     | `rwxrwxrwx` |
 
 ```
-sqlite> select writefile('hello.txt', 'hello world', 436);
+sqlite> select fileio_write('hello.txt', 'hello world', 436);
 11
 ```
 
 If the optional `mtime` argument is present, it expects an integer — the number of seconds since the unix epoch. The modification-time of the target file is set to this value before returning.
 
-### mkdir(path[, perm])
+### fileio_mkdir(path [,perm])
 
 Creates a directory named `path` with permission bits `perm` (octal `777` by default).
 
 ```
-sqlite> mkdir('hellodir')
+sqlite> select fileio_mkdir('hellodir');
 ```
 
-### symlink(src, dst)
+### fileio_symlink(src, dst)
 
 Creates a symbolic link named `dst`, pointing to `src`.
 
 ```
-select symlink('hello.txt', 'hello.lnk');
+sqlite> select fileio_symlink('hello.txt', 'hello.lnk');
 ```
 
-### lsdir(path[, recursive])
+### fileio_ls(path [,recursive])
 
 Lists files and directories as a virtual table.
 
 List a single file specified by `path`:
 
 ```
-sqlite> select * from lsdir('hello.txt');
+sqlite> select * from fileio_ls('hello.txt');
 ┌───────────┬───────┬────────────┬──────┐
 │   name    │ mode  │   mtime    │ size │
 ├───────────┼───────┼────────────┼──────┤
@@ -103,7 +103,7 @@ sqlite> select * from lsdir('hello.txt');
 List a whole directory. Lists only the direct children by default:
 
 ```
-sqlite> select * from lsdir('test') order by name;
+sqlite> select * from fileio_ls('test') order by name;
 ┌─────────────────┬───────┬────────────┬──────┐
 │      name       │ mode  │   mtime    │ size │
 ├─────────────────┼───────┼────────────┼──────┤
@@ -118,7 +118,7 @@ sqlite> select * from lsdir('test') order by name;
 List a whole directory recursively. When `recursive = true`, lists all the descendants:
 
 ```
-sqlite> select * from lsdir('src', true);
+sqlite> select * from fileio_ls('src', true);
 ```
 
 Each row has the following columns:
@@ -128,12 +128,12 @@ Each row has the following columns:
 -   `mtime`: Last modification time (`stat.st_mtime`, integer number of seconds since the epoch).
 -   `size`: Total size in bytes (`stat.st_size`, integer value).
 
-Use `lsmode()` helper function to get a human-readable representation of the `mode`:
+Use `fileio_mode()` helper function to get a human-readable representation of the `mode`:
 
 ```
-sqlite> select name, lsmode(mode) from fsdir('test');
+sqlite> select name, fileio_mode(mode) as mode from fileio_ls('test');
 ┌─────────────────┬──────────────┐
-│      name       │ lsmode(mode) │
+│      name       │     mode     │
 ├─────────────────┼──────────────┤
 │ test            │ drwxr-xr-x   │
 │ test/crypto.sq  │ -rw-r--r--   │
@@ -145,15 +145,28 @@ sqlite> select name, lsmode(mode) from fsdir('test');
 
 Parameter `path` is an absolute or relative pathname:
 
--   If the path refers to a file that does not exist — `lsdir()` returns zero rows.
+-   If the path refers to a file that does not exist — `fileio_ls()` returns zero rows.
 -   If the path refers to a regular file or symbolic link — it returns a single row.
 -   If the path refers to a directory — it returns one row for the directory and one row for each direct child. Optionally returns a row for every descendant, if `recursive = true`.
+
+### Backward compatibilty
+
+Some functions have aliases for backward compatibility:
+
+```
+readfile  = fileio_read
+writefile = fileio_write
+mkdir     = fileio_mkdir
+symlink   = fileio_symlink
+lsdir     = fileio_ls
+lsmode    = fileio_mode
+```
 
 ## Usage
 
 ```
 sqlite> .load ./fileio
-sqlite> select readfile('whatever.txt');
+sqlite> select fileio_read('whatever.txt');
 ```
 
 [⬇️ Download](https://github.com/nalgeon/sqlean/releases/latest) •
