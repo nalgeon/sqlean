@@ -80,7 +80,7 @@ static void regexp_statement(sqlite3_context* context, int argc, sqlite3_value**
     sqlite3_result_int(context, is_match);
 
     if (is_new_re) {
-        sqlite3_set_auxdata(context, 1, re, (void (*)(void*))regexp.free);
+        sqlite3_set_auxdata(context, 0, re, (void (*)(void*))regexp.free);
     }
 }
 
