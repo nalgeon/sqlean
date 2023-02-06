@@ -28,7 +28,7 @@ download-external:
 	curl -L https://github.com/asg017/sqlite-path/raw/main/sqlite-path.c >> src/path.c
 	curl -L https://github.com/likle/cwalk/raw/master/include/cwalk.h --output src/cwalk.h
 	curl -L https://github.com/likle/cwalk/raw/master/src/cwalk.c --output src/cwalk.c
-	# curl -L https://github.com/jakethaw/pivot_vtab/raw/main/pivot_vtab.c --output src/pivotvtab.c
+	curl -L https://raw.githubusercontent.com/jakethaw/pivot_vtab/08ab07973a02b74a91ab3a61f2afa26b658191d0/pivot_vtab.c --output src/pivotvtab.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/prefixes.c --output src/prefixes.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/spellfix.c --output src/spellfix.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/sqlar.c --output src/sqlar.c
@@ -62,7 +62,7 @@ compile-linux:
 	make compile-linux-extension name=memstat
 	make compile-linux-extension name=path src="src/cwalk.c"
 	make compile-linux-extension name=pearson
-	# make compile-linux-extension name=pivotvtab
+	make compile-linux-extension name=pivotvtab
 	make compile-linux-extension name=prefixes
 	make compile-linux-extension name=recsize
 	make compile-linux-extension name=rotate
@@ -104,7 +104,7 @@ compile-windows:
 	make compile-windows-extension name=memstat
 	make compile-windows-extension name=path src="src/cwalk.c"
 	make compile-windows-extension name=pearson
-	# make compile-windows-extension name=pivotvtab
+	make compile-windows-extension name=pivotvtab
 	make compile-windows-extension name=prefixes
 	make compile-windows-extension name=recsize
 	make compile-windows-extension name=rotate
@@ -147,7 +147,7 @@ compile-macos:
 	make compile-macos-extension name=memstat
 	make compile-macos-extension name=path src="src/cwalk.c"
 	make compile-macos-extension name=pearson
-	# make compile-macos-extension name=pivotvtab
+	make compile-macos-extension name=pivotvtab
 	make compile-macos-extension name=prefixes
 	make compile-macos-extension name=recsize
 	make compile-macos-extension name=rotate
@@ -196,8 +196,7 @@ test-all:
 	make test suite=math2
 	make test suite=memstat
 	make test suite=pearson
-	# tests fail on ubuntu with segmentation fault
-	# make test suite=pivotvtab
+	make test suite=pivotvtab
 	make test suite=prefixes
 	make test suite=recsize
 	make test suite=rotate
