@@ -176,6 +176,11 @@ static void define_function(sqlite3_context* ctx, int argc, sqlite3_value** argv
     }
 }
 
+/*
+ * No-op as nothing is cached.
+ */
+static void define_free(sqlite3_context* ctx, int argc, sqlite3_value** argv) {}
+
 // custom cache
 #elif DEFINE_CACHE == 2
 
@@ -248,7 +253,7 @@ static void define_function(sqlite3_context* ctx, int argc, sqlite3_value** argv
 /*
  * Frees prepared statements compiled by user-defined functions.
  */
-static void free_compiled(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
+static void define_free(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
     cache_free();
 }
 
@@ -310,7 +315,7 @@ static int load_functions(sqlite3* db) {
 int define_manage_init(sqlite3* db) {
     const int flags = SQLITE_UTF8 | SQLITE_DIRECTONLY;
     sqlite3_create_function(db, "define", 2, flags, NULL, define_function, NULL, NULL);
-    sqlite3_create_function(db, "define_free", 0, flags, NULL, free_compiled, NULL, NULL);
+    sqlite3_create_function(db, "define_free", 0, flags, NULL, define_free, NULL, NULL);
     sqlite3_create_function(db, "define_cache", 0, flags, NULL, print_cache, NULL, NULL);
     sqlite3_create_function(db, "undefine", 1, flags, NULL, undefine_function, NULL, NULL);
     return load_functions(db);
