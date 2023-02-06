@@ -16,7 +16,7 @@ env:
     SQLITE_RELEASE_YEAR: "2021"
     SQLITE_VERSION: "3360000"
     SQLITE_BRANCH: "3.36"
-    SQLITE_EXTENSIONS: "pivotvtab"
+    SQLITE_EXTENSION: "pivotvtab"
 
 jobs:
     build:
@@ -42,23 +42,23 @@ jobs:
             - name: Build for Linux
               if: matrix.os == 'ubuntu-latest'
               run: |
-                  make compile-linux
-                  make test-all
+                  make compile-linux-extension name=${{ env.SQLITE_EXTENSION }}
+                  make test suite=${{ env.SQLITE_EXTENSION }}
 
             - name: Build for Windows
               if: matrix.os == 'windows-latest'
               shell: bash
-              run: make compile-windows
+              run: make compile-windows-extension name=${{ env.SQLITE_EXTENSION }}
 
             - name: Build for macOS
               if: matrix.os == 'macos-latest'
-              run: make compile-macos
+              run: make compile-macos-extension name=${{ env.SQLITE_EXTENSION }}
 
             - name: Upload binaries to release
               uses: svenstaro/upload-release-action@v2
               with:
                   repo_token: ${{ secrets.GITHUB_TOKEN }}
-                  file: dist/${{ env.SQLITE_EXTENSIONS }}.*
+                  file: dist/${{ env.SQLITE_EXTENSION }}.*
                   file_glob: true
                   overwrite: true
                   tag: incubator
