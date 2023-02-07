@@ -482,7 +482,8 @@ static void fileio_append(sqlite3_context* ctx, int argc, sqlite3_value** argv) 
         return;
     }
 
-    sqlite3_result_int(ctx, rc);
+    size_t n = strlen(str);
+    sqlite3_result_int(ctx, n);
 
     if (is_new_file) {
         sqlite3_set_auxdata(ctx, 0, file, (void (*)(void*))fclose);
