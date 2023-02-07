@@ -451,6 +451,44 @@ static void sqlite3_writefile(sqlite3_context* context, int argc, sqlite3_value*
     }
 }
 
+// Appends string to a file specified by path.
+// fileio_append(path, str)
+static void fileio_append(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
+    bool is_new_file = false;
+    FILE* file = sqlite3_get_auxdata(ctx, 0);
+    if (file == NULL) {
+        const char* path = (const char*)sqlite3_value_text(argv[0]);
+        file = fopen(path, "a");
+        if (file == NULL && errno == ENOENT) {
+            // parent directory does not exist, let's create it
+            if (makeParentDirectory(path) == SQLITE_OK) {
+                file = fopen(path, "a");
+            }
+        }
+        if (file == NULL) {
+            sqlite3_result_error(ctx, "failed to open file", -1);
+            return;
+        }
+        is_new_file = true;
+    }
+
+    const char* str = (const char*)sqlite3_value_text(argv[1]);
+    int rc = fputs(str, file);
+    if (rc < 0) {
+        if (is_new_file) {
+            fclose(file);
+        }
+        sqlite3_result_error(ctx, "failed to append string to file", -1);
+        return;
+    }
+
+    sqlite3_result_int(ctx, rc);
+
+    if (is_new_file) {
+        sqlite3_set_auxdata(ctx, 0, file, (void (*)(void*))fclose);
+    }
+}
+
 // Creates a symlink.
 // symlink(src, dst)
 static void sqlite3_symlink(sqlite3_context* context, int argc, sqlite3_value** argv) {
@@ -936,6 +974,8 @@ int fileio_scalar_init(sqlite3* db) {
 
     sqlite3_create_function(db, "fileio_write", -1, flags, 0, sqlite3_writefile, 0, 0);
     sqlite3_create_function(db, "writefile", -1, flags, 0, sqlite3_writefile, 0, 0);
+
+    sqlite3_create_function(db, "fileio_append", 2, flags, 0, fileio_append, 0, 0);
     return SQLITE_OK;
 }
 

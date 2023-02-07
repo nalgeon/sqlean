@@ -37,7 +37,8 @@ select '22', (name, mode) = ('hellodir', 16877) from fileio_ls('hellodir');
 .shell printf 'hello world' > hello.txt
 select '31', typeof(fileio_read('hello.txt')) = 'blob';
 select '32', length(fileio_read('hello.txt')) = 11;
-select '33', fileio_read('whatever') is null;
+select '33', cast(fileio_read('hello.txt') as text) = 'hello world';
+select '34', fileio_read('whatever') is null;
 
 -- fileio_symlink
 .shell printf 'hello world' > hello.txt
@@ -60,5 +61,12 @@ select '62', (name, value) = ('hello.txt', 'one') from hello where rowid = 1;
 select '63', (name, value) = ('hello.txt', 'two') from hello where rowid = 2;
 select '64', (name, value) = ('hello.txt', 'thr') from hello where rowid = 3;
 drop table hello;
+
+-- fileio_append
+.shell rm -f hello.txt
+create table hello(value text);
+insert into hello(value) values ('one'), ('two'), ('three');
+select '71', sum(fileio_append('hello.txt', value)) = 11 from hello;
+select '72', cast(fileio_read('hello.txt') as text) = 'onetwothree';
 
 .shell rm -f hello.txt
