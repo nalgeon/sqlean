@@ -1,4 +1,4 @@
-# text: Text manipulation in SQLite
+# text: Text Manipulation in SQLite
 
 Additional string functions.
 Adapted from [extension-functions.c](https://sqlite.org/contrib/) by Liam Healy.
@@ -34,12 +34,16 @@ two
 
 Only ASCII (1-byte) symbols are supported as separators.
 
-## Usage
+## Installation and Usage
+
+SQLite command-line interface:
 
 ```
 sqlite> .load ./text
 sqlite> select reverse('hello');
 ```
+
+See [How to Install an Extension](install.md) for usage with IDE, Python, etc.
 
 [⬇️ Download](https://github.com/nalgeon/sqlean/releases/latest) •
 [✨ Explore](https://github.com/nalgeon/sqlean) •

@@ -1,4 +1,4 @@
-# fuzzy: Fuzzy string matching and phonetics in SQLite
+# fuzzy: Fuzzy String Matching and Phonetics in SQLite
 
 Fuzzy-matching helpers:
 
@@ -10,7 +10,7 @@ Adapted from [libstrcmp](https://github.com/Rostepher/libstrcmp) by Ross Bayer a
 
 If you want a ready-to-use mechanism to search a large vocabulary for close matches, see the [spellfix](https://github.com/nalgeon/sqlean/issues/27#issuecomment-1002297477) extension.
 
-## String distances
+## String Distances
 
 Measure distance between two strings:
 
@@ -43,7 +43,7 @@ sqlite> select osa_distance('awesome', 'aewsme');
 
 Only ASCII strings are supported.
 
-## Phonetic codes
+## Phonetic Codes
 
 Compute phonetic string code:
 
@@ -82,12 +82,16 @@ sqlite> select translit('привет');
 privet
 ```
 
-## Usage
+## Installation and Usage
+
+SQLite command-line interface:
 
 ```
 sqlite> .load ./fuzzy
 sqlite> select soundex('hello');
 ```
+
+See [How to Install an Extension](install.md) for usage with IDE, Python, etc.
 
 [⬇️ Download](https://github.com/nalgeon/sqlean/releases/latest) •
 [✨ Explore](https://github.com/nalgeon/sqlean) •

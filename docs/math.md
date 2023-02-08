@@ -17,12 +17,16 @@ Provides following functions:
 
 [Full description](https://sqlite.org/lang_mathfunc.html)
 
-## Usage
+## Installation and Usage
+
+SQLite command-line interface:
 
 ```
 sqlite> .load ./math
 sqlite> select sqrt(9);
 ```
+
+See [How to Install an Extension](install.md) for usage with IDE, Python, etc.
 
 [⬇️ Download](https://github.com/nalgeon/sqlean/releases/latest) •
 [✨ Explore](https://github.com/nalgeon/sqlean) •

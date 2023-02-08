@@ -118,12 +118,16 @@ $        end of string
 (?!...)  negative lookahead
 ```
 
-## Usage
+## Installation and Usage
+
+SQLite command-line interface:
 
 ```
 sqlite> .load ./regexp
 sqlite> select regexp_like('abcdef', 'b.d');
 ```
+
+See [How to Install an Extension](install.md) for usage with IDE, Python, etc.
 
 [⬇️ Download](https://github.com/nalgeon/sqlean/releases/latest) •
 [✨ Explore](https://github.com/nalgeon/sqlean) •

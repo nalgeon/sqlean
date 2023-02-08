@@ -1,4 +1,4 @@
-# ipaddr: IP address manipulation in SQLite
+# ipaddr: IP Address Manipulation in SQLite
 
 Functions to manipulate IPs and subnets. Created by [Vincent Bernat](https://github.com/vincentbernat).
 
@@ -50,13 +50,16 @@ sqlite> select ipcontains('192.168.16.0/24', '192.168.16.3');
 1
 ```
 
-## Usage
+## Installation and Usage
+
+SQLite command-line interface:
 
 ```
 sqlite> .load ./ipaddr
 sqlite> select ipfamily('2001:db8::1');
-6
 ```
+
+See [How to Install an Extension](install.md) for usage with IDE, Python, etc.
 
 [⬇️ Download](https://github.com/nalgeon/sqlean/releases/latest) •
 [✨ Explore](https://github.com/nalgeon/sqlean) •

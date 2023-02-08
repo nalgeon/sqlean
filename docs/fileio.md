@@ -1,4 +1,4 @@
-# fileio: Read and write files in SQLite
+# fileio: Read and Write Files in SQLite
 
 Access the file system directly from SQL. Partly based on the [fileio.c](https://sqlite.org/src/file/ext/misc/fileio.c) by D. Richard Hipp.
 
@@ -194,7 +194,7 @@ Parameter `path` is an absolute or relative pathname:
 -   If the path refers to a regular file or symbolic link — it returns a single row.
 -   If the path refers to a directory — it returns one row for the directory and one row for each direct child. Optionally returns a row for every descendant, if `recursive = true`.
 
-### Backward compatibilty
+### Backward Compatibilty
 
 Some functions have aliases for backward compatibility:
 
@@ -207,12 +207,16 @@ lsdir     = fileio_ls
 lsmode    = fileio_mode
 ```
 
-## Usage
+## Installation and Usage
+
+SQLite command-line interface:
 
 ```
 sqlite> .load ./fileio
 sqlite> select fileio_read('whatever.txt');
 ```
+
+See [How to Install an Extension](install.md) for usage with IDE, Python, etc.
 
 [⬇️ Download](https://github.com/nalgeon/sqlean/releases/latest) •
 [✨ Explore](https://github.com/nalgeon/sqlean) •

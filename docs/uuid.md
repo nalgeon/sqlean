@@ -39,12 +39,16 @@ sqlite> select hex(uuid_blob(uuid4()));
 7192B1B452964E809500CF0364476CD3
 ```
 
-## Usage
+## Installation and Usage
+
+SQLite command-line interface:
 
 ```
 sqlite> .load ./uuid
 sqlite> select uuid4();
 ```
+
+See [How to Install an Extension](install.md) for usage with IDE, Python, etc.
 
 [⬇️ Download](https://github.com/nalgeon/sqlean/releases/latest) •
 [✨ Explore](https://github.com/nalgeon/sqlean) •

@@ -1,10 +1,10 @@
-# define: User-defined functions in SQLite
+# define: User-Defined Functions in SQLite
 
 Write arbitrary functions in SQL (as opposed to [application-defined functions](https://sqlite.org/appfunc.html), which require programming in C, Python, or another language). Or even execute arbitrary SQL from a string.
 
 Adapted from [statement_vtab.c](https://github.com/0x09/sqlite-statement-vtab/blob/master/statement_vtab.c) by 0x09 and [eval.c](https://www.sqlite.org/src/file/ext/misc/eval.c) by D. Richard Hipp.
 
-## Scalar functions
+## Scalar Functions
 
 `select define(NAME, BODY)`
 
@@ -85,7 +85,7 @@ sqlite> select sumn(5);
 Parse error: no such function: sumn
 ```
 
-## Table-valued functions
+## Table-Valued Functions
 
 `create virtual table NAME using define((BODY))`
 
@@ -155,7 +155,7 @@ sqlite> select * from strcut('one;two', ';');
 Parse error: no such table: strcut
 ```
 
-## Arbitrary SQL statements
+## Arbitrary SQL Statements
 
 `eval(SQL[, SEPARATOR])`
 
@@ -259,13 +259,17 @@ Executes arbitrary SQL and returns the result as string (if any).
 
 Deletes a previously defined function (scalar or table-valued).
 
-## Usage
+## Installation and Usage
+
+SQLite command-line interface:
 
 ```
 sqlite> .load ./define
 sqlite> select define('sumn', ':n * (:n + 1) / 2');
 sqlite> select sumn(5);
 ```
+
+See [How to Install an Extension](install.md) for usage with IDE, Python, etc.
 
 [⬇️ Download](https://github.com/nalgeon/sqlean/releases/latest) •
 [✨ Explore](https://github.com/nalgeon/sqlean) •

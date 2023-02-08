@@ -1,4 +1,4 @@
-# vsv: CSV files as virtual tables in SQLite
+# vsv: CSV Files as Virtual Tables in SQLite
 
 Provides virtual table for working directly with CSV files, without importing data into the database. Useful for very large datasets.
 
@@ -165,14 +165,17 @@ escape sequence. Recognized escape sequences are:
 \xhh specific byte where hh is hexadecimal
 ```
 
-## Usage
+## Installation and Usage
 
-```sql
-.load ./vsv
+SQLite command-line interface:
 
-create virtual table temp.vsv using vsv(...);
-select * from vsv;
 ```
+sqlite> .load ./vsv
+sqlite> create virtual table temp.vsv using vsv(...);
+sqlite> select * from vsv;
+```
+
+See [How to Install an Extension](install.md) for usage with IDE, Python, etc.
 
 [⬇️ Download](https://github.com/nalgeon/sqlean/releases/latest) •
 [✨ Explore](https://github.com/nalgeon/sqlean) •

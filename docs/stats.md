@@ -1,8 +1,8 @@
-# stats: Mathematical statistics in SQLite
+# stats: Mathematical Statistics in SQLite
 
 Common statistical functions. Adapted from [extension-functions.c](https://sqlite.org/contrib/) by Liam Healy, [percentile.c](https://sqlite.org/src/file/ext/misc/percentile.c) and [series.c](https://sqlite.org/src/file/ext/misc/series.c) by D. Richard Hipp.
 
-### Aggregate functions
+### Aggregate Functions
 
 -   `median(x)` — median (50th percentile),
 -   `percentile_25(x)` — 25th percentile,
@@ -42,12 +42,16 @@ The `generate_series()` table has a single result column named `value` holding i
 
 `stop` defaults to 9223372036854775807. `step` defaults to 1.
 
-## Usage
+## Installation and Usage
+
+SQLite command-line interface:
 
 ```
 sqlite> .load ./stats
 sqlite> select median(value) from generate_series(1, 99);
 ```
+
+See [How to Install an Extension](install.md) for usage with IDE, Python, etc.
 
 [⬇️ Download](https://github.com/nalgeon/sqlean/releases/latest) •
 [✨ Explore](https://github.com/nalgeon/sqlean) •

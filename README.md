@@ -1,4 +1,4 @@
-# All the missing SQLite functions
+# All the Missing SQLite Functions
 
 SQLite has few functions compared to other database management systems. SQLite authors see this as a feature rather than a problem, because SQLite has an extension mechanism in place.
 
@@ -8,13 +8,13 @@ We do not try to gather all the existing extensions into one giant pile — that
 
 To achieve it, we split extensions that are too broad, merge the ones that are too narrow, refactor, add missing features, test, document, and do a ton of other small things.
 
-## The main set
+## Main Set
 
 These are the most popular functions. They are tested, documented and organized into the domain modules with clear API.
 
 Think of them as the extended standard library for SQLite:
 
--   [crypto](docs/crypto.md): secure hashes
+-   [crypto](docs/crypto.md): hash functions
 -   [define](docs/define.md): user-defined functions and dynamic sql
 -   [fileio](docs/fileio.md): read and write files
 -   [fuzzy](docs/fuzzy.md): fuzzy string matching and phonetics
@@ -28,7 +28,7 @@ Think of them as the extended standard library for SQLite:
 -   [uuid](docs/uuid.md): Universally Unique IDentifiers
 -   [vsv](docs/vsv.md): CSV files as virtual tables
 
-## The incubator
+## Incubator
 
 These extensions haven't yet made their way to the main set. They may be untested, poorly documented, too broad, too narrow, or without a well-thought API.
 
@@ -77,35 +77,45 @@ Binaries are 64-bit and require a 64-bit SQLite version. If you are using SQLite
 
 Incubator extensions are [also available](https://github.com/nalgeon/sqlean/releases/tag/incubator).
 
-## Usage
+## Installation and Usage
 
-CLI usage:
+Examples below use the `stats` extension; you can specify any other supported extension.
+
+SQLite command-line interface (CLI, aka 'sqlite3.exe' on Windows):
 
 ```
 sqlite> .load ./stats
 sqlite> select median(value) from generate_series(1, 99);
 ```
 
-IDE usage:
+IDE, e.g. SQLiteStudio, SQLiteSpy or DBeaver:
 
 ```
 select load_extension('c:\Users\anton\sqlite\stats.dll');
 select median(value) from generate_series(1, 99);
 ```
 
-In-app usage:
+Python:
 
 ```python
 import sqlite3
 
 connection = sqlite3.connect(":memory:")
 connection.enable_load_extension(True)
-connection.load_extension("./stats.so")
+connection.load_extension("./stats")
 connection.execute("select median(value) from generate_series(1, 99)")
 connection.close()
 ```
 
-You can specify any other supported extension instead of `stats`.
+Node.js, using [better-sqlite3](https://github.com/WiseLibs/better-sqlite3):
+
+```js
+const sqlite3 = require("better-sqlite3");
+const db = new sqlite3(":memory:");
+db.loadExtension("./stats");
+db.exec("select median(value) from generate_series(1, 99)");
+db.close();
+```
 
 ## Contributing
 
