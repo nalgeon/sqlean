@@ -179,6 +179,13 @@ static void test_reverse(void) {
         rstring.free(res);
     }
     {
+        RuneString str = rstring.from_cstring("𐌀𐌁𐌂");
+        RuneString res = rstring.reverse(str);
+        assert(eq(res, "𐌂𐌁𐌀"));
+        rstring.free(str);
+        rstring.free(res);
+    }
+    {
         RuneString str = rstring.new();
         RuneString res = rstring.reverse(str);
         assert(eq(res, ""));

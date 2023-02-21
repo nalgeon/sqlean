@@ -107,6 +107,7 @@ int32_t* runes_from_cstring(const char* const str, size_t length) {
         runes[idx] = rune;
         idx += 1;
     }
+    free(iter);
     return runes;
 }
 
@@ -117,7 +118,8 @@ char* runes_to_cstring(const int32_t* runes, size_t length) {
         return str;
     }
 
-    str = calloc(length, sizeof(int32_t));
+    size_t maxlen = length * sizeof(int32_t) + 1;
+    str = malloc(maxlen);
     if (str == NULL) {
         return NULL;
     }
@@ -126,10 +128,10 @@ char* runes_to_cstring(const int32_t* runes, size_t length) {
     for (size_t i = 0; i < length; i++) {
         at = utf8_cat_rune(at, runes[i]);
     }
-    at += 1;
     *at = '\0';
+    at += 1;
 
-    if (length > 0) {
+    if (at - str < maxlen) {
         // shrink to real size
         size_t size = at - str;
         str = realloc(str, size);
