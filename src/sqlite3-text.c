@@ -1,10 +1,8 @@
-// Originally by Liam Healy, Public Domain
-// extension-functions.c at https://sqlite.org/contrib/
-// Modified by Anton Zhiyanov, https://github.com/nalgeon/sqlean, MIT License
+// Copyright (c) 2023 Anton Zhiyanov, MIT License
+// https://github.com/nalgeon/sqlean
 
-/*
- * SQLite text functions.
- */
+// SQLite extension for working with text.
+
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -12,125 +10,23 @@
 #include <string.h>
 
 #include "sqlite3ext.h"
+#include "text/text.h"
 
 SQLITE_EXTENSION_INIT1
 
-/**
- * From sqlite3 utf.c
- */
-static const unsigned char sqlite3Utf8Trans1[] = {
-    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
-    0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
-    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
-    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x00, 0x01, 0x02, 0x03, 0x00, 0x01, 0x00, 0x00,
-};
-
-#define READ_UTF8(zIn, zTerm, c)                                                    \
-    c = *(zIn++);                                                                   \
-    if (c >= 0xc0) {                                                                \
-        c = sqlite3Utf8Trans1[c - 0xc0];                                            \
-        while (zIn != zTerm && (*zIn & 0xc0) == 0x80) {                             \
-            c = (c << 6) + (0x3f & *(zIn++));                                       \
-        }                                                                           \
-        if (c < 0x80 || (c & 0xFFFFF800) == 0xD800 || (c & 0xFFFFFFFE) == 0xFFFE) { \
-            c = 0xFFFD;                                                             \
-        }                                                                           \
-    }
-
-/*
- * reverse() and friends extracted from
- * extension-functions.c (https://sqlite.org/contrib/)
- * by Liam Healy
- */
-#define advance_char(X)               \
-    while ((0xc0 & *++(X)) == 0x80) { \
-    }
-
-static int read_char(const unsigned char* str) {
-    int c;
-    READ_UTF8(str, 0, c);
-    return c;
-}
-
-/*
- * Returns reversed string.
- * reverse("abcde") == "edcba"
- */
-static char* reverse(const char* source) {
-    int len = strlen(source);
-    char* result = sqlite3_malloc(len + 1);
-    char* rzt = result + len;
-    *(rzt--) = '\0';
-
-    const char* zt = source;
-    while (read_char((unsigned char*)zt) != 0) {
-        source = zt;
-        advance_char(zt);
-        for (int i = 1; zt - i >= source; ++i) {
-            *(rzt--) = *(zt - i);
-        }
-    }
-    return result;
-}
-
-static void sqlite3_reverse(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    assert(argc == 1);
-    if (sqlite3_value_type(argv[0]) == SQLITE_NULL) {
-        sqlite3_result_null(context);
-        return;
-    }
-    const char* source = (char*)sqlite3_value_text(argv[0]);
-    char* result = reverse(source);
-    sqlite3_result_text(context, result, -1, sqlite3_free);
-}
-
-/*
- * strsep() implementation, Windows doesn't have it
- * copied from https://unixpapa.com/incnote/string.html
- */
-static char* str_sep(char** sp, const char* sep) {
-    if (sp == NULL || *sp == NULL || **sp == '\0') {
-        return NULL;
-    }
-    char* s = *sp;
-    char* p = s + strcspn(s, sep);
-    if (*p != '\0')
-        *p++ = '\0';
-    *sp = p;
-    return s;
-}
-
-/*
- * Splits `source` string on `sep` and returns the given `part` (counting from one)
- * split_part("one;two;three", ";", 2) == "two"
- */
-static char* split_part(char* source, const char* sep, int64_t part) {
-    char* token;
-    int64_t index = 1;
-    while ((token = str_sep(&source, sep)) != NULL) {
-        if (index == part) {
-            break;
-        }
-        index++;
-    }
-    return token;
-}
-
-static void sqlite3_split_part(sqlite3_context* context, int argc, sqlite3_value** argv) {
+// Splits a string by a separator and returns the n-th part (counting from one).
+// text_split(str, sep, n)
+static void sqlite3_split(sqlite3_context* context, int argc, sqlite3_value** argv) {
     assert(argc == 3);
 
-    char* source = (char*)sqlite3_value_text(argv[0]);
-    if (source == NULL) {
+    const char* src = (char*)sqlite3_value_text(argv[0]);
+    if (src == NULL) {
         sqlite3_result_null(context);
-        return;
-    }
-    if (strcmp(source, "") == 0) {
-        sqlite3_result_text(context, "", -1, SQLITE_TRANSIENT);
         return;
     }
 
     const char* sep = (const char*)sqlite3_value_text(argv[1]);
-    if (!sep) {
+    if (sep == NULL) {
         sqlite3_result_null(context);
         return;
     }
@@ -139,31 +35,79 @@ static void sqlite3_split_part(sqlite3_context* context, int argc, sqlite3_value
         sqlite3_result_error(context, "part parameter should be integer", -1);
         return;
     }
-    int64_t part = sqlite3_value_int64(argv[2]);
+    int part = sqlite3_value_int(argv[2]);
     if (part <= 0) {
         sqlite3_result_error(context, "part parameter should be > 0", -1);
         return;
     }
 
-    char* token = split_part(source, sep, part);
-
-    if (token == NULL) {
-        sqlite3_result_text(context, "", -1, SQLITE_TRANSIENT);
-        return;
-    }
-    sqlite3_result_text(context, token, -1, SQLITE_TRANSIENT);
+    ByteString s_src = bstring.from_cstring(src, strlen(src));
+    ByteString s_sep = bstring.from_cstring(sep, strlen(sep));
+    ByteString s_part = bstring.split_part(s_src, s_sep, part - 1);
+    sqlite3_result_text(context, s_part.bytes, -1, SQLITE_TRANSIENT);
+    bstring.free(s_part);
 }
 
-/*
- * Registers the extension.
- */
+// Reverses a string.
+// text_reverse(str)
+static void sqlite3_reverse(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    assert(argc == 1);
+
+    const char* src = (char*)sqlite3_value_text(argv[0]);
+    if (src == NULL) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    RuneString s_src = rstring.from_cstring(src);
+    RuneString s_res = rstring.reverse(s_src);
+    char* res = rstring.to_cstring(s_src);
+
+    sqlite3_result_text(context, res, -1, free);
+    rstring.free(s_src);
+    rstring.free(s_res);
+}
+
+// substring
+// utf8 text_at(str, idx)
+// utf8 text_substring(str, start [,length])
+// utf8 text_slice(str, start [,end])
+
+// search and match
+// utf8 text_index(str, other)
+// utf8 text_last_index(str, other)
+//      text_contains(str, other)
+//      text_has_prefix(str, prefix)
+//      text_has_suffix(str, suffix)
+//      text_count(str, other)
+
+// split and join
+//      text_split(sep, str, ...)
+//      text_join(sep, str, ...)
+//      text_concat(str, ...)
+//      text_repeat(str, n)
+
+// replace
+//      text_replace(str, old, new [, n])
+// utf8 text_reverse(str)
+
+// trim and pad
+//      text_trim(str)
+//      text_ltrim(str)
+//      text_rtrim(str)
+// !utf text_pad_left(str, length [,fill])
+// !utf text_pad_right(str, length [,fill])
+
 #ifdef _WIN32
 __declspec(dllexport)
 #endif
-    int sqlite3_text_init(sqlite3* db, char** pzErrMsg, const sqlite3_api_routines* pApi) {
-    SQLITE_EXTENSION_INIT2(pApi);
+    int sqlite3_text_init(sqlite3* db, char** errmsg_ptr, const sqlite3_api_routines* api) {
+    (void)errmsg_ptr;
+    SQLITE_EXTENSION_INIT2(api);
     static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
+    sqlite3_create_function(db, "text_reverse", 1, flags, 0, sqlite3_reverse, 0, 0);
     sqlite3_create_function(db, "reverse", 1, flags, 0, sqlite3_reverse, 0, 0);
-    sqlite3_create_function(db, "split_part", 3, flags, 0, sqlite3_split_part, 0, 0);
+    sqlite3_create_function(db, "text_split", 3, flags, 0, sqlite3_split, 0, 0);
+    sqlite3_create_function(db, "split_part", 3, flags, 0, sqlite3_split, 0, 0);
     return SQLITE_OK;
 }

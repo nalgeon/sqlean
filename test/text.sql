@@ -22,4 +22,4 @@ select '18', split_part('one,two,three', '', 1) = 'one,two,three';
 select '19', split_part('one,two,three', NULL, 2) is NULL;
 select '20', split_part('one,,,four', ',', 2) = '';
 select '21', split_part('one,,,four', ',', 4) = 'four';
-select '22', split_part('one/two|three', '/|', 2) = 'two';
+select '22', split_part('one/\two/\three', '/\', 2) = 'two';

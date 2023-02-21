@@ -26,7 +26,7 @@ compile-linux:
 	gcc -Wall -Wno-unknown-pragmas -O3 -fPIC -shared src/sqlite3-math.c -o dist/math.so -lm
 	gcc -Wall -Wno-unknown-pragmas -O3 -fPIC -shared -DPCRE2_CODE_UNIT_WIDTH=8 -DLINK_SIZE=2 -DHAVE_CONFIG_H -DSUPPORT_UNICODE src/sqlite3-regexp.c src/regexp/regexp.c src/regexp/pcre2/*.c -o dist/regexp.so
 	gcc -Wall -Wno-unknown-pragmas -O3 -fPIC -shared src/sqlite3-stats.c -o dist/stats.so -lm
-	gcc -Wall -Wno-unknown-pragmas -O3 -fPIC -shared src/sqlite3-text.c -o dist/text.so
+	gcc -Wall -Wno-unknown-pragmas -O3 -fPIC -shared src/sqlite3-text.c src/text/*.c -o dist/text.so
 	gcc -Wall -Wno-unknown-pragmas -O3 -fPIC -shared src/sqlite3-unicode.c -o dist/unicode.so
 	gcc -Wall -Wno-unknown-pragmas -O3 -fPIC -shared src/sqlite3-uuid.c -o dist/uuid.so
 	gcc -Wall -Wno-unknown-pragmas -O3 -fPIC -shared src/sqlite3-vsv.c -o dist/vsv.so -lm
@@ -43,7 +43,7 @@ compile-windows:
 	gcc -O3 -shared -I. src/sqlite3-math.c -o dist/math.dll -lm
 	gcc -O3 -shared -DPCRE2_CODE_UNIT_WIDTH=8 -DLINK_SIZE=2 -DHAVE_CONFIG_H -DSUPPORT_UNICODE -DPCRE2_STATIC -I. src/sqlite3-regexp.c src/regexp/regexp.c src/regexp/pcre2/*.c -o dist/regexp.dll
 	gcc -O3 -shared -I. src/sqlite3-stats.c -o dist/stats.dll -lm
-	gcc -O3 -shared -I. src/sqlite3-text.c -o dist/text.dll
+	gcc -O3 -shared -I. src/sqlite3-text.c src/text/*.c -o dist/text.dll
 	gcc -O3 -shared -I. src/sqlite3-unicode.c -o dist/unicode.dll
 	gcc -O3 -shared -I. src/sqlite3-uuid.c -o dist/uuid.dll
 	gcc -O3 -shared -I. src/sqlite3-vsv.c -o dist/vsv.dll -lm
@@ -61,7 +61,7 @@ compile-macos:
 	gcc -Wall -O3 -fPIC -dynamiclib -I src src/sqlite3-math.c -o dist/math.dylib -lm
 	gcc -Wall -O3 -fPIC -dynamiclib -DPCRE2_CODE_UNIT_WIDTH=8 -DLINK_SIZE=2 -DHAVE_CONFIG_H -DSUPPORT_UNICODE -I src src/sqlite3-regexp.c src/regexp/regexp.c src/regexp/pcre2/*.c -o dist/regexp.dylib
 	gcc -Wall -O3 -fPIC -dynamiclib -I src src/sqlite3-stats.c -o dist/stats.dylib -lm
-	gcc -Wall -O3 -fPIC -dynamiclib -I src src/sqlite3-text.c -o dist/text.dylib
+	gcc -Wall -O3 -fPIC -dynamiclib -I src src/sqlite3-text.c src/text/*.c -o dist/text.dylib
 	gcc -Wall -O3 -fPIC -dynamiclib -I src src/sqlite3-unicode.c -o dist/unicode.dylib
 	gcc -Wall -O3 -fPIC -dynamiclib -I src src/sqlite3-uuid.c -o dist/uuid.dylib
 	gcc -Wall -O3 -fPIC -dynamiclib -I src src/sqlite3-vsv.c -o dist/vsv.dylib -lm
@@ -77,7 +77,7 @@ compile-macos-x86:
 	gcc -O3 -fPIC -dynamiclib -I src src/sqlite3-math.c -o dist/x86/math.dylib -target x86_64-apple-macos10.12 -lm
 	gcc -O3 -fPIC -dynamiclib -DPCRE2_CODE_UNIT_WIDTH=8 -DLINK_SIZE=2 -DHAVE_CONFIG_H -DSUPPORT_UNICODE -I src src/sqlite3-regexp.c src/regexp/regexp.c src/regexp/pcre2/*.c -o dist/x86/regexp.dylib -target x86_64-apple-macos10.12
 	gcc -O3 -fPIC -dynamiclib -I src src/sqlite3-stats.c -o dist/x86/stats.dylib -target x86_64-apple-macos10.12 -lm
-	gcc -O3 -fPIC -dynamiclib -I src src/sqlite3-text.c -o dist/x86/text.dylib -target x86_64-apple-macos10.12
+	gcc -O3 -fPIC -dynamiclib -I src src/sqlite3-text.c src/text/*.c -o dist/x86/text.dylib -target x86_64-apple-macos10.12
 	gcc -O3 -fPIC -dynamiclib -I src src/sqlite3-unicode.c -o dist/x86/unicode.dylib -target x86_64-apple-macos10.12
 	gcc -O3 -fPIC -dynamiclib -I src src/sqlite3-uuid.c -o dist/x86/uuid.dylib -target x86_64-apple-macos10.12
 	gcc -O3 -fPIC -dynamiclib -I src src/sqlite3-vsv.c -o dist/x86/vsv.dylib -target x86_64-apple-macos10.12 -lm
@@ -93,7 +93,7 @@ compile-macos-arm64:
 	gcc -O3 -fPIC -dynamiclib -I src src/sqlite3-math.c -o dist/arm64/math.dylib -target arm64-apple-macos11 -lm
 	gcc -O3 -fPIC -dynamiclib -DPCRE2_CODE_UNIT_WIDTH=8 -DLINK_SIZE=2 -DHAVE_CONFIG_H -DSUPPORT_UNICODE -I src src/sqlite3-regexp.c src/regexp/regexp.c src/regexp/pcre2/*.c -o dist/arm64/regexp.dylib -target arm64-apple-macos11
 	gcc -O3 -fPIC -dynamiclib -I src src/sqlite3-stats.c -o dist/arm64/stats.dylib -target arm64-apple-macos11 -lm
-	gcc -O3 -fPIC -dynamiclib -I src src/sqlite3-text.c -o dist/arm64/text.dylib -target arm64-apple-macos11
+	gcc -O3 -fPIC -dynamiclib -I src src/sqlite3-text.c src/text/*.c -o dist/arm64/text.dylib -target arm64-apple-macos11
 	gcc -O3 -fPIC -dynamiclib -I src src/sqlite3-unicode.c -o dist/arm64/unicode.dylib -target arm64-apple-macos11
 	gcc -O3 -fPIC -dynamiclib -I src src/sqlite3-uuid.c -o dist/arm64/uuid.dylib -target arm64-apple-macos11
 	gcc -O3 -fPIC -dynamiclib -I src src/sqlite3-vsv.c -o dist/arm64/vsv.dylib -target arm64-apple-macos11 -lm
@@ -122,3 +122,9 @@ test-all:
 test:
 	@sqlite3 < test/$(suite).sql > test.log
 	@cat test.log | (! grep -Ex "[0-9]+.[^1]")
+
+ctest:
+	gcc -Wall test/$(package)/$(module).test.c src/$(package)/*.c -o $(package).$(module)
+	@chmod +x $(package).$(module)
+	@./$(package).$(module)
+	@rm -f $(package).$(module)
