@@ -12,9 +12,11 @@ Main features:
 -   Create a symlink.
 -   List files in a directory.
 
-### fileio_read(path)
+### fileio_read(path [,offset [,limit]])
 
 Reads the file specified by `path` and returns its contents as `blob`.
+If offset is supplied and is non-zero and less than the file size, then seek to that offset before reading.
+If limit is supplied and is non-zero then limit the number of bytes read to limit.
 
 ```sql
 select fileio_write('hello.txt', 'hello world');
