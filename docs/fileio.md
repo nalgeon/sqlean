@@ -15,8 +15,10 @@ Main features:
 ### fileio_read(path [,offset [,limit]])
 
 Reads the file specified by `path` and returns its contents as `blob`.
-If offset is supplied and is non-zero and less than the file size, then seek to that offset before reading.
-If limit is supplied and is non-zero then limit the number of bytes read to limit.
+
+If `offset > 0`, seeks to that offset before reading. If `offset` is past the end of the file, returns `zeroblob(0)`.
+
+If `limit > 0`, limits the number of bytes read.
 
 ```sql
 select fileio_write('hello.txt', 'hello world');
@@ -27,6 +29,15 @@ select typeof(fileio_read('hello.txt'));
 
 select length(fileio_read('hello.txt'));
 -- 11
+
+select fileio_read('hello.txt');
+-- hello world
+
+select fileio_read('hello.txt', 6);
+-- world
+
+select fileio_read('hello.txt', 0, 5);
+-- hello
 ```
 
 ### fileio_scan(path)
