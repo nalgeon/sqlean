@@ -31,18 +31,12 @@ static void sqlite3_substring2(sqlite3_context* context, int argc, sqlite3_value
     }
     int start = sqlite3_value_int(argv[1]);
 
-    RuneString s_src = rstring.from_cstring(src);
-
-    // as implemented in sqlite
-    if (start < 0) {
-        // substr('hello', -2) = 'lo'
-        start = s_src.length + start + 1;
-    } else if (start == 0) {
-        // substr('hello', 0) = 'hello'
-        start = 1;
+    if (start > 0) {
+        start -= 1;
     }
 
-    RuneString s_res = rstring.substring(s_src, start - 1, s_src.length);
+    RuneString s_src = rstring.from_cstring(src);
+    RuneString s_res = rstring.slice(s_src, start, s_src.length);
     char* res = rstring.to_cstring(s_res);
     sqlite3_result_text(context, res, -1, free);
     rstring.free(s_res);
@@ -71,26 +65,11 @@ static void sqlite3_substring3(sqlite3_context* context, int argc, sqlite3_value
     }
     int length = sqlite3_value_int(argv[2]);
 
-    RuneString s_src = rstring.from_cstring(src);
-
-    // as implemented in sqlite
-    if (start < 0) {
-        // substr('hello', -2) = 'lo'
-        start = s_src.length + start + 1;
-    } else if (start == 0) {
-        // substr('hello', 0) = 'hello'
-        start = 1;
+    if (start > 0) {
+        start -= 1;
     }
 
-    // as implemented in sqlite
     int end = start + length;
-    if (end < 1) {
-        // substr('hello', 3, -2) = 'el'
-        end = 1;
-    } else if (end > s_src.length + 1) {
-        // substr('hello', 3, 5) = 'llo'
-        end = s_src.length + 1;
-    }
 
     // slice() expects end to be greater than start,
     // so swap them if necessary
@@ -100,7 +79,44 @@ static void sqlite3_substring3(sqlite3_context* context, int argc, sqlite3_value
         end = tmp;
     }
 
-    RuneString s_res = rstring.slice(s_src, start - 1, end - 1);
+    RuneString s_src = rstring.from_cstring(src);
+    RuneString s_res = rstring.slice(s_src, start, end);
+    char* res = rstring.to_cstring(s_res);
+    sqlite3_result_text(context, res, -1, free);
+    rstring.free(s_res);
+}
+
+// Extracts a substring from `start` position inclusive to `end` position non-inclusive (1-based).
+// text_slice(str, start, end)
+static void sqlite3_slice(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    assert(argc == 3);
+
+    const char* src = (char*)sqlite3_value_text(argv[0]);
+    if (src == NULL) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    if (sqlite3_value_type(argv[1]) != SQLITE_INTEGER) {
+        sqlite3_result_error(context, "start parameter should be integer", -1);
+        return;
+    }
+    int start = sqlite3_value_int(argv[1]);
+    if (start > 0) {
+        start -= 1;
+    }
+
+    if (sqlite3_value_type(argv[2]) != SQLITE_INTEGER) {
+        sqlite3_result_error(context, "end parameter should be integer", -1);
+        return;
+    }
+    int end = sqlite3_value_int(argv[2]);
+    if (end > 0) {
+        end -= 1;
+    }
+
+    RuneString s_src = rstring.from_cstring(src);
+    RuneString s_res = rstring.slice(s_src, start, end);
     char* res = rstring.to_cstring(s_res);
     sqlite3_result_text(context, res, -1, free);
     rstring.free(s_res);
@@ -198,6 +214,8 @@ __declspec(dllexport)
     static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
     sqlite3_create_function(db, "text_substring", 2, flags, 0, sqlite3_substring2, 0, 0);
     sqlite3_create_function(db, "text_substring", 3, flags, 0, sqlite3_substring3, 0, 0);
+    sqlite3_create_function(db, "text_slice", 2, flags, 0, sqlite3_substring2, 0, 0);
+    sqlite3_create_function(db, "text_slice", 3, flags, 0, sqlite3_slice, 0, 0);
     sqlite3_create_function(db, "text_reverse", 1, flags, 0, sqlite3_reverse, 0, 0);
     sqlite3_create_function(db, "reverse", 1, flags, 0, sqlite3_reverse, 0, 0);
     sqlite3_create_function(db, "text_split", 3, flags, 0, sqlite3_split, 0, 0);
