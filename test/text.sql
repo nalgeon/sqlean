@@ -4,19 +4,23 @@
 .load dist/text
 
 -- Substring
-select '01', text_substring('hello world', -1) = 'hello world';
-select '02', text_substring('hello world', 0) = 'hello world';
-select '03', text_substring('hello world', 1) = 'hello world';
-select '04', text_substring('hello world', 7) = 'world';
-select '05', text_substring('hello world', 11) = 'd';
-select '06', text_substring('hello world', 12) = '';
+select '01', text_substring('hello world', 0) = 'hello world';
+select '02', text_substring('hello world', 1) = 'hello world';
+select '03', text_substring('hello world', 7) = 'world';
+select '04', text_substring('hello world', 11) = 'd';
+select '05', text_substring('hello world', 12) = '';
+select '06', text_substring('hello world', -1) = 'd';
+select '07', text_substring('hello world', -5) = 'world';
 
 select '11', text_substring('hello world', 1, 5) = 'hello';
 select '12', text_substring('hello world', 7, 5) = 'world';
 select '13', text_substring('hello world', 1, 1) = 'h';
 select '14', text_substring('hello world', 11, 1) = 'd';
 select '15', text_substring('hello world', 12, 1) = '';
-select '16', text_substring('hello world', -2, 5) = 'he';
+select '16', text_substring('hello world', 6, -2) = 'lo';
+select '17', text_substring('hello world', 6, -5) = 'hello';
+select '18', text_substring('hello world', 6, -10) = 'hello';
+select '19', text_substring('hello world', -3, -2) = 'wo';
 
 /*
 -- Reverse string
