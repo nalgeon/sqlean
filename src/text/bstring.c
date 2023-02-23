@@ -81,8 +81,8 @@ static ByteString string_slice(ByteString str, int start, int end) {
 }
 
 static ByteString string_substring(ByteString str, size_t start, size_t length) {
-    if (length > str.length) {
-        length = str.length;
+    if (length > str.length - start) {
+        length = str.length - start;
     }
     return string_slice(str, start, start + length);
 }

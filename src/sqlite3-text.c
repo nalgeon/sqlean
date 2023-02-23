@@ -14,6 +14,77 @@
 
 SQLITE_EXTENSION_INIT1
 
+// Extracts a substring starting at the `start` position (1-based).
+// text_substring(str, start)
+static void sqlite3_substring2(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    assert(argc == 2);
+
+    const char* src = (char*)sqlite3_value_text(argv[0]);
+    if (src == NULL) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    if (sqlite3_value_type(argv[1]) != SQLITE_INTEGER) {
+        sqlite3_result_error(context, "start parameter should be integer", -1);
+        return;
+    }
+    int start = sqlite3_value_int(argv[1]);
+
+    // as implemented in postgres:
+    // substr('hello', -2) = substr(1) = 'hello'
+    if (start <= 0) {
+        start = 1;
+    }
+
+    RuneString s_src = rstring.from_cstring(src);
+    RuneString s_res = rstring.substring(s_src, start - 1, s_src.length);
+    char* res = rstring.to_cstring(s_res);
+    sqlite3_result_text(context, res, -1, free);
+    rstring.free(s_res);
+}
+
+// Extracts a substring of `length` characters starting at the `start` position (1-based).
+// text_substring(str, start, length)
+static void sqlite3_substring3(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    assert(argc == 3);
+
+    const char* src = (char*)sqlite3_value_text(argv[0]);
+    if (src == NULL) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    if (sqlite3_value_type(argv[1]) != SQLITE_INTEGER) {
+        sqlite3_result_error(context, "start parameter should be integer", -1);
+        return;
+    }
+    int start = sqlite3_value_int(argv[1]);
+
+    if (sqlite3_value_type(argv[2]) != SQLITE_INTEGER) {
+        sqlite3_result_error(context, "length parameter should be integer", -1);
+        return;
+    }
+    int length = sqlite3_value_int(argv[2]);
+    if (length <= 0) {
+        sqlite3_result_error(context, "length parameter should >= 0", -1);
+        return;
+    }
+
+    // as implemented in postgres:
+    // substr('hello', -2, 5) = substr(1, 2) = 'he'
+    if (start <= 0) {
+        length += (start - 1);
+        start = 1;
+    }
+
+    RuneString s_src = rstring.from_cstring(src);
+    RuneString s_res = rstring.substring(s_src, start - 1, length);
+    char* res = rstring.to_cstring(s_res);
+    sqlite3_result_text(context, res, -1, free);
+    rstring.free(s_res);
+}
+
 // Splits a string by a separator and returns the n-th part (counting from one).
 // text_split(str, sep, n)
 static void sqlite3_split(sqlite3_context* context, int argc, sqlite3_value** argv) {
@@ -61,7 +132,7 @@ static void sqlite3_reverse(sqlite3_context* context, int argc, sqlite3_value** 
 
     RuneString s_src = rstring.from_cstring(src);
     RuneString s_res = rstring.reverse(s_src);
-    char* res = rstring.to_cstring(s_src);
+    char* res = rstring.to_cstring(s_res);
 
     sqlite3_result_text(context, res, -1, free);
     rstring.free(s_src);
@@ -69,7 +140,6 @@ static void sqlite3_reverse(sqlite3_context* context, int argc, sqlite3_value** 
 }
 
 // substring
-// utf8 text_at(str, idx)
 // utf8 text_substring(str, start [,length])
 // utf8 text_slice(str, start [,end])
 
@@ -105,6 +175,8 @@ __declspec(dllexport)
     (void)errmsg_ptr;
     SQLITE_EXTENSION_INIT2(api);
     static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
+    sqlite3_create_function(db, "text_substring", 2, flags, 0, sqlite3_substring2, 0, 0);
+    sqlite3_create_function(db, "text_substring", 3, flags, 0, sqlite3_substring3, 0, 0);
     sqlite3_create_function(db, "text_reverse", 1, flags, 0, sqlite3_reverse, 0, 0);
     sqlite3_create_function(db, "reverse", 1, flags, 0, sqlite3_reverse, 0, 0);
     sqlite3_create_function(db, "text_split", 3, flags, 0, sqlite3_split, 0, 0);

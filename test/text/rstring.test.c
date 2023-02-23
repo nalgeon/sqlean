@@ -89,6 +89,12 @@ static void test_substring(void) {
     }
 
     {
+        RuneString slice = rstring.substring(str, 7, str.length);
+        assert(eq(slice, "мир"));
+        rstring.free(slice);
+    }
+
+    {
         RuneString slice = rstring.substring(str, 1, 1);
         assert(eq(slice, "р"));
         rstring.free(slice);

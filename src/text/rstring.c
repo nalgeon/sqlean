@@ -98,8 +98,8 @@ static RuneString string_slice(RuneString str, int start, int end) {
 }
 
 static RuneString string_substring(RuneString str, size_t start, size_t length) {
-    if (length > str.length) {
-        length = str.length;
+    if (length > str.length - start) {
+        length = str.length - start;
     }
     return string_slice(str, start, start + length);
 }

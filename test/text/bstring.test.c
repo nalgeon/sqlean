@@ -80,6 +80,12 @@ static void test_substring(void) {
     }
 
     {
+        ByteString slice = bstring.substring(str, 6, str.length);
+        assert(eq(slice, "world"));
+        bstring.free(slice);
+    }
+
+    {
         ByteString slice = bstring.substring(str, 1, 1);
         assert(eq(slice, "e"));
         bstring.free(slice);

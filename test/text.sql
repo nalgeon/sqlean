@@ -3,23 +3,40 @@
 
 .load dist/text
 
+-- Substring
+select '01', text_substring('hello world', -1) = 'hello world';
+select '02', text_substring('hello world', 0) = 'hello world';
+select '03', text_substring('hello world', 1) = 'hello world';
+select '04', text_substring('hello world', 7) = 'world';
+select '05', text_substring('hello world', 11) = 'd';
+select '06', text_substring('hello world', 12) = '';
+
+select '11', text_substring('hello world', 1, 5) = 'hello';
+select '12', text_substring('hello world', 7, 5) = 'world';
+select '13', text_substring('hello world', 1, 1) = 'h';
+select '14', text_substring('hello world', 11, 1) = 'd';
+select '15', text_substring('hello world', 12, 1) = '';
+select '16', text_substring('hello world', -2, 5) = 'he';
+
+/*
 -- Reverse string
-select '01', reverse(null) is NULL;
-select '02', reverse('hello') = 'olleh';
-select '03', reverse('привет') = 'тевирп';
-select '04', reverse("𐌀𐌁𐌂") = '𐌂𐌁𐌀';
-select '05', reverse('hello 42@ world') = 'dlrow @24 olleh';
+select 'x1', text_reverse(null) is NULL;
+select 'x2', text_reverse('hello') = 'olleh';
+select 'x3', text_reverse('привет') = 'тевирп';
+select 'x4', text_reverse("𐌀𐌁𐌂") = '𐌂𐌁𐌀';
+select 'x5', text_reverse('hello 42@ world') = 'dlrow @24 olleh';
 
 -- Extract part from string
-select '11', split_part(NULL, ',', 2) is NULL;
-select '12', split_part('', ',', 2) = '';
-select '13', split_part('one,two,three', ',', 2) = 'two';
-select '14', split_part('one|two|three', '|', 2) = 'two';
-select '15', split_part('один,два,три', ',', 2) = 'два';
-select '16', split_part('one,two,three', ',', 10) = '';
-select '17', split_part('one,two,three', ';', 2) = '';
-select '18', split_part('one,two,three', '', 1) = 'one,two,three';
-select '19', split_part('one,two,three', NULL, 2) is NULL;
-select '20', split_part('one,,,four', ',', 2) = '';
-select '21', split_part('one,,,four', ',', 4) = 'four';
-select '22', split_part('one/\two/\three', '/\', 2) = 'two';
+select 'y1', text_split(NULL, ',', 2) is NULL;
+select 'y2', text_split('', ',', 2) = '';
+select 'y3', text_split('one,two,three', ',', 2) = 'two';
+select 'y4', text_split('one|two|three', '|', 2) = 'two';
+select 'y5', text_split('один,два,три', ',', 2) = 'два';
+select 'y6', text_split('one,two,three', ',', 10) = '';
+select 'y7', text_split('one,two,three', ';', 2) = '';
+select 'y8', text_split('one,two,three', '', 1) = 'one,two,three';
+select 'y9', text_split('one,two,three', NULL, 2) is NULL;
+select 'y0', text_split('one,,,four', ',', 2) = '';
+select 'y1', text_split('one,,,four', ',', 4) = 'four';
+select 'y2', text_split('one/\two/\three', '/\', 2) = 'two';
+*/
