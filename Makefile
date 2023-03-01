@@ -3,6 +3,10 @@
 
 .PHONY: test
 
+export SQLITE_RELEASE_YEAR=2021
+export SQLITE_VERSION=3360000
+export SQLITE_BRANCH="3.36"
+
 prepare-dist:
 	mkdir -p dist
 	rm -rf dist/*

@@ -117,6 +117,26 @@ db.exec("select median(value) from generate_series(1, 99)");
 db.close();
 ```
 
+## Building from Source
+
+Download the dependencies:
+
+```
+make prepare-dist
+make download-sqlite
+make download-external
+```
+
+Then build for your OS (choose one of the following):
+
+```
+make compile-linux
+make compile-windows
+make compile-macos
+```
+
+You'll find the compiled extensions in the `dist` folder.
+
 ## Contributing
 
 Contributions are welcome! Submit your own or third-party extension to the incubator:
