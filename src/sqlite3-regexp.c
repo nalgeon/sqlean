@@ -208,10 +208,10 @@ static void regexp_substr(sqlite3_context* context, int argc, sqlite3_value** ar
 /*
  * Finds a substring of the source string that matches the pattern
  * and returns the nth matching group within that substring.
- * regexp_group(source, pattern[, n])
- * E.g.: select regexp_group('abcdef', 'b(.)d', 1) = 'c';
+ * regexp_capture(source, pattern[, n])
+ * E.g.: select regexp_capture('abcdef', 'b(.)d', 1) = 'c';
  */
-static void regexp_group(sqlite3_context* context, int argc, sqlite3_value** argv) {
+static void regexp_capture(sqlite3_context* context, int argc, sqlite3_value** argv) {
     const char* source;
     const char* pattern;
 
@@ -355,8 +355,8 @@ __declspec(dllexport)
     sqlite3_create_function(db, "regexp", 2, flags, 0, regexp_statement, 0, 0);
     sqlite3_create_function(db, "regexp_like", 2, flags, 0, regexp_like, 0, 0);
     sqlite3_create_function(db, "regexp_substr", 2, flags, 0, regexp_substr, 0, 0);
-    sqlite3_create_function(db, "regexp_group", 2, flags, 0, regexp_group, 0, 0);
-    sqlite3_create_function(db, "regexp_group", 3, flags, 0, regexp_group, 0, 0);
+    sqlite3_create_function(db, "regexp_capture", 2, flags, 0, regexp_capture, 0, 0);
+    sqlite3_create_function(db, "regexp_capture", 3, flags, 0, regexp_capture, 0, 0);
     sqlite3_create_function(db, "regexp_replace", 3, flags, 0, regexp_replace, 0, 0);
     return SQLITE_OK;
 }
