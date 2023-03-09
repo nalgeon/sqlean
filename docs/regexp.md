@@ -37,6 +37,17 @@ sqlite> select regexp_substr('the year is 2021', '2k21');
 (null)
 ```
 
+### `regexp_group(source, pattern [, n])`
+
+Finds a substring of the source string that matches the pattern and returns the nth matching group within that substring. Group numbering starts at 1. n = 0 (default) returns the entire substring.
+
+```
+sqlite> select regexp_group('years is 2021', '\d\d(\d\d)', 0);
+2021
+sqlite> select regexp_group('years is 2021', '\d\d(\d\d)', 1);
+21
+```
+
 ### `regexp_replace(source, pattern, replacement)`
 
 Replaces all matching substrings with the replacement string.

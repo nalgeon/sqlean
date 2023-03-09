@@ -35,3 +35,16 @@ select '111', regexp_substr('the year is 2021', 'y(?=ear)') = 'y';
 
 -- unicode
 select '151', regexp_substr('-- привет --', '\b\w+\b') = 'привет';
+
+-- regexp substr
+select '171', regexp_substr('abcdef', 'b.d') = 'bcd';
+select '172', regexp_substr('abcdef', 'b(.)d') = 'bcd';
+select '173', regexp_substr('abcdef', 'z') is null;
+
+-- regexp group
+select '181', regexp_group('abcdef', 'b.d', 0) = 'bcd';
+select '182', regexp_group('abcdef', 'b(.)d') = 'bcd';
+select '183', regexp_group('abcdef', 'b(.)d', 0) = 'bcd';
+select '184', regexp_group('abcdef', 'b(.)d', 1) = 'c';
+select '185', regexp_group('abcdef', 'b(.)d', 2) is null;
+select '186', regexp_group('abcdef', 'z', 0) is null;

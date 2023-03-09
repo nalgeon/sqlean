@@ -177,7 +177,7 @@ static void regexp_substr(sqlite3_context* context, int argc, sqlite3_value** ar
     }
 
     char* matched_str;
-    int rc = regexp.substr(re, source, &matched_str);
+    int rc = regexp.extract(re, source, 0, &matched_str);
     if (rc == -1) {
         if (is_new_re) {
             regexp.free(re);
@@ -196,6 +196,74 @@ static void regexp_substr(sqlite3_context* context, int argc, sqlite3_value** ar
 #ifdef DEBUG
     fprintf(stderr, "matched_str = '%s'\n", matched_str);
 #endif
+
+    sqlite3_result_text(context, matched_str, -1, SQLITE_TRANSIENT);
+    free(matched_str);
+
+    if (is_new_re) {
+        sqlite3_set_auxdata(context, 1, re, (void (*)(void*))regexp.free);
+    }
+}
+
+/*
+ * Finds a substring of the source string that matches the pattern
+ * and returns the nth matching group within that substring.
+ * regexp_group(source, pattern[, n])
+ * E.g.: select regexp_group('abcdef', 'b(.)d', 1) = 'c';
+ */
+static void regexp_group(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    const char* source;
+    const char* pattern;
+
+    assert(argc == 2 || argc == 3);
+
+    source = (const char*)sqlite3_value_text(argv[0]);
+    if (!source) {
+        return;
+    }
+
+    pattern = (const char*)sqlite3_value_text(argv[1]);
+    if (!pattern) {
+        sqlite3_result_error(context, "missing regexp pattern", -1);
+        return;
+    }
+
+    size_t group_idx = 0;
+    if (argc == 3) {
+        if (sqlite3_value_type(argv[2]) != SQLITE_INTEGER) {
+            sqlite3_result_error(context, "group number should be integer", -1);
+            return;
+        }
+        group_idx = sqlite3_value_int64(argv[2]);
+    }
+
+    bool is_new_re = false;
+    pcre2_code* re = sqlite3_get_auxdata(context, 1);
+    if (re == NULL) {
+        re = regexp.compile(pattern);
+        if (re == NULL) {
+            sqlite3_result_error_nomem(context);
+            return;
+        }
+        is_new_re = true;
+    }
+
+    char* matched_str;
+    int rc = regexp.extract(re, source, group_idx, &matched_str);
+    if (rc == -1) {
+        if (is_new_re) {
+            regexp.free(re);
+        }
+        sqlite3_result_error(context, "invalid regexp pattern", -1);
+        return;
+    }
+
+    if (rc == 0) {
+        if (is_new_re) {
+            regexp.free(re);
+        }
+        return;
+    }
 
     sqlite3_result_text(context, matched_str, -1, SQLITE_TRANSIENT);
     free(matched_str);
@@ -287,6 +355,8 @@ __declspec(dllexport)
     sqlite3_create_function(db, "regexp", 2, flags, 0, regexp_statement, 0, 0);
     sqlite3_create_function(db, "regexp_like", 2, flags, 0, regexp_like, 0, 0);
     sqlite3_create_function(db, "regexp_substr", 2, flags, 0, regexp_substr, 0, 0);
+    sqlite3_create_function(db, "regexp_group", 2, flags, 0, regexp_group, 0, 0);
+    sqlite3_create_function(db, "regexp_group", 3, flags, 0, regexp_group, 0, 0);
     sqlite3_create_function(db, "regexp_replace", 3, flags, 0, regexp_replace, 0, 0);
     return SQLITE_OK;
 }
