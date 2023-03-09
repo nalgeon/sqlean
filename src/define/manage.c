@@ -225,6 +225,17 @@ static int create_function(sqlite3* db, const char* name, const char* body) {
         return ret;
     }
     int nparams = sqlite3_bind_parameter_count(stmt);
+    // We are going to cache the statement in the function constructor and retrieve it later
+    // when executing the function, using sqlite3_user_data(). But relying on this internal cache
+    // is not enough.
+    //
+    // SQLite requires all prepared statements to be closed before calling the function destructor
+    // when closing the connection. So we can't close the statement in the function destructor.
+    // We have to cache it in the external cache and ask the user to manually free it
+    // before closing the connection.
+    //
+    // Alternatively, we can cache via the sqlite3_set_auxdata() with a negative slot,
+    // but that seems rather hacky.
     if ((ret = cache_add(stmt)) != SQLITE_OK) {
         return ret;
     }
