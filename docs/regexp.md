@@ -37,7 +37,7 @@ select regexp_substr('the year is 2021', '2k21');
 -- (null)
 ```
 
-### 🚧 `regexp_capture(source, pattern [, n])`
+### `regexp_capture(source, pattern [, n])`
 
 Finds a substring of the source string that matches the pattern and returns the `n`th matching group within that substring. Group numbering starts at 1. `n = 0` (default) returns the entire substring.
 
