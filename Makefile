@@ -7,7 +7,7 @@ SQLITE_RELEASE_YEAR := 2021
 SQLITE_VERSION := 3360000
 SQLITE_BRANCH := 3.36
 
-SQLEAN_VERSION := '"$(or $(git tag --points-at HEAD),main)"'
+SQLEAN_VERSION := '"$(or $(shell git tag --points-at HEAD),main)"'
 
 LINIX_FLAGS := -Wall -Wno-unknown-pragmas -fPIC -shared -DSQLEAN_VERSION=$(SQLEAN_VERSION)
 WINDO_FLAGS := -shared -DSQLEAN_VERSION=$(SQLEAN_VERSION)
