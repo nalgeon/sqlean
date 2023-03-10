@@ -7,6 +7,7 @@
 #include <assert.h>
 #include <math.h>
 
+#include "sqlean.h"
 #include "sqlite3ext.h"
 SQLITE_EXTENSION_INIT1
 
@@ -206,6 +207,11 @@ static void piFunc(sqlite3_context* context, int argc, sqlite3_value** argv) {
     sqlite3_result_double(context, M_PI);
 }
 
+// Returns the current Sqlean version.
+static void sqlean_version(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    sqlite3_result_text(context, SQLEAN_VERSION, -1, SQLITE_STATIC);
+}
+
 /*
  * Registers the extension.
  */
@@ -245,5 +251,6 @@ __declspec(dllexport)
     sqlite3_create_function(db, "radians", 1, flags, degToRad, math1Func, 0, 0);
     sqlite3_create_function(db, "degrees", 1, flags, radToDeg, math1Func, 0, 0);
     sqlite3_create_function(db, "pi", 0, flags, 0, piFunc, 0, 0);
+    sqlite3_create_function(db, "sqlean_version", 0, flags, 0, sqlean_version, 0, 0);
     return SQLITE_OK;
 }

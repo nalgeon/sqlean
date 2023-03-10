@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "sqlean.h"
 #include "sqlite3ext.h"
 
 SQLITE_EXTENSION_INIT1
@@ -154,6 +155,11 @@ static void sqlite3_split_part(sqlite3_context* context, int argc, sqlite3_value
     sqlite3_result_text(context, token, -1, SQLITE_TRANSIENT);
 }
 
+// Returns the current Sqlean version.
+static void sqlean_version(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    sqlite3_result_text(context, SQLEAN_VERSION, -1, SQLITE_STATIC);
+}
+
 /*
  * Registers the extension.
  */
@@ -165,5 +171,6 @@ __declspec(dllexport)
     static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
     sqlite3_create_function(db, "reverse", 1, flags, 0, sqlite3_reverse, 0, 0);
     sqlite3_create_function(db, "split_part", 3, flags, 0, sqlite3_split_part, 0, 0);
+    sqlite3_create_function(db, "sqlean_version", 0, flags, 0, sqlean_version, 0, 0);
     return SQLITE_OK;
 }

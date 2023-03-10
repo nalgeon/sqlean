@@ -51,11 +51,13 @@
  * If the X input string has too few or too many digits or contains
  * stray characters other than {, }, or -, then NULL is returned.
  */
-#include "sqlite3ext.h"
-SQLITE_EXTENSION_INIT1
 #include <assert.h>
 #include <ctype.h>
 #include <string.h>
+
+#include "sqlean.h"
+#include "sqlite3ext.h"
+SQLITE_EXTENSION_INIT1
 
 #if !defined(SQLITE_ASCII) && !defined(SQLITE_EBCDIC)
 #define SQLITE_ASCII 1
@@ -197,6 +199,11 @@ static void sqlite3_uuid_blob(sqlite3_context* context, int argc, sqlite3_value*
     sqlite3_result_blob(context, pBlob, 16, SQLITE_TRANSIENT);
 }
 
+// Returns the current Sqlean version.
+static void sqlean_version(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    sqlite3_result_text(context, SQLEAN_VERSION, -1, SQLITE_STATIC);
+}
+
 #ifdef _WIN32
 __declspec(dllexport)
 #endif
@@ -210,5 +217,6 @@ __declspec(dllexport)
     static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
     sqlite3_create_function(db, "uuid_str", 1, flags, 0, sqlite3_uuid_str, 0, 0);
     sqlite3_create_function(db, "uuid_blob", 1, flags, 0, sqlite3_uuid_blob, 0, 0);
+    sqlite3_create_function(db, "sqlean_version", 0, flags, 0, sqlean_version, 0, 0);
     return SQLITE_OK;
 }

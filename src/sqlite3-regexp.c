@@ -22,6 +22,7 @@
 
 #include "regexp/pcre2/pcre2.h"
 #include "regexp/regexp.h"
+#include "sqlean.h"
 #include "sqlite3ext.h"
 SQLITE_EXTENSION_INIT1
 
@@ -343,6 +344,11 @@ static void regexp_replace(sqlite3_context* context, int argc, sqlite3_value** a
     }
 }
 
+// Returns the current Sqlean version.
+static void sqlean_version(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    sqlite3_result_text(context, SQLEAN_VERSION, -1, SQLITE_STATIC);
+}
+
 /*
  * Registers the extension.
  */
@@ -358,5 +364,6 @@ __declspec(dllexport)
     sqlite3_create_function(db, "regexp_capture", 2, flags, 0, regexp_capture, 0, 0);
     sqlite3_create_function(db, "regexp_capture", 3, flags, 0, regexp_capture, 0, 0);
     sqlite3_create_function(db, "regexp_replace", 3, flags, 0, regexp_replace, 0, 0);
+    sqlite3_create_function(db, "sqlean_version", 0, flags, 0, sqlean_version, 0, 0);
     return SQLITE_OK;
 }
