@@ -3,6 +3,10 @@
 
 .PHONY: prepare-dist download-sqlite download-external compile-linux compile-windows compile-macos test test-all
 
+SQLITE_RELEASE_YEAR := 2021
+SQLITE_VERSION := 3360000
+SQLITE_BRANCH := 3.36
+
 prepare-dist:
 	mkdir -p dist
 	rm -f dist/*
