@@ -65,6 +65,7 @@ test-all:
 5. Compile for you OS and run tests to verify that everything is OK:
 
 ```shell
+make prepare-dist
 make compile-linux
 make test suite=cbrt
 ```

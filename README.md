@@ -1,4 +1,4 @@
-# SQLite extensions incubator
+# SQLite Extensions Incubator
 
 The incubator contains SQLite extensions which haven't yet made their way to the main set. They may be untested, poorly documented, too broad, too narrow, or without a well-thought API. Think of them as candidates for the standard library.
 
@@ -16,24 +16,25 @@ There are [precompiled binaries](https://github.com/nalgeon/sqlean/releases/tag/
 
 Binaries are 64-bit and require a 64-bit SQLite version. If you are using SQLite shell on Windows (`sqlite.exe`), its 64-bit version is available at https://github.com/nalgeon/sqlite.
 
-## Usage
+## Installation and usage
 
-CLI usage:
+Examples below use the `cbrt` extension; you can specify any other supported extension.
+
+SQLite command-line interface (CLI, aka 'sqlite3.exe' on Windows):
 
 ```
 sqlite> .load ./cbrt
 sqlite> select cbrt(27);
-3.0
 ```
 
-IDE usage:
+IDE, e.g. SQLiteStudio, SQLiteSpy or DBeaver:
 
 ```
 select load_extension('/path/to/extension/cbrt');
 select cbrt(27);
 ```
 
-In-app usage:
+Python:
 
 ```python
 import sqlite3
@@ -45,7 +46,35 @@ connection.execute("select cbrt(27)")
 connection.close()
 ```
 
-You can specify any other supported extension instead of `cbrt`.
+Node.js, using [better-sqlite3](https://github.com/WiseLibs/better-sqlite3):
+
+```js
+const sqlite3 = require("better-sqlite3");
+const db = new sqlite3(":memory:");
+db.loadExtension("./cbrt");
+db.exec("select cbrt(27)");
+db.close();
+```
+
+## Building from source
+
+Download the dependencies:
+
+```
+make prepare-dist
+make download-sqlite
+make download-external
+```
+
+Then build for your OS (choose one of the following):
+
+```
+make compile-linux
+make compile-windows
+make compile-macos
+```
+
+You'll find the compiled extensions in the `dist` folder.
 
 ## Submit your favorite extension
 

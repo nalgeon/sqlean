@@ -40,7 +40,8 @@ test-all:
 5. Compile for you OS and run tests to verify that everything is OK:
 
 ```shell
-SQLITE_BRANCH="3.36" make download-external
+make prepare-dist
+make download-external
 make compile-linux
 make test suite=eval
 ```
