@@ -108,9 +108,9 @@ __declspec(dllexport)
     static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
     sqlite3_create_function(db, "md5", 1, flags, (void*)5, sqlite3_hash, 0, 0);
     sqlite3_create_function(db, "sha1", 1, flags, (void*)1, sqlite3_hash, 0, 0);
-    sqlite3_create_function(db, "sha256", -1, flags, (void*)2256, sqlite3_hash, 0, 0);
-    sqlite3_create_function(db, "sha384", -1, flags, (void*)2384, sqlite3_hash, 0, 0);
-    sqlite3_create_function(db, "sha512", -1, flags, (void*)2512, sqlite3_hash, 0, 0);
+    sqlite3_create_function(db, "sha256", 1, flags, (void*)2256, sqlite3_hash, 0, 0);
+    sqlite3_create_function(db, "sha384", 1, flags, (void*)2384, sqlite3_hash, 0, 0);
+    sqlite3_create_function(db, "sha512", 1, flags, (void*)2512, sqlite3_hash, 0, 0);
     sqlite3_create_function(db, "sqlean_version", 0, flags, 0, sqlean_version, 0, 0);
     return SQLITE_OK;
 }
