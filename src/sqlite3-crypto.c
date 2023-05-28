@@ -105,7 +105,7 @@ static void encode(sqlite3_context* context, int argc, sqlite3_value** argv, enc
     const uint8_t* source = (uint8_t*)sqlite3_value_blob(argv[0]);
     size_t result_len = 0;
     const char* result = (char*)encode_fn(source, source_len, &result_len);
-    sqlite3_result_text(context, result, -1, sqlite3_free);
+    sqlite3_result_text(context, result, -1, free);
 }
 
 // Encodes binary data into a textual representation using the specified algorithm.
@@ -147,7 +147,7 @@ static void decode(sqlite3_context* context, int argc, sqlite3_value** argv, enc
         return;
     }
 
-    sqlite3_result_blob(context, result, result_len, sqlite3_free);
+    sqlite3_result_blob(context, result, result_len, free);
 }
 
 // Decodes binary data from a textual representation using the specified algorithm.
