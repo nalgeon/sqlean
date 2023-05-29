@@ -89,3 +89,24 @@ select '109', decode('28e0b2a05fe0b2a029', 'hex') = cast('(ಠ_ಠ)' as blob);
 
 select '111', decode('68656C6C6F', 'hex') = cast('hello' as blob);
 select '112', decode('2CF24DBA5FB0A30E26E83B2AC5B9E29E1B161E5C1FA7425E73043362938B9824', 'hex') = sha256('hello');
+
+select '121', encode(null, 'url') is null;
+select '122', encode('', 'url') = '';
+select '123', encode('hello', 'url') = 'hello';
+select '124', encode('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~', 'url') = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~';
+select '125', encode('!*\();:@&=+$,/?#[]', 'url') = '%21%2A%5C%28%29%3B%3A%40%26%3D%2B%24%2C%2F%3F%23%5B%5D';
+select '126', encode('https://www.google.lu/search?q=hello+world&ie=UTF-8', 'url') = 'https%3A%2F%2Fwww.google.lu%2Fsearch%3Fq%3Dhello%2Bworld%26ie%3DUTF-8';
+select '127', encode('one two three', 'url') = 'one%20two%20three';
+select '128', encode('эй, мир!', 'url') = '%D1%8D%D0%B9%2C%20%D0%BC%D0%B8%D1%80%21';
+select '129', encode('(ಠ_ಠ)', 'url') = '%28%E0%B2%A0_%E0%B2%A0%29';
+
+select '131', decode(null, 'url') is null;
+select '132', decode('', 'url') = cast('' as blob);
+select '133', decode('hello', 'url') = cast('hello' as blob);
+select '134', decode('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~', 'url') = cast('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~' as blob);
+select '135', decode('%21%2A%5C%28%29%3B%3A%40%26%3D%2B%24%2C%2F%3F%23%5B%5D', 'url') = cast('!*\();:@&=+$,/?#[]' as blob);
+select '136', decode('https%3A%2F%2Fwww.google.lu%2Fsearch%3Fq%3Dhello%2Bworld%26ie%3DUTF-8', 'url') = cast('https://www.google.lu/search?q=hello+world&ie=UTF-8' as blob);
+select '137', decode('one%20two%20three', 'url') = cast('one two three' as blob);
+select '138', decode('%D1%8D%D0%B9%2C%20%D0%BC%D0%B8%D1%80%21', 'url') = cast('эй, мир!' as blob);
+select '139', decode('%28%E0%B2%A0_%E0%B2%A0%29', 'url') = cast('(ಠ_ಠ)' as blob);
+select '140', decode('one+two+three', 'url') = cast('one two three' as blob);
