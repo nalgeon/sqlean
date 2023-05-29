@@ -11,6 +11,7 @@
 
 #include "crypto/base32.h"
 #include "crypto/base64.h"
+#include "crypto/hex.h"
 #include "crypto/md5.h"
 #include "crypto/sha1.h"
 #include "crypto/sha2.h"
@@ -122,6 +123,10 @@ static void sqlite3_encode(sqlite3_context* context, int argc, sqlite3_value** a
         encode(context, 1, argv, base64_encode);
         return;
     }
+    if (strncmp(format, "hex", n) == 0) {
+        encode(context, 1, argv, hex_encode);
+        return;
+    }
     sqlite3_result_error(context, "unknown encoding", -1);
 }
 
@@ -162,6 +167,10 @@ static void sqlite3_decode(sqlite3_context* context, int argc, sqlite3_value** a
     }
     if (strncmp(format, "base64", n) == 0) {
         decode(context, 1, argv, base64_decode);
+        return;
+    }
+    if (strncmp(format, "hex", n) == 0) {
+        decode(context, 1, argv, hex_decode);
         return;
     }
     sqlite3_result_error(context, "unknown encoding", -1);

@@ -26,7 +26,7 @@ select decode('aGVsbG8=', 'base64');
 -- hello
 ```
 
-Supported algorithms: `base32` and `base64`
+Supported algorithms: `base32`, `base64`, `hex`
 
 ## Installation and Usage
 

@@ -66,3 +66,26 @@ select '87', decode('MFRGGZA=', 'base32') = cast('abcd' as blob);
 select '88', decode('MFRGGZDF', 'base32') = cast('abcde' as blob);
 select '89', decode('MFRGGZDFMY======', 'base32') = cast('abcdef' as blob);
 select '90', decode('GJRWMMRUMRRGCNLGMIYGCMZQMUZDMZJYGNRDEYLDGVRDSZJSHFSTCYRRGYYWKNLDGFTGCNZUGI2WKNZTGA2DGMZWGI4TGODCHE4DENA=', 'base32') = cast('2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824' as blob);
+
+select '91', encode(null, 'hex') is null;
+select '92', encode('', 'hex') = '';
+select '93', encode('hello', 'hex') = '68656c6c6f';
+select '94', encode(sha256('hello'), 'hex') = '2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824';
+select '95', encode('x', 'hex') = '78';
+select '96', encode('xyz', 'hex') = '78797a';
+select '97', encode('xyz{|}', 'hex') = '78797a7b7c7d';
+select '98', encode('эй, мир!', 'hex') = 'd18dd0b92c20d0bcd0b8d18021';
+select '99', encode('(ಠ_ಠ)', 'hex') = '28e0b2a05fe0b2a029';
+
+select '101', decode(null, 'hex') is null;
+select '102', decode('', 'hex') = cast('' as blob);
+select '103', decode('68656c6c6f', 'hex') = cast('hello' as blob);
+select '104', decode('2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824', 'hex') = sha256('hello');
+select '105', decode('78', 'hex') = cast('x' as blob);
+select '106', decode('78797a', 'hex') = cast('xyz' as blob);
+select '107', decode('78797a7b7c7d', 'hex') = cast('xyz{|}' as blob);
+select '108', decode('d18dd0b92c20d0bcd0b8d18021', 'hex') = cast('эй, мир!' as blob);
+select '109', decode('28e0b2a05fe0b2a029', 'hex') = cast('(ಠ_ಠ)' as blob);
+
+select '111', decode('68656C6C6F', 'hex') = cast('hello' as blob);
+select '112', decode('2CF24DBA5FB0A30E26E83B2AC5B9E29E1B161E5C1FA7425E73043362938B9824', 'hex') = sha256('hello');
