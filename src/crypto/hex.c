@@ -11,7 +11,8 @@
 #include "hex.h"
 
 uint8_t* hex_encode(const uint8_t* src, size_t len, size_t* out_len) {
-    uint8_t* encoded = malloc(len * 2);
+    *out_len = len * 2;
+    uint8_t* encoded = malloc(*out_len + 1);
     if (encoded == NULL) {
         *out_len = 0;
         return NULL;
@@ -19,6 +20,7 @@ uint8_t* hex_encode(const uint8_t* src, size_t len, size_t* out_len) {
     for (size_t i = 0; i < len; i++) {
         sprintf((char*)encoded + (i * 2), "%02x", src[i]);
     }
+    encoded[*out_len] = '\0';
     *out_len = len * 2;
     return encoded;
 }
