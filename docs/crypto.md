@@ -1,8 +1,8 @@
-# crypto: Hash Functions in SQLite
+# crypto: Hashing, Encoding and Decoding in SQLite
 
-Hash functions and encode/decode functions.
+Hashing, encoding and decoding functions.
 
-### Secure hash and message digest functions
+### Hashing and message digest functions
 
 -   `md5(data)`
 -   `sha1(data)`
@@ -12,7 +12,7 @@ Hash functions and encode/decode functions.
 
 Each hash function expects `data` to be `TEXT` or `BLOB`. Returns a `BLOB` hash. Use the `hex()` or `encode()` functions to encode it into a textual representation.
 
-### Encode/decode functions
+### Encoding and decoding functions
 
 -   `encode(data, algo)` encodes binary data into a textual representation using the specified algorithm.
 -   `decode(text, algo)` decodes binary data from a textual representation using the specified algorithm.
