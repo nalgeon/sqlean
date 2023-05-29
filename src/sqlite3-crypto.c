@@ -28,6 +28,10 @@ typedef uint8_t* (*encdec_fn)(const uint8_t* src, size_t len, size_t* out_len);
 static void sqlite3_hash(sqlite3_context* context, int argc, sqlite3_value** argv) {
     assert(argc == 1);
 
+    if (sqlite3_value_type(argv[0]) == SQLITE_NULL) {
+        return;
+    }
+
     void* (*init_func)() = NULL;
     void (*update_func)(void*, void*, size_t) = NULL;
     int (*final_func)(void*, void*) = NULL;
@@ -65,7 +69,7 @@ static void sqlite3_hash(sqlite3_context* context, int argc, sqlite3_value** arg
             algo = 1;
             break;
         default:
-            sqlite3_result_error(context, "Unknown Algorithm", -1);
+            sqlite3_result_error(context, "unknown algorithm", -1);
             return;
     }
 
@@ -74,22 +78,21 @@ static void sqlite3_hash(sqlite3_context* context, int argc, sqlite3_value** arg
         ctx = init_func();
     }
     if (!ctx) {
-        sqlite3_result_error(context, "Algorithm could not allocate it's context", -1);
+        sqlite3_result_error(context, "could not allocate algorithm context", -1);
         return;
     }
 
     void* data = NULL;
-    if (sqlite3_value_type(argv[0]) == SQLITE_NULL) {
-        sqlite3_result_null(context);
-        return;
-    } else if (sqlite3_value_type(argv[0]) == SQLITE_BLOB) {
+    if (sqlite3_value_type(argv[0]) == SQLITE_BLOB) {
         data = (void*)sqlite3_value_blob(argv[0]);
     } else {
         data = (void*)sqlite3_value_text(argv[0]);
     }
+
     size_t datalen = sqlite3_value_bytes(argv[0]);
-    if (datalen > 0)
+    if (datalen > 0) {
         update_func(ctx, data, datalen);
+    }
 
     unsigned char hash[128] = {0};
     int hashlen = final_func(ctx, hash);
