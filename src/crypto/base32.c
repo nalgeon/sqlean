@@ -14,7 +14,10 @@ static const char base32_chars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 uint8_t* base32_encode(const uint8_t* src, size_t len, size_t* out_len) {
     *out_len = ((len + 4) / 5) * 8;
     uint8_t* encoded = malloc(*out_len + 1);
-    encoded[*out_len] = '\0';
+    if (encoded == NULL) {
+        *out_len = 0;
+        return NULL;
+    }
 
     for (size_t i = 0, j = 0; i < len;) {
         uint32_t octet0 = i < len ? src[i++] : 0;
@@ -40,6 +43,7 @@ uint8_t* base32_encode(const uint8_t* src, size_t len, size_t* out_len) {
         }
     }
 
+    encoded[*out_len] = '\0';
     return encoded;
 }
 
@@ -49,6 +53,11 @@ uint8_t* base32_decode(const uint8_t* src, size_t len, size_t* out_len) {
     }
     *out_len = len * 5 / 8;
     uint8_t* decoded = malloc(*out_len);
+    if (decoded == NULL) {
+        *out_len = 0;
+        return NULL;
+    }
+
     size_t bits = 0, value = 0, count = 0;
     for (size_t i = 0; i < len; i++) {
         uint8_t c = src[i];

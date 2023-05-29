@@ -12,12 +12,15 @@ static const char base64_chars[] =
 
 uint8_t* base64_encode(const uint8_t* src, size_t len, size_t* out_len) {
     uint8_t* encoded = NULL;
-    size_t i, j, enc_len;
+    size_t i, j;
     uint32_t octets;
 
-    enc_len = ((len + 2) / 3) * 4;
-    encoded = (uint8_t*)malloc(enc_len + 1);
-    encoded[enc_len] = '\0';
+    *out_len = ((len + 2) / 3) * 4;
+    encoded = malloc(*out_len + 1);
+    if (encoded == NULL) {
+        *out_len = 0;
+        return NULL;
+    }
 
     for (i = 0, j = 0; i < len; i += 3, j += 4) {
         octets =
@@ -29,13 +32,13 @@ uint8_t* base64_encode(const uint8_t* src, size_t len, size_t* out_len) {
     }
 
     if (len % 3 == 1) {
-        encoded[enc_len - 1] = '=';
-        encoded[enc_len - 2] = '=';
+        encoded[*out_len - 1] = '=';
+        encoded[*out_len - 2] = '=';
     } else if (len % 3 == 2) {
-        encoded[enc_len - 1] = '=';
+        encoded[*out_len - 1] = '=';
     }
 
-    *out_len = enc_len;
+    encoded[*out_len] = '\0';
     return encoded;
 }
 
@@ -65,8 +68,9 @@ uint8_t* base64_decode(const uint8_t* src, size_t len, size_t* out_len) {
     }
 
     *out_len = (len / 4) * 3 - padding;
-    uint8_t* decoded = (uint8_t*)malloc(*out_len);
+    uint8_t* decoded = malloc(*out_len);
     if (decoded == NULL) {
+        *out_len = 0;
         return NULL;
     }
 
