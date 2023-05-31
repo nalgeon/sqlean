@@ -28,10 +28,11 @@ select decode('aGVsbG8=', 'base64');
 
 Supported algorithms:
 
--   `base32` (`hello` ↔ `NBSWY3DP`)
--   `base64` (`hello` ↔ `aGVsbG8=`)
--   `hex` (`hello` ↔ `68656c6c6f`)
--   `url` (`hello, world!` ↔ `hello%2C%20world%21`)
+-   `base32` (`hello` ⇆`NBSWY3DP`)
+-   `base64` (`hello` ⇆ `aGVsbG8=`)
+-   `base85` (`hello` ⇆ `BOu!rDZ`)
+-   `hex` (`hello` ⇆ `68656c6c6f`)
+-   `url` (`hello, world!` ⇆ `hello%2C%20world%21`)
 
 ## Installation and Usage
 

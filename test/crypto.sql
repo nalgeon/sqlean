@@ -110,3 +110,23 @@ select '137', decode('one%20two%20three', 'url') = cast('one two three' as blob)
 select '138', decode('%D1%8D%D0%B9%2C%20%D0%BC%D0%B8%D1%80%21', 'url') = cast('эй, мир!' as blob);
 select '139', decode('%28%E0%B2%A0_%E0%B2%A0%29', 'url') = cast('(ಠ_ಠ)' as blob);
 select '140', decode('one+two+three', 'url') = cast('one two three' as blob);
+
+select '141', encode(null, 'base85') is null;
+select '142', encode('', 'base85') = '';
+select '143', encode('hell', 'base85') = 'BOu!r';
+select '144', encode('hello', 'base85') = 'BOu!rDZ';
+select '145', encode('hellow', 'base85') = 'BOu!rDg)';
+select '146', encode('hellowo', 'base85') = 'BOu!rDg-+';
+select '147', encode('эй, мир!', 'base85') = 'd>cM`/0N<Pd(%JR+T';
+select '148', encode('(ಠ_ಠ)', 'base85') = '.,_D(?f85_.0';
+select '149', encode('The quick brown 🦊 jumps over 13 lazy 🐶.', 'base85') = '<+ohcEHPu*CER),Dg-(An=QS8+DQ%9E-!.?G%G\:0f''qg@=!2An=PfN/c';
+
+select '151', decode(null, 'base85') is null;
+select '152', decode('', 'base85') = cast('' as blob);
+select '153', decode('BOu!r', 'base85') = cast('hell' as blob);
+select '154', decode('BOu!rDZ', 'base85') = cast('hello' as blob);
+select '155', decode('BOu!rDg)', 'base85') = cast('hellow' as blob);
+select '156', decode('BOu!rDg-+', 'base85') = cast('hellowo' as blob);
+select '157', decode('d>cM`/0N<Pd(%JR+T', 'base85') = cast('эй, мир!' as blob);
+select '158', decode('.,_D(?f85_.0', 'base85') = cast('(ಠ_ಠ)' as blob);
+select '159', decode('<+ohcEHPu*CER),Dg-(An=QS8+DQ%9E-!.?G%G\:0f''qg@=!2An=PfN/c', 'base85') = cast('The quick brown 🦊 jumps over 13 lazy 🐶.' as blob);
