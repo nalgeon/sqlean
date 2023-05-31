@@ -28,44 +28,42 @@ select '52', encode('', 'base64') = '';
 select '53', encode('hello', 'base64') = 'aGVsbG8=';
 select '54', encode(sha256('hello'), 'base64') = 'LPJNul+wow4m6DsqxbninhsWHlwfp0JecwQzYpOLmCQ=';
 select '55', encode('a', 'base64') = 'YQ==';
-select '56', encode('ab', 'base64') = 'YWI=';
-select '57', encode('abc', 'base64') = 'YWJj';
-select '58', encode('abcd', 'base64') = 'YWJjZA==';
-select '59', encode('abcde', 'base64') = 'YWJjZGU=';
-select '60', encode('abcdef', 'base64') = 'YWJjZGVm';
+select '56', encode('abc', 'base64') = 'YWJj';
+select '57', encode('abcde', 'base64') = 'YWJjZGU=';
+select '58', encode('эй, мир!', 'base64') = '0Y3QuSwg0LzQuNGAIQ==';
+select '59', encode('(ಠ_ಠ)', 'base64') = 'KOCyoF/gsqAp';
+select '60', encode('The quick brown 🦊 jumps over 13 lazy 🐶.', 'base64') = 'VGhlIHF1aWNrIGJyb3duIPCfpooganVtcHMgb3ZlciAxMyBsYXp5IPCfkLYu';
 
 select '61', decode(null, 'base64') is null;
 select '62', decode('', 'base64') = cast('' as blob);
 select '63', decode('aGVsbG8=', 'base64') = cast('hello' as blob);
 select '64', decode('LPJNul+wow4m6DsqxbninhsWHlwfp0JecwQzYpOLmCQ=', 'base64') = sha256('hello');
 select '65', decode('YQ==', 'base64') = cast('a' as blob);
-select '66', decode('YWI=', 'base64') = cast('ab' as blob);
-select '67', decode('YWJj', 'base64') = cast('abc' as blob);
-select '68', decode('YWJjZA==', 'base64') = cast('abcd' as blob);
-select '69', decode('YWJjZGU=', 'base64') = cast('abcde' as blob);
-select '70', decode('YWJjZGVm', 'base64') = cast('abcdef' as blob);
+select '66', decode('YWJj', 'base64') = cast('abc' as blob);
+select '67', decode('YWJjZGU=', 'base64') = cast('abcde' as blob);
+select '68', decode('0Y3QuSwg0LzQuNGAIQ==', 'base64') = cast('эй, мир!' as blob);
+select '69', decode('KOCyoF/gsqAp', 'base64') = cast('(ಠ_ಠ)' as blob);
+select '70', decode('VGhlIHF1aWNrIGJyb3duIPCfpooganVtcHMgb3ZlciAxMyBsYXp5IPCfkLYu', 'base64') = cast('The quick brown 🦊 jumps over 13 lazy 🐶.' as blob);
 
 select '71', encode(null, 'base32') is null;
 select '72', encode('', 'base32') = '';
 select '73', encode('hello', 'base32') = 'NBSWY3DP';
-select '74', encode('a', 'base32') = 'ME======';
-select '75', encode('ab', 'base32') = 'MFRA====';
+select '75', encode('a', 'base32') = 'ME======';
 select '76', encode('abc', 'base32') = 'MFRGG===';
-select '77', encode('abcd', 'base32') = 'MFRGGZA=';
-select '78', encode('abcde', 'base32') = 'MFRGGZDF';
-select '79', encode('abcdef', 'base32') = 'MFRGGZDFMY======';
-select '80', encode('2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824', 'base32') = 'GJRWMMRUMRRGCNLGMIYGCMZQMUZDMZJYGNRDEYLDGVRDSZJSHFSTCYRRGYYWKNLDGFTGCNZUGI2WKNZTGA2DGMZWGI4TGODCHE4DENA=';
+select '77', encode('abcde', 'base32') = 'MFRGGZDF';
+select '78', encode('эй, мир!', 'base32') = '2GG5BOJMEDILZUFY2GACC===';
+select '79', encode('(ಠ_ಠ)', 'base32') = 'FDQLFIC74CZKAKI=';
+select '80', encode('The quick brown 🦊 jumps over 13 lazy 🐶.', 'base32') = 'KRUGKIDROVUWG2ZAMJZG653OEDYJ7JUKEBVHK3LQOMQG65TFOIQDCMZANRQXU6JA6CPZBNRO';
 
 select '81', decode(null, 'base32') is null;
 select '82', decode('', 'base32') = cast('' as blob);
 select '83', decode('NBSWY3DP', 'base32') = cast('hello' as blob);
-select '84', decode('ME======', 'base32') = cast('a' as blob);
-select '85', decode('MFRA====', 'base32') = cast('ab' as blob);
+select '85', decode('ME======', 'base32') = cast('a' as blob);
 select '86', decode('MFRGG===', 'base32') = cast('abc' as blob);
-select '87', decode('MFRGGZA=', 'base32') = cast('abcd' as blob);
-select '88', decode('MFRGGZDF', 'base32') = cast('abcde' as blob);
-select '89', decode('MFRGGZDFMY======', 'base32') = cast('abcdef' as blob);
-select '90', decode('GJRWMMRUMRRGCNLGMIYGCMZQMUZDMZJYGNRDEYLDGVRDSZJSHFSTCYRRGYYWKNLDGFTGCNZUGI2WKNZTGA2DGMZWGI4TGODCHE4DENA=', 'base32') = cast('2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824' as blob);
+select '87', decode('MFRGGZDF', 'base32') = cast('abcde' as blob);
+select '88', decode('2GG5BOJMEDILZUFY2GACC===', 'base32') = cast('эй, мир!' as blob);
+select '89', decode('FDQLFIC74CZKAKI=', 'base32') = cast('(ಠ_ಠ)' as blob);
+select '90', decode('KRUGKIDROVUWG2ZAMJZG653OEDYJ7JUKEBVHK3LQOMQG65TFOIQDCMZANRQXU6JA6CPZBNRO', 'base32') = cast('The quick brown 🦊 jumps over 13 lazy 🐶.' as blob);
 
 select '91', encode(null, 'hex') is null;
 select '92', encode('', 'hex') = '';
@@ -76,6 +74,7 @@ select '96', encode('xyz', 'hex') = '78797a';
 select '97', encode('xyz{|}', 'hex') = '78797a7b7c7d';
 select '98', encode('эй, мир!', 'hex') = 'd18dd0b92c20d0bcd0b8d18021';
 select '99', encode('(ಠ_ಠ)', 'hex') = '28e0b2a05fe0b2a029';
+select '100', encode('The quick brown 🦊 jumps over 13 lazy 🐶.', 'hex') = '54686520717569636b2062726f776e20f09fa68a206a756d7073206f766572203133206c617a7920f09f90b62e';
 
 select '101', decode(null, 'hex') is null;
 select '102', decode('', 'hex') = cast('' as blob);
@@ -86,6 +85,7 @@ select '106', decode('78797a', 'hex') = cast('xyz' as blob);
 select '107', decode('78797a7b7c7d', 'hex') = cast('xyz{|}' as blob);
 select '108', decode('d18dd0b92c20d0bcd0b8d18021', 'hex') = cast('эй, мир!' as blob);
 select '109', decode('28e0b2a05fe0b2a029', 'hex') = cast('(ಠ_ಠ)' as blob);
+select '110', decode('54686520717569636b2062726f776e20f09fa68a206a756d7073206f766572203133206c617a7920f09f90b62e', 'hex') = cast('The quick brown 🦊 jumps over 13 lazy 🐶.' as blob);
 
 select '111', decode('68656C6C6F', 'hex') = cast('hello' as blob);
 select '112', decode('2CF24DBA5FB0A30E26E83B2AC5B9E29E1B161E5C1FA7425E73043362938B9824', 'hex') = sha256('hello');
@@ -99,6 +99,7 @@ select '126', encode('https://www.google.lu/search?q=hello+world&ie=UTF-8', 'url
 select '127', encode('one two three', 'url') = 'one%20two%20three';
 select '128', encode('эй, мир!', 'url') = '%D1%8D%D0%B9%2C%20%D0%BC%D0%B8%D1%80%21';
 select '129', encode('(ಠ_ಠ)', 'url') = '%28%E0%B2%A0_%E0%B2%A0%29';
+select '130', encode('The quick brown 🦊 jumps over 13 lazy 🐶.', 'url') = 'The%20quick%20brown%20%F0%9F%A6%8A%20jumps%20over%2013%20lazy%20%F0%9F%90%B6.';
 
 select '131', decode(null, 'url') is null;
 select '132', decode('', 'url') = cast('' as blob);
@@ -107,9 +108,10 @@ select '134', decode('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012345
 select '135', decode('%21%2A%5C%28%29%3B%3A%40%26%3D%2B%24%2C%2F%3F%23%5B%5D', 'url') = cast('!*\();:@&=+$,/?#[]' as blob);
 select '136', decode('https%3A%2F%2Fwww.google.lu%2Fsearch%3Fq%3Dhello%2Bworld%26ie%3DUTF-8', 'url') = cast('https://www.google.lu/search?q=hello+world&ie=UTF-8' as blob);
 select '137', decode('one%20two%20three', 'url') = cast('one two three' as blob);
+select '137_1', decode('one+two+three', 'url') = cast('one two three' as blob);
 select '138', decode('%D1%8D%D0%B9%2C%20%D0%BC%D0%B8%D1%80%21', 'url') = cast('эй, мир!' as blob);
 select '139', decode('%28%E0%B2%A0_%E0%B2%A0%29', 'url') = cast('(ಠ_ಠ)' as blob);
-select '140', decode('one+two+three', 'url') = cast('one two three' as blob);
+select '140', decode('The%20quick%20brown%20%f0%9f%a6%8a%20jumps%20over%2013%20lazy%20%f0%9f%90%b6.', 'url') = cast('The quick brown 🦊 jumps over 13 lazy 🐶.' as blob);
 
 select '141', encode(null, 'base85') is null;
 select '142', encode('', 'base85') = '';

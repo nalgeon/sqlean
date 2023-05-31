@@ -131,4 +131,4 @@ test-all:
 # https://stackoverflow.com/questions/15367674/bash-one-liner-to-exit-with-the-opposite-status-of-a-grep-command/21788642
 test:
 	@sqlite3 < test/$(suite).sql > test.log
-	@cat test.log | (! grep -Ex "[0-9]+.[^1]")
+	@cat test.log | (! grep -Ex "[0-9_]+.[^1]")
