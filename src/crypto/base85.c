@@ -50,7 +50,7 @@ uint8_t* base85_encode(const uint8_t* src, size_t len, size_t* out_len) {
     }
 
     *out_len = len * 5 / 4 + (len % 4 ? 1 : 0);
-    encoded[*out_len + 1] = '\0';
+    encoded[*out_len] = '\0';
     return encoded;
 }
 
