@@ -214,6 +214,15 @@ static void test_pad_left(void) {
     }
     {
         RuneString str = rstring.from_cstring("hello");
+        RuneString fill = rstring.from_cstring("xo");
+        RuneString res = rstring.pad_left(str, 8, fill);
+        assert(eq(res, "xoxhello"));
+        rstring.free(str);
+        rstring.free(fill);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("hello");
         RuneString fill = rstring.from_cstring("★");
         RuneString res = rstring.pad_left(str, 8, fill);
         assert(eq(res, "★★★hello"));
@@ -235,6 +244,15 @@ static void test_pad_left(void) {
         RuneString fill = rstring.from_cstring("★");
         RuneString res = rstring.pad_left(str, 8, fill);
         assert(eq(res, "★★привет"));
+        rstring.free(str);
+        rstring.free(fill);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("привет");
+        RuneString fill = rstring.from_cstring("хо");
+        RuneString res = rstring.pad_left(str, 9, fill);
+        assert(eq(res, "хохпривет"));
         rstring.free(str);
         rstring.free(fill);
         rstring.free(res);
@@ -310,6 +328,15 @@ static void test_pad_right(void) {
     }
     {
         RuneString str = rstring.from_cstring("hello");
+        RuneString fill = rstring.from_cstring("xo");
+        RuneString res = rstring.pad_right(str, 8, fill);
+        assert(eq(res, "helloxox"));
+        rstring.free(str);
+        rstring.free(fill);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("hello");
         RuneString fill = rstring.from_cstring("★");
         RuneString res = rstring.pad_right(str, 8, fill);
         assert(eq(res, "hello★★★"));
@@ -331,6 +358,15 @@ static void test_pad_right(void) {
         RuneString fill = rstring.from_cstring("★");
         RuneString res = rstring.pad_right(str, 8, fill);
         assert(eq(res, "привет★★"));
+        rstring.free(str);
+        rstring.free(fill);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("привет");
+        RuneString fill = rstring.from_cstring("хо");
+        RuneString res = rstring.pad_right(str, 9, fill);
+        assert(eq(res, "приветхох"));
         rstring.free(str);
         rstring.free(fill);
         rstring.free(res);
