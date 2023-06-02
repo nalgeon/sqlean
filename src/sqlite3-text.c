@@ -39,6 +39,7 @@ static void sqlite3_substring2(sqlite3_context* context, int argc, sqlite3_value
     RuneString s_res = rstring.slice(s_src, start, s_src.length);
     char* res = rstring.to_cstring(s_res);
     sqlite3_result_text(context, res, -1, free);
+    rstring.free(s_src);
     rstring.free(s_res);
 }
 
@@ -83,6 +84,7 @@ static void sqlite3_substring3(sqlite3_context* context, int argc, sqlite3_value
     RuneString s_res = rstring.slice(s_src, start, end);
     char* res = rstring.to_cstring(s_res);
     sqlite3_result_text(context, res, -1, free);
+    rstring.free(s_src);
     rstring.free(s_res);
 }
 
@@ -119,6 +121,7 @@ static void sqlite3_slice(sqlite3_context* context, int argc, sqlite3_value** ar
     RuneString s_res = rstring.slice(s_src, start, end);
     char* res = rstring.to_cstring(s_res);
     sqlite3_result_text(context, res, -1, free);
+    rstring.free(s_src);
     rstring.free(s_res);
 }
 
@@ -147,6 +150,7 @@ static void sqlite3_left(sqlite3_context* context, int argc, sqlite3_value** arg
     RuneString s_res = rstring.substring(s_src, 0, length);
     char* res = rstring.to_cstring(s_res);
     sqlite3_result_text(context, res, -1, free);
+    rstring.free(s_src);
     rstring.free(s_res);
 }
 
@@ -181,6 +185,8 @@ static void sqlite3_split(sqlite3_context* context, int argc, sqlite3_value** ar
     ByteString s_sep = bstring.from_cstring(sep, strlen(sep));
     ByteString s_part = bstring.split_part(s_src, s_sep, part - 1);
     sqlite3_result_text(context, s_part.bytes, -1, SQLITE_TRANSIENT);
+    bstring.free(s_src);
+    bstring.free(s_sep);
     bstring.free(s_part);
 }
 
