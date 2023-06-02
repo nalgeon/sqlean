@@ -41,6 +41,20 @@ select '2_17', text_slice('hello world', 7, -1) = 'worl';
 select '2_18', text_slice('hello world', -5, -2) = 'wor';
 select '2_19', text_slice('hello world', -2, -5) = '';
 
+-- Left
+select '3_01', text_left(null, 5) is null;
+select '3_02', text_left('hello world', 0) = '';
+select '3_03', text_left('hello world', 1) = 'h';
+select '3_04', text_left('hello world', 5) = 'hello';
+select '3_05', text_left('hello world', 10) = 'hello worl';
+select '3_06', text_left('hello world', 11) = 'hello world';
+select '3_07', text_left('hello world', 15) = 'hello world';
+select '3_08', text_left('hello world', -1) = 'hello worl';
+select '3_09', text_left('hello world', -6) = 'hello';
+select '3_10', text_left('hello world', -10) = 'h';
+select '3_11', text_left('hello world', -11) = '';
+select '3_12', text_left('hello world', -15) = '';
+
 -- Reverse string
 select 'x_01', text_reverse(null) is NULL;
 select 'x_02', text_reverse('hello') = 'olleh';

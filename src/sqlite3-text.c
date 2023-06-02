@@ -122,6 +122,34 @@ static void sqlite3_slice(sqlite3_context* context, int argc, sqlite3_value** ar
     rstring.free(s_res);
 }
 
+// Extracts a substring of `length` characters starting at the beginning of the string.
+// For `length < 0`, extracts all but the last `length` characters.
+static void sqlite3_left(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    assert(argc == 2);
+
+    const char* src = (char*)sqlite3_value_text(argv[0]);
+    if (src == NULL) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    if (sqlite3_value_type(argv[1]) != SQLITE_INTEGER) {
+        sqlite3_result_error(context, "length parameter should be integer", -1);
+        return;
+    }
+    int length = sqlite3_value_int(argv[1]);
+
+    RuneString s_src = rstring.from_cstring(src);
+    if (length < 0) {
+        length = s_src.length + length;
+        length = length >= 0 ? length : 0;
+    }
+    RuneString s_res = rstring.substring(s_src, 0, length);
+    char* res = rstring.to_cstring(s_res);
+    sqlite3_result_text(context, res, -1, free);
+    rstring.free(s_res);
+}
+
 // Splits a string by a separator and returns the n-th part (counting from one).
 // text_split(str, sep, n)
 static void sqlite3_split(sqlite3_context* context, int argc, sqlite3_value** argv) {
@@ -177,8 +205,10 @@ static void sqlite3_reverse(sqlite3_context* context, int argc, sqlite3_value** 
 }
 
 // substring
-// utf8 text_substring(str, start [,length])
 // utf8 text_slice(str, start [,end])
+// utf8 text_substring(str, start [,length])
+// utf8 text_left(str, length)
+// utf8 text_right(str, length)
 
 // search and match
 // utf8 text_index(str, other)
@@ -202,8 +232,12 @@ static void sqlite3_reverse(sqlite3_context* context, int argc, sqlite3_value** 
 //      text_trim(str)
 //      text_ltrim(str)
 //      text_rtrim(str)
-// !utf text_pad_left(str, length [,fill])
-// !utf text_pad_right(str, length [,fill])
+// utf8 text_lpad(str, length [,fill])
+// utf8 text_rpad(str, length [,fill])
+
+// length and size
+// utf8 text_length(str)
+//      text_size(str)
 
 #ifdef _WIN32
 __declspec(dllexport)
@@ -216,6 +250,7 @@ __declspec(dllexport)
     sqlite3_create_function(db, "text_substring", 3, flags, 0, sqlite3_substring3, 0, 0);
     sqlite3_create_function(db, "text_slice", 2, flags, 0, sqlite3_substring2, 0, 0);
     sqlite3_create_function(db, "text_slice", 3, flags, 0, sqlite3_slice, 0, 0);
+    sqlite3_create_function(db, "text_left", 2, flags, 0, sqlite3_left, 0, 0);
     sqlite3_create_function(db, "text_reverse", 1, flags, 0, sqlite3_reverse, 0, 0);
     sqlite3_create_function(db, "reverse", 1, flags, 0, sqlite3_reverse, 0, 0);
     sqlite3_create_function(db, "text_split", 3, flags, 0, sqlite3_split, 0, 0);
