@@ -1,12 +1,16 @@
 // Copyright (c) 2023 Anton Zhiyanov, MIT License
 // https://github.com/nalgeon/sqlean
 
-// Rune string <-> C string conversions.
+// UTF-8 characters (runes) <-> C string conversions.
 
 #include <assert.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdlib.h>
 
-#include "text.h"
+#include "runes.h"
 
+// utf8_cat_rune prints the rune to the string.
 static char* utf8_cat_rune(char* str, int32_t rune) {
     if (0 == ((int32_t)0xffffff80 & rune)) {
         // 1-byte/7-bit ascii
@@ -38,6 +42,7 @@ static char* utf8_cat_rune(char* str, int32_t rune) {
     return str;
 }
 
+// utf8iter iterates over the C string, producing runes.
 typedef struct {
     const char* str;
     int32_t rune;
@@ -46,6 +51,7 @@ typedef struct {
     bool eof;
 } utf8iter;
 
+// utf8iter_new creates a new iterator.
 static utf8iter* utf8iter_new(const char* str, size_t length) {
     utf8iter* iter = malloc(sizeof(utf8iter));
     if (iter == NULL) {
@@ -58,6 +64,7 @@ static utf8iter* utf8iter_new(const char* str, size_t length) {
     return iter;
 }
 
+// utf8iter_next advances the iterator to the next rune and returns it.
 static int32_t utf8iter_next(utf8iter* iter) {
     assert(iter != NULL);
 
@@ -94,6 +101,7 @@ static int32_t utf8iter_next(utf8iter* iter) {
     return iter->rune;
 }
 
+// runes_from_cstring creates an array of runes from a C string.
 int32_t* runes_from_cstring(const char* const str, size_t length) {
     assert(length > 0);
     int32_t* runes = calloc(length, sizeof(int32_t));
@@ -111,6 +119,7 @@ int32_t* runes_from_cstring(const char* const str, size_t length) {
     return runes;
 }
 
+// runes_to_cstring creates a C string from an array of runes.
 char* runes_to_cstring(const int32_t* runes, size_t length) {
     char* str;
     if (length == 0) {
