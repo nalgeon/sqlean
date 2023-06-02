@@ -201,6 +201,198 @@ static void test_reverse(void) {
     printf("OK\n");
 }
 
+static void test_pad_left(void) {
+    printf("test_pad_left...");
+    {
+        RuneString str = rstring.from_cstring("hello");
+        RuneString fill = rstring.from_cstring("0");
+        RuneString res = rstring.pad_left(str, 8, fill);
+        assert(eq(res, "000hello"));
+        rstring.free(str);
+        rstring.free(fill);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("hello");
+        RuneString fill = rstring.from_cstring("★");
+        RuneString res = rstring.pad_left(str, 8, fill);
+        assert(eq(res, "★★★hello"));
+        rstring.free(str);
+        rstring.free(fill);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("привет");
+        RuneString fill = rstring.from_cstring(" ");
+        RuneString res = rstring.pad_left(str, 8, fill);
+        assert(eq(res, "  привет"));
+        rstring.free(str);
+        rstring.free(fill);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("привет");
+        RuneString fill = rstring.from_cstring("★");
+        RuneString res = rstring.pad_left(str, 8, fill);
+        assert(eq(res, "★★привет"));
+        rstring.free(str);
+        rstring.free(fill);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("привет");
+        RuneString fill = rstring.from_cstring("★");
+        RuneString res = rstring.pad_left(str, 6, fill);
+        assert(eq(res, "привет"));
+        rstring.free(str);
+        rstring.free(fill);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("привет");
+        RuneString fill = rstring.from_cstring("★");
+        RuneString res = rstring.pad_left(str, 4, fill);
+        assert(eq(res, "прив"));
+        rstring.free(str);
+        rstring.free(fill);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("привет");
+        RuneString fill = rstring.from_cstring("★");
+        RuneString res = rstring.pad_left(str, 0, fill);
+        assert(eq(res, ""));
+        rstring.free(str);
+        rstring.free(fill);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("привет");
+        RuneString fill = rstring.from_cstring("");
+        RuneString res = rstring.pad_left(str, 8, fill);
+        assert(eq(res, "привет"));
+        rstring.free(str);
+        rstring.free(fill);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("");
+        RuneString fill = rstring.from_cstring("★");
+        RuneString res = rstring.pad_left(str, 5, fill);
+        assert(eq(res, "★★★★★"));
+        rstring.free(str);
+        rstring.free(fill);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("");
+        RuneString fill = rstring.from_cstring("");
+        RuneString res = rstring.pad_left(str, 5, fill);
+        assert(eq(res, ""));
+        rstring.free(str);
+        rstring.free(fill);
+        rstring.free(res);
+    }
+
+    printf("OK\n");
+}
+
+static void test_pad_right(void) {
+    printf("test_pad_right...");
+    {
+        RuneString str = rstring.from_cstring("hello");
+        RuneString fill = rstring.from_cstring("0");
+        RuneString res = rstring.pad_right(str, 8, fill);
+        assert(eq(res, "hello000"));
+        rstring.free(str);
+        rstring.free(fill);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("hello");
+        RuneString fill = rstring.from_cstring("★");
+        RuneString res = rstring.pad_right(str, 8, fill);
+        assert(eq(res, "hello★★★"));
+        rstring.free(str);
+        rstring.free(fill);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("привет");
+        RuneString fill = rstring.from_cstring(" ");
+        RuneString res = rstring.pad_right(str, 8, fill);
+        assert(eq(res, "привет  "));
+        rstring.free(str);
+        rstring.free(fill);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("привет");
+        RuneString fill = rstring.from_cstring("★");
+        RuneString res = rstring.pad_right(str, 8, fill);
+        assert(eq(res, "привет★★"));
+        rstring.free(str);
+        rstring.free(fill);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("привет");
+        RuneString fill = rstring.from_cstring("★");
+        RuneString res = rstring.pad_right(str, 6, fill);
+        assert(eq(res, "привет"));
+        rstring.free(str);
+        rstring.free(fill);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("привет");
+        RuneString fill = rstring.from_cstring("★");
+        RuneString res = rstring.pad_right(str, 4, fill);
+        assert(eq(res, "прив"));
+        rstring.free(str);
+        rstring.free(fill);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("привет");
+        RuneString fill = rstring.from_cstring("★");
+        RuneString res = rstring.pad_right(str, 0, fill);
+        assert(eq(res, ""));
+        rstring.free(str);
+        rstring.free(fill);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("привет");
+        RuneString fill = rstring.from_cstring("");
+        RuneString res = rstring.pad_right(str, 8, fill);
+        assert(eq(res, "привет"));
+        rstring.free(str);
+        rstring.free(fill);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("");
+        RuneString fill = rstring.from_cstring("★");
+        RuneString res = rstring.pad_right(str, 5, fill);
+        assert(eq(res, "★★★★★"));
+        rstring.free(str);
+        rstring.free(fill);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("");
+        RuneString fill = rstring.from_cstring("");
+        RuneString res = rstring.pad_right(str, 5, fill);
+        assert(eq(res, ""));
+        rstring.free(str);
+        rstring.free(fill);
+        rstring.free(res);
+    }
+
+    printf("OK\n");
+}
+
 int main(void) {
     test_cstring();
     test_at();
@@ -209,5 +401,7 @@ int main(void) {
     test_index();
     test_last_index();
     test_reverse();
+    test_pad_left();
+    test_pad_right();
     return 0;
 }

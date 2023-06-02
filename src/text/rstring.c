@@ -197,6 +197,76 @@ static RuneString string_reverse(RuneString str) {
     return res;
 }
 
+// return string_from_runes(str.runes, str.length, false);
+
+RuneString string_pad_left(RuneString str, size_t length, RuneString fill) {
+    if (str.length >= length) {
+        // If the string is already longer than length, return a truncated version of the string
+        return string_substring(str, 0, length);
+    }
+
+    if (fill.length == 0) {
+        // If the fill string is empty, return the original string
+        return string_from_runes(str.runes, str.length, false);
+    }
+
+    // Calculate the number of characters to pad
+    size_t pad_langth = length - str.length;
+
+    // Allocate memory for the padded string
+    size_t new_size = (str.length + pad_langth) * sizeof(int32_t);
+    int32_t* new_runes = malloc(new_size);
+    if (new_runes == NULL) {
+        return string_new();
+    }
+
+    // Copy the fill characters to the beginning of the new string
+    for (size_t i = 0; i < pad_langth; i++) {
+        new_runes[i] = fill.runes[i % fill.length];
+    }
+
+    // Copy the original string to the end of the new string
+    memcpy(&new_runes[pad_langth], str.runes, str.size);
+
+    // Return the new string
+    RuneString new_str = string_from_runes(new_runes, length, true);
+    return new_str;
+}
+
+RuneString string_pad_right(RuneString str, size_t length, RuneString fill) {
+    if (str.length >= length) {
+        // If the string is already longer than length, return a truncated version of the string
+        return string_substring(str, 0, length);
+    }
+
+    if (fill.length == 0) {
+        // If the fill string is empty, return the original string
+        return string_from_runes(str.runes, str.length, false);
+    }
+
+    // Calculate the number of characters to pad
+    size_t pad_length = length - str.length;
+
+    // Allocate memory for the padded string
+    size_t new_size = (str.length + pad_length) * sizeof(int32_t);
+    int32_t* new_runes = malloc(new_size);
+    if (new_runes == NULL) {
+        return string_new();
+    }
+
+    // Copy the original string to the beginning of the new string
+    memcpy(new_runes, str.runes, str.size);
+
+    // Copy the fill characters to the end of the new string
+    for (size_t i = str.length; i < length; i++) {
+        new_runes[i] = fill.runes[(i - str.length) % fill.length];
+    }
+
+    // Return the new string
+    RuneString new_str = string_from_runes(new_runes, length, true);
+    return new_str;
+}
+
 static void string_print(RuneString str) {
     if (str.length == 0) {
         printf("'' (len=0)\n");
@@ -220,4 +290,6 @@ struct rstring_ns rstring = {.new = string_new,
                              .slice = string_slice,
                              .substring = string_substring,
                              .reverse = string_reverse,
+                             .pad_left = string_pad_left,
+                             .pad_right = string_pad_right,
                              .print = string_print};

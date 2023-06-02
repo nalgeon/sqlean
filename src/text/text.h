@@ -34,6 +34,10 @@ struct rstring_ns {
     int (*last_index)(RuneString str, RuneString other);
 
     RuneString (*reverse)(RuneString str);
+
+    RuneString (*pad_left)(RuneString str, size_t length, RuneString fill);
+    RuneString (*pad_right)(RuneString str, size_t length, RuneString fill);
+
     void (*print)(RuneString str);
 };
 
