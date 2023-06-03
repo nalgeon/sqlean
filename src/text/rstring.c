@@ -91,14 +91,27 @@ static RuneString string_slice(RuneString str, int start, int end) {
     if (str.length == 0) {
         return string_new();
     }
+
+    // adjusted start index
     start = start < 0 ? str.length + start : start;
+    // python-compatible: treat negative start index larger than the length of the string as zero
+    start = start < 0 ? 0 : start;
+    // adjusted start index should be less the the length of the string
+    if (start >= (int)str.length) {
+        return string_new();
+    }
+
+    // adjusted end index
     end = end < 0 ? str.length + end : end;
-    if (start < 0 || start >= (int)str.length) {
+    // python-compatible: treat end index larger than the length of the string
+    // as equal to the length
+    end = end > (int)str.length ? (int)str.length : end;
+    // adjusted end index should be >= 0
+    if (end < 0) {
         return string_new();
     }
-    if (end < 0 || end > (int)str.length) {
-        return string_new();
-    }
+
+    // adjusted start index should be less than adjusted end index
     if (start >= end) {
         return string_new();
     }

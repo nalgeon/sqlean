@@ -3,43 +3,108 @@
 
 .load dist/text
 
--- Substring
+-- Substring: start only
 select '1_01', text_substring('hello world', 0) = 'hello world';
 select '1_02', text_substring('hello world', 1) = 'hello world';
 select '1_03', text_substring('hello world', 7) = 'world';
 select '1_04', text_substring('hello world', 11) = 'd';
 select '1_05', text_substring('hello world', 12) = '';
-select '1_06', text_substring('hello world', -1) = 'd';
-select '1_07', text_substring('hello world', -5) = 'world';
+select '1_06', text_substring('hello world', 15) = '';
+select '1_07', text_substring('hello world', -1) = 'hello world';
+select '1_08', text_substring('hello world', -5) = 'hello world';
+select '1_09', text_substring('hello world', -11) = 'hello world';
+select '1_10', text_substring('hello world', -12) = 'hello world';
+select '1_11', text_substring('hello world', -15) = 'hello world';
 
-select '1_11', text_substring('hello world', 1, 5) = 'hello';
-select '1_12', text_substring('hello world', 7, 5) = 'world';
-select '1_13', text_substring('hello world', 1, 1) = 'h';
-select '1_14', text_substring('hello world', 11, 1) = 'd';
-select '1_15', text_substring('hello world', 12, 1) = '';
-select '1_16', text_substring('hello world', 6, -2) = 'lo';
-select '1_17', text_substring('hello world', 6, -5) = 'hello';
-select '1_18', text_substring('hello world', 6, -10) = '';
-select '1_19', text_substring('hello world', -3, -2) = 'wo';
+-- Substring: start + length
+select '1_21', text_substring('hello world', 0, 5) = 'hell';
+select '1_22', text_substring('hello world', -1, 5) = 'hel';
+select '1_23', text_substring('hello world', -3, 5) = 'h';
+select '1_24', text_substring('hello world', -4, 5) = '';
+select '1_25', text_substring('hello world', -5, 5) = '';
+select '1_26', text_substring('hello world', -5, 11) = 'hello';
+select '1_27', text_substring('hello world', -5, 17) = 'hello world';
+select '1_28', text_substring('hello world', -5, 18) = 'hello world';
+select '1_29', text_substring('hello world', 1, 0) = '';
+select '1_30', text_substring('hello world', 1, 5) = 'hello';
+select '1_31', text_substring('hello world', 7, 5) = 'world';
+select '1_32', text_substring('hello world', 1, 1) = 'h';
+select '1_33', text_substring('hello world', 11, 1) = 'd';
+select '1_34', text_substring('hello world', 11, 5) = 'd';
+select '1_35', text_substring('hello world', 12, 1) = '';
 
--- Slice
+-- Slice: start only
 select '2_01', text_slice('hello world', 0) = 'hello world';
 select '2_02', text_slice('hello world', 1) = 'hello world';
 select '2_03', text_slice('hello world', 7) = 'world';
 select '2_04', text_slice('hello world', 11) = 'd';
 select '2_05', text_slice('hello world', 12) = '';
+select '2_05', text_slice('hello world', 15) = '';
 select '2_06', text_slice('hello world', -1) = 'd';
 select '2_07', text_slice('hello world', -5) = 'world';
+select '2_08', text_slice('hello world', -11) = 'hello world';
+select '2_09', text_slice('hello world', -12) = 'hello world';
+select '2_10', text_slice('hello world', -15) = 'hello world';
+select '2_11', text_slice(null, 1) is null;
 
-select '2_11', text_slice('hello world', 1, 6) = 'hello';
-select '2_12', text_slice('hello world', 7, 12) = 'world';
-select '2_13', text_slice('hello world', 1, 2) = 'h';
-select '2_14', text_slice('hello world', 11, 12) = 'd';
-select '2_15', text_slice('hello world', 12, 13) = '';
-select '2_16', text_slice('hello world', 6, 1) = '';
-select '2_17', text_slice('hello world', 7, -1) = 'worl';
-select '2_18', text_slice('hello world', -5, -2) = 'wor';
-select '2_19', text_slice('hello world', -2, -5) = '';
+-- Slice: start >= 0, end >= 0
+select '2_21', text_slice('hello world', 0, 0) = '';
+select '2_22', text_slice('hello world', 0, 5) = 'hell';
+select '2_23', text_slice('hello world', 1, 0) = '';
+select '2_24', text_slice('hello world', 1, 1) = '';
+select '2_25', text_slice('hello world', 1, 2) = 'h';
+select '2_26', text_slice('hello world', 1, 5) = 'hell';
+select '2_27', text_slice('hello world', 1, 11) = 'hello worl';
+select '2_28', text_slice('hello world', 1, 12) = 'hello world';
+select '2_29', text_slice('hello world', 1, 15) = 'hello world';
+select '2_30', text_slice('hello world', 7, 8) = 'w';
+select '2_31', text_slice('hello world', 7, 12) = 'world';
+select '2_32', text_slice('hello world', 11, 12) = 'd';
+select '2_33', text_slice('hello world', 11, 15) = 'd';
+select '2_34', text_slice('hello world', 12, 1) = '';
+select '2_35', text_slice(null, 1, 2) is null;
+
+-- Slice: start >= 0, end < 0
+select '2_41', text_slice('hello world', 0, -1) = 'hello worl';
+select '2_42', text_slice('hello world', 1, -1) = 'hello worl';
+select '2_43', text_slice('hello world', 1, -6) = 'hello';
+select '2_44', text_slice('hello world', 1, -10) = 'h';
+select '2_45', text_slice('hello world', 1, -11) = '';
+select '2_46', text_slice('hello world', 1, -15) = '';
+select '2_47', text_slice('hello world', 4, -6) = 'lo';
+select '2_48', text_slice('hello world', 7, -1) = 'worl';
+select '2_49', text_slice('hello world', 10, -1) = 'l';
+select '2_50', text_slice('hello world', 11, -1) = '';
+select '2_51', text_slice('hello world', 15, -1) = '';
+
+-- Slice: start < 0, end >= 0
+select '2_61', text_slice('hello world', -1, 0) = '';
+select '2_62', text_slice('hello world', -1, 10) = '';
+select '2_63', text_slice('hello world', -1, 11) = '';
+select '2_64', text_slice('hello world', -1, 12) = 'd';
+select '2_65', text_slice('hello world', -1, 15) = 'd';
+select '2_66', text_slice('hello world', -5, 1) = '';
+select '2_67', text_slice('hello world', -5, 7) = '';
+select '2_68', text_slice('hello world', -5, 8) = 'w';
+select '2_69', text_slice('hello world', -5, 9) = 'wo';
+select '2_70', text_slice('hello world', -5, 11) = 'worl';
+select '2_71', text_slice('hello world', -5, 12) = 'world';
+select '2_72', text_slice('hello world', -5, 15) = 'world';
+select '2_73', text_slice('hello world', -10, 6) = 'ello';
+select '2_74', text_slice('hello world', -11, 6) = 'hello';
+select '2_75', text_slice('hello world', -12, 6) = 'hello';
+select '2_76', text_slice('hello world', -15, 6) = 'hello';
+
+-- Slice: start < 0, end < 0
+select '2_81', text_slice('hello world', -1, -1) = '';
+select '2_82', text_slice('hello world', -2, -1) = 'l';
+select '2_83', text_slice('hello world', -10, -1) = 'ello worl';
+select '2_84', text_slice('hello world', -11, -1) = 'hello worl';
+select '2_85', text_slice('hello world', -15, -1) = 'hello worl';
+select '2_86', text_slice('hello world', -5, -1) = 'worl';
+select '2_87', text_slice('hello world', -5, -8) = '';
+select '2_88', text_slice('hello world', -8, -3) = 'lo wo';
+select '2_89', text_slice('hello world', -3, -8) = '';
 
 -- Left
 select '3_01', text_left(null, 5) is null;
