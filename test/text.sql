@@ -216,6 +216,25 @@ select '9_32', text_split('one|two|thr', '|', -2) = 'two';
 select '9_33', text_split('one|two|thr', '|', -3) = 'one';
 select '9_34', text_split('one|two|thr', '|', -4) = '';
 
+-- Join
+select '10_01', text_join('|', 'one') = 'one';
+select '10_02', text_join('|', 'one', 'two') = 'one|two';
+select '10_03', text_join('|', 'one', 'two', 'three') = 'one|two|three';
+select '10_04', text_join('|', '', 'two', 'three') = '|two|three';
+select '10_05', text_join('|', 'one', '', 'three') = 'one||three';
+select '10_06', text_join('|', 'one', 'two', '') = 'one|two|';
+
+select '10_11', text_join('|', 'один', 'два', 'три') = 'один|два|три';
+select '10_12', text_join('(ಠ_ಠ)', 'one', 'two', 'three') = 'one(ಠ_ಠ)two(ಠ_ಠ)three';
+select '10_13', text_join('(ಠ_ಠ)', 'один', 'два', 'три') = 'один(ಠ_ಠ)два(ಠ_ಠ)три';
+
+select '10_21', text_join(null, 'one', 'two', 'three') is null;
+select '10_22', text_join('|', null, 'two', 'three') = 'two|three';
+select '10_23', text_join('|', 'one', null, 'three') = 'one|three';
+select '10_24', text_join('|', 'one', 'two', null) = 'one|two';
+select '10_25', text_join('|', null, 'two', null) = 'two';
+select '10_26', text_join('|', null, null, null) = '';
+
 -- Reverse string
 select 'x_01', text_reverse(null) is NULL;
 select 'x_02', text_reverse('hello') = 'olleh';
