@@ -235,6 +235,21 @@ select '10_24', text_join('|', 'one', 'two', null) = 'one|two';
 select '10_25', text_join('|', null, 'two', null) = 'two';
 select '10_26', text_join('|', null, null, null) = '';
 
+-- Concat
+select '11_01', text_concat('one') = 'one';
+select '11_02', text_concat('one', 'two') = 'onetwo';
+select '11_03', text_concat('one', 'two', 'three') = 'onetwothree';
+select '11_04', text_concat('', 'two', 'three') = 'twothree';
+select '11_05', text_concat('one', '', 'three') = 'onethree';
+select '11_06', text_concat('one', 'two', '') = 'onetwo';
+select '11_07', text_concat('один', 'два', 'три') = 'одиндватри';
+
+select '11_11', text_concat(null, 'two', 'three') = 'twothree';
+select '11_12', text_concat('one', null, 'three') = 'onethree';
+select '11_13', text_concat('one', 'two', null) = 'onetwo';
+select '11_14', text_concat(null, 'two', null) = 'two';
+select '11_15', text_concat(null, null, null) = '';
+
 -- Reverse string
 select 'x_01', text_reverse(null) is NULL;
 select 'x_02', text_reverse('hello') = 'olleh';

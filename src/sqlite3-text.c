@@ -490,6 +490,42 @@ static void sqlite3_join(sqlite3_context* context, int argc, sqlite3_value** arg
     free(s_parts);
 }
 
+// Concatenates strings and returns the resulting string. Ignores nulls.
+// text_concat(str, ...)
+// [pg-compatible] concat(val1[, val2 [, ...]])
+static void sqlite3_concat(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    if (argc < 1) {
+        sqlite3_result_error(context, "expected at least 1 parameter", -1);
+        return;
+    }
+
+    // parts
+    size_t n_parts = argc;
+    ByteString* s_parts = malloc(n_parts * sizeof(ByteString));
+    if (s_parts == NULL) {
+        sqlite3_result_null(context);
+        return;
+    }
+    for (size_t i = 0, part_idx = 0; i < argc; i++) {
+        if (sqlite3_value_type(argv[i]) == SQLITE_NULL) {
+            // ignore nulls
+            n_parts--;
+            continue;
+        }
+        const char* part = (char*)sqlite3_value_text(argv[i]);
+        int part_len = sqlite3_value_bytes(argv[i]);
+        s_parts[part_idx] = bstring.from_cstring(part, part_len);
+        part_idx++;
+    }
+
+    // join parts
+    ByteString s_res = bstring.concat(s_parts, n_parts);
+    const char* res = bstring.to_cstring(s_res);
+    sqlite3_result_text(context, res, -1, SQLITE_TRANSIENT);
+    bstring.free(s_res);
+    free(s_parts);
+}
+
 #pragma endregion
 
 // Reverses a string.
@@ -580,6 +616,8 @@ __declspec(dllexport)
     sqlite3_create_function(db, "split_part", 3, flags, 0, sqlite3_split, 0, 0);
     sqlite3_create_function(db, "text_join", -1, flags, 0, sqlite3_join, 0, 0);
     sqlite3_create_function(db, "concat_ws", -1, flags, 0, sqlite3_join, 0, 0);
+    sqlite3_create_function(db, "text_concat", -1, flags, 0, sqlite3_concat, 0, 0);
+    sqlite3_create_function(db, "concat", -1, flags, 0, sqlite3_concat, 0, 0);
 
     sqlite3_create_function(db, "text_reverse", 1, flags, 0, sqlite3_reverse, 0, 0);
     sqlite3_create_function(db, "reverse", 1, flags, 0, sqlite3_reverse, 0, 0);
