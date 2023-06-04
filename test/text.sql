@@ -120,6 +120,20 @@ select '3_10', text_left('hello world', -10) = 'h';
 select '3_11', text_left('hello world', -11) = '';
 select '3_12', text_left('hello world', -15) = '';
 
+-- Right
+select '4_01', text_right(null, 5) is null;
+select '4_02', text_right('hello world', 0) = '';
+select '4_03', text_right('hello world', 1) = 'd';
+select '4_04', text_right('hello world', 5) = 'world';
+select '4_05', text_right('hello world', 10) = 'ello world';
+select '4_06', text_right('hello world', 11) = 'hello world';
+select '4_07', text_right('hello world', 15) = 'hello world';
+select '4_08', text_right('hello world', -1) = 'ello world';
+select '4_09', text_right('hello world', -6) = 'world';
+select '4_10', text_right('hello world', -10) = 'd';
+select '4_11', text_right('hello world', -11) = '';
+select '4_12', text_right('hello world', -15) = '';
+
 -- Reverse string
 select 'x_01', text_reverse(null) is NULL;
 select 'x_02', text_reverse('hello') = 'olleh';

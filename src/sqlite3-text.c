@@ -170,8 +170,8 @@ static void sqlite3_slice3(sqlite3_context* context, int argc, sqlite3_value** a
     rstring.free(s_res);
 }
 
-// Extracts a substring of `length` characters starting at the beginning of the string.
-// For `length < 0`, extracts all but the last `length` characters.
+// Extracts a substring of `length` characters from the beginning of the string.
+// For `length < 0`, extracts all but the last `|length|` characters.
 static void sqlite3_left(sqlite3_context* context, int argc, sqlite3_value** argv) {
     assert(argc == 2);
 
@@ -193,6 +193,36 @@ static void sqlite3_left(sqlite3_context* context, int argc, sqlite3_value** arg
         length = length >= 0 ? length : 0;
     }
     RuneString s_res = rstring.substring(s_src, 0, length);
+    char* res = rstring.to_cstring(s_res);
+    sqlite3_result_text(context, res, -1, free);
+    rstring.free(s_src);
+    rstring.free(s_res);
+}
+
+// Extracts a substring of `length` characters from the end of the string.
+// For `length < 0`, extracts all but the first `|length|` characters.
+static void sqlite3_right(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    assert(argc == 2);
+
+    const char* src = (char*)sqlite3_value_text(argv[0]);
+    if (src == NULL) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    if (sqlite3_value_type(argv[1]) != SQLITE_INTEGER) {
+        sqlite3_result_error(context, "length parameter should be integer", -1);
+        return;
+    }
+    int length = sqlite3_value_int(argv[1]);
+
+    RuneString s_src = rstring.from_cstring(src);
+
+    length = (length < 0) ? (int)s_src.length + length : length;
+    int start = (int)s_src.length - length;
+    start = start < 0 ? 0 : start;
+
+    RuneString s_res = rstring.substring(s_src, start, length);
     char* res = rstring.to_cstring(s_res);
     sqlite3_result_text(context, res, -1, free);
     rstring.free(s_src);
@@ -302,6 +332,7 @@ __declspec(dllexport)
     sqlite3_create_function(db, "text_slice", 2, flags, 0, sqlite3_slice2, 0, 0);
     sqlite3_create_function(db, "text_slice", 3, flags, 0, sqlite3_slice3, 0, 0);
     sqlite3_create_function(db, "text_left", 2, flags, 0, sqlite3_left, 0, 0);
+    sqlite3_create_function(db, "text_right", 2, flags, 0, sqlite3_right, 0, 0);
     sqlite3_create_function(db, "text_reverse", 1, flags, 0, sqlite3_reverse, 0, 0);
     sqlite3_create_function(db, "reverse", 1, flags, 0, sqlite3_reverse, 0, 0);
     sqlite3_create_function(db, "text_split", 3, flags, 0, sqlite3_split, 0, 0);
