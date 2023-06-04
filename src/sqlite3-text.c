@@ -14,6 +14,8 @@
 
 SQLITE_EXTENSION_INIT1
 
+#pragma region Substrings
+
 // Extracts a substring starting at the `start` position (1-based).
 // text_substring(str, start)
 static void sqlite3_substring2(sqlite3_context* context, int argc, sqlite3_value** argv) {
@@ -285,6 +287,62 @@ static void sqlite3_reverse(sqlite3_context* context, int argc, sqlite3_value** 
     rstring.free(s_res);
 }
 
+#pragma endregion
+
+#pragma region Search and match
+
+// Returns the first index of the substring in the original string.
+// text_index(str, other)
+static void sqlite3_index(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    assert(argc == 2);
+
+    const char* src = (char*)sqlite3_value_text(argv[0]);
+    if (src == NULL) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    const char* other = (char*)sqlite3_value_text(argv[1]);
+    if (other == NULL) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    RuneString s_src = rstring.from_cstring(src);
+    RuneString s_other = rstring.from_cstring(other);
+    int idx = rstring.index(s_src, s_other);
+    sqlite3_result_int64(context, idx + 1);
+    rstring.free(s_src);
+    rstring.free(s_other);
+}
+
+// Returns the last index of the substring in the original string.
+// text_last_index(str, other)
+static void sqlite3_last_index(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    assert(argc == 2);
+
+    const char* src = (char*)sqlite3_value_text(argv[0]);
+    if (src == NULL) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    const char* other = (char*)sqlite3_value_text(argv[1]);
+    if (other == NULL) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    RuneString s_src = rstring.from_cstring(src);
+    RuneString s_other = rstring.from_cstring(other);
+    int idx = rstring.last_index(s_src, s_other);
+    sqlite3_result_int64(context, idx + 1);
+    rstring.free(s_src);
+    rstring.free(s_other);
+}
+
+#pragma endregion
+
 // substring
 // utf8 text_slice(str, start [,end])
 // utf8 text_substring(str, start [,length])
@@ -327,12 +385,19 @@ __declspec(dllexport)
     (void)errmsg_ptr;
     SQLITE_EXTENSION_INIT2(api);
     static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
+
+    // substrings
     sqlite3_create_function(db, "text_substring", 2, flags, 0, sqlite3_substring2, 0, 0);
     sqlite3_create_function(db, "text_substring", 3, flags, 0, sqlite3_substring3, 0, 0);
     sqlite3_create_function(db, "text_slice", 2, flags, 0, sqlite3_slice2, 0, 0);
     sqlite3_create_function(db, "text_slice", 3, flags, 0, sqlite3_slice3, 0, 0);
     sqlite3_create_function(db, "text_left", 2, flags, 0, sqlite3_left, 0, 0);
     sqlite3_create_function(db, "text_right", 2, flags, 0, sqlite3_right, 0, 0);
+
+    // search and match
+    sqlite3_create_function(db, "text_index", 2, flags, 0, sqlite3_index, 0, 0);
+    sqlite3_create_function(db, "text_last_index", 2, flags, 0, sqlite3_last_index, 0, 0);
+
     sqlite3_create_function(db, "text_reverse", 1, flags, 0, sqlite3_reverse, 0, 0);
     sqlite3_create_function(db, "reverse", 1, flags, 0, sqlite3_reverse, 0, 0);
     sqlite3_create_function(db, "text_split", 3, flags, 0, sqlite3_split, 0, 0);

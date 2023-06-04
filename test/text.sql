@@ -134,6 +134,22 @@ select '4_10', text_right('hello world', -10) = 'd';
 select '4_11', text_right('hello world', -11) = '';
 select '4_12', text_right('hello world', -15) = '';
 
+-- Index
+select '4_01', text_index(null, 'ello') is null;
+select '4_02', text_index('hello yellow', null) is null;
+select '4_03', text_index('hello yellow', 'hello') = 1;
+select '4_04', text_index('hello yellow', 'yellow') = 7;
+select '4_05', text_index('hello yellow', 'ello') = 2;
+select '4_06', text_index('hello yellow', 'x') = 0;
+
+-- Last index
+select '5_01', text_last_index(null, 'ello') is null;
+select '5_02', text_last_index('hello yellow', null) is null;
+select '5_03', text_last_index('hello yellow', 'hello') = 1;
+select '5_04', text_last_index('hello yellow', 'yellow') = 7;
+select '5_05', text_last_index('hello yellow', 'ello') = 8;
+select '5_06', text_last_index('hello yellow', 'x') = 0;
+
 -- Reverse string
 select 'x_01', text_reverse(null) is NULL;
 select 'x_02', text_reverse('hello') = 'olleh';
