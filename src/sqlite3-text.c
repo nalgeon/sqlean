@@ -341,6 +341,31 @@ static void sqlite3_last_index(sqlite3_context* context, int argc, sqlite3_value
     rstring.free(s_other);
 }
 
+// Checks if the string contains the substring.
+// text_contains(str, other)
+static void sqlite3_contains(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    assert(argc == 2);
+
+    const char* src = (char*)sqlite3_value_text(argv[0]);
+    if (src == NULL) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    const char* other = (char*)sqlite3_value_text(argv[1]);
+    if (other == NULL) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    ByteString s_src = bstring.from_cstring(src, sqlite3_value_bytes(argv[0]));
+    ByteString s_other = bstring.from_cstring(other, sqlite3_value_bytes(argv[1]));
+    bool found = bstring.contains(s_src, s_other);
+    sqlite3_result_int(context, found);
+    bstring.free(s_src);
+    bstring.free(s_other);
+}
+
 #pragma endregion
 
 // substring
@@ -397,6 +422,7 @@ __declspec(dllexport)
     // search and match
     sqlite3_create_function(db, "text_index", 2, flags, 0, sqlite3_index, 0, 0);
     sqlite3_create_function(db, "text_last_index", 2, flags, 0, sqlite3_last_index, 0, 0);
+    sqlite3_create_function(db, "text_contains", 2, flags, 0, sqlite3_contains, 0, 0);
 
     sqlite3_create_function(db, "text_reverse", 1, flags, 0, sqlite3_reverse, 0, 0);
     sqlite3_create_function(db, "reverse", 1, flags, 0, sqlite3_reverse, 0, 0);

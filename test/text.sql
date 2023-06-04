@@ -150,6 +150,14 @@ select '5_04', text_last_index('hello yellow', 'yellow') = 7;
 select '5_05', text_last_index('hello yellow', 'ello') = 8;
 select '5_06', text_last_index('hello yellow', 'x') = 0;
 
+-- Contains
+select '6_01', text_contains(null, 'ello') is null;
+select '6_02', text_contains('hello yellow', null) is null;
+select '6_03', text_contains('hello yellow', 'hello') = 1;
+select '6_04', text_contains('hello yellow', 'yellow') = 1;
+select '6_05', text_contains('hello yellow', 'ello') = 1;
+select '6_06', text_contains('hello yellow', 'x') = 0;
+
 -- Reverse string
 select 'x_01', text_reverse(null) is NULL;
 select 'x_02', text_reverse('hello') = 'olleh';
