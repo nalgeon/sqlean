@@ -183,23 +183,42 @@ select '8_05', text_count('hello yellow', 'ello') = 2;
 select '8_06', text_count('hello yellow', 'l') = 4;
 select '8_07', text_count('hello yellow', 'x') = 0;
 
+-- Split
+select '9_01', text_split(null, '|', 2) is null;
+select '9_02', text_split('', '|', 2) = '';
+select '9_03', text_split('one|two|three', '|', 2) = 'two';
+select '9_04', text_split('one;two;three', ';', 2) = 'two';
+select '9_05', text_split('один|два|три', '|', 2) = 'два';
+select '9_06', text_split('one|two|three', '|', 10) = '';
+select '9_07', text_split('one|two|three', ';', 2) = '';
+select '9_08', text_split('one|two|three', '', 1) = 'one|two|three';
+select '9_09', text_split('one|two|three', '', 2) = '';
+select '9_10', text_split('one,two,three', null, 2) is null;
+
+select '9_11', text_split('one|||four', '|', 1) = 'one';
+select '9_12', text_split('one|||four', '|', 2) = '';
+select '9_13', text_split('one|||four', '|', 3) = '';
+select '9_14', text_split('one|||four', '|', 4) = 'four';
+select '9_15', text_split('one/\two/\three', '/\', 2) = 'two';
+select '9_16', text_split('one|two|thr', 'two', 1) = 'one|';
+select '9_17', text_split('one|two|thr', 'two', 2) = '|thr';
+select '9_18', text_split('one|two|thr', 'two', 3) = '';
+
+select '9_21', text_split('|one|two|', '|', 1) = '';
+select '9_22', text_split('|one|two|', '|', 2) = 'one';
+select '9_23', text_split('|one|two|', '|', 3) = 'two';
+select '9_24', text_split('|one|two|', '|', 4) = '';
+select '9_25', text_split('one|two', 'one|two', 1) = '';
+select '9_26', text_split('one|two', 'one|two', 2) = '';
+
+select '9_31', text_split('one|two|thr', '|', -1) = 'thr';
+select '9_32', text_split('one|two|thr', '|', -2) = 'two';
+select '9_33', text_split('one|two|thr', '|', -3) = 'one';
+select '9_34', text_split('one|two|thr', '|', -4) = '';
+
 -- Reverse string
 select 'x_01', text_reverse(null) is NULL;
 select 'x_02', text_reverse('hello') = 'olleh';
 select 'x_03', text_reverse('привет') = 'тевирп';
 select 'x_04', text_reverse("𐌀𐌁𐌂") = '𐌂𐌁𐌀';
 select 'x_05', text_reverse('hello 42@ world') = 'dlrow @24 olleh';
-
--- Extract part from string
-select 'y_01', text_split(NULL, ',', 2) is NULL;
-select 'y_02', text_split('', ',', 2) = '';
-select 'y_03', text_split('one,two,three', ',', 2) = 'two';
-select 'y_04', text_split('one|two|three', '|', 2) = 'two';
-select 'y_05', text_split('один,два,три', ',', 2) = 'два';
-select 'y_06', text_split('one,two,three', ',', 10) = '';
-select 'y_07', text_split('one,two,three', ';', 2) = '';
-select 'y_08', text_split('one,two,three', '', 1) = 'one,two,three';
-select 'y_09', text_split('one,two,three', NULL, 2) is NULL;
-select 'y_10', text_split('one,,,four', ',', 2) = '';
-select 'y_11', text_split('one,,,four', ',', 4) = 'four';
-select 'y_12', text_split('one/\two/\three', '/\', 2) = 'two';

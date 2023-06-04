@@ -395,8 +395,12 @@ static void sqlite3_count(sqlite3_context* context, int argc, sqlite3_value** ar
 
 #pragma endregion
 
+#pragma region Split and join
+
 // Splits a string by a separator and returns the n-th part (counting from one).
+// When n is negative, returns the |n|'th-from-last part.
 // text_split(str, sep, n)
+// [pg-compatible] split_part(string, delimiter, n)
 static void sqlite3_split(sqlite3_context* context, int argc, sqlite3_value** argv) {
     assert(argc == 3);
 
@@ -417,19 +421,31 @@ static void sqlite3_split(sqlite3_context* context, int argc, sqlite3_value** ar
         return;
     }
     int part = sqlite3_value_int(argv[2]);
-    if (part <= 0) {
-        sqlite3_result_error(context, "part parameter should be > 0", -1);
+    // pg-compatible
+    if (part == 0) {
+        sqlite3_result_error(context, "part parameter should not be 0", -1);
         return;
     }
+    // convert to 0-based index
+    part = part > 0 ? part - 1 : part;
 
     ByteString s_src = bstring.from_cstring(src, strlen(src));
     ByteString s_sep = bstring.from_cstring(sep, strlen(sep));
-    ByteString s_part = bstring.split_part(s_src, s_sep, part - 1);
+
+    // count from the last part backwards
+    if (part < 0) {
+        int n_parts = bstring.count(s_src, s_sep) + 1;
+        part = n_parts + part;
+    }
+
+    ByteString s_part = bstring.split_part(s_src, s_sep, part);
     sqlite3_result_text(context, s_part.bytes, -1, SQLITE_TRANSIENT);
     bstring.free(s_src);
     bstring.free(s_sep);
     bstring.free(s_part);
 }
+
+#pragma endregion
 
 // Reverses a string.
 // text_reverse(str)
@@ -514,9 +530,11 @@ __declspec(dllexport)
     sqlite3_create_function(db, "text_has_suffix", 2, flags, 0, sqlite3_has_suffix, 0, 0);
     sqlite3_create_function(db, "text_count", 2, flags, 0, sqlite3_count, 0, 0);
 
-    sqlite3_create_function(db, "text_reverse", 1, flags, 0, sqlite3_reverse, 0, 0);
-    sqlite3_create_function(db, "reverse", 1, flags, 0, sqlite3_reverse, 0, 0);
+    // split and join
     sqlite3_create_function(db, "text_split", 3, flags, 0, sqlite3_split, 0, 0);
     sqlite3_create_function(db, "split_part", 3, flags, 0, sqlite3_split, 0, 0);
+
+    sqlite3_create_function(db, "text_reverse", 1, flags, 0, sqlite3_reverse, 0, 0);
+    sqlite3_create_function(db, "reverse", 1, flags, 0, sqlite3_reverse, 0, 0);
     return SQLITE_OK;
 }
