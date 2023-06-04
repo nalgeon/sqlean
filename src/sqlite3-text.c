@@ -18,6 +18,7 @@ SQLITE_EXTENSION_INIT1
 
 // Extracts a substring starting at the `start` position (1-based).
 // text_substring(str, start)
+// [pg-compatible] substr(string, start)
 static void sqlite3_substring2(sqlite3_context* context, int argc, sqlite3_value** argv) {
     assert(argc == 2);
 
@@ -47,6 +48,7 @@ static void sqlite3_substring2(sqlite3_context* context, int argc, sqlite3_value
 
 // Extracts a substring of `length` characters starting at the `start` position (1-based).
 // text_substring(str, start, length)
+// [pg-compatible] substr(string, start, count)
 static void sqlite3_substring3(sqlite3_context* context, int argc, sqlite3_value** argv) {
     assert(argc == 3);
 
@@ -174,6 +176,8 @@ static void sqlite3_slice3(sqlite3_context* context, int argc, sqlite3_value** a
 
 // Extracts a substring of `length` characters from the beginning of the string.
 // For `length < 0`, extracts all but the last `|length|` characters.
+// text_left(str, length)
+// [pg-compatible] left(string, n)
 static void sqlite3_left(sqlite3_context* context, int argc, sqlite3_value** argv) {
     assert(argc == 2);
 
@@ -203,6 +207,8 @@ static void sqlite3_left(sqlite3_context* context, int argc, sqlite3_value** arg
 
 // Extracts a substring of `length` characters from the end of the string.
 // For `length < 0`, extracts all but the first `|length|` characters.
+// text_right(str, length)
+// [pg-compatible] right(string, n)
 static void sqlite3_right(sqlite3_context* context, int argc, sqlite3_value** argv) {
     assert(argc == 2);
 
@@ -231,68 +237,13 @@ static void sqlite3_right(sqlite3_context* context, int argc, sqlite3_value** ar
     rstring.free(s_res);
 }
 
-// Splits a string by a separator and returns the n-th part (counting from one).
-// text_split(str, sep, n)
-static void sqlite3_split(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    assert(argc == 3);
-
-    const char* src = (char*)sqlite3_value_text(argv[0]);
-    if (src == NULL) {
-        sqlite3_result_null(context);
-        return;
-    }
-
-    const char* sep = (const char*)sqlite3_value_text(argv[1]);
-    if (sep == NULL) {
-        sqlite3_result_null(context);
-        return;
-    }
-
-    if (sqlite3_value_type(argv[2]) != SQLITE_INTEGER) {
-        sqlite3_result_error(context, "part parameter should be integer", -1);
-        return;
-    }
-    int part = sqlite3_value_int(argv[2]);
-    if (part <= 0) {
-        sqlite3_result_error(context, "part parameter should be > 0", -1);
-        return;
-    }
-
-    ByteString s_src = bstring.from_cstring(src, strlen(src));
-    ByteString s_sep = bstring.from_cstring(sep, strlen(sep));
-    ByteString s_part = bstring.split_part(s_src, s_sep, part - 1);
-    sqlite3_result_text(context, s_part.bytes, -1, SQLITE_TRANSIENT);
-    bstring.free(s_src);
-    bstring.free(s_sep);
-    bstring.free(s_part);
-}
-
-// Reverses a string.
-// text_reverse(str)
-static void sqlite3_reverse(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    assert(argc == 1);
-
-    const char* src = (char*)sqlite3_value_text(argv[0]);
-    if (src == NULL) {
-        sqlite3_result_null(context);
-        return;
-    }
-
-    RuneString s_src = rstring.from_cstring(src);
-    RuneString s_res = rstring.reverse(s_src);
-    char* res = rstring.to_cstring(s_res);
-
-    sqlite3_result_text(context, res, -1, free);
-    rstring.free(s_src);
-    rstring.free(s_res);
-}
-
 #pragma endregion
 
 #pragma region Search and match
 
 // Returns the first index of the substring in the original string.
 // text_index(str, other)
+// [pg-compatible] strpos(string, substring)
 static void sqlite3_index(sqlite3_context* context, int argc, sqlite3_value** argv) {
     assert(argc == 2);
 
@@ -368,6 +319,62 @@ static void sqlite3_contains(sqlite3_context* context, int argc, sqlite3_value**
 
 #pragma endregion
 
+// Splits a string by a separator and returns the n-th part (counting from one).
+// text_split(str, sep, n)
+static void sqlite3_split(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    assert(argc == 3);
+
+    const char* src = (char*)sqlite3_value_text(argv[0]);
+    if (src == NULL) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    const char* sep = (const char*)sqlite3_value_text(argv[1]);
+    if (sep == NULL) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    if (sqlite3_value_type(argv[2]) != SQLITE_INTEGER) {
+        sqlite3_result_error(context, "part parameter should be integer", -1);
+        return;
+    }
+    int part = sqlite3_value_int(argv[2]);
+    if (part <= 0) {
+        sqlite3_result_error(context, "part parameter should be > 0", -1);
+        return;
+    }
+
+    ByteString s_src = bstring.from_cstring(src, strlen(src));
+    ByteString s_sep = bstring.from_cstring(sep, strlen(sep));
+    ByteString s_part = bstring.split_part(s_src, s_sep, part - 1);
+    sqlite3_result_text(context, s_part.bytes, -1, SQLITE_TRANSIENT);
+    bstring.free(s_src);
+    bstring.free(s_sep);
+    bstring.free(s_part);
+}
+
+// Reverses a string.
+// text_reverse(str)
+static void sqlite3_reverse(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    assert(argc == 1);
+
+    const char* src = (char*)sqlite3_value_text(argv[0]);
+    if (src == NULL) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    RuneString s_src = rstring.from_cstring(src);
+    RuneString s_res = rstring.reverse(s_src);
+    char* res = rstring.to_cstring(s_res);
+
+    sqlite3_result_text(context, res, -1, free);
+    rstring.free(s_src);
+    rstring.free(s_res);
+}
+
 // substring
 // utf8 text_slice(str, start [,end])
 // utf8 text_substring(str, start [,length])
@@ -417,10 +424,13 @@ __declspec(dllexport)
     sqlite3_create_function(db, "text_slice", 2, flags, 0, sqlite3_slice2, 0, 0);
     sqlite3_create_function(db, "text_slice", 3, flags, 0, sqlite3_slice3, 0, 0);
     sqlite3_create_function(db, "text_left", 2, flags, 0, sqlite3_left, 0, 0);
+    sqlite3_create_function(db, "left", 2, flags, 0, sqlite3_left, 0, 0);
     sqlite3_create_function(db, "text_right", 2, flags, 0, sqlite3_right, 0, 0);
+    sqlite3_create_function(db, "right", 2, flags, 0, sqlite3_right, 0, 0);
 
     // search and match
     sqlite3_create_function(db, "text_index", 2, flags, 0, sqlite3_index, 0, 0);
+    sqlite3_create_function(db, "strpos", 2, flags, 0, sqlite3_index, 0, 0);
     sqlite3_create_function(db, "text_last_index", 2, flags, 0, sqlite3_last_index, 0, 0);
     sqlite3_create_function(db, "text_contains", 2, flags, 0, sqlite3_contains, 0, 0);
 
