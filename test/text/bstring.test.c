@@ -351,22 +351,63 @@ static void test_has_suffix(void) {
 
 static void test_count(void) {
     printf("test_count...");
-    ByteString str = bstring.from_cstring("hello world", 11);
+    ByteString str = bstring.from_cstring("hello yellow", 12);
 
-    ByteString other = bstring.from_cstring("l", 1);
-    int count = bstring.count(str, other);
-    assert(count == 3);
-    bstring.free(other);
+    {
+        ByteString other = bstring.from_cstring("h", 1);
+        int count = bstring.count(str, other);
+        assert(count == 1);
+        bstring.free(other);
+    }
 
-    other = bstring.from_cstring("ld", 2);
-    count = bstring.count(str, other);
-    assert(count == 1);
-    bstring.free(other);
+    {
+        ByteString other = bstring.from_cstring("e", 1);
+        int count = bstring.count(str, other);
+        assert(count == 2);
+        bstring.free(other);
+    }
 
-    other = bstring.from_cstring("lda", 3);
-    count = bstring.count(str, other);
-    assert(count == 0);
-    bstring.free(other);
+    {
+        ByteString other = bstring.from_cstring("o", 1);
+        int count = bstring.count(str, other);
+        assert(count == 2);
+        bstring.free(other);
+    }
+
+    {
+        ByteString other = bstring.from_cstring("l", 1);
+        int count = bstring.count(str, other);
+        assert(count == 4);
+        bstring.free(other);
+    }
+
+    {
+        ByteString other = bstring.from_cstring("he", 2);
+        int count = bstring.count(str, other);
+        assert(count == 1);
+        bstring.free(other);
+    }
+
+    {
+        ByteString other = bstring.from_cstring(" he", 3);
+        int count = bstring.count(str, other);
+        assert(count == 0);
+        bstring.free(other);
+    }
+
+    {
+        ByteString other = bstring.from_cstring("ow", 2);
+        int count = bstring.count(str, other);
+        assert(count == 1);
+        bstring.free(other);
+    }
+
+    {
+        ByteString other = bstring.from_cstring("ow ", 3);
+        int count = bstring.count(str, other);
+        assert(count == 0);
+        bstring.free(other);
+    }
 
     bstring.free(str);
     printf("OK\n");

@@ -174,6 +174,15 @@ select '8_04', text_has_suffix('hello yellow', 'yellow') = 1;
 select '8_05', text_has_suffix('hello yellow', 'ello') = 0;
 select '8_06', text_has_suffix('hello yellow', 'x') = 0;
 
+-- Count
+select '8_01', text_count(null, 'ello') is null;
+select '8_02', text_count('hello yellow', null) is null;
+select '8_03', text_count('hello yellow', 'hello') = 1;
+select '8_04', text_count('hello yellow', 'yellow') = 1;
+select '8_05', text_count('hello yellow', 'ello') = 2;
+select '8_06', text_count('hello yellow', 'l') = 4;
+select '8_07', text_count('hello yellow', 'x') = 0;
+
 -- Reverse string
 select 'x_01', text_reverse(null) is NULL;
 select 'x_02', text_reverse('hello') = 'olleh';

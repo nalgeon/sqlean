@@ -249,7 +249,7 @@ static size_t string_count(ByteString str, ByteString other) {
             break;
         }
         count += 1;
-        char_idx += match_idx + other.length;
+        char_idx = match_idx + other.length;
     }
 
     return count;

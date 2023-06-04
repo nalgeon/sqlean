@@ -115,9 +115,23 @@ static void test_index(void) {
     RuneString str = rstring.from_cstring("привет мир");
 
     {
+        RuneString other = rstring.from_cstring("пр");
+        int index = rstring.index(str, other);
+        assert(index == 0);
+        rstring.free(other);
+    }
+
+    {
         RuneString other = rstring.from_cstring("и");
         int index = rstring.index(str, other);
         assert(index == 2);
+        rstring.free(other);
+    }
+
+    {
+        RuneString other = rstring.from_cstring("ми");
+        int index = rstring.index(str, other);
+        assert(index == 7);
         rstring.free(other);
     }
 
@@ -130,6 +144,21 @@ static void test_index(void) {
 
     {
         RuneString other = rstring.from_cstring("ирк");
+        int index = rstring.index(str, other);
+        assert(index == -1);
+        rstring.free(other);
+    }
+
+    {
+        RuneString str = rstring.from_cstring("привет миф");
+        RuneString other = rstring.from_cstring("ф");
+        int index = rstring.index(str, other);
+        assert(index == 9);
+        rstring.free(other);
+    }
+
+    {
+        RuneString other = rstring.from_cstring("р ");
         int index = rstring.index(str, other);
         assert(index == -1);
         rstring.free(other);
