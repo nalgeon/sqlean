@@ -317,6 +317,57 @@ static void sqlite3_contains(sqlite3_context* context, int argc, sqlite3_value**
     bstring.free(s_other);
 }
 
+// Checks if the string starts with the substring.
+// text_has_prefix(str, other)
+// [pg-compatible] starts_with(string, prefix)
+static void sqlite3_has_prefix(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    assert(argc == 2);
+
+    const char* src = (char*)sqlite3_value_text(argv[0]);
+    if (src == NULL) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    const char* other = (char*)sqlite3_value_text(argv[1]);
+    if (other == NULL) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    ByteString s_src = bstring.from_cstring(src, sqlite3_value_bytes(argv[0]));
+    ByteString s_other = bstring.from_cstring(other, sqlite3_value_bytes(argv[1]));
+    bool found = bstring.has_prefix(s_src, s_other);
+    sqlite3_result_int(context, found);
+    bstring.free(s_src);
+    bstring.free(s_other);
+}
+
+// Checks if the string ends with the substring.
+// text_has_suffix(str, other)
+static void sqlite3_has_suffix(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    assert(argc == 2);
+
+    const char* src = (char*)sqlite3_value_text(argv[0]);
+    if (src == NULL) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    const char* other = (char*)sqlite3_value_text(argv[1]);
+    if (other == NULL) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    ByteString s_src = bstring.from_cstring(src, sqlite3_value_bytes(argv[0]));
+    ByteString s_other = bstring.from_cstring(other, sqlite3_value_bytes(argv[1]));
+    bool found = bstring.has_suffix(s_src, s_other);
+    sqlite3_result_int(context, found);
+    bstring.free(s_src);
+    bstring.free(s_other);
+}
+
 #pragma endregion
 
 // Splits a string by a separator and returns the n-th part (counting from one).
@@ -433,6 +484,9 @@ __declspec(dllexport)
     sqlite3_create_function(db, "strpos", 2, flags, 0, sqlite3_index, 0, 0);
     sqlite3_create_function(db, "text_last_index", 2, flags, 0, sqlite3_last_index, 0, 0);
     sqlite3_create_function(db, "text_contains", 2, flags, 0, sqlite3_contains, 0, 0);
+    sqlite3_create_function(db, "text_has_prefix", 2, flags, 0, sqlite3_has_prefix, 0, 0);
+    sqlite3_create_function(db, "starts_with", 2, flags, 0, sqlite3_has_prefix, 0, 0);
+    sqlite3_create_function(db, "text_has_suffix", 2, flags, 0, sqlite3_has_suffix, 0, 0);
 
     sqlite3_create_function(db, "text_reverse", 1, flags, 0, sqlite3_reverse, 0, 0);
     sqlite3_create_function(db, "reverse", 1, flags, 0, sqlite3_reverse, 0, 0);

@@ -158,6 +158,22 @@ select '6_04', text_contains('hello yellow', 'yellow') = 1;
 select '6_05', text_contains('hello yellow', 'ello') = 1;
 select '6_06', text_contains('hello yellow', 'x') = 0;
 
+-- Has prefix
+select '7_01', text_has_prefix(null, 'ello') is null;
+select '7_02', text_has_prefix('hello yellow', null) is null;
+select '7_03', text_has_prefix('hello yellow', 'hello') = 1;
+select '7_04', text_has_prefix('hello yellow', 'yellow') = 0;
+select '7_05', text_has_prefix('hello yellow', 'ello') = 0;
+select '7_06', text_has_prefix('hello yellow', 'x') = 0;
+
+-- Has suffix
+select '8_01', text_has_suffix(null, 'ello') is null;
+select '8_02', text_has_suffix('hello yellow', null) is null;
+select '8_03', text_has_suffix('hello yellow', 'hello') = 0;
+select '8_04', text_has_suffix('hello yellow', 'yellow') = 1;
+select '8_05', text_has_suffix('hello yellow', 'ello') = 0;
+select '8_06', text_has_suffix('hello yellow', 'x') = 0;
+
 -- Reverse string
 select 'x_01', text_reverse(null) is NULL;
 select 'x_02', text_reverse('hello') = 'olleh';
