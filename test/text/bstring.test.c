@@ -525,17 +525,29 @@ static void test_concat(void) {
 
 static void test_repeat(void) {
     printf("test_repeat...");
-    ByteString str = bstring.from_cstring("one", 3);
-    ByteString res = bstring.repeat(str, 3);
-    assert(eq(res, "oneoneone"));
-    bstring.free(res);
-    bstring.free(str);
+    {
+        ByteString str = bstring.from_cstring("one", 3);
+        ByteString res = bstring.repeat(str, 3);
+        assert(eq(res, "oneoneone"));
+        bstring.free(res);
+        bstring.free(str);
+    }
 
-    str = bstring.from_cstring("*", 1);
-    res = bstring.repeat(str, 5);
-    assert(eq(res, "*****"));
-    bstring.free(res);
-    bstring.free(str);
+    {
+        ByteString str = bstring.from_cstring("*", 1);
+        ByteString res = bstring.repeat(str, 5);
+        assert(eq(res, "*****"));
+        bstring.free(res);
+        bstring.free(str);
+    }
+
+    {
+        ByteString str = bstring.from_cstring("one", 3);
+        ByteString res = bstring.repeat(str, 0);
+        assert(eq(res, ""));
+        bstring.free(res);
+        bstring.free(str);
+    }
 
     printf("OK\n");
 }

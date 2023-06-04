@@ -526,6 +526,34 @@ static void sqlite3_concat(sqlite3_context* context, int argc, sqlite3_value** a
     free(s_parts);
 }
 
+// Concatenates the string to itself a given number of times and returns the resulting string.
+// text_repeat(str, count)
+// [pg-compatible] repeat(string, number)
+static void sqlite3_repeat(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    assert(argc == 2);
+
+    const char* src = (char*)sqlite3_value_text(argv[0]);
+    if (src == NULL) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    if (sqlite3_value_type(argv[1]) != SQLITE_INTEGER) {
+        sqlite3_result_error(context, "count parameter should be integer", -1);
+        return;
+    }
+    int count = sqlite3_value_int(argv[1]);
+    // pg-compatible: treat negative count as zero
+    count = count >= 0 ? count : 0;
+
+    ByteString s_src = bstring.from_cstring(src, sqlite3_value_bytes(argv[0]));
+    ByteString s_res = bstring.repeat(s_src, count);
+    const char* res = bstring.to_cstring(s_res);
+    sqlite3_result_text(context, res, -1, SQLITE_TRANSIENT);
+    bstring.free(s_src);
+    bstring.free(s_res);
+}
+
 #pragma endregion
 
 // Reverses a string.
@@ -618,6 +646,8 @@ __declspec(dllexport)
     sqlite3_create_function(db, "concat_ws", -1, flags, 0, sqlite3_join, 0, 0);
     sqlite3_create_function(db, "text_concat", -1, flags, 0, sqlite3_concat, 0, 0);
     sqlite3_create_function(db, "concat", -1, flags, 0, sqlite3_concat, 0, 0);
+    sqlite3_create_function(db, "text_repeat", 2, flags, 0, sqlite3_repeat, 0, 0);
+    sqlite3_create_function(db, "repeat", 2, flags, 0, sqlite3_repeat, 0, 0);
 
     sqlite3_create_function(db, "text_reverse", 1, flags, 0, sqlite3_reverse, 0, 0);
     sqlite3_create_function(db, "reverse", 1, flags, 0, sqlite3_reverse, 0, 0);

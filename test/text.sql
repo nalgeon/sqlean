@@ -250,6 +250,15 @@ select '11_13', text_concat('one', 'two', null) = 'onetwo';
 select '11_14', text_concat(null, 'two', null) = 'two';
 select '11_15', text_concat(null, null, null) = '';
 
+-- Repeat
+select '12_01', text_repeat(null, 1) is null;
+select '12_02', text_repeat('one', -1) = '';
+select '12_03', text_repeat('one', 0) = '';
+select '12_04', text_repeat('one', 1) = 'one';
+select '12_05', text_repeat('one', 2) = 'oneone';
+select '12_06', text_repeat('one', 3) = 'oneoneone';
+select '12_07', text_repeat('два', 3) = 'двадвадва';
+
 -- Reverse string
 select 'x_01', text_reverse(null) is NULL;
 select 'x_02', text_reverse('hello') = 'olleh';
