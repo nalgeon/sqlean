@@ -398,9 +398,11 @@ select '19_24', text_replace('hello', 'l', '*', 2)  = 'he**o';
 select '19_25', text_replace('hello', 'l', '*', 3)  = 'he**o';
 select '19_16', text_replace('нетто', 'т', 'три', 1)  = 'нетрито';
 
--- Reverse string
-select 'x_01', text_reverse(null) is NULL;
-select 'x_02', text_reverse('hello') = 'olleh';
-select 'x_03', text_reverse('привет') = 'тевирп';
-select 'x_04', text_reverse("𐌀𐌁𐌂") = '𐌂𐌁𐌀';
-select 'x_05', text_reverse('hello 42@ world') = 'dlrow @24 olleh';
+-- Reverse
+select '20_01', text_reverse(null) is NULL;
+select '20_02', text_reverse('') = '';
+select '20_03', text_reverse('***') = '***';
+select '20_04', text_reverse('hello') = 'olleh';
+select '20_05', text_reverse('привет') = 'тевирп';
+select '20_06', text_reverse('𐌀𐌁𐌂') = '𐌂𐌁𐌀';
+select '20_07', text_reverse('hello 42@ world') = 'dlrow @24 olleh';

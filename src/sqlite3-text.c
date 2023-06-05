@@ -723,8 +723,10 @@ static void sqlite3_replace(sqlite3_context* context, int argc, sqlite3_value** 
     bstring.free(s_res);
 }
 
-// Reverses a string.
+// Reverses the order of the characters in the string.
 // text_reverse(str)
+// [pg-compatible] reverse(text)
+// (!) postgres does not support unicode strings in reverse, while this function does.
 static void sqlite3_reverse(sqlite3_context* context, int argc, sqlite3_value** argv) {
     assert(argc == 1);
 
@@ -737,7 +739,6 @@ static void sqlite3_reverse(sqlite3_context* context, int argc, sqlite3_value** 
     RuneString s_src = rstring.from_cstring(src);
     RuneString s_res = rstring.reverse(s_src);
     char* res = rstring.to_cstring(s_res);
-
     sqlite3_result_text(context, res, -1, free);
     rstring.free(s_src);
     rstring.free(s_res);
