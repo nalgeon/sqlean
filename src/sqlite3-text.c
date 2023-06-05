@@ -594,6 +594,51 @@ static void sqlite3_trim(sqlite3_context* context, int argc, sqlite3_value** arg
     rstring.free(s_res);
 }
 
+// Pads the string to the specified length by prepending/appending certain characters
+// (spaces by default).
+// text_lpad(str, length [,fill])
+// text_rpad(str, length [,fill])
+// [pg-compatible] lpad(string, length [, fill])
+// [pg-compatible] rpad(string, length [, fill])
+// (!) postgres does not support unicode strings in lpad/rpad, while this function does.
+static void sqlite3_pad(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    if (argc != 2 && argc != 3) {
+        sqlite3_result_error(context, "expected 2 or 3 parameters", -1);
+        return;
+    }
+
+    const char* src = (char*)sqlite3_value_text(argv[0]);
+    if (src == NULL) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    if (sqlite3_value_type(argv[1]) != SQLITE_INTEGER) {
+        sqlite3_result_error(context, "length parameter should be integer", -1);
+        return;
+    }
+    int length = sqlite3_value_int(argv[1]);
+    // postgres-compatible: treat negative length as zero
+    length = length < 0 ? 0 : length;
+
+    const char* fill = argc == 3 ? (char*)sqlite3_value_text(argv[2]) : " ";
+    if (fill == NULL) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    RuneString (*pad_func)(RuneString, size_t, RuneString) = (void*)sqlite3_user_data(context);
+
+    RuneString s_src = rstring.from_cstring(src);
+    RuneString s_fill = rstring.from_cstring(fill);
+    RuneString s_res = pad_func(s_src, length, s_fill);
+    const char* res = rstring.to_cstring(s_res);
+    sqlite3_result_text(context, res, -1, free);
+    rstring.free(s_src);
+    rstring.free(s_fill);
+    rstring.free(s_res);
+}
+
 #pragma endregion
 
 // Reverses a string.
@@ -691,8 +736,14 @@ __declspec(dllexport)
 
     // trim and pad
     sqlite3_create_function(db, "text_ltrim", -1, flags, rstring.trim_left, sqlite3_trim, 0, 0);
+    sqlite3_create_function(db, "ltrim", -1, flags, rstring.trim_left, sqlite3_trim, 0, 0);
     sqlite3_create_function(db, "text_rtrim", -1, flags, rstring.trim_right, sqlite3_trim, 0, 0);
+    sqlite3_create_function(db, "rtrim", -1, flags, rstring.trim_right, sqlite3_trim, 0, 0);
     sqlite3_create_function(db, "text_trim", -1, flags, rstring.trim, sqlite3_trim, 0, 0);
+    sqlite3_create_function(db, "text_lpad", -1, flags, rstring.pad_left, sqlite3_pad, 0, 0);
+    sqlite3_create_function(db, "lpad", -1, flags, rstring.pad_left, sqlite3_pad, 0, 0);
+    sqlite3_create_function(db, "text_rpad", -1, flags, rstring.pad_right, sqlite3_pad, 0, 0);
+    sqlite3_create_function(db, "rpad", -1, flags, rstring.pad_right, sqlite3_pad, 0, 0);
 
     sqlite3_create_function(db, "text_reverse", 1, flags, 0, sqlite3_reverse, 0, 0);
     sqlite3_create_function(db, "reverse", 1, flags, 0, sqlite3_reverse, 0, 0);

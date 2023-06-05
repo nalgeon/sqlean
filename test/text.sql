@@ -325,6 +325,44 @@ select '15_42', text_trim('19hello372', '987654321') = 'hello';
 select '15_43', text_trim('193hello372', '98765421') = '3hello3';
 select '15_44', text_trim('хххприветхохох', 'ох') = 'привет';
 
+-- Pad left
+select '16_01', text_lpad(null, 5) is null;
+select '16_02', text_lpad('', 5)  = '     ';
+select '16_03', text_lpad('hello', -1)  = '';
+select '16_04', text_lpad('hello', 0)  = '';
+select '16_05', text_lpad('hello', 1)  = 'h';
+select '16_06', text_lpad('hello', 3)  = 'hel';
+select '16_07', text_lpad('hello', 5)  = 'hello';
+select '16_08', text_lpad('hello', 6)  = ' hello';
+select '16_09', text_lpad('hello', 8)  = '   hello';
+select '16_10', text_lpad('мир', 5)  = '  мир';
+
+select '16_11', text_lpad(null, 5, '*') is null;
+select '16_12', text_lpad('hello', 5, null) is null;
+select '16_13', text_lpad('', 5, '*') = '*****';
+select '16_14', text_lpad('hello', 8, '*') = '***hello';
+select '16_15', text_lpad('hello', 8, 'xo') = 'xoxhello';
+select '16_16', text_lpad('мир', 6, 'хо') = 'хохмир';
+
+-- Pad right
+select '17_01', text_rpad(null, 5) is null;
+select '17_02', text_rpad('', 5)  = '     ';
+select '17_03', text_rpad('hello', -1)  = '';
+select '17_04', text_rpad('hello', 0)  = '';
+select '17_05', text_rpad('hello', 1)  = 'h';
+select '17_06', text_rpad('hello', 3)  = 'hel';
+select '17_07', text_rpad('hello', 5)  = 'hello';
+select '17_08', text_rpad('hello', 6)  = 'hello ';
+select '17_09', text_rpad('hello', 8)  = 'hello   ';
+select '17_10', text_rpad('мир', 5)  = 'мир  ';
+
+select '17_11', text_rpad(null, 5, '*') is null;
+select '17_12', text_rpad('hello', 5, null) is null;
+select '17_13', text_rpad('', 5, '*') = '*****';
+select '17_14', text_rpad('hello', 8, '*') = 'hello***';
+select '17_15', text_rpad('hello', 8, 'xo') = 'helloxox';
+select '17_16', text_rpad('мир', 6, 'хо') = 'мирхох';
+
 -- Reverse string
 select 'x_01', text_reverse(null) is NULL;
 select 'x_02', text_reverse('hello') = 'olleh';
