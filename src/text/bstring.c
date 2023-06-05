@@ -363,7 +363,7 @@ static ByteString string_repeat(ByteString str, size_t count) {
 
 // string_replace replaces the `old` substring with the `new` substring in the original string,
 // but not more than `max_count` times.
-static ByteString string_replace(ByteString str, ByteString old, ByteString new, size_t max_count) {
+static ByteString string_replace(ByteString str, ByteString old, ByteString new, int max_count) {
     // count matches of the old string in the source string
     size_t count = string_count(str, old);
     if (count == 0) {

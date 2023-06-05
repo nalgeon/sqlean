@@ -363,6 +363,41 @@ select '17_14', text_rpad('hello', 8, '*') = 'hello***';
 select '17_15', text_rpad('hello', 8, 'xo') = 'helloxox';
 select '17_16', text_rpad('мир', 6, 'хо') = 'мирхох';
 
+-- Replace all
+select '18_01', text_replace(null, 'a', '*') is null;
+select '18_02', text_replace('abc', null, '*') is null;
+select '18_03', text_replace('abc', 'a', null) is null;
+select '18_04', text_replace('hello', 'l', '*')  = 'he**o';
+select '18_05', text_replace('hello', 'l', 'xo')  = 'hexoxoo';
+select '18_06', text_replace('hello', 'ell', '*')  = 'h*o';
+select '18_07', text_replace('hello', 'ello', 'argh')  = 'hargh';
+select '18_08', text_replace('hello', 'hello', '-')  = '-';
+select '18_09', text_replace('hello', '', '*')  = 'hello';
+select '18_10', text_replace('hello', 'l', '')  = 'heo';
+select '18_11', text_replace('', 'l', '*')  = '';
+select '18_12', text_replace('нетто', 'т', 'три')  = 'нетритрио';
+
+-- Replace
+select '19_01', text_replace(null, 'a', '*', 1) is null;
+select '19_02', text_replace('abc', null, '*', 1) is null;
+select '19_03', text_replace('abc', 'a', null, 1) is null;
+select '19_04', text_replace('hello', 'l', '*', 2)  = 'he**o';
+select '19_05', text_replace('hello', 'l', 'xo', 2)  = 'hexoxoo';
+select '19_06', text_replace('hello', 'ell', '*', 1)  = 'h*o';
+select '19_07', text_replace('hello', 'ello', 'argh', 1)  = 'hargh';
+select '19_08', text_replace('hello', 'hello', '-', 1)  = '-';
+select '19_09', text_replace('hello', '', '*', 1)  = 'hello';
+select '19_10', text_replace('hello', 'l', '', 2)  = 'heo';
+select '19_11', text_replace('', 'l', '*', 1)  = '';
+select '19_12', text_replace('нетто', 'т', 'три', 2)  = 'нетритрио';
+
+select '19_21', text_replace('hello', 'l', '*', -1)  = 'hello';
+select '19_22', text_replace('hello', 'l', '*', 0)  = 'hello';
+select '19_23', text_replace('hello', 'l', '*', 1)  = 'he*lo';
+select '19_24', text_replace('hello', 'l', '*', 2)  = 'he**o';
+select '19_25', text_replace('hello', 'l', '*', 3)  = 'he**o';
+select '19_16', text_replace('нетто', 'т', 'три', 1)  = 'нетрито';
+
 -- Reverse string
 select 'x_01', text_reverse(null) is NULL;
 select 'x_02', text_reverse('hello') = 'olleh';

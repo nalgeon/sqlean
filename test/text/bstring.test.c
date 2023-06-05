@@ -567,6 +567,26 @@ static void test_replace(void) {
     }
 
     {
+        ByteString old = bstring.from_cstring("o", 1);
+        ByteString new = bstring.from_cstring("***", 3);
+        ByteString res = bstring.replace(str, old, new, 1);
+        assert(eq(res, "hell*** world"));
+        bstring.free(old);
+        bstring.free(new);
+        bstring.free(res);
+    }
+
+    {
+        ByteString old = bstring.from_cstring("o", 1);
+        ByteString new = bstring.from_cstring("***", 3);
+        ByteString res = bstring.replace(str, old, new, 2);
+        assert(eq(res, "hell*** w***rld"));
+        bstring.free(old);
+        bstring.free(new);
+        bstring.free(res);
+    }
+
+    {
         ByteString old = bstring.from_cstring("e", 1);
         ByteString new = bstring.from_cstring("***", 3);
         ByteString res = bstring.replace(str, old, new, 1);

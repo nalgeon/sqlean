@@ -45,7 +45,7 @@ struct bstring_ns {
     ByteString (*concat)(ByteString* strings, size_t count);
     ByteString (*repeat)(ByteString str, size_t count);
 
-    ByteString (*replace)(ByteString str, ByteString old, ByteString new, size_t max_count);
+    ByteString (*replace)(ByteString str, ByteString old, ByteString new, int max_count);
     ByteString (*replace_all)(ByteString str, ByteString old, ByteString new);
     ByteString (*reverse)(ByteString str);
 

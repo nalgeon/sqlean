@@ -641,6 +641,88 @@ static void sqlite3_pad(sqlite3_context* context, int argc, sqlite3_value** argv
 
 #pragma endregion
 
+#pragma region Other modifications
+
+// Replaces all old substrings with new substrings in the original string.
+// text_replace(str, old, new)
+// [pg-compatible] replace(string, from, to)
+static void sqlite3_replace_all(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    assert(argc == 3);
+
+    const char* src = (char*)sqlite3_value_text(argv[0]);
+    if (src == NULL) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    const char* old = (char*)sqlite3_value_text(argv[1]);
+    if (old == NULL) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    const char* new = (char*)sqlite3_value_text(argv[2]);
+    if (new == NULL) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    ByteString s_src = bstring.from_cstring(src, sqlite3_value_bytes(argv[0]));
+    ByteString s_old = bstring.from_cstring(old, sqlite3_value_bytes(argv[1]));
+    ByteString s_new = bstring.from_cstring(new, sqlite3_value_bytes(argv[2]));
+    ByteString s_res = bstring.replace_all(s_src, s_old, s_new);
+    const char* res = bstring.to_cstring(s_res);
+    sqlite3_result_text(context, res, -1, SQLITE_TRANSIENT);
+    bstring.free(s_src);
+    bstring.free(s_old);
+    bstring.free(s_new);
+    bstring.free(s_res);
+}
+
+// Replaces old substrings with new substrings in the original string,
+// but not more than `count` times.
+// text_replace(str, old, new, count)
+static void sqlite3_replace(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    assert(argc == 4);
+
+    const char* src = (char*)sqlite3_value_text(argv[0]);
+    if (src == NULL) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    const char* old = (char*)sqlite3_value_text(argv[1]);
+    if (old == NULL) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    const char* new = (char*)sqlite3_value_text(argv[2]);
+    if (new == NULL) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    if (sqlite3_value_type(argv[3]) != SQLITE_INTEGER) {
+        sqlite3_result_error(context, "count parameter should be integer", -1);
+        return;
+    }
+    int count = sqlite3_value_int(argv[3]);
+    // treat negative count as zero
+    count = count < 0 ? 0 : count;
+
+    ByteString s_src = bstring.from_cstring(src, sqlite3_value_bytes(argv[0]));
+    ByteString s_old = bstring.from_cstring(old, sqlite3_value_bytes(argv[1]));
+    ByteString s_new = bstring.from_cstring(new, sqlite3_value_bytes(argv[2]));
+    ByteString s_res = bstring.replace(s_src, s_old, s_new, count);
+    const char* res = bstring.to_cstring(s_res);
+    sqlite3_result_text(context, res, -1, SQLITE_TRANSIENT);
+    bstring.free(s_src);
+    bstring.free(s_old);
+    bstring.free(s_new);
+    bstring.free(s_res);
+}
+
 // Reverses a string.
 // text_reverse(str)
 static void sqlite3_reverse(sqlite3_context* context, int argc, sqlite3_value** argv) {
@@ -660,6 +742,8 @@ static void sqlite3_reverse(sqlite3_context* context, int argc, sqlite3_value** 
     rstring.free(s_src);
     rstring.free(s_res);
 }
+
+#pragma endregion
 
 // substring
 // utf8 text_slice(str, start [,end])
@@ -745,6 +829,10 @@ __declspec(dllexport)
     sqlite3_create_function(db, "text_rpad", -1, flags, rstring.pad_right, sqlite3_pad, 0, 0);
     sqlite3_create_function(db, "rpad", -1, flags, rstring.pad_right, sqlite3_pad, 0, 0);
 
+    // other modifications
+    sqlite3_create_function(db, "text_replace", 3, flags, 0, sqlite3_replace_all, 0, 0);
+    sqlite3_create_function(db, "replace", 3, flags, 0, sqlite3_replace_all, 0, 0);
+    sqlite3_create_function(db, "text_replace", 4, flags, 0, sqlite3_replace, 0, 0);
     sqlite3_create_function(db, "text_reverse", 1, flags, 0, sqlite3_reverse, 0, 0);
     sqlite3_create_function(db, "reverse", 1, flags, 0, sqlite3_reverse, 0, 0);
     return SQLITE_OK;
