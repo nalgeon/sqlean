@@ -750,6 +750,7 @@ static void sqlite3_reverse(sqlite3_context* context, int argc, sqlite3_value** 
 
 // Returns the number of characters in the string.
 // text_length(str)
+// [pg-compatible] length(text)
 // [pg-compatible] char_length(text)
 // [pg-compatible] character_length(text)
 static void sqlite3_length(sqlite3_context* context, int argc, sqlite3_value** argv) {
@@ -842,6 +843,7 @@ __declspec(dllexport)
     sqlite3_create_function(db, "text_rtrim", -1, flags, rstring.trim_right, sqlite3_trim, 0, 0);
     sqlite3_create_function(db, "rtrim", -1, flags, rstring.trim_right, sqlite3_trim, 0, 0);
     sqlite3_create_function(db, "text_trim", -1, flags, rstring.trim, sqlite3_trim, 0, 0);
+    sqlite3_create_function(db, "btrim", -1, flags, rstring.trim, sqlite3_trim, 0, 0);
     sqlite3_create_function(db, "text_lpad", -1, flags, rstring.pad_left, sqlite3_pad, 0, 0);
     sqlite3_create_function(db, "lpad", -1, flags, rstring.pad_left, sqlite3_pad, 0, 0);
     sqlite3_create_function(db, "text_rpad", -1, flags, rstring.pad_right, sqlite3_pad, 0, 0);
