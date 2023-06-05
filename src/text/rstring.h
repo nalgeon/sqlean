@@ -39,6 +39,9 @@ struct rstring_ns {
 
     RuneString (*reverse)(RuneString str);
 
+    RuneString (*trim_left)(RuneString str, RuneString chars);
+    RuneString (*trim_right)(RuneString str, RuneString chars);
+    RuneString (*trim)(RuneString str, RuneString chars);
     RuneString (*pad_left)(RuneString str, size_t length, RuneString fill);
     RuneString (*pad_right)(RuneString str, size_t length, RuneString fill);
 

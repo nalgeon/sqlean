@@ -259,6 +259,72 @@ select '12_05', text_repeat('one', 2) = 'oneone';
 select '12_06', text_repeat('one', 3) = 'oneoneone';
 select '12_07', text_repeat('два', 3) = 'двадвадва';
 
+-- Trim left
+select '13_01', text_ltrim(null) is null;
+select '13_02', text_ltrim('hello') = 'hello';
+select '13_03', text_ltrim('  hello') = 'hello';
+select '13_04', text_ltrim('  ') = '';
+select '13_05', text_ltrim('') = '';
+select '13_06', text_ltrim('  привет') = 'привет';
+
+select '13_11', text_ltrim('hello', null) is null;
+select '13_12', text_ltrim('hello', '') = 'hello';
+select '13_13', text_ltrim('  hello', ' ') = 'hello';
+select '13_14', text_ltrim('273hello', '987654321') = 'hello';
+select '13_15', text_ltrim('273hello', '98765421') = '3hello';
+select '13_16', text_ltrim('273', '987654321') = '';
+select '13_17', text_ltrim('', '987654321') = '';
+select '13_18', text_ltrim('хохохпривет', 'ох') = 'привет';
+
+-- Trim right
+select '14_01', text_rtrim(null) is null;
+select '14_02', text_rtrim('hello') = 'hello';
+select '14_03', text_rtrim('hello  ') = 'hello';
+select '14_04', text_rtrim('  ') = '';
+select '14_05', text_rtrim('') = '';
+select '14_06', text_rtrim('привет  ') = 'привет';
+
+select '14_11', text_rtrim('hello', null) is null;
+select '14_12', text_rtrim('hello', '') = 'hello';
+select '14_13', text_rtrim('hello  ', ' ') = 'hello';
+select '14_14', text_rtrim('hello372', '987654321') = 'hello';
+select '14_15', text_rtrim('hello372', '98765421') = 'hello3';
+select '14_16', text_rtrim('372', '987654321') = '';
+select '14_17', text_rtrim('', '987654321') = '';
+select '14_18', text_rtrim('приветхохох', 'ох') = 'привет';
+
+-- Trim both
+select '15_01', text_trim(null) is null;
+select '15_02', text_trim('hello') = 'hello';
+select '15_03', text_trim('  hello') = 'hello';
+select '15_04', text_trim('  ') = '';
+select '15_05', text_trim('') = '';
+select '15_06', text_trim('  привет') = 'привет';
+
+select '15_11', text_trim('hello', null) is null;
+select '15_12', text_trim('hello', '') = 'hello';
+select '15_13', text_trim('  hello', ' ') = 'hello';
+select '15_14', text_trim('273hello', '987654321') = 'hello';
+select '15_15', text_trim('273hello', '98765421') = '3hello';
+select '15_16', text_trim('273', '987654321') = '';
+select '15_17', text_trim('', '987654321') = '';
+select '15_18', text_trim('хохохпривет', 'ох') = 'привет';
+
+select '15_21', text_trim('hello  ') = 'hello';
+select '15_22', text_trim('  ') = '';
+select '15_23', text_trim('') = '';
+select '15_24', text_trim('привет  ') = 'привет';
+
+select '15_31', text_trim('hello  ', ' ') = 'hello';
+select '15_32', text_trim('hello372', '987654321') = 'hello';
+select '15_33', text_trim('hello372', '98765421') = 'hello3';
+select '15_34', text_trim('приветхохох', 'ох') = 'привет';
+
+select '15_41', text_trim('   hello  ') = 'hello';
+select '15_42', text_trim('19hello372', '987654321') = 'hello';
+select '15_43', text_trim('193hello372', '98765421') = '3hello3';
+select '15_44', text_trim('хххприветхохох', 'ох') = 'привет';
+
 -- Reverse string
 select 'x_01', text_reverse(null) is NULL;
 select 'x_02', text_reverse('hello') = 'olleh';

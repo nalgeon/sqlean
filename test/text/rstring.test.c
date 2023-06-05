@@ -230,6 +230,273 @@ static void test_reverse(void) {
     printf("OK\n");
 }
 
+static void test_trim_left(void) {
+    printf("test_trim_left...");
+    {
+        RuneString str = rstring.from_cstring("   привет");
+        RuneString chars = rstring.from_cstring(" ");
+        RuneString res = rstring.trim_left(str, chars);
+        assert(eq(res, "привет"));
+        rstring.free(str);
+        rstring.free(chars);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("273привет");
+        RuneString chars = rstring.from_cstring("987654321");
+        RuneString res = rstring.trim_left(str, chars);
+        assert(eq(res, "привет"));
+        rstring.free(str);
+        rstring.free(chars);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("273привет");
+        RuneString chars = rstring.from_cstring("98765421");
+        RuneString res = rstring.trim_left(str, chars);
+        assert(eq(res, "3привет"));
+        rstring.free(str);
+        rstring.free(chars);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("хохохпривет");
+        RuneString chars = rstring.from_cstring("ох");
+        RuneString res = rstring.trim_left(str, chars);
+        assert(eq(res, "привет"));
+        rstring.free(str);
+        rstring.free(chars);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("привет");
+        RuneString chars = rstring.from_cstring(" ");
+        RuneString res = rstring.trim_left(str, chars);
+        assert(eq(res, "привет"));
+        rstring.free(str);
+        rstring.free(chars);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("");
+        RuneString chars = rstring.from_cstring(" ");
+        RuneString res = rstring.trim_left(str, chars);
+        assert(eq(res, ""));
+        rstring.free(str);
+        rstring.free(chars);
+        rstring.free(res);
+    }
+    printf("OK\n");
+}
+
+static void test_trim_right(void) {
+    printf("test_trim_right...");
+    {
+        RuneString str = rstring.from_cstring("привет   ");
+        RuneString chars = rstring.from_cstring(" ");
+        RuneString res = rstring.trim_right(str, chars);
+        assert(eq(res, "привет"));
+        rstring.free(str);
+        rstring.free(chars);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("привет372");
+        RuneString chars = rstring.from_cstring("987654321");
+        RuneString res = rstring.trim_right(str, chars);
+        assert(eq(res, "привет"));
+        rstring.free(str);
+        rstring.free(chars);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("привет372");
+        RuneString chars = rstring.from_cstring("98765421");
+        RuneString res = rstring.trim_right(str, chars);
+        assert(eq(res, "привет3"));
+        rstring.free(str);
+        rstring.free(chars);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("приветхохох");
+        RuneString chars = rstring.from_cstring("ох");
+        RuneString res = rstring.trim_right(str, chars);
+        assert(eq(res, "привет"));
+        rstring.free(str);
+        rstring.free(chars);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("привет");
+        RuneString chars = rstring.from_cstring(" ");
+        RuneString res = rstring.trim_right(str, chars);
+        assert(eq(res, "привет"));
+        rstring.free(str);
+        rstring.free(chars);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("");
+        RuneString chars = rstring.from_cstring(" ");
+        RuneString res = rstring.trim_right(str, chars);
+        assert(eq(res, ""));
+        rstring.free(str);
+        rstring.free(chars);
+        rstring.free(res);
+    }
+    printf("OK\n");
+}
+
+static void test_trim(void) {
+    printf("test_trim...");
+    {
+        RuneString str = rstring.from_cstring("   привет");
+        RuneString chars = rstring.from_cstring(" ");
+        RuneString res = rstring.trim(str, chars);
+        assert(eq(res, "привет"));
+        rstring.free(str);
+        rstring.free(chars);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("273привет");
+        RuneString chars = rstring.from_cstring("987654321");
+        RuneString res = rstring.trim(str, chars);
+        assert(eq(res, "привет"));
+        rstring.free(str);
+        rstring.free(chars);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("273привет");
+        RuneString chars = rstring.from_cstring("98765421");
+        RuneString res = rstring.trim(str, chars);
+        assert(eq(res, "3привет"));
+        rstring.free(str);
+        rstring.free(chars);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("хохохпривет");
+        RuneString chars = rstring.from_cstring("ох");
+        RuneString res = rstring.trim(str, chars);
+        assert(eq(res, "привет"));
+        rstring.free(str);
+        rstring.free(chars);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("привет");
+        RuneString chars = rstring.from_cstring(" ");
+        RuneString res = rstring.trim(str, chars);
+        assert(eq(res, "привет"));
+        rstring.free(str);
+        rstring.free(chars);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("");
+        RuneString chars = rstring.from_cstring(" ");
+        RuneString res = rstring.trim(str, chars);
+        assert(eq(res, ""));
+        rstring.free(str);
+        rstring.free(chars);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("привет   ");
+        RuneString chars = rstring.from_cstring(" ");
+        RuneString res = rstring.trim(str, chars);
+        assert(eq(res, "привет"));
+        rstring.free(str);
+        rstring.free(chars);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("привет372");
+        RuneString chars = rstring.from_cstring("987654321");
+        RuneString res = rstring.trim(str, chars);
+        assert(eq(res, "привет"));
+        rstring.free(str);
+        rstring.free(chars);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("привет372");
+        RuneString chars = rstring.from_cstring("98765421");
+        RuneString res = rstring.trim(str, chars);
+        assert(eq(res, "привет3"));
+        rstring.free(str);
+        rstring.free(chars);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("приветхохох");
+        RuneString chars = rstring.from_cstring("ох");
+        RuneString res = rstring.trim(str, chars);
+        assert(eq(res, "привет"));
+        rstring.free(str);
+        rstring.free(chars);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("привет");
+        RuneString chars = rstring.from_cstring(" ");
+        RuneString res = rstring.trim(str, chars);
+        assert(eq(res, "привет"));
+        rstring.free(str);
+        rstring.free(chars);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("");
+        RuneString chars = rstring.from_cstring(" ");
+        RuneString res = rstring.trim(str, chars);
+        assert(eq(res, ""));
+        rstring.free(str);
+        rstring.free(chars);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("   привет  ");
+        RuneString chars = rstring.from_cstring(" ");
+        RuneString res = rstring.trim(str, chars);
+        assert(eq(res, "привет"));
+        rstring.free(str);
+        rstring.free(chars);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("19привет372");
+        RuneString chars = rstring.from_cstring("987654321");
+        RuneString res = rstring.trim(str, chars);
+        assert(eq(res, "привет"));
+        rstring.free(str);
+        rstring.free(chars);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("139привет372");
+        RuneString chars = rstring.from_cstring("98765421");
+        RuneString res = rstring.trim(str, chars);
+        assert(eq(res, "39привет3"));
+        rstring.free(str);
+        rstring.free(chars);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("хохохприветххх");
+        RuneString chars = rstring.from_cstring("ох");
+        RuneString res = rstring.trim(str, chars);
+        assert(eq(res, "привет"));
+        rstring.free(str);
+        rstring.free(chars);
+        rstring.free(res);
+    }
+    printf("OK\n");
+}
+
 static void test_pad_left(void) {
     printf("test_pad_left...");
     {
@@ -466,6 +733,9 @@ int main(void) {
     test_index();
     test_last_index();
     test_reverse();
+    test_trim_left();
+    test_trim_right();
+    test_trim();
     test_pad_left();
     test_pad_right();
     return 0;

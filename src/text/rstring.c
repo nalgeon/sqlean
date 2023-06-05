@@ -235,6 +235,54 @@ static RuneString string_reverse(RuneString str) {
     return res;
 }
 
+// string_trim_left trims certain characters from the beginning of the string.
+static RuneString string_trim_left(RuneString str, RuneString chars) {
+    if (str.length == 0) {
+        return string_new();
+    }
+    size_t idx = 0;
+    for (; idx < str.length; idx++) {
+        if (string_index_char(chars, str.runes[idx], 0) == -1) {
+            break;
+        }
+    }
+    return string_slice(str, idx, str.length);
+}
+
+// string_trim_right trims certain characters from the end of the string.
+static RuneString string_trim_right(RuneString str, RuneString chars) {
+    if (str.length == 0) {
+        return string_new();
+    }
+    size_t idx = str.length - 1;
+    for (; idx >= 0; idx--) {
+        if (string_index_char(chars, str.runes[idx], 0) == -1) {
+            break;
+        }
+    }
+    return string_slice(str, 0, idx + 1);
+}
+
+// string_trim trims certain characters from the beginning and end of the string.
+static RuneString string_trim(RuneString str, RuneString chars) {
+    if (str.length == 0) {
+        return string_new();
+    }
+    size_t left = 0;
+    for (; left < str.length; left++) {
+        if (string_index_char(chars, str.runes[left], 0) == -1) {
+            break;
+        }
+    }
+    size_t right = str.length - 1;
+    for (; right >= 0; right--) {
+        if (string_index_char(chars, str.runes[right], 0) == -1) {
+            break;
+        }
+    }
+    return string_slice(str, left, right + 1);
+}
+
 // string_pad_left pads the string to the specified length by prepending `fill` characters.
 // If the string is already longer than the specified length, it is truncated on the right.
 RuneString string_pad_left(RuneString str, size_t length, RuneString fill) {
@@ -331,6 +379,9 @@ struct rstring_ns rstring = {.new = string_new,
                              .slice = string_slice,
                              .substring = string_substring,
                              .reverse = string_reverse,
+                             .trim_left = string_trim_left,
+                             .trim_right = string_trim_right,
+                             .trim = string_trim,
                              .pad_left = string_pad_left,
                              .pad_right = string_pad_right,
                              .print = string_print};
