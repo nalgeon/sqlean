@@ -254,7 +254,7 @@ static RuneString string_trim_right(RuneString str, RuneString chars) {
     if (str.length == 0) {
         return string_new();
     }
-    size_t idx = str.length - 1;
+    int idx = str.length - 1;
     for (; idx >= 0; idx--) {
         if (string_index_char(chars, str.runes[idx], 0) == -1) {
             break;
@@ -274,7 +274,7 @@ static RuneString string_trim(RuneString str, RuneString chars) {
             break;
         }
     }
-    size_t right = str.length - 1;
+    int right = str.length - 1;
     for (; right >= 0; right--) {
         if (string_index_char(chars, str.runes[right], 0) == -1) {
             break;

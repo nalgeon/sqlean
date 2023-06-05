@@ -278,6 +278,15 @@ static void test_trim_left(void) {
         rstring.free(res);
     }
     {
+        RuneString str = rstring.from_cstring("   ");
+        RuneString chars = rstring.from_cstring(" ");
+        RuneString res = rstring.trim_left(str, chars);
+        assert(eq(res, ""));
+        rstring.free(str);
+        rstring.free(chars);
+        rstring.free(res);
+    }
+    {
         RuneString str = rstring.from_cstring("");
         RuneString chars = rstring.from_cstring(" ");
         RuneString res = rstring.trim_left(str, chars);
@@ -337,6 +346,15 @@ static void test_trim_right(void) {
         rstring.free(res);
     }
     {
+        RuneString str = rstring.from_cstring("   ");
+        RuneString chars = rstring.from_cstring(" ");
+        RuneString res = rstring.trim_right(str, chars);
+        assert(eq(res, ""));
+        rstring.free(str);
+        rstring.free(chars);
+        rstring.free(res);
+    }
+    {
         RuneString str = rstring.from_cstring("");
         RuneString chars = rstring.from_cstring(" ");
         RuneString res = rstring.trim_right(str, chars);
@@ -391,6 +409,15 @@ static void test_trim(void) {
         RuneString chars = rstring.from_cstring(" ");
         RuneString res = rstring.trim(str, chars);
         assert(eq(res, "привет"));
+        rstring.free(str);
+        rstring.free(chars);
+        rstring.free(res);
+    }
+    {
+        RuneString str = rstring.from_cstring("   ");
+        RuneString chars = rstring.from_cstring(" ");
+        RuneString res = rstring.trim(str, chars);
+        assert(eq(res, ""));
         rstring.free(str);
         rstring.free(chars);
         rstring.free(res);
