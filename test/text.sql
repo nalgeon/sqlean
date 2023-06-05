@@ -406,3 +406,24 @@ select '20_04', text_reverse('hello') = 'olleh';
 select '20_05', text_reverse('привет') = 'тевирп';
 select '20_06', text_reverse('𐌀𐌁𐌂') = '𐌂𐌁𐌀';
 select '20_07', text_reverse('hello 42@ world') = 'dlrow @24 olleh';
+
+-- Length
+select '21_01', text_length(null) is NULL;
+select '21_02', text_length('') = 0;
+select '21_03', text_length('h') = 1;
+select '21_04', text_length('hello') = 5;
+select '21_05', text_length('привет') = 6;
+
+-- Size
+select '22_01', text_size(null) is NULL;
+select '22_02', text_size('') = 0;
+select '22_03', text_size('h') = 1;
+select '22_04', text_size('hello') = 5;
+select '22_05', text_size('привет') = 12;
+
+-- Bit size
+select '23_01', bit_length(null) is NULL;
+select '23_02', bit_length('') = 0;
+select '23_03', bit_length('h') = 1*8;
+select '23_04', bit_length('hello') = 5*8;
+select '23_05', bit_length('привет') = 2*6*8;

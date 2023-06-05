@@ -746,40 +746,57 @@ static void sqlite3_reverse(sqlite3_context* context, int argc, sqlite3_value** 
 
 #pragma endregion
 
-// substring
-// utf8 text_slice(str, start [,end])
-// utf8 text_substring(str, start [,length])
-// utf8 text_left(str, length)
-// utf8 text_right(str, length)
+#pragma region Properties
 
-// search and match
-// utf8 text_index(str, other)
-// utf8 text_last_index(str, other)
-//      text_contains(str, other)
-//      text_has_prefix(str, prefix)
-//      text_has_suffix(str, suffix)
-//      text_count(str, other)
+// Returns the number of characters in the string.
+// text_length(str)
+// [pg-compatible] char_length(text)
+// [pg-compatible] character_length(text)
+static void sqlite3_length(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    assert(argc == 1);
 
-// split and join
-//      text_split(sep, str, ...)
-//      text_join(sep, str, ...)
-//      text_concat(str, ...)
-//      text_repeat(str, n)
+    const char* src = (char*)sqlite3_value_text(argv[0]);
+    if (src == NULL) {
+        sqlite3_result_null(context);
+        return;
+    }
 
-// trim and pad
-// utf8 text_ltrim(str [,chars])
-// utf8 text_rtrim(str [,chars])
-// utf8 text_trim(str [,chars])
-// utf8 text_lpad(str, length [,fill])
-// utf8 text_rpad(str, length [,fill])
+    RuneString s_src = rstring.from_cstring(src);
+    sqlite3_result_int64(context, s_src.length);
+    rstring.free(s_src);
+}
 
-// other modifications
-//      text_replace(str, old, new [, n])
-// utf8 text_reverse(str)
+// Returns the number of bytes in the string.
+// text_size(str)
+// [pg-compatible] octet_length(text)
+static void sqlite3_size(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    assert(argc == 1);
 
-// length and size
-// utf8 text_length(str)
-//      text_size(str)
+    const char* src = (char*)sqlite3_value_text(argv[0]);
+    if (src == NULL) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    sqlite3_result_int64(context, sqlite3_value_bytes(argv[0]));
+}
+
+// Returns the number of bits in the string.
+// [pg-compatible] bit_length(text)
+static void sqlite3_bit_size(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    assert(argc == 1);
+
+    const char* src = (char*)sqlite3_value_text(argv[0]);
+    if (src == NULL) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    int size = sqlite3_value_bytes(argv[0]);
+    sqlite3_result_int64(context, 8 * size);
+}
+
+#pragma endregion
 
 #ifdef _WIN32
 __declspec(dllexport)
@@ -836,5 +853,14 @@ __declspec(dllexport)
     sqlite3_create_function(db, "text_replace", 4, flags, 0, sqlite3_replace, 0, 0);
     sqlite3_create_function(db, "text_reverse", 1, flags, 0, sqlite3_reverse, 0, 0);
     sqlite3_create_function(db, "reverse", 1, flags, 0, sqlite3_reverse, 0, 0);
+
+    // properties
+    sqlite3_create_function(db, "text_length", 1, flags, 0, sqlite3_length, 0, 0);
+    sqlite3_create_function(db, "char_length", 1, flags, 0, sqlite3_length, 0, 0);
+    sqlite3_create_function(db, "character_length", 1, flags, 0, sqlite3_length, 0, 0);
+    sqlite3_create_function(db, "text_size", 1, flags, 0, sqlite3_size, 0, 0);
+    sqlite3_create_function(db, "octet_length", 1, flags, 0, sqlite3_size, 0, 0);
+    sqlite3_create_function(db, "bit_length", 1, flags, 0, sqlite3_bit_size, 0, 0);
+
     return SQLITE_OK;
 }
