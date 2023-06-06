@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "../sqlean.h"
 #include "../sqlite3ext.h"
 SQLITE_EXTENSION_INIT3
 
@@ -225,6 +226,17 @@ static int create_function(sqlite3* db, const char* name, const char* body) {
         return ret;
     }
     int nparams = sqlite3_bind_parameter_count(stmt);
+    // We are going to cache the statement in the function constructor and retrieve it later
+    // when executing the function, using sqlite3_user_data(). But relying on this internal cache
+    // is not enough.
+    //
+    // SQLite requires all prepared statements to be closed before calling the function destructor
+    // when closing the connection. So we can't close the statement in the function destructor.
+    // We have to cache it in the external cache and ask the user to manually free it
+    // before closing the connection.
+    //
+    // Alternatively, we can cache via the sqlite3_set_auxdata() with a negative slot,
+    // but that seems rather hacky.
     if ((ret = cache_add(stmt)) != SQLITE_OK) {
         return ret;
     }
@@ -312,11 +324,17 @@ static int load_functions(sqlite3* db) {
     return sqlite3_finalize(stmt);
 }
 
+// Returns the current Sqlean version.
+static void sqlean_version(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    sqlite3_result_text(context, SQLEAN_VERSION, -1, SQLITE_STATIC);
+}
+
 int define_manage_init(sqlite3* db) {
     const int flags = SQLITE_UTF8 | SQLITE_DIRECTONLY;
     sqlite3_create_function(db, "define", 2, flags, NULL, define_function, NULL, NULL);
     sqlite3_create_function(db, "define_free", 0, flags, NULL, define_free, NULL, NULL);
     sqlite3_create_function(db, "define_cache", 0, flags, NULL, print_cache, NULL, NULL);
     sqlite3_create_function(db, "undefine", 1, flags, NULL, undefine_function, NULL, NULL);
+    sqlite3_create_function(db, "sqlean_version", 0, flags, 0, sqlean_version, 0, 0);
     return load_functions(db);
 }

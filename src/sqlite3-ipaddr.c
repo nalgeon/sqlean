@@ -15,10 +15,11 @@
 
 #ifdef __FreeBSD__
 #include <netinet/in.h>
-#include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #endif
 
+#include "sqlean.h"
 #include "sqlite3ext.h"
 
 SQLITE_EXTENSION_INIT1
@@ -209,6 +210,11 @@ end:
     sqlite3_free(ip2);
 }
 
+// Returns the current Sqlean version.
+static void sqlean_version(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    sqlite3_result_text(context, SQLEAN_VERSION, -1, SQLITE_STATIC);
+}
+
 /*
  * Registers the extension.
  */
@@ -223,6 +229,6 @@ __declspec(dllexport)
     sqlite3_create_function(db, "ipmasklen", 1, flags, 0, sqlite3_ipmasklen, 0, 0);
     sqlite3_create_function(db, "ipnetwork", 1, flags, 0, sqlite3_ipnetwork, 0, 0);
     sqlite3_create_function(db, "ipcontains", 2, flags, 0, sqlite3_ipcontains, 0, 0);
-
+    sqlite3_create_function(db, "sqlean_version", 0, flags, 0, sqlean_version, 0, 0);
     return SQLITE_OK;
 }

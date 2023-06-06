@@ -57,6 +57,7 @@
 
 #include "extension.h"
 
+#include "../sqlean.h"
 #include "../sqlite3ext.h"
 SQLITE_EXTENSION_INIT3
 
@@ -83,12 +84,18 @@ SQLITE_EXTENSION_INIT3
 ** Throw an SQLITE_IOERR if there are difficulties pulling the file
 ** off of disk.
 */
-static void readFileContents(sqlite3_context* ctx, const char* zName) {
+static void readFileContents(sqlite3_context* ctx,
+                             const char* zName,
+                             const int nOffset,
+                             const int nLimit) {
     FILE* in;
     sqlite3_int64 nIn;
     void* pBuf;
     sqlite3* db;
     int mxBlob;
+
+    assert(nOffset >= 0);
+    assert(nLimit >= 0);
 
     in = fopen(zName, "rb");
     if (in == 0) {
@@ -98,6 +105,22 @@ static void readFileContents(sqlite3_context* ctx, const char* zName) {
     fseek(in, 0, SEEK_END);
     nIn = ftell(in);
     rewind(in);
+
+    if (nOffset > nIn) {
+        /* offset is greater than the size of the file */
+        sqlite3_result_zeroblob(ctx, 0);
+        fclose(in);
+        return;
+    }
+    if (nOffset > 0) {
+        fseek(in, nOffset, SEEK_SET);
+        nIn -= nOffset;
+    }
+
+    if (nLimit > 0 && nLimit < nIn) {
+        nIn = nLimit;
+    }
+
     db = sqlite3_context_db_handle(ctx);
     mxBlob = sqlite3_limit(db, SQLITE_LIMIT_LENGTH, -1);
     if (nIn > mxBlob) {
@@ -126,12 +149,30 @@ static void readFileContents(sqlite3_context* ctx, const char* zName) {
 ** if the file does not exist or is unreadable.
 */
 static void sqlite3_readfile(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    const char* zName;
-    (void)(argc); /* Unused parameter */
-    zName = (const char*)sqlite3_value_text(argv[0]);
-    if (zName == 0)
+    const char* zName = (const char*)sqlite3_value_text(argv[0]);
+    if (zName == 0) {
         return;
-    readFileContents(context, zName);
+    }
+
+    int nOffset = 0;
+    if (argc >= 2 && sqlite3_value_type(argv[1]) != SQLITE_NULL) {
+        nOffset = sqlite3_value_int(argv[1]);
+        if (nOffset < 0) {
+            sqlite3_result_error(context, "offset must be >= 0", -1);
+            return;
+        }
+    }
+
+    int nLimit = 0;
+    if (argc == 3 && sqlite3_value_type(argv[2]) != SQLITE_NULL) {
+        nLimit = sqlite3_value_int(argv[2]);
+        if (nLimit < 0) {
+            sqlite3_result_error(context, "limit must be >= 0", -1);
+            return;
+        }
+    }
+
+    readFileContents(context, zName, nOffset, nLimit);
 }
 
 /*
@@ -563,6 +604,11 @@ static void sqlite3_lsmode(sqlite3_context* context, int argc, sqlite3_value** a
     sqlite3_result_text(context, z, -1, SQLITE_TRANSIENT);
 }
 
+// Returns the current Sqlean version.
+static void sqlean_version(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    sqlite3_result_text(context, SQLEAN_VERSION, -1, SQLITE_STATIC);
+}
+
 /*
 ** Cursor type for recursively iterating through a directory structure.
 */
@@ -967,8 +1013,8 @@ int fileio_scalar_init(sqlite3* db) {
     sqlite3_create_function(db, "fileio_mkdir", -1, flags, 0, sqlite3_mkdir, 0, 0);
     sqlite3_create_function(db, "mkdir", -1, flags, 0, sqlite3_mkdir, 0, 0);
 
-    sqlite3_create_function(db, "fileio_read", 1, flags, 0, sqlite3_readfile, 0, 0);
-    sqlite3_create_function(db, "readfile", 1, flags, 0, sqlite3_readfile, 0, 0);
+    sqlite3_create_function(db, "fileio_read", -1, flags, 0, sqlite3_readfile, 0, 0);
+    sqlite3_create_function(db, "readfile", -1, flags, 0, sqlite3_readfile, 0, 0);
 
     sqlite3_create_function(db, "fileio_symlink", 2, flags, 0, sqlite3_symlink, 0, 0);
     sqlite3_create_function(db, "symlink", 2, flags, 0, sqlite3_symlink, 0, 0);
@@ -977,6 +1023,7 @@ int fileio_scalar_init(sqlite3* db) {
     sqlite3_create_function(db, "writefile", -1, flags, 0, sqlite3_writefile, 0, 0);
 
     sqlite3_create_function(db, "fileio_append", 2, flags, 0, fileio_append, 0, 0);
+    sqlite3_create_function(db, "sqlean_version", 0, flags, 0, sqlean_version, 0, 0);
     return SQLITE_OK;
 }
 

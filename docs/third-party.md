@@ -4,6 +4,7 @@ SQLean relies heavily on third-party SQLite extensions and open source libraries
 
 | Library | Author | License |
 | ------- | ------ | ------- |
+| [cryptii](https://github.com/cryptii/cryptii) | Fränz Friederes | MIT License |
 | [crypto-algorithms](https://github.com/B-Con/crypto-algorithms) | Brad Conte | Public Domain |
 | [eval.c](https://www.sqlite.org/src/file/ext/misc/eval.c) | D. Richard Hipp | Public Domain |
 | extension-functions.c | Liam Healy | Public Domain |

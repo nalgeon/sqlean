@@ -221,8 +221,6 @@
 ** the CSV input.
 **
 */
-#include "sqlite3ext.h"
-SQLITE_EXTENSION_INIT1
 #include <assert.h>
 #include <ctype.h>
 #include <math.h>
@@ -230,6 +228,10 @@ SQLITE_EXTENSION_INIT1
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "sqlean.h"
+#include "sqlite3ext.h"
+SQLITE_EXTENSION_INIT1
 
 #ifndef SQLITE_OMIT_VIRTUALTABLE
 
@@ -1262,8 +1264,7 @@ static int vsv_isValidNumber(int dsep, char* arg) {
     if (start <= stop && *start == dsep)  // may have decimal separator
     {
         isValid = 2;
-        if (*start != '.')
-        {
+        if (*start != '.') {
             *start = '.';
         }
         start++;
@@ -1637,6 +1638,11 @@ static sqlite3_module VsvModuleFauxWrite = {
 
 #endif /* !defined(SQLITE_OMIT_VIRTUALTABLE) */
 
+// Returns the current Sqlean version.
+static void sqlean_version(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    sqlite3_result_text(context, SQLEAN_VERSION, -1, SQLITE_STATIC);
+}
+
 /*
 ** This routine is called when the extension is loaded.  The new
 ** VSV virtual table module is registered with the calling database
@@ -1652,6 +1658,8 @@ __declspec(dllexport)
     int rc;
     SQLITE_EXTENSION_INIT2(pApi);
     rc = sqlite3_create_module(db, "vsv", &VsvModule, 0);
+    static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
+    sqlite3_create_function(db, "sqlean_version", 0, flags, 0, sqlean_version, 0, 0);
 #ifdef SQLITE_TEST
     if (rc == SQLITE_OK) {
         rc = sqlite3_create_module(db, "vsv_wr", &VsvModuleFauxWrite, 0);

@@ -61,13 +61,14 @@ static int regexp_like(pcre2_code* re, const char* source) {
 }
 
 /*
- * regexp_substr extracts source substring matching pattern into `substr`.
+ * regexp_extract extracts source substring matching pattern into `substr`.
+ * if `group_idx` > 0, returns the corresponding group instead of the whole matched substring.
  * returns:
  *     -1 if the pattern is invalid
  *      0 if there is no match
  *      1 if there is a match
  */
-static int regexp_substr(pcre2_code* re, const char* source, char** substr) {
+static int regexp_extract(pcre2_code* re, const char* source, size_t group_idx, char** substr) {
     if (re == NULL) {
         return -1;
     }
@@ -83,10 +84,15 @@ static int regexp_substr(pcre2_code* re, const char* source, char** substr) {
         return 0;
     }
 
+    if (group_idx >= rc) {
+        pcre2_match_data_free(match_data);
+        return 0;
+    }
+
     size_t* ovector = pcre2_get_ovector_pointer(match_data);
 
-    const char* substr_start = source + ovector[0];
-    size_t substr_len = ovector[1] - ovector[0];
+    const char* substr_start = source + ovector[2 * group_idx];
+    size_t substr_len = ovector[2 * group_idx + 1] - ovector[2 * group_idx];
 
     *substr = malloc(substr_len + 1);
     memcpy(*substr, substr_start, substr_len);
@@ -137,5 +143,5 @@ static int regexp_replace(pcre2_code* re, const char* source, const char* repl, 
 struct regexp_ns regexp = {.compile = regexp_compile,
                            .free = regexp_free,
                            .like = regexp_like,
-                           .substr = regexp_substr,
+                           .extract = regexp_extract,
                            .replace = regexp_replace};

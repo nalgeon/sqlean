@@ -10,49 +10,60 @@ Provides the following functions:
 
 Checks if the source string matches the pattern.
 
-```
-sqlite> select true where 'the year is 2021' regexp '[0-9]+';
-1
+```sql
+select true where 'the year is 2021' regexp '[0-9]+';
+-- 1
 ```
 
 ### `regexp_like(source, pattern)`
 
 Checks if the source string matches the pattern.
 
-```
-sqlite> select regexp_like('the year is 2021', '[0-9]+');
-1
-sqlite> select regexp_like('the year is 2021', '2k21');
-0
+```sql
+select regexp_like('the year is 2021', '[0-9]+');
+-- 1
+select regexp_like('the year is 2021', '2k21');
+-- 0
 ```
 
 ### `regexp_substr(source, pattern)`
 
 Returns a substring of the source string that matches the pattern.
 
+```sql
+select regexp_substr('the year is 2021', '[0-9]+');
+-- 2021
+select regexp_substr('the year is 2021', '2k21');
+-- (null)
 ```
-sqlite> select regexp_substr('the year is 2021', '[0-9]+');
-2021
-sqlite> select regexp_substr('the year is 2021', '2k21');
-(null)
+
+### `regexp_capture(source, pattern [, n])`
+
+Finds a substring of the source string that matches the pattern and returns the `n`th matching group within that substring. Group numbering starts at 1. `n = 0` (default) returns the entire substring.
+
+```sql
+select regexp_capture('years is 2021', '\d\d(\d\d)', 0);
+-- 2021
+select regexp_capture('years is 2021', '\d\d(\d\d)', 1);
+-- 21
 ```
 
 ### `regexp_replace(source, pattern, replacement)`
 
 Replaces all matching substrings with the replacement string.
 
-```
-sqlite> select regexp_replace('the year is 2021', '[0-9]+', '2050');
-the year is 2050
-sqlite> select regexp_replace('the year is 2021', '2k21', '2050');
-the year is 2021
+```sql
+select regexp_replace('the year is 2021', '[0-9]+', '2050');
+-- the year is 2050
+select regexp_replace('the year is 2021', '2k21', '2050');
+-- the year is 2021
 ```
 
 Supports backreferences to captured groups `$1` trough `$9` in the replacement string:
 
-```
-sqlite> select regexp_replace('the year is 2021', '([0-9]+)', '$1 or 2050');
-the year is 2021 or 2050
+```sql
+select regexp_replace('the year is 2021', '([0-9]+)', '$1 or 2050');
+-- the year is 2021 or 2050
 ```
 
 ## Supported syntax

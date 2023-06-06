@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "sqlean.h"
 #include "sqlite3ext.h"
 #include "text/text.h"
 
@@ -838,6 +839,11 @@ static void sqlite3_bit_size(sqlite3_context* context, int argc, sqlite3_value**
 
 #pragma endregion
 
+// Returns the current Sqlean version.
+static void sqlean_version(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    sqlite3_result_text(context, SQLEAN_VERSION, -1, SQLITE_STATIC);
+}
+
 #ifdef _WIN32
 __declspec(dllexport)
 #endif
@@ -904,6 +910,8 @@ __declspec(dllexport)
     sqlite3_create_function(db, "text_size", 1, flags, 0, sqlite3_size, 0, 0);
     sqlite3_create_function(db, "octet_length", 1, flags, 0, sqlite3_size, 0, 0);
     sqlite3_create_function(db, "bit_length", 1, flags, 0, sqlite3_bit_size, 0, 0);
+
+    sqlite3_create_function(db, "sqlean_version", 0, flags, 0, sqlean_version, 0, 0);
 
     return SQLITE_OK;
 }

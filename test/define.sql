@@ -27,6 +27,12 @@ select '23', randint(10, 20) >= 10 and randint(10, 20) <= 20;
 select '24', randint(10, 20) >= 10 and randint(10, 20) <= 20;
 select '25', randint(10, 20) >= 10 and randint(10, 20) <= 20;
 
+-- redefine is not supported
+-- select define('increment', '?1 + 1');
+-- select '26', increment(5) = 6;
+-- select define('increment', '?1 + 2');
+-- select '27', increment(5) = 7;
+
 create virtual table strcut using define((
   select
     substr(:str, 1, instr(:str, :sep) - 1) as left,

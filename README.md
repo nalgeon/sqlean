@@ -14,7 +14,7 @@ These are the most popular functions. They are tested, documented and organized 
 
 Think of them as the extended standard library for SQLite:
 
--   [crypto](docs/crypto.md): hash functions
+-   [crypto](docs/crypto.md): hashing, encoding and decoding data
 -   [define](docs/define.md): user-defined functions and dynamic sql
 -   [fileio](docs/fileio.md): read and write files
 -   [fuzzy](docs/fuzzy.md): fuzzy string matching and phonetics
@@ -116,6 +116,26 @@ db.loadExtension("./stats");
 db.exec("select median(value) from generate_series(1, 99)");
 db.close();
 ```
+
+## Building from Source
+
+Download the dependencies:
+
+```
+make prepare-dist
+make download-sqlite
+make download-external
+```
+
+Then build for your OS (choose one of the following):
+
+```
+make compile-linux
+make compile-windows
+make compile-macos
+```
+
+You'll find the compiled extensions in the `dist` folder.
 
 ## Contributing
 
