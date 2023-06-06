@@ -436,8 +436,8 @@ select '22_04', text_size('hello') = 5;
 select '22_05', text_size('привет') = 12;
 
 -- Bit size
-select '23_01', bit_length(null) is NULL;
-select '23_02', bit_length('') = 0;
-select '23_03', bit_length('h') = 1*8;
-select '23_04', bit_length('hello') = 5*8;
-select '23_05', bit_length('привет') = 2*6*8;
+select '23_01', text_bitsize(null) is NULL;
+select '23_02', text_bitsize('') = 0;
+select '23_03', text_bitsize('h') = 1*8;
+select '23_04', text_bitsize('hello') = 5*8;
+select '23_05', text_bitsize('привет') = 2*6*8;

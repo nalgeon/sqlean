@@ -563,8 +563,9 @@ static void sqlite3_repeat(sqlite3_context* context, int argc, sqlite3_value** a
 // text_ltrim(str [,chars])
 // text_rtrim(str [,chars])
 // text_trim(str [,chars])
-// [pg-compatible] ltrim(string [, charcters])
-// [pg-compatible] rtrim(string [, charcters])
+// [pg-compatible] ltrim(string [, characters])
+// [pg-compatible] rtrim(string [, characters])
+// [pg-compatible] btrim(string [, characters])
 static void sqlite3_trim(sqlite3_context* context, int argc, sqlite3_value** argv) {
     if (argc != 1 && argc != 2) {
         sqlite3_result_error(context, "expected 1 or 2 parameters", -1);
@@ -823,6 +824,7 @@ static void sqlite3_size(sqlite3_context* context, int argc, sqlite3_value** arg
 }
 
 // Returns the number of bits in the string.
+// text_bitsize(str)
 // [pg-compatible] bit_length(text)
 static void sqlite3_bit_size(sqlite3_context* context, int argc, sqlite3_value** argv) {
     assert(argc == 1);
@@ -896,7 +898,6 @@ __declspec(dllexport)
 
     // other modifications
     sqlite3_create_function(db, "text_replace", 3, flags, 0, sqlite3_replace_all, 0, 0);
-    sqlite3_create_function(db, "replace", 3, flags, 0, sqlite3_replace_all, 0, 0);
     sqlite3_create_function(db, "text_replace", 4, flags, 0, sqlite3_replace, 0, 0);
     sqlite3_create_function(db, "text_translate", 3, flags, 0, sqlite3_translate, 0, 0);
     sqlite3_create_function(db, "translate", 3, flags, 0, sqlite3_translate, 0, 0);
@@ -909,6 +910,7 @@ __declspec(dllexport)
     sqlite3_create_function(db, "character_length", 1, flags, 0, sqlite3_length, 0, 0);
     sqlite3_create_function(db, "text_size", 1, flags, 0, sqlite3_size, 0, 0);
     sqlite3_create_function(db, "octet_length", 1, flags, 0, sqlite3_size, 0, 0);
+    sqlite3_create_function(db, "text_bitsize", 1, flags, 0, sqlite3_bit_size, 0, 0);
     sqlite3_create_function(db, "bit_length", 1, flags, 0, sqlite3_bit_size, 0, 0);
 
     sqlite3_create_function(db, "sqlean_version", 0, flags, 0, sqlean_version, 0, 0);
