@@ -398,6 +398,20 @@ select '19_24', text_replace('hello', 'l', '*', 2)  = 'he**o';
 select '19_25', text_replace('hello', 'l', '*', 3)  = 'he**o';
 select '19_16', text_replace('нетто', 'т', 'три', 1)  = 'нетрито';
 
+-- Translate
+select '24_01', text_translate(null, 'l', '1') is null;
+select '24_02', text_translate('hello', null, '1') is null;
+select '24_03', text_translate('hello', 'l', null) is null;
+select '24_04', text_translate('hello', 'l', '1')  = 'he11o';
+select '24_05', text_translate('hello', 'ole', '013')  = 'h3110';
+select '24_06', text_translate('hello', 'oleh', '01')  = '110';
+select '24_07', text_translate('12345', '143', 'ax')  = 'a2x5';
+select '24_08', text_translate('hello', '', '1')  = 'hello';
+select '24_09', text_translate('hello', 'l', '')  = 'heo';
+select '24_10', text_translate('hello', '', '')  = 'hello';
+select '24_11', text_translate('', 'l', '1')  = '';
+select '24_12', text_translate('нетто', 'от', '03')  = 'не330';
+
 -- Reverse
 select '20_01', text_reverse(null) is NULL;
 select '20_02', text_reverse('') = '';

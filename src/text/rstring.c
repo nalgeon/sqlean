@@ -223,6 +223,56 @@ static int string_last_index(RuneString str, RuneString other) {
     return -1;
 }
 
+// string_translate replaces each string character that matches a character in the `from` set with
+// the corresponding character in the `to` set. If `from` is longer than `to`, occurrences of the
+// extra characters in `from` are deleted.
+static RuneString string_translate(RuneString str, RuneString from, RuneString to) {
+    if (str.length == 0) {
+        return string_new();
+    }
+
+    // empty mapping, return the original string
+    if (from.length == 0) {
+        return string_from_runes(str.runes, str.length, false);
+    }
+
+    // resulting string can be no longer than the original one
+    int32_t* runes = calloc(str.length, sizeof(int32_t));
+    if (runes == NULL) {
+        return string_new();
+    }
+
+    // but it may be shorter, so we should track its length separately
+    size_t length = 0;
+    // perform the translation
+    for (size_t idx = 0; idx < str.length; idx++) {
+        size_t k = 0;
+        // map idx-th character in str `from` -> `to`
+        for (; k < from.length && k < to.length; k++) {
+            if (str.runes[idx] == from.runes[k]) {
+                runes[length] = to.runes[k];
+                length++;
+                break;
+            }
+        }
+        // if `from` is longer than `to`, ingore idx-th character found in `from`
+        bool ignore = false;
+        for (; k < from.length; k++) {
+            if (str.runes[idx] == from.runes[k]) {
+                ignore = true;
+                break;
+            }
+        }
+        // else copy idx-th character as is
+        if (!ignore) {
+            runes[length] = str.runes[idx];
+            length++;
+        }
+    }
+
+    return string_from_runes(runes, length, true);
+}
+
 // string_reverse returns the reversed string.
 static RuneString string_reverse(RuneString str) {
     int32_t* runes = (int32_t*)str.runes;
@@ -378,6 +428,7 @@ struct rstring_ns rstring = {.new = string_new,
                              .last_index = string_last_index,
                              .slice = string_slice,
                              .substring = string_substring,
+                             .translate = string_translate,
                              .reverse = string_reverse,
                              .trim_left = string_trim_left,
                              .trim_right = string_trim_right,

@@ -723,6 +723,45 @@ static void sqlite3_replace(sqlite3_context* context, int argc, sqlite3_value** 
     bstring.free(s_res);
 }
 
+// Replaces each string character that matches a character in the `from` set
+// with the corresponding character in the `to` set. If `from` is longer than `to`,
+// occurrences of the extra characters in `from` are deleted.
+// text_translate(str, from, to)
+// [pg-compatible] translate(string, from, to)
+// (!) postgres does not support unicode strings in translate, while this function does.
+static void sqlite3_translate(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    assert(argc == 3);
+
+    const char* src = (char*)sqlite3_value_text(argv[0]);
+    if (src == NULL) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    const char* from = (char*)sqlite3_value_text(argv[1]);
+    if (from == NULL) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    const char* to = (char*)sqlite3_value_text(argv[2]);
+    if (to == NULL) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    RuneString s_src = rstring.from_cstring(src);
+    RuneString s_from = rstring.from_cstring(from);
+    RuneString s_to = rstring.from_cstring(to);
+    RuneString s_res = rstring.translate(s_src, s_from, s_to);
+    char* res = rstring.to_cstring(s_res);
+    sqlite3_result_text(context, res, -1, free);
+    rstring.free(s_src);
+    rstring.free(s_from);
+    rstring.free(s_to);
+    rstring.free(s_res);
+}
+
 // Reverses the order of the characters in the string.
 // text_reverse(str)
 // [pg-compatible] reverse(text)
@@ -853,6 +892,8 @@ __declspec(dllexport)
     sqlite3_create_function(db, "text_replace", 3, flags, 0, sqlite3_replace_all, 0, 0);
     sqlite3_create_function(db, "replace", 3, flags, 0, sqlite3_replace_all, 0, 0);
     sqlite3_create_function(db, "text_replace", 4, flags, 0, sqlite3_replace, 0, 0);
+    sqlite3_create_function(db, "text_translate", 3, flags, 0, sqlite3_translate, 0, 0);
+    sqlite3_create_function(db, "translate", 3, flags, 0, sqlite3_translate, 0, 0);
     sqlite3_create_function(db, "text_reverse", 1, flags, 0, sqlite3_reverse, 0, 0);
     sqlite3_create_function(db, "reverse", 1, flags, 0, sqlite3_reverse, 0, 0);
 

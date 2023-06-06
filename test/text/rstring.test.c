@@ -197,6 +197,108 @@ static void test_last_index(void) {
     printf("OK\n");
 }
 
+static void test_translate(void) {
+    printf("test_translate...");
+    RuneString str = rstring.from_cstring("привет мир");
+
+    {
+        RuneString from = rstring.from_cstring("ир");
+        RuneString to = rstring.from_cstring("ИР");
+        RuneString res = rstring.translate(str, from, to);
+        assert(eq(res, "пРИвет мИР"));
+        rstring.free(from);
+        rstring.free(to);
+        rstring.free(res);
+    }
+
+    {
+        RuneString from = rstring.from_cstring("абв");
+        RuneString to = rstring.from_cstring("АБВ");
+        RuneString res = rstring.translate(str, from, to);
+        assert(eq(res, "приВет мир"));
+        rstring.free(from);
+        rstring.free(to);
+        rstring.free(res);
+    }
+
+    {
+        RuneString from = rstring.from_cstring("мир");
+        RuneString to = rstring.from_cstring("мир");
+        RuneString res = rstring.translate(str, from, to);
+        assert(eq(res, "привет мир"));
+        rstring.free(from);
+        rstring.free(to);
+        rstring.free(res);
+    }
+
+    {
+        RuneString from = rstring.from_cstring("ипр");
+        RuneString to = rstring.from_cstring("И");
+        RuneString res = rstring.translate(str, from, to);
+        assert(eq(res, "Ивет мИ"));
+        rstring.free(from);
+        rstring.free(to);
+        rstring.free(res);
+    }
+
+    {
+        RuneString str = rstring.from_cstring("и");
+        RuneString from = rstring.from_cstring("пир");
+        RuneString to = rstring.from_cstring("ПИР");
+        RuneString res = rstring.translate(str, from, to);
+        assert(eq(res, "И"));
+        rstring.free(str);
+        rstring.free(from);
+        rstring.free(to);
+        rstring.free(res);
+    }
+
+    {
+        RuneString str = rstring.from_cstring("о");
+        RuneString from = rstring.from_cstring("пир");
+        RuneString to = rstring.from_cstring("ПИР");
+        RuneString res = rstring.translate(str, from, to);
+        assert(eq(res, "о"));
+        rstring.free(str);
+        rstring.free(from);
+        rstring.free(to);
+        rstring.free(res);
+    }
+
+    {
+        RuneString from = rstring.from_cstring("");
+        RuneString to = rstring.from_cstring("ИР");
+        RuneString res = rstring.translate(str, from, to);
+        assert(eq(res, "привет мир"));
+        rstring.free(from);
+        rstring.free(to);
+        rstring.free(res);
+    }
+
+    {
+        RuneString from = rstring.from_cstring("ир");
+        RuneString to = rstring.from_cstring("");
+        RuneString res = rstring.translate(str, from, to);
+        assert(eq(res, "пвет м"));
+        rstring.free(from);
+        rstring.free(to);
+        rstring.free(res);
+    }
+
+    {
+        RuneString from = rstring.from_cstring("");
+        RuneString to = rstring.from_cstring("");
+        RuneString res = rstring.translate(str, from, to);
+        assert(eq(res, "привет мир"));
+        rstring.free(from);
+        rstring.free(to);
+        rstring.free(res);
+    }
+
+    rstring.free(str);
+    printf("OK\n");
+}
+
 static void test_reverse(void) {
     printf("test_reverse...");
     {
@@ -759,6 +861,7 @@ int main(void) {
     test_substring();
     test_index();
     test_last_index();
+    test_translate();
     test_reverse();
     test_trim_left();
     test_trim_right();

@@ -37,6 +37,7 @@ struct rstring_ns {
     int (*index)(RuneString str, RuneString other);
     int (*last_index)(RuneString str, RuneString other);
 
+    RuneString (*translate)(RuneString str, RuneString from, RuneString to);
     RuneString (*reverse)(RuneString str);
 
     RuneString (*trim_left)(RuneString str, RuneString chars);
