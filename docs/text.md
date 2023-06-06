@@ -264,7 +264,7 @@ select text_lpad('hello', 7, '*');
 
 Postgres-compatible, aliased as `lpad`.
 
-⚠️ PostgreSQL does not support unicode strings in `lpad`, while this function does.
+ℹ️ PostgreSQL does not support unicode strings in `lpad`, while this function does.
 
 ## `text_rpad(str, length [,fill])`
 
@@ -280,7 +280,7 @@ select text_rpad('hello', 7, '*');
 
 Postgres-compatible, aliased as `rpad`.
 
-⚠️ PostgreSQL does not support unicode strings in `rpad`, while this function does.
+ℹ️ PostgreSQL does not support unicode strings in `rpad`, while this function does.
 
 ## Other modifications
 
@@ -312,7 +312,7 @@ select text_translate('hello', 'ol', '0');
 
 Postgres-compatible, aliased as `translate`.
 
-⚠️ PostgreSQL does not support unicode strings in `translate`, while this function does.
+ℹ️ PostgreSQL does not support unicode strings in `translate`, while this function does.
 
 ### `text_reverse(str)`
 
@@ -325,7 +325,7 @@ select text_reverse('hello');
 
 Postgres-compatible, aliased as `reverse`.
 
-⚠️ PostgreSQL does not support unicode strings in `reverse`, while this function does.
+ℹ️ PostgreSQL does not support unicode strings in `reverse`, while this function does.
 
 ## String properties
 
