@@ -36,7 +36,7 @@ compile-linux:
 	gcc -O3 $(LINIX_FLAGS) src/sqlite3-math.c -o dist/math.so -lm
 	gcc -O3 $(LINIX_FLAGS) -DPCRE2_CODE_UNIT_WIDTH=8 -DLINK_SIZE=2 -DHAVE_CONFIG_H -DSUPPORT_UNICODE src/sqlite3-regexp.c src/regexp/regexp.c src/regexp/pcre2/*.c -o dist/regexp.so
 	gcc -O3 $(LINIX_FLAGS) src/sqlite3-stats.c -o dist/stats.so -lm
-	gcc -O3 $(LINIX_FLAGS) src/sqlite3-text.c -o dist/text.so
+	gcc -O3 $(LINIX_FLAGS) src/sqlite3-text.c src/text/*.c -o dist/text.so
 	gcc -O3 $(LINIX_FLAGS) src/sqlite3-unicode.c -o dist/unicode.so
 	gcc -O3 $(LINIX_FLAGS) src/sqlite3-uuid.c -o dist/uuid.so
 	gcc -O3 $(LINIX_FLAGS) src/sqlite3-vsv.c -o dist/vsv.so -lm
@@ -53,7 +53,7 @@ compile-windows:
 	gcc -O3 $(WINDO_FLAGS) -I. src/sqlite3-math.c -o dist/math.dll -lm
 	gcc -O3 $(WINDO_FLAGS) -DPCRE2_CODE_UNIT_WIDTH=8 -DLINK_SIZE=2 -DHAVE_CONFIG_H -DSUPPORT_UNICODE -DPCRE2_STATIC -I. src/sqlite3-regexp.c src/regexp/regexp.c src/regexp/pcre2/*.c -o dist/regexp.dll
 	gcc -O3 $(WINDO_FLAGS) -I. src/sqlite3-stats.c -o dist/stats.dll -lm
-	gcc -O3 $(WINDO_FLAGS) -I. src/sqlite3-text.c -o dist/text.dll
+	gcc -O3 $(WINDO_FLAGS) -I. src/sqlite3-text.c src/text/*.c -o dist/text.dll
 	gcc -O3 $(WINDO_FLAGS) -I. src/sqlite3-unicode.c -o dist/unicode.dll
 	gcc -O3 $(WINDO_FLAGS) -I. src/sqlite3-uuid.c -o dist/uuid.dll
 	gcc -O3 $(WINDO_FLAGS) -I. src/sqlite3-vsv.c -o dist/vsv.dll -lm
@@ -71,7 +71,7 @@ compile-macos:
 	gcc -O3 $(MACOS_FLAGS) -I src src/sqlite3-math.c -o dist/math.dylib -lm
 	gcc -O3 $(MACOS_FLAGS) -DPCRE2_CODE_UNIT_WIDTH=8 -DLINK_SIZE=2 -DHAVE_CONFIG_H -DSUPPORT_UNICODE -I src src/sqlite3-regexp.c src/regexp/regexp.c src/regexp/pcre2/*.c -o dist/regexp.dylib
 	gcc -O3 $(MACOS_FLAGS) -I src src/sqlite3-stats.c -o dist/stats.dylib -lm
-	gcc -O3 $(MACOS_FLAGS) -I src src/sqlite3-text.c -o dist/text.dylib
+	gcc -O3 $(MACOS_FLAGS) -I src src/sqlite3-text.c src/text/*.c -o dist/text.dylib
 	gcc -O3 $(MACOS_FLAGS) -I src src/sqlite3-unicode.c -o dist/unicode.dylib
 	gcc -O3 $(MACOS_FLAGS) -I src src/sqlite3-uuid.c -o dist/uuid.dylib
 	gcc -O3 $(MACOS_FLAGS) -I src src/sqlite3-vsv.c -o dist/vsv.dylib -lm
@@ -132,3 +132,9 @@ test-all:
 test:
 	@sqlite3 < test/$(suite).sql > test.log
 	@cat test.log | (! grep -Ex "[0-9_]+.[^1]")
+
+ctest:
+	gcc -Wall test/$(package)/$(module).test.c src/$(package)/*.c -o $(package).$(module)
+	@chmod +x $(package).$(module)
+	@./$(package).$(module)
+	@rm -f $(package).$(module)
