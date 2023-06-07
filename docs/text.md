@@ -2,7 +2,7 @@
 
 A rich set of string functions, from `slice`, `contains` and `count` to `split_part`, `trim` and `repeat`.
 
-Provides 24 functions, many of which are postgres-compatible (i.e. they have the same alias and logic as in PostgreSQL). It can be useful when migrating from SQLite to PostgreSQL or vice versa.
+Provides 25 functions, many of which are postgres-compatible (i.e. they have the same alias and logic as in PostgreSQL). It can be useful when migrating from SQLite to PostgreSQL or vice versa.
 
 Note that some unicode-related functions like `upper` and `lower` are in the separate [`unicode`](unicode.md) extension. Regular expression functions are in the separate [`regexp`](regexp.md) extension.
 
