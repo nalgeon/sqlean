@@ -87,7 +87,7 @@ compile-macos-x86:
 	gcc -O3 $(MACOS_FLAGS) -I src src/sqlite3-math.c -o dist/x86/math.dylib -target x86_64-apple-macos10.12 -lm
 	gcc -O3 $(MACOS_FLAGS) -DPCRE2_CODE_UNIT_WIDTH=8 -DLINK_SIZE=2 -DHAVE_CONFIG_H -DSUPPORT_UNICODE -I src src/sqlite3-regexp.c src/regexp/regexp.c src/regexp/pcre2/*.c -o dist/x86/regexp.dylib -target x86_64-apple-macos10.12
 	gcc -O3 $(MACOS_FLAGS) -I src src/sqlite3-stats.c -o dist/x86/stats.dylib -target x86_64-apple-macos10.12 -lm
-	gcc -O3 $(MACOS_FLAGS) -I src src/sqlite3-text.c -o dist/x86/text.dylib -target x86_64-apple-macos10.12
+	gcc -O3 $(MACOS_FLAGS) -I src src/sqlite3-text.c src/text/*.c -o dist/x86/text.dylib -target x86_64-apple-macos10.12
 	gcc -O3 $(MACOS_FLAGS) -I src src/sqlite3-unicode.c -o dist/x86/unicode.dylib -target x86_64-apple-macos10.12
 	gcc -O3 $(MACOS_FLAGS) -I src src/sqlite3-uuid.c -o dist/x86/uuid.dylib -target x86_64-apple-macos10.12
 	gcc -O3 $(MACOS_FLAGS) -I src src/sqlite3-vsv.c -o dist/x86/vsv.dylib -target x86_64-apple-macos10.12 -lm
@@ -103,7 +103,7 @@ compile-macos-arm64:
 	gcc -O3 $(MACOS_FLAGS) -I src src/sqlite3-math.c -o dist/arm64/math.dylib -target arm64-apple-macos11 -lm
 	gcc -O3 $(MACOS_FLAGS) -DPCRE2_CODE_UNIT_WIDTH=8 -DLINK_SIZE=2 -DHAVE_CONFIG_H -DSUPPORT_UNICODE -I src src/sqlite3-regexp.c src/regexp/regexp.c src/regexp/pcre2/*.c -o dist/arm64/regexp.dylib -target arm64-apple-macos11
 	gcc -O3 $(MACOS_FLAGS) -I src src/sqlite3-stats.c -o dist/arm64/stats.dylib -target arm64-apple-macos11 -lm
-	gcc -O3 $(MACOS_FLAGS) -I src src/sqlite3-text.c -o dist/arm64/text.dylib -target arm64-apple-macos11
+	gcc -O3 $(MACOS_FLAGS) -I src src/sqlite3-text.c src/text/*.c -o dist/arm64/text.dylib -target arm64-apple-macos11
 	gcc -O3 $(MACOS_FLAGS) -I src src/sqlite3-unicode.c -o dist/arm64/unicode.dylib -target arm64-apple-macos11
 	gcc -O3 $(MACOS_FLAGS) -I src src/sqlite3-uuid.c -o dist/arm64/uuid.dylib -target arm64-apple-macos11
 	gcc -O3 $(MACOS_FLAGS) -I src src/sqlite3-vsv.c -o dist/arm64/vsv.dylib -target arm64-apple-macos11 -lm
