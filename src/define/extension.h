@@ -1,7 +1,7 @@
 // Copyright (c) 2023 Anton Zhiyanov, MIT License
 // https://github.com/nalgeon/sqlean
 
-// User-defined functions.
+// User-defined functions in SQLite.
 
 #ifndef DEFINE_EXTENSION_H
 #define DEFINE_EXTENSION_H
