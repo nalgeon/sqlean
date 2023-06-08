@@ -8,6 +8,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../sqlean.h"
+#include "../sqlite3ext.h"
+SQLITE_EXTENSION_INIT3
+
 #include "base32.h"
 #include "base64.h"
 #include "base85.h"
@@ -16,10 +20,6 @@
 #include "sha1.h"
 #include "sha2.h"
 #include "url.h"
-
-#include "../sqlean.h"
-#include "../sqlite3ext.h"
-SQLITE_EXTENSION_INIT3
 
 #include "extension.h"
 
