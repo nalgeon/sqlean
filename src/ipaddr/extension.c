@@ -69,7 +69,7 @@ end:
     return ip;
 }
 
-static void sqlite_ipfamily(sqlite3_context* context, int argc, sqlite3_value** argv) {
+static void ipaddr_ipfamily(sqlite3_context* context, int argc, sqlite3_value** argv) {
     assert(argc == 1);
     if (sqlite3_value_type(argv[0]) == SQLITE_NULL) {
         sqlite3_result_null(context);
@@ -85,7 +85,7 @@ static void sqlite_ipfamily(sqlite3_context* context, int argc, sqlite3_value** 
     sqlite3_free(ip);
 }
 
-static void sqlite_iphost(sqlite3_context* context, int argc, sqlite3_value** argv) {
+static void ipaddr_iphost(sqlite3_context* context, int argc, sqlite3_value** argv) {
     assert(argc == 1);
     if (sqlite3_value_type(argv[0]) == SQLITE_NULL) {
         sqlite3_result_null(context);
@@ -109,7 +109,7 @@ static void sqlite_iphost(sqlite3_context* context, int argc, sqlite3_value** ar
     sqlite3_free(ip);
 }
 
-static void sqlite_ipmasklen(sqlite3_context* context, int argc, sqlite3_value** argv) {
+static void ipaddr_ipmasklen(sqlite3_context* context, int argc, sqlite3_value** argv) {
     assert(argc == 1);
     if (sqlite3_value_type(argv[0]) == SQLITE_NULL) {
         sqlite3_result_null(context);
@@ -125,7 +125,7 @@ static void sqlite_ipmasklen(sqlite3_context* context, int argc, sqlite3_value**
     return;
 }
 
-static void sqlite_ipnetwork(sqlite3_context* context, int argc, sqlite3_value** argv) {
+static void ipaddr_ipnetwork(sqlite3_context* context, int argc, sqlite3_value** argv) {
     assert(argc == 1);
     if (sqlite3_value_type(argv[0]) == SQLITE_NULL) {
         sqlite3_result_null(context);
@@ -161,7 +161,7 @@ static void sqlite_ipnetwork(sqlite3_context* context, int argc, sqlite3_value**
     sqlite3_free(ip);
 }
 
-static void sqlite_ipcontains(sqlite3_context* context, int argc, sqlite3_value** argv) {
+static void ipaddr_ipcontains(sqlite3_context* context, int argc, sqlite3_value** argv) {
     assert(argc == 2);
     if (sqlite3_value_type(argv[0]) == SQLITE_NULL || sqlite3_value_type(argv[1]) == SQLITE_NULL) {
         sqlite3_result_null(context);
@@ -217,11 +217,11 @@ static void sqlean_version(sqlite3_context* context, int argc, sqlite3_value** a
 
 int ipaddr_init(sqlite3* db) {
     static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
-    sqlite3_create_function(db, "ipfamily", 1, flags, 0, sqlite_ipfamily, 0, 0);
-    sqlite3_create_function(db, "iphost", 1, flags, 0, sqlite_iphost, 0, 0);
-    sqlite3_create_function(db, "ipmasklen", 1, flags, 0, sqlite_ipmasklen, 0, 0);
-    sqlite3_create_function(db, "ipnetwork", 1, flags, 0, sqlite_ipnetwork, 0, 0);
-    sqlite3_create_function(db, "ipcontains", 2, flags, 0, sqlite_ipcontains, 0, 0);
+    sqlite3_create_function(db, "ipfamily", 1, flags, 0, ipaddr_ipfamily, 0, 0);
+    sqlite3_create_function(db, "iphost", 1, flags, 0, ipaddr_iphost, 0, 0);
+    sqlite3_create_function(db, "ipmasklen", 1, flags, 0, ipaddr_ipmasklen, 0, 0);
+    sqlite3_create_function(db, "ipnetwork", 1, flags, 0, ipaddr_ipnetwork, 0, 0);
+    sqlite3_create_function(db, "ipcontains", 2, flags, 0, ipaddr_ipcontains, 0, 0);
     sqlite3_create_function(db, "sqlean_version", 0, flags, 0, sqlean_version, 0, 0);
     return SQLITE_OK;
 }

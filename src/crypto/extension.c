@@ -27,7 +27,7 @@ SQLITE_EXTENSION_INIT3
 typedef uint8_t* (*encdec_fn)(const uint8_t* src, size_t len, size_t* out_len);
 
 // Generic compute hash function. Algorithm is encoded in the user data field.
-static void sqlite_hash(sqlite3_context* context, int argc, sqlite3_value** argv) {
+static void crypto_hash(sqlite3_context* context, int argc, sqlite3_value** argv) {
     assert(argc == 1);
 
     if (sqlite3_value_type(argv[0]) == SQLITE_NULL) {
@@ -117,7 +117,7 @@ static void encode(sqlite3_context* context, int argc, sqlite3_value** argv, enc
 
 // Encodes binary data into a textual representation using the specified algorithm.
 // encode('hello', 'base64') = 'aGVsbG8='
-static void sqlite_encode(sqlite3_context* context, int argc, sqlite3_value** argv) {
+static void crypto_encode(sqlite3_context* context, int argc, sqlite3_value** argv) {
     assert(argc == 2);
     size_t n = sqlite3_value_bytes(argv[1]);
     const char* format = (char*)sqlite3_value_text(argv[1]);
@@ -171,7 +171,7 @@ static void decode(sqlite3_context* context, int argc, sqlite3_value** argv, enc
 
 // Decodes binary data from a textual representation using the specified algorithm.
 // decode('aGVsbG8=', 'base64') = cast('hello' as blob)
-static void sqlite_decode(sqlite3_context* context, int argc, sqlite3_value** argv) {
+static void crypto_decode(sqlite3_context* context, int argc, sqlite3_value** argv) {
     assert(argc == 2);
     size_t n = sqlite3_value_bytes(argv[1]);
     const char* format = (char*)sqlite3_value_text(argv[1]);
@@ -205,13 +205,13 @@ static void sqlean_version(sqlite3_context* context, int argc, sqlite3_value** a
 
 int crypto_init(sqlite3* db) {
     static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
-    sqlite3_create_function(db, "md5", 1, flags, (void*)5, sqlite_hash, 0, 0);
-    sqlite3_create_function(db, "sha1", 1, flags, (void*)1, sqlite_hash, 0, 0);
-    sqlite3_create_function(db, "sha256", 1, flags, (void*)2256, sqlite_hash, 0, 0);
-    sqlite3_create_function(db, "sha384", 1, flags, (void*)2384, sqlite_hash, 0, 0);
-    sqlite3_create_function(db, "sha512", 1, flags, (void*)2512, sqlite_hash, 0, 0);
-    sqlite3_create_function(db, "encode", 2, flags, 0, sqlite_encode, 0, 0);
-    sqlite3_create_function(db, "decode", 2, flags, 0, sqlite_decode, 0, 0);
+    sqlite3_create_function(db, "md5", 1, flags, (void*)5, crypto_hash, 0, 0);
+    sqlite3_create_function(db, "sha1", 1, flags, (void*)1, crypto_hash, 0, 0);
+    sqlite3_create_function(db, "sha256", 1, flags, (void*)2256, crypto_hash, 0, 0);
+    sqlite3_create_function(db, "sha384", 1, flags, (void*)2384, crypto_hash, 0, 0);
+    sqlite3_create_function(db, "sha512", 1, flags, (void*)2512, crypto_hash, 0, 0);
+    sqlite3_create_function(db, "encode", 2, flags, 0, crypto_encode, 0, 0);
+    sqlite3_create_function(db, "decode", 2, flags, 0, crypto_decode, 0, 0);
     sqlite3_create_function(db, "sqlean_version", 0, flags, 0, sqlean_version, 0, 0);
     return SQLITE_OK;
 }

@@ -354,7 +354,7 @@ static int seriesBestIndex(sqlite3_vtab* pVTab, sqlite3_index_info* pIdxInfo) {
 ** This following structure defines all the methods for the
 ** generate_series virtual table.
 */
-static sqlite3_module series_module = {
+static sqlite3_module module = {
     .xConnect = seriesConnect,
     .xBestIndex = seriesBestIndex,
     .xDisconnect = seriesDisconnect,
@@ -368,6 +368,6 @@ static sqlite3_module series_module = {
 };
 
 int stats_series_init(sqlite3* db) {
-    sqlite3_create_module(db, "generate_series", &series_module, 0);
+    sqlite3_create_module(db, "generate_series", &module, 0);
     return SQLITE_OK;
 }
