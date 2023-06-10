@@ -70,7 +70,7 @@ char* soundex(const char* str) {
     char* code = malloc(5 * sizeof(char));
 
     // temporary buffer to encode string
-    char buf[str_len+1];
+    char buf[str_len + 1];
 
     // set first value to first char in str
     code[0] = toupper(str[0]);
