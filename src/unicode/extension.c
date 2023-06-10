@@ -74,6 +74,8 @@ Using unicode fold db : CaseFolding.txt
 #include "../sqlite3ext.h"
 SQLITE_EXTENSION_INIT3
 
+#include "extension.h"
+
 #ifndef _SQLITE3_UNICODE_H
 #define _SQLITE3_UNICODE_H
 
