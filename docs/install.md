@@ -15,7 +15,7 @@ Incubator extensions are [also available](https://github.com/nalgeon/sqlean/rele
 
 ## 2. Load and Use
 
-Examples below use the `stats` extension; you can specify any other supported extension.
+Examples below use the `stats` extension; you can specify any other supported extension. To load all extensions at once, use the single-file `sqlean` bundle.
 
 SQLite command-line interface (CLI, aka 'sqlite3.exe' on Windows):
 
