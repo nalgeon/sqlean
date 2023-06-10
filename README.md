@@ -83,43 +83,14 @@ Incubator extensions are [also available](https://github.com/nalgeon/sqlean/rele
 
 ## Installation and Usage
 
-Examples below use the `stats` extension; you can specify any other supported extension. To load all extensions at once, use the single-file `sqlean` bundle.
-
-SQLite command-line interface (CLI, aka 'sqlite3.exe' on Windows):
+SQLite command-line interface:
 
 ```
-sqlite> .load ./stats
+sqlite> .load ./sqlean
 sqlite> select median(value) from generate_series(1, 99);
 ```
 
-IDE, e.g. SQLiteStudio, SQLiteSpy or DBeaver:
-
-```
-select load_extension('c:\Users\anton\sqlite\stats.dll');
-select median(value) from generate_series(1, 99);
-```
-
-Python:
-
-```python
-import sqlite3
-
-connection = sqlite3.connect(":memory:")
-connection.enable_load_extension(True)
-connection.load_extension("./stats")
-connection.execute("select median(value) from generate_series(1, 99)")
-connection.close()
-```
-
-Node.js, using [better-sqlite3](https://github.com/WiseLibs/better-sqlite3):
-
-```js
-const sqlite3 = require("better-sqlite3");
-const db = new sqlite3(":memory:");
-db.loadExtension("./stats");
-db.exec("select median(value) from generate_series(1, 99)");
-db.close();
-```
+See [How to Install an Extension](install.md) for usage with IDE, Python, etc.
 
 ## Building from Source
 

@@ -31,6 +31,16 @@ select load_extension('c:\Users\anton\sqlite\stats.dll');
 select median(value) from generate_series(1, 99);
 ```
 
+**Note for macOS users**. macOS may disable unsigned binaries and prevent the extension from loading. To resolve this issue, remove the extension from quarantine by running the following command in Terminal (replace `/path/to/folder` with an actual path to the folder containing the extension):
+
+```
+xattr -d com.apple.quarantine /path/to/folder/stats.dylib
+```
+
+Also note that the "stock" SQLite CLI on macOS does not support extensions. Use the [custom build](https://github.com/nalgeon/sqlite).
+
+---
+
 Python:
 
 ```python
