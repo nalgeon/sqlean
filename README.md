@@ -90,7 +90,7 @@ sqlite> .load ./sqlean
 sqlite> select median(value) from generate_series(1, 99);
 ```
 
-See [How to Install an Extension](install.md) for usage with IDE, Python, etc.
+See [How to Install an Extension](docs/install.md) for usage with IDE, Python, etc.
 
 ## Building from Source
 
