@@ -30,6 +30,8 @@ Think of them as the extended standard library for SQLite:
 -   [uuid](docs/uuid.md): Universally Unique IDentifiers
 -   [vsv](docs/vsv.md): CSV files as virtual tables
 
+The single-file `sqlean` bundle contains all extensions from the main set (except `ipaddr`).
+
 ## Incubator
 
 These extensions haven't yet made their way to the main set. They may be untested, poorly documented, too broad, too narrow, or without a well-thought API.
@@ -81,7 +83,7 @@ Incubator extensions are [also available](https://github.com/nalgeon/sqlean/rele
 
 ## Installation and Usage
 
-Examples below use the `stats` extension; you can specify any other supported extension.
+Examples below use the `stats` extension; you can specify any other supported extension. To load all extensions at once, use the single-file `sqlean` bundle.
 
 SQLite command-line interface (CLI, aka 'sqlite3.exe' on Windows):
 

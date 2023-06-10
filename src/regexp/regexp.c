@@ -140,8 +140,10 @@ static int regexp_replace(pcre2_code* re, const char* source, const char* repl, 
     return 1;
 }
 
-struct regexp_ns regexp = {.compile = regexp_compile,
-                           .free = regexp_free,
-                           .like = regexp_like,
-                           .extract = regexp_extract,
-                           .replace = regexp_replace};
+struct regexp_ns regexp = {
+    .compile = regexp_compile,
+    .free = regexp_free,
+    .like = regexp_like,
+    .extract = regexp_extract,
+    .replace = regexp_replace,
+};

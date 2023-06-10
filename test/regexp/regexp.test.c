@@ -5,8 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "pcre2/pcre2.h"
-#include "regexp.h"
+#include "../../src/regexp/pcre2/pcre2.h"
+#include "../../src/regexp/regexp.h"
 
 bool eq(const char* str, const char* expected) {
     return strcmp(str, expected) == 0;

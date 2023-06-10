@@ -75,7 +75,7 @@ static void cache_free() {
 /*
  * Prints prepared statements cache contents.
  */
-static void print_cache(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
+static void define_cache(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
     cache_print();
 }
 
@@ -274,7 +274,7 @@ static void define_free(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
 /*
  * Deletes user-defined function (scalar or table-valued)
  */
-static void undefine_function(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
+static void define_undefine(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
     char* template =
         "delete from sqlean_define where name = '%s';"
         "drop table if exists \"%s\";";
@@ -333,8 +333,8 @@ int define_manage_init(sqlite3* db) {
     const int flags = SQLITE_UTF8 | SQLITE_DIRECTONLY;
     sqlite3_create_function(db, "define", 2, flags, NULL, define_function, NULL, NULL);
     sqlite3_create_function(db, "define_free", 0, flags, NULL, define_free, NULL, NULL);
-    sqlite3_create_function(db, "define_cache", 0, flags, NULL, print_cache, NULL, NULL);
-    sqlite3_create_function(db, "undefine", 1, flags, NULL, undefine_function, NULL, NULL);
+    sqlite3_create_function(db, "define_cache", 0, flags, NULL, define_cache, NULL, NULL);
+    sqlite3_create_function(db, "undefine", 1, flags, NULL, define_undefine, NULL, NULL);
     sqlite3_create_function(db, "sqlean_version", 0, flags, 0, sqlean_version, 0, 0);
     return load_functions(db);
 }

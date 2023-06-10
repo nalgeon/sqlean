@@ -148,7 +148,7 @@ static void readFileContents(sqlite3_context* ctx,
 ** of the file named X is read and returned as a BLOB.  NULL is returned
 ** if the file does not exist or is unreadable.
 */
-static void sqlite3_readfile(sqlite3_context* context, int argc, sqlite3_value** argv) {
+static void fileio_readfile(sqlite3_context* context, int argc, sqlite3_value** argv) {
     const char* zName = (const char*)sqlite3_value_text(argv[0]);
     if (zName == 0) {
         return;
@@ -458,7 +458,7 @@ static int writeFile(sqlite3_context* pCtx,
 
 // Writes data to a file.
 // writefile(path, data[, perm[, mtime]])
-static void sqlite3_writefile(sqlite3_context* context, int argc, sqlite3_value** argv) {
+static void fileio_writefile(sqlite3_context* context, int argc, sqlite3_value** argv) {
     sqlite3_int64 mtime = -1;
 
     if (argc < 2 || argc > 4) {
@@ -533,7 +533,7 @@ static void fileio_append(sqlite3_context* ctx, int argc, sqlite3_value** argv) 
 
 // Creates a symlink.
 // symlink(src, dst)
-static void sqlite3_symlink(sqlite3_context* context, int argc, sqlite3_value** argv) {
+static void fileio_symlink(sqlite3_context* context, int argc, sqlite3_value** argv) {
     if (argc != 2) {
         sqlite3_result_error(context, "wrong number of arguments to function symlink()", -1);
         return;
@@ -553,7 +553,7 @@ static void sqlite3_symlink(sqlite3_context* context, int argc, sqlite3_value** 
 
 // Creates a directory.
 // mkdir(path, perm)
-static void sqlite3_mkdir(sqlite3_context* context, int argc, sqlite3_value** argv) {
+static void fileio_mkdir(sqlite3_context* context, int argc, sqlite3_value** argv) {
     if (argc != 1 && argc != 2) {
         sqlite3_result_error(context, "wrong number of arguments to function mkdir()", -1);
         return;
@@ -579,7 +579,7 @@ static void sqlite3_mkdir(sqlite3_context* context, int argc, sqlite3_value** ar
 // Given a numberic st_mode from stat(), convert it into a human-readable
 // text string in the style of "ls -l".
 // lsmode(mode)
-static void sqlite3_lsmode(sqlite3_context* context, int argc, sqlite3_value** argv) {
+static void fileio_lsmode(sqlite3_context* context, int argc, sqlite3_value** argv) {
     int i;
     int iMode = sqlite3_value_int(argv[0]);
     char z[16];
@@ -972,55 +972,41 @@ static int fsdirBestIndex(sqlite3_vtab* tab, sqlite3_index_info* pIdxInfo) {
     return SQLITE_OK;
 }
 
-static sqlite3_module fsdirModule = {
-    0,               /* iVersion */
-    0,               /* xCreate */
-    fsdirConnect,    /* xConnect */
-    fsdirBestIndex,  /* xBestIndex */
-    fsdirDisconnect, /* xDisconnect */
-    0,               /* xDestroy */
-    fsdirOpen,       /* xOpen - open a cursor */
-    fsdirClose,      /* xClose - close a cursor */
-    fsdirFilter,     /* xFilter - configure scan constraints */
-    fsdirNext,       /* xNext - advance a cursor */
-    fsdirEof,        /* xEof - check for end of scan */
-    fsdirColumn,     /* xColumn - read data */
-    fsdirRowid,      /* xRowid - read data */
-    0,               /* xUpdate */
-    0,               /* xBegin */
-    0,               /* xSync */
-    0,               /* xCommit */
-    0,               /* xRollback */
-    0,               /* xFindMethod */
-    0,               /* xRename */
-    0,               /* xSavepoint */
-    0,               /* xRelease */
-    0,               /* xRollbackTo */
-    0,               /* xShadowName */
+static sqlite3_module ls_module = {
+    .xConnect = fsdirConnect,
+    .xBestIndex = fsdirBestIndex,
+    .xDisconnect = fsdirDisconnect,
+    .xOpen = fsdirOpen,
+    .xClose = fsdirClose,
+    .xFilter = fsdirFilter,
+    .xNext = fsdirNext,
+    .xEof = fsdirEof,
+    .xColumn = fsdirColumn,
+    .xRowid = fsdirRowid,
 };
 
 int fileio_ls_init(sqlite3* db) {
-    sqlite3_create_module(db, "fileio_ls", &fsdirModule, 0);
-    sqlite3_create_module(db, "lsdir", &fsdirModule, 0);
+    sqlite3_create_module(db, "fileio_ls", &ls_module, 0);
+    sqlite3_create_module(db, "lsdir", &ls_module, 0);
     return SQLITE_OK;
 }
 
 int fileio_scalar_init(sqlite3* db) {
     static const int flags = SQLITE_UTF8 | SQLITE_DIRECTONLY;
-    sqlite3_create_function(db, "fileio_mode", 1, SQLITE_UTF8, 0, sqlite3_lsmode, 0, 0);
-    sqlite3_create_function(db, "lsmode", 1, SQLITE_UTF8, 0, sqlite3_lsmode, 0, 0);
+    sqlite3_create_function(db, "fileio_mode", 1, SQLITE_UTF8, 0, fileio_lsmode, 0, 0);
+    sqlite3_create_function(db, "lsmode", 1, SQLITE_UTF8, 0, fileio_lsmode, 0, 0);
 
-    sqlite3_create_function(db, "fileio_mkdir", -1, flags, 0, sqlite3_mkdir, 0, 0);
-    sqlite3_create_function(db, "mkdir", -1, flags, 0, sqlite3_mkdir, 0, 0);
+    sqlite3_create_function(db, "fileio_mkdir", -1, flags, 0, fileio_mkdir, 0, 0);
+    sqlite3_create_function(db, "mkdir", -1, flags, 0, fileio_mkdir, 0, 0);
 
-    sqlite3_create_function(db, "fileio_read", -1, flags, 0, sqlite3_readfile, 0, 0);
-    sqlite3_create_function(db, "readfile", -1, flags, 0, sqlite3_readfile, 0, 0);
+    sqlite3_create_function(db, "fileio_read", -1, flags, 0, fileio_readfile, 0, 0);
+    sqlite3_create_function(db, "readfile", -1, flags, 0, fileio_readfile, 0, 0);
 
-    sqlite3_create_function(db, "fileio_symlink", 2, flags, 0, sqlite3_symlink, 0, 0);
-    sqlite3_create_function(db, "symlink", 2, flags, 0, sqlite3_symlink, 0, 0);
+    sqlite3_create_function(db, "fileio_symlink", 2, flags, 0, fileio_symlink, 0, 0);
+    sqlite3_create_function(db, "symlink", 2, flags, 0, fileio_symlink, 0, 0);
 
-    sqlite3_create_function(db, "fileio_write", -1, flags, 0, sqlite3_writefile, 0, 0);
-    sqlite3_create_function(db, "writefile", -1, flags, 0, sqlite3_writefile, 0, 0);
+    sqlite3_create_function(db, "fileio_write", -1, flags, 0, fileio_writefile, 0, 0);
+    sqlite3_create_function(db, "writefile", -1, flags, 0, fileio_writefile, 0, 0);
 
     sqlite3_create_function(db, "fileio_append", 2, flags, 0, fileio_append, 0, 0);
     sqlite3_create_function(db, "sqlean_version", 0, flags, 0, sqlean_version, 0, 0);

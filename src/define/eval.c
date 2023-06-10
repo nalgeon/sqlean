@@ -68,7 +68,7 @@ static int eval_callback(void* pCtx, int argc, char** argv, char** colnames) {
  * Evaluate the SQL text in X. Return the results, using string
  * Y as the separator. If Y is omitted, use a single space character.
  */
-static void eval(sqlite3_context* context, int argc, sqlite3_value** argv) {
+static void define_eval(sqlite3_context* context, int argc, sqlite3_value** argv) {
     const char* zSql;
     sqlite3* db;
     char* zErr = 0;
@@ -103,7 +103,7 @@ static void eval(sqlite3_context* context, int argc, sqlite3_value** argv) {
 
 int define_eval_init(sqlite3* db) {
     const int flags = SQLITE_UTF8 | SQLITE_DIRECTONLY;
-    sqlite3_create_function(db, "eval", 1, flags, NULL, eval, NULL, NULL);
-    sqlite3_create_function(db, "eval", 2, flags, NULL, eval, NULL, NULL);
+    sqlite3_create_function(db, "eval", 1, flags, NULL, define_eval, NULL, NULL);
+    sqlite3_create_function(db, "eval", 2, flags, NULL, define_eval, NULL, NULL);
     return SQLITE_OK;
 }

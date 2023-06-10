@@ -8,7 +8,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../../src/text/text.h"
+#include "../../src/sqlite3ext.h"
+SQLITE_EXTENSION_INIT1
+
+#include "../../src/text/rstring.h"
 
 static bool eq(RuneString str, const char* expected) {
     char* got = rstring.to_cstring(str);

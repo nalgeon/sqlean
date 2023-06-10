@@ -275,30 +275,18 @@ static int xbest_index(sqlite3_vtab* vtable, sqlite3_index_info* index_info) {
     return SQLITE_OK;
 }
 
-static sqlite3_module module = {.iVersion = 0,
-                                .xCreate = 0,
-                                .xConnect = xconnect,
-                                .xBestIndex = xbest_index,
-                                .xDisconnect = xdisconnect,
-                                .xDestroy = 0,
-                                .xOpen = xopen,
-                                .xClose = xclose,
-                                .xFilter = xfilter,
-                                .xNext = xnext,
-                                .xEof = xeof,
-                                .xColumn = xcolumn,
-                                .xRowid = xrowid,
-                                .xUpdate = 0,
-                                .xBegin = 0,
-                                .xSync = 0,
-                                .xCommit = 0,
-                                .xRollback = 0,
-                                .xFindFunction = 0,
-                                .xRename = 0,
-                                .xSavepoint = 0,
-                                .xRelease = 0,
-                                .xRollbackTo = 0,
-                                .xShadowName = 0};
+static sqlite3_module module = {
+    .xConnect = xconnect,
+    .xBestIndex = xbest_index,
+    .xDisconnect = xdisconnect,
+    .xOpen = xopen,
+    .xClose = xclose,
+    .xFilter = xfilter,
+    .xNext = xnext,
+    .xEof = xeof,
+    .xColumn = xcolumn,
+    .xRowid = xrowid,
+};
 
 int fileio_scan_init(sqlite3* db) {
     sqlite3_create_module(db, "fileio_scan", &module, 0);

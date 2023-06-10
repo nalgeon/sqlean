@@ -290,7 +290,7 @@ static int define_vtab_best_index(sqlite3_vtab* pVTab, sqlite3_index_info* index
     return SQLITE_OK;
 }
 
-static sqlite3_module define_module = {
+static sqlite3_module module = {
     .xCreate = define_vtab_create,
     .xConnect = define_vtab_connect,
     .xBestIndex = define_vtab_best_index,
@@ -306,6 +306,6 @@ static sqlite3_module define_module = {
 };
 
 int define_module_init(sqlite3* db) {
-    sqlite3_create_module(db, "define", &define_module, NULL);
+    sqlite3_create_module(db, "define", &module, NULL);
     return SQLITE_OK;
 }
