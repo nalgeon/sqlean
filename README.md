@@ -10,7 +10,7 @@ To achieve it, we split extensions that are too broad, merge the ones that are t
 
 🌟 **Call for feedback**! Please [share your use cases](https://github.com/nalgeon/sqlean/issues/81) to help the project focus on important aspects.
 
-## Main Set
+## Main set
 
 These are the most popular functions. They are tested, documented and organized into the domain modules with clear API.
 
@@ -67,7 +67,7 @@ Think of them as candidates for the standard library:
 
 [Vote for your favorites](https://github.com/nalgeon/sqlean/issues/27)! We'll refactor and merge popular ones into the main set.
 
-## Download
+## Downloading
 
 There are [precompiled binaries](https://github.com/nalgeon/sqlean/releases/latest) for every OS:
 
@@ -80,9 +80,11 @@ Binaries are 64-bit and require a 64-bit SQLite version. If you are using SQLite
 
 Incubator extensions are [also available](https://github.com/nalgeon/sqlean/releases/tag/incubator).
 
-## Installation and Usage
+## Installation and usage
 
-SQLite command-line interface:
+The easiest way to try out `sqlean` extensions is to use the [pre-bundled shell](docs/shell.md). But you can also load them individually.
+
+For example, using the SQLite command-line interface:
 
 ```
 sqlite> .load ./sqlean
@@ -91,7 +93,7 @@ sqlite> select median(value) from generate_series(1, 99);
 
 See [How to Install an Extension](docs/install.md) for usage with IDE, Python, etc.
 
-## Building from Source
+## Building from source
 
 Download the dependencies:
 

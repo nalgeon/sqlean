@@ -1,6 +1,8 @@
 # How to Install an Extension
 
-## 1. Download
+The easiest way to try out `sqlean` extensions is to use the [pre-bundled shell](shell.md). But if you prefer to use the standard SQLite shell, IDEs or software APIs — read on.
+
+## 1. Downloading
 
 There are [precompiled binaries](https://github.com/nalgeon/sqlean/releases/latest) for every OS:
 
@@ -13,7 +15,7 @@ Binaries are 64-bit and require a 64-bit SQLite version. If you are using SQLite
 
 Incubator extensions are [also available](https://github.com/nalgeon/sqlean/releases/tag/incubator).
 
-## 2. Load and Use
+## 2. Usage
 
 Examples below use the `stats` extension; you can specify any other supported extension. To load all extensions at once, use the single-file `sqlean` bundle.
 
