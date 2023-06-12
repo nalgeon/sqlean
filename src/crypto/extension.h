@@ -6,7 +6,7 @@
 #ifndef CRYPTO_EXTENSION_H
 #define CRYPTO_EXTENSION_H
 
-#include "../sqlite3ext.h"
+#include "sqlite3ext.h"
 
 int crypto_init(sqlite3* db);
 

@@ -11,10 +11,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../sqlite3ext.h"
+#include "sqlite3ext.h"
 SQLITE_EXTENSION_INIT3
-
-#include "extension.h"
 
 /* series_cursor is a subclass of sqlite3_vtab_cursor which will
 ** serve as the underlying representation of a cursor that scans

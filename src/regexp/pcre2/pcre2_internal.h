@@ -140,8 +140,8 @@ only if it is not already set. */
 /* Include the public PCRE2 header and the definitions of UCP character
 property values. This must follow the setting of PCRE2_EXP_DECL above. */
 
-#include "pcre2.h"
-#include "pcre2_ucp.h"
+#include "regexp/pcre2/pcre2.h"
+#include "regexp/pcre2/pcre2_ucp.h"
 
 /* When PCRE2 is compiled as a C++ library, the subject pointer can be replaced
 with a custom type. This makes it possible, for example, to allow pcre2_match()
@@ -1975,7 +1975,7 @@ private structures. */
 #define match_block                  PCRE2_SUFFIX(match_block_)
 #define named_group                  PCRE2_SUFFIX(named_group_)
 
-#include "pcre2_intmodedep.h"
+#include "regexp/pcre2/pcre2_intmodedep.h"
 
 /* Private "external" functions. These are internal functions that are called
 from modules other than the one in which they are defined. They have to be

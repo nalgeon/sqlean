@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "common.h"
+#include "fuzzy/common.h"
 
 /// Helper function that returns the numeric code for a given char as specified
 /// by the soundex algorithm.

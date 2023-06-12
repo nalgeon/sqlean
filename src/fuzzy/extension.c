@@ -7,12 +7,10 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include "../sqlean.h"
-#include "../sqlite3ext.h"
+#include "sqlite3ext.h"
 SQLITE_EXTENSION_INIT3
 
-#include "extension.h"
-#include "fuzzy.h"
+#include "fuzzy/fuzzy.h"
 
 // is_ascii checks if the string consists of ASCII symbols only
 static bool is_ascii(const unsigned char* str) {
@@ -258,11 +256,6 @@ static void fuzzy_caverphone(sqlite3_context* context, int argc, sqlite3_value**
     sqlite3_result_text(context, result, -1, free);
 }
 
-// Returns the current Sqlean version.
-static void sqlean_version(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    sqlite3_result_text(context, SQLEAN_VERSION, -1, SQLITE_STATIC);
-}
-
 int fuzzy_init(sqlite3* db) {
     static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
     // libstrcmp
@@ -280,6 +273,5 @@ int fuzzy_init(sqlite3* db) {
     sqlite3_create_function(db, "translit", 1, flags, 0, fuzzy_transliterate, 0, 0);
     // custom
     sqlite3_create_function(db, "caverphone", 1, flags, 0, fuzzy_caverphone, 0, 0);
-    sqlite3_create_function(db, "sqlean_version", 0, flags, 0, sqlean_version, 0, 0);
     return SQLITE_OK;
 }

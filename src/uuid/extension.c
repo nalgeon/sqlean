@@ -59,11 +59,8 @@
 #include <ctype.h>
 #include <string.h>
 
-#include "../sqlean.h"
-#include "../sqlite3ext.h"
+#include "sqlite3ext.h"
 SQLITE_EXTENSION_INIT3
-
-#include "extension.h"
 
 #if !defined(SQLITE_ASCII) && !defined(SQLITE_EBCDIC)
 #define SQLITE_ASCII 1
@@ -205,11 +202,6 @@ static void uuid_blob(sqlite3_context* context, int argc, sqlite3_value** argv) 
     sqlite3_result_blob(context, pBlob, 16, SQLITE_TRANSIENT);
 }
 
-// Returns the current Sqlean version.
-static void sqlean_version(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    sqlite3_result_text(context, SQLEAN_VERSION, -1, SQLITE_STATIC);
-}
-
 int uuid_init(sqlite3* db) {
     static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS;
     static const int det_flags = flags | SQLITE_DETERMINISTIC;
@@ -218,6 +210,5 @@ int uuid_init(sqlite3* db) {
     sqlite3_create_function(db, "gen_random_uuid", 0, flags, 0, uuid_generate, 0, 0);
     sqlite3_create_function(db, "uuid_str", 1, det_flags, 0, uuid_str, 0, 0);
     sqlite3_create_function(db, "uuid_blob", 1, det_flags, 0, uuid_blob, 0, 0);
-    sqlite3_create_function(db, "sqlean_version", 0, det_flags, 0, sqlean_version, 0, 0);
     return SQLITE_OK;
 }

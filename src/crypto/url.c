@@ -12,8 +12,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "url.h"
-
 const char* allowed_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~";
 
 uint8_t hex_to_ascii(char c) {

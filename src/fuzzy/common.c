@@ -2,7 +2,7 @@
 // https://www.sqlite.org/src/file/ext/misc/spellfix.c
 // Modified by Anton Zhiyanov, https://github.com/nalgeon/sqlean/, MIT License
 
-#include "common.h"
+#include "fuzzy/common.h"
 
 /*
 ** The following table gives the character class for non-initial ASCII

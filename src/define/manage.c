@@ -6,11 +6,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../sqlean.h"
-#include "../sqlite3ext.h"
+#include "sqlite3ext.h"
 SQLITE_EXTENSION_INIT3
-
-#include "extension.h"
 
 #define DEFINE_CACHE 2
 
@@ -324,17 +321,11 @@ static int load_functions(sqlite3* db) {
     return sqlite3_finalize(stmt);
 }
 
-// Returns the current Sqlean version.
-static void sqlean_version(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    sqlite3_result_text(context, SQLEAN_VERSION, -1, SQLITE_STATIC);
-}
-
 int define_manage_init(sqlite3* db) {
     const int flags = SQLITE_UTF8 | SQLITE_DIRECTONLY;
     sqlite3_create_function(db, "define", 2, flags, NULL, define_function, NULL, NULL);
     sqlite3_create_function(db, "define_free", 0, flags, NULL, define_free, NULL, NULL);
     sqlite3_create_function(db, "define_cache", 0, flags, NULL, define_cache, NULL, NULL);
     sqlite3_create_function(db, "undefine", 1, flags, NULL, define_undefine, NULL, NULL);
-    sqlite3_create_function(db, "sqlean_version", 0, flags, 0, sqlean_version, 0, 0);
     return load_functions(db);
 }

@@ -140,7 +140,7 @@ test:
 	@cat test.log | (! grep -Ex "[0-9_]+.[^1]")
 
 ctest:
-	gcc -Wall test/$(package)/$(module).test.c src/$(package)/*.c -o $(package).$(module)
+	gcc -Wall -I src test/$(package)/$(module).test.c src/$(package)/*.c -o $(package).$(module)
 	@chmod +x $(package).$(module)
 	@./$(package).$(module)
 	@rm -f $(package).$(module)

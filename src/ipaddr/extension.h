@@ -6,7 +6,7 @@
 #ifndef IPADDR_EXTENSION_H
 #define IPADDR_EXTENSION_H
 
-#include "../sqlite3ext.h"
+#include "sqlite3ext.h"
 
 int ipaddr_init(sqlite3* db);
 

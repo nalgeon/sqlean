@@ -46,9 +46,9 @@ with the library. In this case, PCRE2_PCRE2TEST is defined. */
 
 #ifndef PCRE2_PCRE2TEST           /* We're compiling the library */
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+#include "regexp/pcre2/config.h"
 #endif
-#include "pcre2_internal.h"
+#include "regexp/pcre2/pcre2_internal.h"
 #endif /* PCRE2_PCRE2TEST */
 
 

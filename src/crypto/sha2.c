@@ -32,11 +32,11 @@
  * $Id: sha2.c,v 1.1 2001/11/08 00:01:51 adg Exp adg $
  */
 
-#include "sha2.h"
-
 #include <assert.h> /* assert() */
 #include <stdlib.h>
 #include <string.h> /* memcpy()/memset() or bcopy()/bzero() */
+
+#include "crypto/sha2.h"
 
 /*
  * ASSERT NOTE:

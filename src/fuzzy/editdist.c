@@ -5,7 +5,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-#include "common.h"
+#include "fuzzy/common.h"
 
 extern const unsigned char midClass[];
 extern const unsigned char initClass[];

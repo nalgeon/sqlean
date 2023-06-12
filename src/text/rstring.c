@@ -10,8 +10,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "rstring.h"
-#include "runes.h"
+#include "text/rstring.h"
+#include "text/runes.h"
 
 // utf8_length returns the number of utf-8 characters in a string.
 static size_t utf8_length(const char* str) {

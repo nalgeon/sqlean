@@ -3,10 +3,10 @@
 
 // User-defined functions in SQLite.
 
-#include "../sqlite3ext.h"
+#include "sqlite3ext.h"
 SQLITE_EXTENSION_INIT3
 
-#include "extension.h"
+#include "define/define.h"
 
 int define_init(sqlite3* db) {
     int status = define_manage_init(db);

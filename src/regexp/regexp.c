@@ -10,8 +10,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "pcre2/pcre2.h"
-#include "regexp.h"
+#include "regexp/pcre2/pcre2.h"
+#include "regexp/regexp.h"
 
 /*
  * regexp_compile compiles and returns the compiled regexp.

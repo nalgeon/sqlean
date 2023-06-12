@@ -6,7 +6,7 @@
 #ifndef FUZZY_EXTENSION_H
 #define FUZZY_EXTENSION_H
 
-#include "../sqlite3ext.h"
+#include "sqlite3ext.h"
 
 int fuzzy_init(sqlite3* db);
 

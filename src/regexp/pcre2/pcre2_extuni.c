@@ -46,11 +46,11 @@ support, because some compilers do not like functionless source files. */
 
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+#include "regexp/pcre2/config.h"
 #endif
 
 
-#include "pcre2_internal.h"
+#include "regexp/pcre2/pcre2_internal.h"
 
 
 /* Dummy function */

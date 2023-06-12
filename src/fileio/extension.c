@@ -3,10 +3,10 @@
 
 // Read and write files in SQLite.
 
-#include "../sqlite3ext.h"
+#include "sqlite3ext.h"
 SQLITE_EXTENSION_INIT3
 
-#include "extension.h"
+#include "fileio/fileio.h"
 
 int fileio_init(sqlite3* db) {
     fileio_scalar_init(db);

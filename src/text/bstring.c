@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "bstring.h"
+#include "text/bstring.h"
 
 // string_new creates an empty string.
 static ByteString string_new(void) {

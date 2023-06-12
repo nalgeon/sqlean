@@ -234,11 +234,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../sqlean.h"
-#include "../sqlite3ext.h"
+#include "sqlite3ext.h"
 SQLITE_EXTENSION_INIT3
-
-#include "extension.h"
 
 /**A macro to hint to the compiler that a function should not be * *inlined.*/
 #if defined(__GNUC__)
@@ -1544,14 +1541,7 @@ static sqlite3_module module = {
     .xRowid = vsvtabRowid,
 };
 
-// Returns the current Sqlean version.
-static void sqlean_version(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    sqlite3_result_text(context, SQLEAN_VERSION, -1, SQLITE_STATIC);
-}
-
 int vsv_init(sqlite3* db) {
     sqlite3_create_module(db, "vsv", &module, 0);
-    static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
-    sqlite3_create_function(db, "sqlean_version", 0, flags, 0, sqlean_version, 0, 0);
     return SQLITE_OK;
 }

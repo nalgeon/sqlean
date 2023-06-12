@@ -6,7 +6,7 @@
 #ifndef TEXT_EXTENSION_H
 #define TEXT_EXTENSION_H
 
-#include "../sqlite3ext.h"
+#include "sqlite3ext.h"
 
 int text_init(sqlite3* db);
 

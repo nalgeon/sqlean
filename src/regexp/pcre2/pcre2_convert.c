@@ -40,10 +40,10 @@ POSSIBILITY OF SUCH DAMAGE.
 
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+#include "regexp/pcre2/config.h"
 #endif
 
-#include "pcre2_internal.h"
+#include "regexp/pcre2/pcre2_internal.h"
 
 #define TYPE_OPTIONS (PCRE2_CONVERT_GLOB| \
   PCRE2_CONVERT_POSIX_BASIC|PCRE2_CONVERT_POSIX_EXTENDED)

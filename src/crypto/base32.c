@@ -7,8 +7,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "base32.h"
-
 static const char base32_chars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 
 uint8_t* base32_encode(const uint8_t* src, size_t len, size_t* out_len) {

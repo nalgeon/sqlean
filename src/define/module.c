@@ -11,10 +11,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../sqlite3ext.h"
+#include "sqlite3ext.h"
 SQLITE_EXTENSION_INIT3
 
-#include "extension.h"
+#include "define/define.h"
 
 struct define_vtab {
     sqlite3_vtab base;

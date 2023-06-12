@@ -70,11 +70,8 @@ Using unicode fold db : CaseFolding.txt
 #include <assert.h>
 #include <string.h>
 
-#include "../sqlean.h"
-#include "../sqlite3ext.h"
+#include "sqlite3ext.h"
 SQLITE_EXTENSION_INIT3
-
-#include "extension.h"
 
 #ifndef _SQLITE3_UNICODE_H
 #define _SQLITE3_UNICODE_H
@@ -5336,11 +5333,6 @@ SQLITE_PRIVATE void versionFunc(sqlite3_context* context, int argc, sqlite3_valu
     sqlite3_result_text(context, SQLITE3_UNICODE_VERSION_STRING, -1, SQLITE_STATIC);
 }
 
-// Returns the current Sqlean version.
-static void sqlean_version(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    sqlite3_result_text(context, SQLEAN_VERSION, -1, SQLITE_STATIC);
-}
-
 /*
 ** <sqlite3_unicode>
 ** Register the UNICODE extension functions with database db.
@@ -5393,8 +5385,6 @@ SQLITE_EXPORT int sqlite3_unicode_init_impl(sqlite3* db) {
                              sqlite3_unicode_collate);
 #endif
 
-    static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
-    sqlite3_create_function(db, "sqlean_version", 0, flags, 0, sqlean_version, 0, 0);
     return SQLITE_OK;
 }
 

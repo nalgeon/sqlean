@@ -8,11 +8,8 @@
 #include <assert.h>
 #include <math.h>
 
-#include "../sqlean.h"
-#include "../sqlite3ext.h"
+#include "sqlite3ext.h"
 SQLITE_EXTENSION_INIT3
-
-#include "extension.h"
 
 #if defined(HAVE_STDINT_H) /* Use this case if we have ANSI headers */
 #define SQLITE_INT_TO_PTR(X) ((void*)(intptr_t)(X))
@@ -203,11 +200,6 @@ static void piFunc(sqlite3_context* context, int argc, sqlite3_value** argv) {
     sqlite3_result_double(context, M_PI);
 }
 
-// Returns the current Sqlean version.
-static void sqlean_version(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    sqlite3_result_text(context, SQLEAN_VERSION, -1, SQLITE_STATIC);
-}
-
 int math_init(sqlite3* db) {
     static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
     sqlite3_create_function(db, "ceil", 1, flags, xCeil, ceilingFunc, 0, 0);
@@ -240,6 +232,5 @@ int math_init(sqlite3* db) {
     sqlite3_create_function(db, "radians", 1, flags, degToRad, math1Func, 0, 0);
     sqlite3_create_function(db, "degrees", 1, flags, radToDeg, math1Func, 0, 0);
     sqlite3_create_function(db, "pi", 0, flags, 0, piFunc, 0, 0);
-    sqlite3_create_function(db, "sqlean_version", 0, flags, 0, sqlean_version, 0, 0);
     return SQLITE_OK;
 }

@@ -8,10 +8,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../../src/sqlite3ext.h"
+#include "sqlite3ext.h"
 SQLITE_EXTENSION_INIT1
 
-#include "../../src/text/bstring.h"
+#include "text/bstring.h"
 
 static bool eq(ByteString str, const char* expected) {
     return strcmp(bstring.to_cstring(str), expected) == 0;

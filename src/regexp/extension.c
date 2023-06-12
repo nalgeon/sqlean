@@ -20,14 +20,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "pcre2/pcre2.h"
-#include "regexp.h"
+#include "regexp/pcre2/pcre2.h"
+#include "regexp/regexp.h"
 
-#include "../sqlean.h"
-#include "../sqlite3ext.h"
+#include "sqlite3ext.h"
 SQLITE_EXTENSION_INIT3
-
-#include "extension.h"
 
 /*
  * Checks if the source string matches the pattern.
@@ -347,11 +344,6 @@ static void regexp_replace(sqlite3_context* context, int argc, sqlite3_value** a
     }
 }
 
-// Returns the current Sqlean version.
-static void sqlean_version(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    sqlite3_result_text(context, SQLEAN_VERSION, -1, SQLITE_STATIC);
-}
-
 int regexp_init(sqlite3* db) {
     static const int flags = SQLITE_UTF8 | SQLITE_DETERMINISTIC;
     sqlite3_create_function(db, "regexp", 2, flags, 0, regexp_statement, 0, 0);
@@ -360,6 +352,5 @@ int regexp_init(sqlite3* db) {
     sqlite3_create_function(db, "regexp_capture", 2, flags, 0, regexp_capture, 0, 0);
     sqlite3_create_function(db, "regexp_capture", 3, flags, 0, regexp_capture, 0, 0);
     sqlite3_create_function(db, "regexp_replace", 3, flags, 0, regexp_replace, 0, 0);
-    sqlite3_create_function(db, "sqlean_version", 0, flags, 0, sqlean_version, 0, 0);
     return SQLITE_OK;
 }
