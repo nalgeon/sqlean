@@ -18,8 +18,8 @@ typedef struct cache_node {
     struct cache_node* next;
 } cache_node;
 
-cache_node* cache_head = NULL;
-cache_node* cache_tail = NULL;
+static cache_node* cache_head = NULL;
+static cache_node* cache_tail = NULL;
 
 static int cache_add(sqlite3_stmt* stmt) {
     if (cache_head == NULL) {
@@ -107,7 +107,7 @@ int define_save_function(sqlite3* db, const char* name, const char* type, const 
 /*
  * Executes user-defined sql from the context.
  */
-static void exec_function(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
+static void define_exec(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
     int ret = SQLITE_OK;
     char* sql = sqlite3_user_data(ctx);
     sqlite3_stmt* stmt;
@@ -137,7 +137,7 @@ end:
 /*
  * Creates user-defined function without caching the prepared statement.
  */
-static int create_function(sqlite3* db, const char* name, const char* body) {
+static int define_create(sqlite3* db, const char* name, const char* body) {
     char* sql = sqlite3_mprintf("select %s", body);
     if (!sql) {
         return SQLITE_NOMEM;
@@ -152,8 +152,8 @@ static int create_function(sqlite3* db, const char* name, const char* body) {
     int nparams = sqlite3_bind_parameter_count(stmt);
     sqlite3_finalize(stmt);
 
-    return sqlite3_create_function_v2(db, name, nparams, SQLITE_UTF8, sql, exec_function, NULL,
-                                      NULL, sqlite3_free);
+    return sqlite3_create_function_v2(db, name, nparams, SQLITE_UTF8, sql, define_exec, NULL, NULL,
+                                      sqlite3_free);
 }
 
 /*
@@ -164,7 +164,7 @@ static void define_function(sqlite3_context* ctx, int argc, sqlite3_value** argv
     const char* name = (const char*)sqlite3_value_text(argv[0]);
     const char* body = (const char*)sqlite3_value_text(argv[1]);
     int ret;
-    if ((ret = create_function(db, name, body)) != SQLITE_OK) {
+    if ((ret = define_create(db, name, body)) != SQLITE_OK) {
         sqlite3_result_error_code(ctx, ret);
         return;
     }
@@ -185,7 +185,7 @@ static void define_free(sqlite3_context* ctx, int argc, sqlite3_value** argv) {}
 /*
  * Executes compiled prepared statement from the context.
  */
-static void exec_function(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
+static void define_exec(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
     int ret = SQLITE_OK;
     sqlite3_stmt* stmt = sqlite3_user_data(ctx);
     for (int i = 0; i < argc; i++) {
@@ -210,7 +210,7 @@ static void exec_function(sqlite3_context* ctx, int argc, sqlite3_value** argv) 
 /*
  * Creates user-defined function and caches the prepared statement.
  */
-static int create_function(sqlite3* db, const char* name, const char* body) {
+static int define_create(sqlite3* db, const char* name, const char* body) {
     char* sql = sqlite3_mprintf("select %s", body);
     if (!sql) {
         return SQLITE_NOMEM;
@@ -238,7 +238,7 @@ static int create_function(sqlite3* db, const char* name, const char* body) {
         return ret;
     }
 
-    return sqlite3_create_function(db, name, nparams, SQLITE_UTF8, stmt, exec_function, NULL, NULL);
+    return sqlite3_create_function(db, name, nparams, SQLITE_UTF8, stmt, define_exec, NULL, NULL);
 }
 
 /*
@@ -249,7 +249,7 @@ static void define_function(sqlite3_context* ctx, int argc, sqlite3_value** argv
     const char* name = (const char*)sqlite3_value_text(argv[0]);
     const char* body = (const char*)sqlite3_value_text(argv[1]);
     int ret;
-    if ((ret = create_function(db, name, body)) != SQLITE_OK) {
+    if ((ret = define_create(db, name, body)) != SQLITE_OK) {
         sqlite3_result_error_code(ctx, ret);
         return;
     }
@@ -293,7 +293,7 @@ static void define_undefine(sqlite3_context* ctx, int argc, sqlite3_value** argv
 /*
  * Loads user-defined functions from the database.
  */
-static int load_functions(sqlite3* db) {
+static int define_load(sqlite3* db) {
     char* sql =
         "create table if not exists sqlean_define"
         "(name text primary key, type text, body text)";
@@ -313,7 +313,7 @@ static int load_functions(sqlite3* db) {
     while (sqlite3_step(stmt) != SQLITE_DONE) {
         name = (const char*)sqlite3_column_text(stmt, 0);
         body = (const char*)sqlite3_column_text(stmt, 1);
-        ret = create_function(db, name, body);
+        ret = define_create(db, name, body);
         if (ret != SQLITE_OK) {
             break;
         }
@@ -327,5 +327,5 @@ int define_manage_init(sqlite3* db) {
     sqlite3_create_function(db, "define_free", 0, flags, NULL, define_free, NULL, NULL);
     sqlite3_create_function(db, "define_cache", 0, flags, NULL, define_cache, NULL, NULL);
     sqlite3_create_function(db, "undefine", 1, flags, NULL, define_undefine, NULL, NULL);
-    return load_functions(db);
+    return define_load(db);
 }

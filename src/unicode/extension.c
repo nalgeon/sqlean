@@ -4262,7 +4262,7 @@ SQLITE_PRIVATE int sqlite3Utf8CharLen(const char* zIn, int nByte) {
 ** This lookup table is used to help decode the first byte of
 ** a multi-byte UTF8 character.
 */
-static const unsigned char sqlite3Utf8Trans1[] = {
+static const unsigned char utf8_lookup[] = {
     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
     0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
@@ -4299,7 +4299,7 @@ static const unsigned char sqlite3Utf8Trans1[] = {
 #define READ_UTF8(zIn, zTerm, c)                                                    \
     c = *(zIn++);                                                                   \
     if (c >= 0xc0) {                                                                \
-        c = sqlite3Utf8Trans1[c - 0xc0];                                            \
+        c = utf8_lookup[c - 0xc0];                                                  \
         while (zIn != zTerm && (*zIn & 0xc0) == 0x80) {                             \
             c = (c << 6) + (0x3f & *(zIn++));                                       \
         }                                                                           \

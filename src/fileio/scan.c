@@ -273,7 +273,7 @@ static int xbest_index(sqlite3_vtab* vtable, sqlite3_index_info* index_info) {
     return SQLITE_OK;
 }
 
-static sqlite3_module module = {
+static sqlite3_module scan_module = {
     .xConnect = xconnect,
     .xBestIndex = xbest_index,
     .xDisconnect = xdisconnect,
@@ -287,7 +287,7 @@ static sqlite3_module module = {
 };
 
 int fileio_scan_init(sqlite3* db) {
-    sqlite3_create_module(db, "fileio_scan", &module, 0);
-    sqlite3_create_module(db, "scanfile", &module, 0);
+    sqlite3_create_module(db, "fileio_scan", &scan_module, 0);
+    sqlite3_create_module(db, "scanfile", &scan_module, 0);
     return SQLITE_OK;
 }

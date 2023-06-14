@@ -1526,7 +1526,7 @@ static int vsvtabBestIndex(sqlite3_vtab* tab, sqlite3_index_info* pIdxInfo) {
     return SQLITE_OK;
 }
 
-static sqlite3_module module = {
+static sqlite3_module vsv_module = {
     .xCreate = vsvtabCreate,
     .xConnect = vsvtabConnect,
     .xBestIndex = vsvtabBestIndex,
@@ -1542,6 +1542,6 @@ static sqlite3_module module = {
 };
 
 int vsv_init(sqlite3* db) {
-    sqlite3_create_module(db, "vsv", &module, 0);
+    sqlite3_create_module(db, "vsv", &vsv_module, 0);
     return SQLITE_OK;
 }

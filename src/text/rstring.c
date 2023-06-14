@@ -40,41 +40,41 @@ static size_t utf8_length(const char* str) {
     return length;
 }
 
-// string_new creates an empty string.
-static RuneString string_new(void) {
+// rstring_new creates an empty string.
+static RuneString rstring_new(void) {
     RuneString str = {.runes = NULL, .length = 0, .size = 0, .owning = true};
     return str;
 }
 
-// string_from_runes creates a new string from an array of utf-8 characters.
+// rstring_from_runes creates a new string from an array of utf-8 characters.
 // `owning` indicates whether the string owns the array and should free the memory when destroyed.
-static RuneString string_from_runes(const int32_t* const runes, size_t length, bool owning) {
+static RuneString rstring_from_runes(const int32_t* const runes, size_t length, bool owning) {
     RuneString str = {
         .runes = runes, .length = length, .size = length * sizeof(int32_t), .owning = owning};
     return str;
 }
 
-// string_from_cstring creates a new string from a zero-terminated C string.
-static RuneString string_from_cstring(const char* const utf8str) {
+// rstring_from_cstring creates a new string from a zero-terminated C string.
+static RuneString rstring_from_cstring(const char* const utf8str) {
     size_t length = utf8_length(utf8str);
     int32_t* runes = length > 0 ? runes_from_cstring(utf8str, length) : NULL;
-    return string_from_runes(runes, length, true);
+    return rstring_from_runes(runes, length, true);
 }
 
-// string_to_cstring converts the string to a zero-terminated C string.
-static char* string_to_cstring(RuneString str) {
+// rstring_to_cstring converts the string to a zero-terminated C string.
+static char* rstring_to_cstring(RuneString str) {
     return runes_to_cstring(str.runes, str.length);
 }
 
-// string_free destroys the string, freeing resources if necessary.
-static void string_free(RuneString str) {
+// rstring_free destroys the string, freeing resources if necessary.
+static void rstring_free(RuneString str) {
     if (str.owning && str.runes != NULL) {
         free((void*)str.runes);
     }
 }
 
-// string_at returns a character by its index in the string.
-static int32_t string_at(RuneString str, size_t idx) {
+// rstring_at returns a character by its index in the string.
+static int32_t rstring_at(RuneString str, size_t idx) {
     if (str.length == 0) {
         return 0;
     }
@@ -84,12 +84,12 @@ static int32_t string_at(RuneString str, size_t idx) {
     return str.runes[idx];
 }
 
-// string_slice returns a slice of the string,
+// rstring_slice returns a slice of the string,
 // from the `start` index (inclusive) to the `end` index (non-inclusive).
 // Negative `start` and `end` values count from the end of the string.
-static RuneString string_slice(RuneString str, int start, int end) {
+static RuneString rstring_slice(RuneString str, int start, int end) {
     if (str.length == 0) {
-        return string_new();
+        return rstring_new();
     }
 
     // adjusted start index
@@ -98,7 +98,7 @@ static RuneString string_slice(RuneString str, int start, int end) {
     start = start < 0 ? 0 : start;
     // adjusted start index should be less the the length of the string
     if (start >= (int)str.length) {
-        return string_new();
+        return rstring_new();
     }
 
     // adjusted end index
@@ -108,32 +108,32 @@ static RuneString string_slice(RuneString str, int start, int end) {
     end = end > (int)str.length ? (int)str.length : end;
     // adjusted end index should be >= 0
     if (end < 0) {
-        return string_new();
+        return rstring_new();
     }
 
     // adjusted start index should be less than adjusted end index
     if (start >= end) {
-        return string_new();
+        return rstring_new();
     }
 
     int32_t* at = (int32_t*)str.runes + start;
     size_t length = end - start;
-    RuneString slice = string_from_runes(at, length, false);
+    RuneString slice = rstring_from_runes(at, length, false);
     return slice;
 }
 
-// string_substring returns a substring of `length` characters,
+// rstring_substring returns a substring of `length` characters,
 // starting from the `start` index.
-static RuneString string_substring(RuneString str, size_t start, size_t length) {
+static RuneString rstring_substring(RuneString str, size_t start, size_t length) {
     if (length > str.length - start) {
         length = str.length - start;
     }
-    return string_slice(str, start, start + length);
+    return rstring_slice(str, start, start + length);
 }
 
-// string_contains_after checks if the other string is a substring of the original string,
+// rstring_contains_after checks if the other string is a substring of the original string,
 // starting at the `start` index.
-static bool string_contains_after(RuneString str, RuneString other, size_t start) {
+static bool rstring_contains_after(RuneString str, RuneString other, size_t start) {
     if (start + other.length > str.length) {
         return false;
     }
@@ -145,9 +145,9 @@ static bool string_contains_after(RuneString str, RuneString other, size_t start
     return true;
 }
 
-// string_index_char returns the first index of the character in the string
+// rstring_index_char returns the first index of the character in the string
 // after the `start` index, inclusive.
-static int string_index_char(RuneString str, int32_t rune, size_t start) {
+static int rstring_index_char(RuneString str, int32_t rune, size_t start) {
     for (size_t idx = start; idx < str.length; idx++) {
         if (str.runes[idx] == rune) {
             return idx;
@@ -156,9 +156,9 @@ static int string_index_char(RuneString str, int32_t rune, size_t start) {
     return -1;
 }
 
-// string_index_char returns the last index of the character in the string
+// rstring_index_char returns the last index of the character in the string
 // before the `end` index, inclusive.
-static int string_last_index_char(RuneString str, int32_t rune, size_t end) {
+static int rstring_last_index_char(RuneString str, int32_t rune, size_t end) {
     if (end >= str.length) {
         return -1;
     }
@@ -170,9 +170,9 @@ static int string_last_index_char(RuneString str, int32_t rune, size_t end) {
     return -1;
 }
 
-// string_index_after returns the index of the substring in the original string
+// rstring_index_after returns the index of the substring in the original string
 // after the `start` index, inclusive.
-static int string_index_after(RuneString str, RuneString other, size_t start) {
+static int rstring_index_after(RuneString str, RuneString other, size_t start) {
     if (other.length == 0) {
         return start;
     }
@@ -182,11 +182,11 @@ static int string_index_after(RuneString str, RuneString other, size_t start) {
 
     size_t cur_idx = start;
     while (cur_idx < str.length) {
-        int match_idx = string_index_char(str, other.runes[0], cur_idx);
+        int match_idx = rstring_index_char(str, other.runes[0], cur_idx);
         if (match_idx == -1) {
             return match_idx;
         }
-        if (string_contains_after(str, other, match_idx)) {
+        if (rstring_contains_after(str, other, match_idx)) {
             return match_idx;
         }
         cur_idx = match_idx + 1;
@@ -194,13 +194,13 @@ static int string_index_after(RuneString str, RuneString other, size_t start) {
     return -1;
 }
 
-// string_index returns the first index of the substring in the original string.
-static int string_index(RuneString str, RuneString other) {
-    return string_index_after(str, other, 0);
+// rstring_index returns the first index of the substring in the original string.
+static int rstring_index(RuneString str, RuneString other) {
+    return rstring_index_after(str, other, 0);
 }
 
-// string_last_index returns the last index of the substring in the original string.
-static int string_last_index(RuneString str, RuneString other) {
+// rstring_last_index returns the last index of the substring in the original string.
+static int rstring_last_index(RuneString str, RuneString other) {
     if (other.length == 0) {
         return str.length - 1;
     }
@@ -210,11 +210,11 @@ static int string_last_index(RuneString str, RuneString other) {
 
     int cur_idx = str.length - 1;
     while (cur_idx >= 0) {
-        int match_idx = string_last_index_char(str, other.runes[0], cur_idx);
+        int match_idx = rstring_last_index_char(str, other.runes[0], cur_idx);
         if (match_idx == -1) {
             return match_idx;
         }
-        if (string_contains_after(str, other, match_idx)) {
+        if (rstring_contains_after(str, other, match_idx)) {
             return match_idx;
         }
         cur_idx = match_idx - 1;
@@ -223,23 +223,23 @@ static int string_last_index(RuneString str, RuneString other) {
     return -1;
 }
 
-// string_translate replaces each string character that matches a character in the `from` set with
+// rstring_translate replaces each string character that matches a character in the `from` set with
 // the corresponding character in the `to` set. If `from` is longer than `to`, occurrences of the
 // extra characters in `from` are deleted.
-static RuneString string_translate(RuneString str, RuneString from, RuneString to) {
+static RuneString rstring_translate(RuneString str, RuneString from, RuneString to) {
     if (str.length == 0) {
-        return string_new();
+        return rstring_new();
     }
 
     // empty mapping, return the original string
     if (from.length == 0) {
-        return string_from_runes(str.runes, str.length, false);
+        return rstring_from_runes(str.runes, str.length, false);
     }
 
     // resulting string can be no longer than the original one
     int32_t* runes = calloc(str.length, sizeof(int32_t));
     if (runes == NULL) {
-        return string_new();
+        return rstring_new();
     }
 
     // but it may be shorter, so we should track its length separately
@@ -270,80 +270,80 @@ static RuneString string_translate(RuneString str, RuneString from, RuneString t
         }
     }
 
-    return string_from_runes(runes, length, true);
+    return rstring_from_runes(runes, length, true);
 }
 
-// string_reverse returns the reversed string.
-static RuneString string_reverse(RuneString str) {
+// rstring_reverse returns the reversed string.
+static RuneString rstring_reverse(RuneString str) {
     int32_t* runes = (int32_t*)str.runes;
     for (size_t i = 0; i < str.length / 2; i++) {
         int32_t r = runes[i];
         runes[i] = runes[str.length - 1 - i];
         runes[str.length - 1 - i] = r;
     }
-    RuneString res = string_from_runes(runes, str.length, false);
+    RuneString res = rstring_from_runes(runes, str.length, false);
     return res;
 }
 
-// string_trim_left trims certain characters from the beginning of the string.
-static RuneString string_trim_left(RuneString str, RuneString chars) {
+// rstring_trim_left trims certain characters from the beginning of the string.
+static RuneString rstring_trim_left(RuneString str, RuneString chars) {
     if (str.length == 0) {
-        return string_new();
+        return rstring_new();
     }
     size_t idx = 0;
     for (; idx < str.length; idx++) {
-        if (string_index_char(chars, str.runes[idx], 0) == -1) {
+        if (rstring_index_char(chars, str.runes[idx], 0) == -1) {
             break;
         }
     }
-    return string_slice(str, idx, str.length);
+    return rstring_slice(str, idx, str.length);
 }
 
-// string_trim_right trims certain characters from the end of the string.
-static RuneString string_trim_right(RuneString str, RuneString chars) {
+// rstring_trim_right trims certain characters from the end of the string.
+static RuneString rstring_trim_right(RuneString str, RuneString chars) {
     if (str.length == 0) {
-        return string_new();
+        return rstring_new();
     }
     int idx = str.length - 1;
     for (; idx >= 0; idx--) {
-        if (string_index_char(chars, str.runes[idx], 0) == -1) {
+        if (rstring_index_char(chars, str.runes[idx], 0) == -1) {
             break;
         }
     }
-    return string_slice(str, 0, idx + 1);
+    return rstring_slice(str, 0, idx + 1);
 }
 
-// string_trim trims certain characters from the beginning and end of the string.
-static RuneString string_trim(RuneString str, RuneString chars) {
+// rstring_trim trims certain characters from the beginning and end of the string.
+static RuneString rstring_trim(RuneString str, RuneString chars) {
     if (str.length == 0) {
-        return string_new();
+        return rstring_new();
     }
     size_t left = 0;
     for (; left < str.length; left++) {
-        if (string_index_char(chars, str.runes[left], 0) == -1) {
+        if (rstring_index_char(chars, str.runes[left], 0) == -1) {
             break;
         }
     }
     int right = str.length - 1;
     for (; right >= 0; right--) {
-        if (string_index_char(chars, str.runes[right], 0) == -1) {
+        if (rstring_index_char(chars, str.runes[right], 0) == -1) {
             break;
         }
     }
-    return string_slice(str, left, right + 1);
+    return rstring_slice(str, left, right + 1);
 }
 
-// string_pad_left pads the string to the specified length by prepending `fill` characters.
+// rstring_pad_left pads the string to the specified length by prepending `fill` characters.
 // If the string is already longer than the specified length, it is truncated on the right.
-RuneString string_pad_left(RuneString str, size_t length, RuneString fill) {
+RuneString rstring_pad_left(RuneString str, size_t length, RuneString fill) {
     if (str.length >= length) {
         // If the string is already longer than length, return a truncated version of the string
-        return string_substring(str, 0, length);
+        return rstring_substring(str, 0, length);
     }
 
     if (fill.length == 0) {
         // If the fill string is empty, return the original string
-        return string_from_runes(str.runes, str.length, false);
+        return rstring_from_runes(str.runes, str.length, false);
     }
 
     // Calculate the number of characters to pad
@@ -353,7 +353,7 @@ RuneString string_pad_left(RuneString str, size_t length, RuneString fill) {
     size_t new_size = (str.length + pad_langth) * sizeof(int32_t);
     int32_t* new_runes = malloc(new_size);
     if (new_runes == NULL) {
-        return string_new();
+        return rstring_new();
     }
 
     // Copy the fill characters to the beginning of the new string
@@ -365,21 +365,21 @@ RuneString string_pad_left(RuneString str, size_t length, RuneString fill) {
     memcpy(&new_runes[pad_langth], str.runes, str.size);
 
     // Return the new string
-    RuneString new_str = string_from_runes(new_runes, length, true);
+    RuneString new_str = rstring_from_runes(new_runes, length, true);
     return new_str;
 }
 
-// string_pad_right pads the string to the specified length by appending `fill` characters.
+// rstring_pad_right pads the string to the specified length by appending `fill` characters.
 // If the string is already longer than the specified length, it is truncated on the right.
-RuneString string_pad_right(RuneString str, size_t length, RuneString fill) {
+RuneString rstring_pad_right(RuneString str, size_t length, RuneString fill) {
     if (str.length >= length) {
         // If the string is already longer than length, return a truncated version of the string
-        return string_substring(str, 0, length);
+        return rstring_substring(str, 0, length);
     }
 
     if (fill.length == 0) {
         // If the fill string is empty, return the original string
-        return string_from_runes(str.runes, str.length, false);
+        return rstring_from_runes(str.runes, str.length, false);
     }
 
     // Calculate the number of characters to pad
@@ -389,7 +389,7 @@ RuneString string_pad_right(RuneString str, size_t length, RuneString fill) {
     size_t new_size = (str.length + pad_length) * sizeof(int32_t);
     int32_t* new_runes = malloc(new_size);
     if (new_runes == NULL) {
-        return string_new();
+        return rstring_new();
     }
 
     // Copy the original string to the beginning of the new string
@@ -401,12 +401,12 @@ RuneString string_pad_right(RuneString str, size_t length, RuneString fill) {
     }
 
     // Return the new string
-    RuneString new_str = string_from_runes(new_runes, length, true);
+    RuneString new_str = rstring_from_runes(new_runes, length, true);
     return new_str;
 }
 
-// string_print prints the string to stdout.
-static void string_print(RuneString str) {
+// rstring_print prints the string to stdout.
+static void rstring_print(RuneString str) {
     if (str.length == 0) {
         printf("'' (len=0)\n");
         return;
@@ -420,21 +420,21 @@ static void string_print(RuneString str) {
 }
 
 struct rstring_ns rstring = {
-    .new = string_new,
-    .from_cstring = string_from_cstring,
-    .to_cstring = string_to_cstring,
-    .free = string_free,
-    .at = string_at,
-    .index = string_index,
-    .last_index = string_last_index,
-    .slice = string_slice,
-    .substring = string_substring,
-    .translate = string_translate,
-    .reverse = string_reverse,
-    .trim_left = string_trim_left,
-    .trim_right = string_trim_right,
-    .trim = string_trim,
-    .pad_left = string_pad_left,
-    .pad_right = string_pad_right,
-    .print = string_print,
+    .new = rstring_new,
+    .from_cstring = rstring_from_cstring,
+    .to_cstring = rstring_to_cstring,
+    .free = rstring_free,
+    .at = rstring_at,
+    .index = rstring_index,
+    .last_index = rstring_last_index,
+    .slice = rstring_slice,
+    .substring = rstring_substring,
+    .translate = rstring_translate,
+    .reverse = rstring_reverse,
+    .trim_left = rstring_trim_left,
+    .trim_right = rstring_trim_right,
+    .trim = rstring_trim,
+    .pad_left = rstring_pad_left,
+    .pad_right = rstring_pad_right,
+    .print = rstring_print,
 };

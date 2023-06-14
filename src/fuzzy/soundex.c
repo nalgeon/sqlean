@@ -14,7 +14,7 @@
 /// @param c char to encode
 ///
 /// @returns char representation of the number associated with the given char
-static char encode_char(const char c) {
+static char soundex_encode(const char c) {
     switch (tolower(c)) {
         case 'b':
         case 'f':
@@ -80,7 +80,7 @@ char* soundex(const char* str) {
 
     // encode all chars in str
     for (unsigned i = 0; i < str_len; i++) {
-        buf[i] = encode_char(str[i]);
+        buf[i] = soundex_encode(str[i]);
     }
 
     // add all viable chars to code
