@@ -8,8 +8,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "hex.h"
-
 uint8_t* hex_encode(const uint8_t* src, size_t len, size_t* out_len) {
     *out_len = len * 2;
     uint8_t* encoded = malloc(*out_len + 1);

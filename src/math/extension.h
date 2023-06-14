@@ -6,7 +6,7 @@
 #ifndef MATH_EXTENSION_H
 #define MATH_EXTENSION_H
 
-#include "../sqlite3ext.h"
+#include "sqlite3ext.h"
 
 int math_init(sqlite3* db);
 

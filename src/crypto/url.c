@@ -12,9 +12,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "url.h"
-
-const char* allowed_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~";
+const char* url_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~";
 
 uint8_t hex_to_ascii(char c) {
     if (isdigit(c)) {
@@ -27,7 +25,7 @@ uint8_t hex_to_ascii(char c) {
 uint8_t* url_encode(const uint8_t* src, size_t len, size_t* out_len) {
     size_t encoded_len = 0;
     for (size_t i = 0; i < len; i++) {
-        if (strchr(allowed_chars, src[i]) == NULL) {
+        if (strchr(url_chars, src[i]) == NULL) {
             encoded_len += 3;
         } else {
             encoded_len += 1;
@@ -42,7 +40,7 @@ uint8_t* url_encode(const uint8_t* src, size_t len, size_t* out_len) {
 
     size_t pos = 0;
     for (size_t i = 0; i < len; i++) {
-        if (strchr(allowed_chars, src[i]) == NULL) {
+        if (strchr(url_chars, src[i]) == NULL) {
             encoded[pos++] = '%';
             encoded[pos++] = "0123456789ABCDEF"[src[i] >> 4];
             encoded[pos++] = "0123456789ABCDEF"[src[i] & 0x0F];

@@ -9,13 +9,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../sqlean.h"
-#include "../sqlite3ext.h"
+#include "sqlite3ext.h"
 SQLITE_EXTENSION_INIT3
 
-#include "bstring.h"
-#include "extension.h"
-#include "rstring.h"
+#include "text/bstring.h"
+#include "text/rstring.h"
 
 #pragma region Substrings
 
@@ -843,11 +841,6 @@ static void text_bit_size(sqlite3_context* context, int argc, sqlite3_value** ar
 
 #pragma endregion
 
-// Returns the current Sqlean version.
-static void sqlean_version(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    sqlite3_result_text(context, SQLEAN_VERSION, -1, SQLITE_STATIC);
-}
-
 int text_init(sqlite3* db) {
     static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
 
@@ -910,6 +903,5 @@ int text_init(sqlite3* db) {
     sqlite3_create_function(db, "text_bitsize", 1, flags, 0, text_bit_size, 0, 0);
     sqlite3_create_function(db, "bit_length", 1, flags, 0, text_bit_size, 0, 0);
 
-    sqlite3_create_function(db, "sqlean_version", 0, flags, 0, sqlean_version, 0, 0);
     return SQLITE_OK;
 }

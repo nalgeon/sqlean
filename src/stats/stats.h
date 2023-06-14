@@ -3,11 +3,12 @@
 
 // Statistical functions for SQLite.
 
-#ifndef STATS_EXTENSION_H
-#define STATS_EXTENSION_H
+#ifndef STATS_INTERNAL_H
+#define STATS_INTERNAL_H
 
 #include "sqlite3ext.h"
 
-int stats_init(sqlite3* db);
+int stats_scalar_init(sqlite3* db);
+int stats_series_init(sqlite3* db);
 
-#endif /* STATS_EXTENSION_H */
+#endif /* STATS_INTERNAL_H */

@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <string.h>
 
-#include "common.h"
+#include "fuzzy/common.h"
 
 /// Computes and returns the hamming distance between two strings. Both strings
 /// must have the same length and not be NULL. More information about the

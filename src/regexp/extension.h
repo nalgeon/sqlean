@@ -6,7 +6,7 @@
 #ifndef REGEXP_EXTENSION_H
 #define REGEXP_EXTENSION_H
 
-#include "../sqlite3ext.h"
+#include "sqlite3ext.h"
 
 int regexp_init(sqlite3* db);
 

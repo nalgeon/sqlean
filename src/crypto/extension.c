@@ -8,20 +8,17 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../sqlean.h"
-#include "../sqlite3ext.h"
+#include "sqlite3ext.h"
 SQLITE_EXTENSION_INIT3
 
-#include "base32.h"
-#include "base64.h"
-#include "base85.h"
-#include "hex.h"
-#include "md5.h"
-#include "sha1.h"
-#include "sha2.h"
-#include "url.h"
-
-#include "extension.h"
+#include "crypto/base32.h"
+#include "crypto/base64.h"
+#include "crypto/base85.h"
+#include "crypto/hex.h"
+#include "crypto/md5.h"
+#include "crypto/sha1.h"
+#include "crypto/sha2.h"
+#include "crypto/url.h"
 
 // encoder/decoder function
 typedef uint8_t* (*encdec_fn)(const uint8_t* src, size_t len, size_t* out_len);
@@ -198,11 +195,6 @@ static void crypto_decode(sqlite3_context* context, int argc, sqlite3_value** ar
     sqlite3_result_error(context, "unknown encoding", -1);
 }
 
-// Returns the current Sqlean version.
-static void sqlean_version(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    sqlite3_result_text(context, SQLEAN_VERSION, -1, SQLITE_STATIC);
-}
-
 int crypto_init(sqlite3* db) {
     static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
     sqlite3_create_function(db, "md5", 1, flags, (void*)5, crypto_hash, 0, 0);
@@ -212,6 +204,5 @@ int crypto_init(sqlite3* db) {
     sqlite3_create_function(db, "sha512", 1, flags, (void*)2512, crypto_hash, 0, 0);
     sqlite3_create_function(db, "encode", 2, flags, 0, crypto_encode, 0, 0);
     sqlite3_create_function(db, "decode", 2, flags, 0, crypto_decode, 0, 0);
-    sqlite3_create_function(db, "sqlean_version", 0, flags, 0, sqlean_version, 0, 0);
     return SQLITE_OK;
 }

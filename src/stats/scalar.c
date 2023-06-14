@@ -18,11 +18,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../sqlean.h"
-#include "../sqlite3ext.h"
+#include "sqlite3ext.h"
 SQLITE_EXTENSION_INIT3
-
-#include "extension.h"
 
 #pragma region Standard deviation and variance
 
@@ -298,11 +295,6 @@ static void percentFinal(sqlite3_context* pCtx) {
 
 #pragma endregion
 
-// Returns the current Sqlean version.
-static void sqlean_version(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    sqlite3_result_text(context, SQLEAN_VERSION, -1, SQLITE_STATIC);
-}
-
 int stats_scalar_init(sqlite3* db) {
     static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS;
     sqlite3_create_function(db, "stddev", 1, flags, 0, 0, varianceStep, stddevFinalize);
@@ -318,6 +310,5 @@ int stats_scalar_init(sqlite3* db) {
     sqlite3_create_function(db, "percentile_90", 1, flags, 0, 0, percentStep90, percentFinal);
     sqlite3_create_function(db, "percentile_95", 1, flags, 0, 0, percentStep95, percentFinal);
     sqlite3_create_function(db, "percentile_99", 1, flags, 0, 0, percentStep99, percentFinal);
-    sqlite3_create_function(db, "sqlean_version", 0, flags, 0, sqlean_version, 0, 0);
     return SQLITE_OK;
 }

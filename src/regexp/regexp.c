@@ -10,13 +10,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "pcre2/pcre2.h"
-#include "regexp.h"
+#include "regexp/pcre2/pcre2.h"
+#include "regexp/regexp.h"
 
 /*
- * regexp_compile compiles and returns the compiled regexp.
+ * re_compile compiles and returns the compiled regexp.
  */
-static pcre2_code* regexp_compile(const char* pattern) {
+static pcre2_code* re_compile(const char* pattern) {
     size_t erroffset;
     int errcode;
     uint32_t options = PCRE2_UCP | PCRE2_UTF;
@@ -26,20 +26,20 @@ static pcre2_code* regexp_compile(const char* pattern) {
 }
 
 /*
- * regexp_free frees the compiled regexp.
+ * re_free frees the compiled regexp.
  */
-static void regexp_free(pcre2_code* re) {
+static void re_free(pcre2_code* re) {
     pcre2_code_free(re);
 }
 
 /*
- * regexp_like checks if source string matches pattern.
+ * re_like checks if source string matches pattern.
  * returns:
  *     -1 if the pattern is invalid
  *      0 if there is no match
  *      1 if there is a match
  */
-static int regexp_like(pcre2_code* re, const char* source) {
+static int re_like(pcre2_code* re, const char* source) {
     if (re == NULL) {
         return -1;
     }
@@ -61,14 +61,14 @@ static int regexp_like(pcre2_code* re, const char* source) {
 }
 
 /*
- * regexp_extract extracts source substring matching pattern into `substr`.
+ * re_extract extracts source substring matching pattern into `substr`.
  * if `group_idx` > 0, returns the corresponding group instead of the whole matched substring.
  * returns:
  *     -1 if the pattern is invalid
  *      0 if there is no match
  *      1 if there is a match
  */
-static int regexp_extract(pcre2_code* re, const char* source, size_t group_idx, char** substr) {
+static int re_extract(pcre2_code* re, const char* source, size_t group_idx, char** substr) {
     if (re == NULL) {
         return -1;
     }
@@ -103,13 +103,13 @@ static int regexp_extract(pcre2_code* re, const char* source, size_t group_idx, 
 }
 
 /*
- * regexp_replace replaces matching substring with replacement string into `dest`.
+ * re_replace replaces matching substring with replacement string into `dest`.
  * returns:
  *     -1 if the pattern is invalid
  *      0 if there is no match
  *      1 if there is a match
  */
-static int regexp_replace(pcre2_code* re, const char* source, const char* repl, char** dest) {
+static int re_replace(pcre2_code* re, const char* source, const char* repl, char** dest) {
     if (re == NULL) {
         return -1;
     }
@@ -141,9 +141,9 @@ static int regexp_replace(pcre2_code* re, const char* source, const char* repl, 
 }
 
 struct regexp_ns regexp = {
-    .compile = regexp_compile,
-    .free = regexp_free,
-    .like = regexp_like,
-    .extract = regexp_extract,
-    .replace = regexp_replace,
+    .compile = re_compile,
+    .free = re_free,
+    .like = re_like,
+    .extract = re_extract,
+    .replace = re_replace,
 };

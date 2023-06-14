@@ -10,10 +10,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../sqlite3ext.h"
+#include "sqlite3ext.h"
 SQLITE_EXTENSION_INIT3
-
-#include "extension.h"
 
 /*
  * Structure used to accumulate the output

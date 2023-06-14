@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "common.h"
+#include "fuzzy/common.h"
 
 /// Computes and returns the Optimal String Alignment distance for two non NULL
 /// strings. More information about the algorithm can be found here:

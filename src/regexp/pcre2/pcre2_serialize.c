@@ -43,11 +43,11 @@ a sequence of compiled codes. */
 
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+#include "regexp/pcre2/config.h"
 #endif
 
 
-#include "pcre2_internal.h"
+#include "regexp/pcre2/pcre2_internal.h"
 
 /* Magic number to provide a small check against being handed junk. */
 

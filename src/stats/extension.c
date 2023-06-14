@@ -3,10 +3,10 @@
 
 // Statistical functions for SQLite.
 
-#include "../sqlite3ext.h"
+#include "sqlite3ext.h"
 SQLITE_EXTENSION_INIT3
 
-#include "extension.h"
+#include "stats/stats.h"
 
 int stats_init(sqlite3* db) {
     stats_scalar_init(db);

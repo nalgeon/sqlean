@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "common.h"
+#include "fuzzy/common.h"
 
 /// Helper function that returns the numeric code for a given char as specified
 /// by the refined soundex algorithm.
@@ -14,7 +14,7 @@
 /// @param c char to encode
 ///
 /// @returns char representation of the number associated with the given char
-static char encode_char(const char c) {
+static char rsoundex_encode(const char c) {
     switch (tolower(c)) {
         case 'b':
         case 'p':
@@ -86,7 +86,7 @@ char* refined_soundex(const char* str) {
 
     // encode all chars in str
     for (unsigned i = 0; i < str_len; i++)
-        buf[i] = encode_char(str[i]);
+        buf[i] = rsoundex_encode(str[i]);
 
     // add all viable chars to code
     char prev = '\0';

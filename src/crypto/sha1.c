@@ -2,12 +2,12 @@
 // https://sqlite.org/src/file/ext/misc/sha1.c
 // Modified by Anton Zhiyanov, https://github.com/nalgeon/sqlean/, MIT License
 
-#include "sha1.h"
-
 #include <assert.h>
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "crypto/sha1.h"
 
 #define SHA_ROT(x, l, r) ((x) << (l) | (x) >> (r))
 #define rol(x, k) SHA_ROT(x, k, 32 - (k))

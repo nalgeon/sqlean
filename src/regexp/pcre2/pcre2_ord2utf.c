@@ -44,10 +44,10 @@ into a UTF string. The behaviour is different for each code unit width. */
 
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+#include "regexp/pcre2/config.h"
 #endif
 
-#include "pcre2_internal.h"
+#include "regexp/pcre2/pcre2_internal.h"
 
 
 /* If SUPPORT_UNICODE is not defined, this function will never be called.

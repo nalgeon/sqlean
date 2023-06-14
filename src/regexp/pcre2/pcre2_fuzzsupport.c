@@ -15,7 +15,7 @@ Written by Philip Hazel, October 2016
 #include <string.h>
 
 #define PCRE2_CODE_UNIT_WIDTH 8
-#include "pcre2.h"
+#include "regexp/pcre2/pcre2.h"
 
 #define MAX_MATCH_SIZE 1000
 

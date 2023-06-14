@@ -40,7 +40,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+#include "regexp/pcre2/config.h"
 #endif
 
 /* These defines enable debugging code */
@@ -60,7 +60,7 @@ information, and fields within it. */
 #define PSSTART start_subject   /* Field containing processed string start */
 #define PSEND   end_subject     /* Field containing processed string end */
 
-#include "pcre2_internal.h"
+#include "regexp/pcre2/pcre2_internal.h"
 
 #define RECURSE_UNSET 0xffffffffu  /* Bigger than max group number */
 

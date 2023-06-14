@@ -8,8 +8,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include "runes.h"
-
 // utf8_cat_rune prints the rune to the string.
 static char* utf8_cat_rune(char* str, int32_t rune) {
     if (0 == ((int32_t)0xffffff80 & rune)) {

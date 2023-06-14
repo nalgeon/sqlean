@@ -6,7 +6,7 @@
 #ifndef UNICODE_EXTENSION_H
 #define UNICODE_EXTENSION_H
 
-#include "../sqlite3ext.h"
+#include "sqlite3ext.h"
 
 int unicode_init(sqlite3* db);
 

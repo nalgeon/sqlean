@@ -18,11 +18,8 @@
 #include <sys/types.h>
 #endif
 
-#include "../sqlean.h"
-#include "../sqlite3ext.h"
+#include "sqlite3ext.h"
 SQLITE_EXTENSION_INIT3
-
-#include "extension.h"
 
 struct ipaddress {
     int af;
@@ -210,11 +207,6 @@ end:
     sqlite3_free(ip2);
 }
 
-// Returns the current Sqlean version.
-static void sqlean_version(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    sqlite3_result_text(context, SQLEAN_VERSION, -1, SQLITE_STATIC);
-}
-
 int ipaddr_init(sqlite3* db) {
     static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
     sqlite3_create_function(db, "ipfamily", 1, flags, 0, ipaddr_ipfamily, 0, 0);
@@ -222,6 +214,5 @@ int ipaddr_init(sqlite3* db) {
     sqlite3_create_function(db, "ipmasklen", 1, flags, 0, ipaddr_ipmasklen, 0, 0);
     sqlite3_create_function(db, "ipnetwork", 1, flags, 0, ipaddr_ipnetwork, 0, 0);
     sqlite3_create_function(db, "ipcontains", 2, flags, 0, ipaddr_ipcontains, 0, 0);
-    sqlite3_create_function(db, "sqlean_version", 0, flags, 0, sqlean_version, 0, 0);
     return SQLITE_OK;
 }

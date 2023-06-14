@@ -5,7 +5,7 @@
 #define FUZZY_H
 
 // distance metrics
-int damerau_levenshtein(const char*, const char*);
+unsigned damerau_levenshtein(const char*, const char*);
 int hamming(const char*, const char*);
 double jaro(const char*, const char*);
 double jaro_winkler(const char*, const char*);

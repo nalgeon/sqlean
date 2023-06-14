@@ -40,14 +40,14 @@ POSSIBILITY OF SUCH DAMAGE.
 
 
 #ifdef HAVE_CONFIG_H
-#include "config.h"
+#include "regexp/pcre2/config.h"
 #endif
 
 #define NLBLOCK cb             /* Block containing newline information */
 #define PSSTART start_pattern  /* Field containing processed string start */
 #define PSEND   end_pattern    /* Field containing processed string end */
 
-#include "pcre2_internal.h"
+#include "regexp/pcre2/pcre2_internal.h"
 
 /* In rare error cases debugging might require calling pcre2_printint(). */
 
@@ -57,7 +57,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #else
 #define PRINTABLE(c) ((c) >= 32 && (c) < 127)
 #endif
-#include "pcre2_printint.c"
+#include "regexp/pcre2/pcre2_printint.c"
 #define DEBUG_CALL_PRINTINT
 #endif
 

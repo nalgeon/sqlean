@@ -4,7 +4,7 @@
 #ifndef REGEXP_H
 #define REGEXP_H
 
-#include "pcre2/pcre2.h"
+#include "regexp/pcre2/pcre2.h"
 
 struct regexp_ns {
     pcre2_code* (*compile)(const char* pattern);

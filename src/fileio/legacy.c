@@ -36,7 +36,7 @@
 #define FILEIO_WIN32_DLL
 #include <direct.h>
 #include <io.h>
-#include "../test_windirent.h"
+#include "test_windirent.h"
 #include "windows.h"
 #define dirent DIRENT
 
@@ -55,10 +55,7 @@
 #include <errno.h>
 #include <time.h>
 
-#include "extension.h"
-
-#include "../sqlean.h"
-#include "../sqlite3ext.h"
+#include "sqlite3ext.h"
 SQLITE_EXTENSION_INIT3
 
 /*
@@ -604,11 +601,6 @@ static void fileio_lsmode(sqlite3_context* context, int argc, sqlite3_value** ar
     sqlite3_result_text(context, z, -1, SQLITE_TRANSIENT);
 }
 
-// Returns the current Sqlean version.
-static void sqlean_version(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    sqlite3_result_text(context, SQLEAN_VERSION, -1, SQLITE_STATIC);
-}
-
 /*
 ** Cursor type for recursively iterating through a directory structure.
 */
@@ -1009,7 +1001,6 @@ int fileio_scalar_init(sqlite3* db) {
     sqlite3_create_function(db, "writefile", -1, flags, 0, fileio_writefile, 0, 0);
 
     sqlite3_create_function(db, "fileio_append", 2, flags, 0, fileio_append, 0, 0);
-    sqlite3_create_function(db, "sqlean_version", 0, flags, 0, sqlean_version, 0, 0);
     return SQLITE_OK;
 }
 

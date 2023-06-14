@@ -6,7 +6,7 @@
 #ifndef VSV_EXTENSION_H
 #define VSV_EXTENSION_H
 
-#include "../sqlite3ext.h"
+#include "sqlite3ext.h"
 
 int vsv_init(sqlite3* db);
 
