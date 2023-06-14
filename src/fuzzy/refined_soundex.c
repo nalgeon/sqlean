@@ -73,10 +73,10 @@ char* refined_soundex(const char* str) {
     size_t str_len = strlen(str);
 
     // final code buffer
-    char code[str_len + 1];
+    char* code = malloc((str_len + 1) * sizeof(char));
 
     // temporary buffer to encode string
-    char buf[str_len + 1];
+    char* buf = malloc((str_len + 1) * sizeof(char));
 
     // set first value to first char in str
     code[0] = toupper(str[0]);
@@ -113,6 +113,9 @@ char* refined_soundex(const char* str) {
         result[i] = code[i];
     }
     result[d] = '\0';
+
+    free(code);
+    free(buf);
 
     return result;
 }
