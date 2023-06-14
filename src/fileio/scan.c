@@ -12,6 +12,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#if defined(_MSC_VER)
+#include <BaseTsd.h>
+typedef SSIZE_T ssize_t;
+#else
+#include <sys/types.h>
+#endif
+
 #include "sqlite3ext.h"
 SQLITE_EXTENSION_INIT3
 
@@ -22,7 +29,7 @@ SQLITE_EXTENSION_INIT3
  * `lineptr` points to the first character read.
  * `n` equals the current buffer size.
  */
-static size_t readline(char** lineptr, size_t* n, FILE* stream) {
+static ssize_t readline(char** lineptr, size_t* n, FILE* stream) {
     char* bufptr = NULL;
     char* p = bufptr;
     size_t size;

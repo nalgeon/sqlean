@@ -32,7 +32,9 @@
 
 #else
 
+#if !defined(_MSC_VER)
 #define _MSC_VER 1929
+#endif
 #define FILEIO_WIN32_DLL
 #include <direct.h>
 #include <io.h>
