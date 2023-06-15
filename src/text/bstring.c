@@ -232,7 +232,8 @@ static bool bstring_has_suffix(ByteString str, ByteString other) {
     if (other.length == 0) {
         return true;
     }
-    return bstring_last_index(str, other) == str.length - other.length;
+    int idx = bstring_last_index(str, other);
+    return idx < 0 ? false : (size_t)idx == (str.length - other.length);
 }
 
 // bstring_count counts how many times the `other` substring is contained in the original string.
@@ -363,7 +364,10 @@ static ByteString bstring_repeat(ByteString str, size_t count) {
 
 // bstring_replace replaces the `old` substring with the `new` substring in the original string,
 // but not more than `max_count` times.
-static ByteString bstring_replace(ByteString str, ByteString old, ByteString new, int max_count) {
+static ByteString bstring_replace(ByteString str,
+                                  ByteString old,
+                                  ByteString new,
+                                  size_t max_count) {
     // count matches of the old string in the source string
     size_t count = bstring_count(str, old);
     if (count == 0) {

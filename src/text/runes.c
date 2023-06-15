@@ -138,7 +138,7 @@ char* runes_to_cstring(const int32_t* runes, size_t length) {
     *at = '\0';
     at += 1;
 
-    if (at - str < maxlen) {
+    if ((size_t)(at - str) < maxlen) {
         // shrink to real size
         size_t size = at - str;
         str = realloc(str, size);

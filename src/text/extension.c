@@ -92,7 +92,7 @@ static void text_substring3(sqlite3_context* context, int argc, sqlite3_value** 
     RuneString s_src = rstring.from_cstring(src);
 
     // postgres-compatible: the substring cannot be longer the the original string
-    if (length > s_src.length) {
+    if ((size_t)length > s_src.length) {
         length = s_src.length;
     }
 
@@ -470,7 +470,7 @@ static void text_join(sqlite3_context* context, int argc, sqlite3_value** argv) 
         sqlite3_result_null(context);
         return;
     }
-    for (size_t i = 1, part_idx = 0; i < argc; i++) {
+    for (size_t i = 1, part_idx = 0; i < (size_t)argc; i++) {
         if (sqlite3_value_type(argv[i]) == SQLITE_NULL) {
             // ignore nulls
             n_parts--;
@@ -507,7 +507,7 @@ static void text_concat(sqlite3_context* context, int argc, sqlite3_value** argv
         sqlite3_result_null(context);
         return;
     }
-    for (size_t i = 0, part_idx = 0; i < argc; i++) {
+    for (size_t i = 0, part_idx = 0; i < (size_t)argc; i++) {
         if (sqlite3_value_type(argv[i]) == SQLITE_NULL) {
             // ignore nulls
             n_parts--;

@@ -5372,7 +5372,7 @@ SQLITE_EXPORT int sqlite3_unicode_init_impl(sqlite3* db) {
 #endif
     };
 
-    for (int i = 0; i < (sizeof(scalars) / sizeof(struct FuncScalar)); i++) {
+    for (size_t i = 0; i < (sizeof(scalars) / sizeof(struct FuncScalar)); i++) {
         struct FuncScalar* p = &scalars[i];
         sqlite3_create_function(db, p->zName, p->nArg, p->enc, p->pContext, p->xFunc, 0, 0);
     }

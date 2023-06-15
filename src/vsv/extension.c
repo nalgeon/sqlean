@@ -823,7 +823,7 @@ static int vsvtabConnect(sqlite3* db,
     int bHeader = -1;      /* header= flags.  -1 means not seen yet */
     int validateUTF8 = -1; /* validateUTF8 flag */
     int rc = SQLITE_OK;    /* Result code from this routine */
-    int i, j;              /* Loop counters */
+    size_t i, j;           /* Loop counters */
     int b;                 /* Value of a boolean parameter */
     int nCol = -99;        /* Value of the columns= parameter */
     int nSkip = -1;        /* Value of the skip= parameter */
@@ -842,7 +842,7 @@ static int vsvtabConnect(sqlite3* db,
     assert(sizeof(azPValue) == sizeof(azParam));
     memset(&sRdr, 0, sizeof(sRdr));
     memset(azPValue, 0, sizeof(azPValue));
-    for (i = 3; i < argc; i++) {
+    for (i = 3; i < (size_t)argc; i++) {
         const char* z = argv[i];
         const char* zValue;
         for (j = 0; j < sizeof(azParam) / sizeof(azParam[0]); j++) {

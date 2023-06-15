@@ -84,7 +84,7 @@ static int re_extract(pcre2_code* re, const char* source, size_t group_idx, char
         return 0;
     }
 
-    if (group_idx >= rc) {
+    if (group_idx >= (size_t)rc) {
         pcre2_match_data_free(match_data);
         return 0;
     }

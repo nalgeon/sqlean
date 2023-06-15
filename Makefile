@@ -9,9 +9,9 @@ SQLITE_BRANCH := 3.36
 
 SQLEAN_VERSION := '"$(or $(shell git tag --points-at HEAD),main)"'
 
-LINIX_FLAGS := -Wall -Wno-unknown-pragmas -fPIC -shared -Isrc -DSQLEAN_VERSION=$(SQLEAN_VERSION)
+LINIX_FLAGS := -Wall -Wsign-compare -Wno-unknown-pragmas -fPIC -shared -Isrc -DSQLEAN_VERSION=$(SQLEAN_VERSION)
 WINDO_FLAGS := -shared -Isrc -DSQLEAN_VERSION=$(SQLEAN_VERSION)
-MACOS_FLAGS := -Wall -fPIC -dynamiclib -Isrc -DSQLEAN_VERSION=$(SQLEAN_VERSION)
+MACOS_FLAGS := -Wall -Wsign-compare -fPIC -dynamiclib -Isrc -DSQLEAN_VERSION=$(SQLEAN_VERSION)
 
 prepare-dist:
 	mkdir -p dist

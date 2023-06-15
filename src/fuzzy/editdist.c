@@ -177,7 +177,7 @@ int edit_distance(const char* zA, const char* zB, int* pnMatch) {
         return 0;
 
     /* Allocate and initialize the Wagner matrix */
-    if (nB < (sizeof(mStack) * 4) / (sizeof(mStack[0]) * 5)) {
+    if ((size_t)nB < (sizeof(mStack) * 4) / (sizeof(mStack[0]) * 5)) {
         m = mStack;
     } else {
         m = toFree = malloc((nB + 1) * 5 * sizeof(m[0]) / 4);
