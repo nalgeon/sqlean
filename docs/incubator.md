@@ -481,6 +481,18 @@ sqlite> select unixepoch('2021-12-22 12:34:45');
 
 Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/isodate.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/isodate.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/isodate.dylib)
 
+## json1
+
+This is the 'native' SQLite [JSON1 extension](https://sqlite.org/json1.html).
+It's often compiled into SQLite build, but in case your build doesn't include it - I've compiled it separately.
+
+```
+sqlite> .load dist/json1
+sqlite> select json_object("answer", 42);
+```
+
+Download: [linux](https://github.com/nalgeon/sqlean/releases/download/incubator/json1.so) | [windows](https://github.com/nalgeon/sqlean/releases/download/incubator/json1.dll) | [macos](https://github.com/nalgeon/sqlean/releases/download/incubator/json1.dylib)
+
 ## json2
 
 Even more JSON functions.

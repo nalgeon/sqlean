@@ -18,7 +18,7 @@ select '01', eval('select 42') = '42';
 
 ```Makefile
 download-external:
-	curl -L https://github.com/sqlite/sqlite/raw/branch-$(SQLITE_BRANCH)/ext/misc/eval.c --output src/eval.c
+	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/eval.c --output src/eval.c
 ```
 
 4. Add compilation and test steps to the Makefile:

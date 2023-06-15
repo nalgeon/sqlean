@@ -3,9 +3,8 @@
 
 .PHONY: prepare-dist download-sqlite download-external compile-linux compile-windows compile-macos test test-all
 
-SQLITE_RELEASE_YEAR := 2021
-SQLITE_VERSION := 3360000
-SQLITE_BRANCH := 3.36
+SQLITE_RELEASE_YEAR := 2023
+SQLITE_VERSION := 3420000
 
 prepare-dist:
 	mkdir -p dist
@@ -26,6 +25,7 @@ download-external:
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/decimal.c --output src/decimal.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/ieee754.c --output src/ieee754.c
 	cat src/lines.h > src/lines.c
+	curl -L https://github.com/sqlite/sqlite/raw/branch-3.36/ext/misc/json1.c --output src/json1.c
 	curl -L https://github.com/asg017/sqlite-lines/raw/main/sqlite-lines.c >> src/lines.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/memstat.c --output src/memstat.c
 	cat src/path.h > src/path.c
@@ -60,6 +60,7 @@ compile-linux:
 	make compile-linux-extension name=ieee754
 	make compile-linux-extension name=interpolate
 	make compile-linux-extension name=isodate
+	make compile-linux-extension name=json1
 	# make compile-linux-extension name=json2 src="src/cJSON.c"
 	make compile-linux-extension name=lines
 	make compile-linux-extension name=math2
@@ -103,6 +104,7 @@ compile-windows:
 	make compile-windows-extension name=ieee754
 	make compile-windows-extension name=interpolate
 	make compile-windows-extension name=isodate
+	make compile-windows-extension name=json1
 	# make compile-windows-extension name=json2 src="src/cJSON.c"
 	make compile-windows-extension name=math2
 	make compile-windows-extension name=memstat
@@ -145,6 +147,7 @@ compile-macos:
 	make compile-macos-extension name=ieee754
 	make compile-macos-extension name=interpolate
 	make compile-macos-extension name=isodate
+	make compile-macos-extension name=json1
 	# make compile-macos-extension name=json2 src="src/cJSON.c"
 	make compile-macos-extension name=lines
 	make compile-macos-extension name=math2
@@ -194,6 +197,7 @@ test-all:
 	make test suite=ieee754
 	make test suite=interpolate
 	make test suite=isodate
+	make test suite=json1
 	# tests fail on ubuntu with segmentation fault
 	# make test suite=json2
 	make test suite=lines
