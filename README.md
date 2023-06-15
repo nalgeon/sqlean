@@ -6,7 +6,7 @@ See the [full extension list](https://github.com/nalgeon/sqlean/issues/27) and v
 
 Meanwhile, you can download compiled incubator extensions as they are and use them if you like.
 
-## Download
+## Downloading
 
 There are [precompiled binaries](https://github.com/nalgeon/sqlean/releases/tag/incubator) for every OS:
 
@@ -39,11 +39,11 @@ Python:
 ```python
 import sqlite3
 
-connection = sqlite3.connect(":memory:")
-connection.enable_load_extension(True)
-connection.load_extension("./cbrt.so")
-connection.execute("select cbrt(27)")
-connection.close()
+conn = sqlite3.connect(":memory:")
+conn.enable_load_extension(True)
+conn.load_extension("./cbrt.so")
+conn.execute("select cbrt(27)")
+conn.close()
 ```
 
 Node.js, using [better-sqlite3](https://github.com/WiseLibs/better-sqlite3):
@@ -76,7 +76,7 @@ make compile-macos
 
 You'll find the compiled extensions in the `dist` folder.
 
-## Submit your favorite extension
+## Submitting your favorite extension
 
 Contributions are welcome! Submit your own or third-party extension to the incubator:
 

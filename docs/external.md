@@ -25,13 +25,13 @@ download-external:
 
 ```Makefile
 compile-linux:
-	gcc -fPIC -shared src/eval.c -o dist/eval.so
+	make compile-linux-extension name=eval
 
 compile-windows:
-	gcc -shared -I. src/eval.c -o dist/eval.dll
+	make compile-windows-extension name=eval
 
 compile-macos:
-	gcc -fPIC -dynamiclib -I src src/eval.c -o dist/eval.dylib
+	make compile-macos-extension name=eval
 
 test-all:
 	make test suite=eval
@@ -41,8 +41,9 @@ test-all:
 
 ```shell
 make prepare-dist
+make download-sqlite
 make download-external
-make compile-linux
+make compile-linux-extension name=eval
 make test suite=eval
 ```
 

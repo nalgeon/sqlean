@@ -50,13 +50,13 @@ select '06', cbrt('whatever') is null;
 
 ```Makefile
 compile-linux:
-	gcc -fPIC -shared src/cbrt.c -o dist/cbrt.so -lm
+	make compile-linux-extension name=cbrt
 
 compile-windows:
-	gcc -shared -I. src/cbrt.c -o dist/cbrt.dll -lm
+	make compile-windows-extension name=cbrt
 
 compile-macos:
-	gcc -fPIC -dynamiclib -I src src/cbrt.c -o dist/cbrt.dylib -lm
+	make compile-macos-extension name=cbrt
 
 test-all:
 	make test suite=cbrt
@@ -66,7 +66,8 @@ test-all:
 
 ```shell
 make prepare-dist
-make compile-linux
+make download-sqlite
+make compile-linux-extension name=cbrt
 make test suite=cbrt
 ```
 
