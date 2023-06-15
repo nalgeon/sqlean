@@ -40,7 +40,7 @@ compile-linux:
 	gcc -O3 $(LINIX_FLAGS) src/sqlite3-unicode.c src/unicode/*.c -o dist/unicode.so
 	gcc -O3 $(LINIX_FLAGS) src/sqlite3-uuid.c src/uuid/*.c -o dist/uuid.so
 	gcc -O3 $(LINIX_FLAGS) src/sqlite3-vsv.c src/vsv/*.c -o dist/vsv.so -lm
-	gcc -O1 $(LINIX_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/sqlean.so -lm
+	gcc -O1 $(LINIX_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/ipaddr/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/sqlean.so -lm
 
 pack-linux:
 	zip -j dist/sqlean-linux-x86.zip dist/*.so
@@ -77,7 +77,7 @@ compile-macos:
 	gcc -O3 $(MACOS_FLAGS) src/sqlite3-unicode.c src/unicode/*.c -o dist/unicode.dylib
 	gcc -O3 $(MACOS_FLAGS) src/sqlite3-uuid.c src/uuid/*.c -o dist/uuid.dylib
 	gcc -O3 $(MACOS_FLAGS) src/sqlite3-vsv.c src/vsv/*.c -o dist/vsv.dylib -lm
-	gcc -O1 $(MACOS_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/sqlean.dylib -lm
+	gcc -O1 $(MACOS_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/ipaddr/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/sqlean.dylib -lm
 
 compile-macos-x86:
 	mkdir -p dist/x86
@@ -94,7 +94,7 @@ compile-macos-x86:
 	gcc -O3 $(MACOS_FLAGS) src/sqlite3-unicode.c src/unicode/*.c -o dist/x86/unicode.dylib -target x86_64-apple-macos10.12
 	gcc -O3 $(MACOS_FLAGS) src/sqlite3-uuid.c src/uuid/*.c -o dist/x86/uuid.dylib -target x86_64-apple-macos10.12
 	gcc -O3 $(MACOS_FLAGS) src/sqlite3-vsv.c src/vsv/*.c -o dist/x86/vsv.dylib -target x86_64-apple-macos10.12 -lm
-	gcc -O1 $(MACOS_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/x86/sqlean.dylib -target x86_64-apple-macos10.12 -lm
+	gcc -O1 $(MACOS_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/ipaddr/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/x86/sqlean.dylib -target x86_64-apple-macos10.12 -lm
 
 compile-macos-arm64:
 	mkdir -p dist/arm64
@@ -111,7 +111,7 @@ compile-macos-arm64:
 	gcc -O3 $(MACOS_FLAGS) src/sqlite3-unicode.c src/unicode/*.c -o dist/arm64/unicode.dylib -target arm64-apple-macos11
 	gcc -O3 $(MACOS_FLAGS) src/sqlite3-uuid.c src/uuid/*.c -o dist/arm64/uuid.dylib -target arm64-apple-macos11
 	gcc -O3 $(MACOS_FLAGS) src/sqlite3-vsv.c src/vsv/*.c -o dist/arm64/vsv.dylib -target arm64-apple-macos11 -lm
-	gcc -O1 $(MACOS_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/arm64/sqlean.dylib -target arm64-apple-macos11 -lm
+	gcc -O1 $(MACOS_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/ipaddr/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/arm64/sqlean.dylib -target arm64-apple-macos11 -lm
 
 pack-macos:
 	zip -j dist/sqlean-macos-x86.zip dist/x86/*.dylib
