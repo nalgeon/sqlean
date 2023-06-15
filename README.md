@@ -21,7 +21,6 @@ Think of them as the extended standard library for SQLite:
 -   [fileio](docs/fileio.md): read and write files
 -   [fuzzy](docs/fuzzy.md): fuzzy string matching and phonetics
 -   [ipaddr](docs/ipaddr.md): IP address manipulation
--   [json1](docs/json1.md): JSON functions
 -   [math](docs/math.md): math functions
 -   [regexp](docs/regexp.md): regular expressions
 -   [stats](docs/stats.md): math statistics
@@ -50,6 +49,7 @@ Think of them as candidates for the standard library:
 -   [decimal](https://github.com/nalgeon/sqlean/issues/27#issuecomment-1007348326), [fcmp](https://github.com/nalgeon/sqlean/issues/27#issuecomment-997482625) and [ieee754](https://github.com/nalgeon/sqlean/issues/27#issuecomment-1007375162): decimal and floating-point arithmetic
 -   [envfuncs](https://github.com/nalgeon/sqlean/issues/27#issuecomment-997423609): read environment variables
 -   [isodate](https://github.com/nalgeon/sqlean/issues/27#issuecomment-998138191): additional date and time functions
+-   [json1](https://github.com/nalgeon/sqlean/issues/27#issuecomment-1593490593): JSON functions
 -   [math2](https://github.com/nalgeon/sqlean/issues/27#issuecomment-999128539): additional math functions and bit arithmetics
 -   [path](https://github.com/nalgeon/sqlean/issues/27#issuecomment-1252243356): parsing and querying paths
 -   [pearson](https://github.com/nalgeon/sqlean/issues/27#issuecomment-997417836): Pearson correlation coefficient between two data sets
