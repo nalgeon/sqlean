@@ -4,14 +4,14 @@
 
 ```
   sqlean shell =
-┌─────────────────────────┐
-│ sqlite shell            │
-├ + ──────────────────────┤
-│ crypto  define  fileio  │
-│ fuzzy   math    regexp  │
-│ stats   text    unicode │
-│ uuid    vsv             │
-└─────────────────────────┘
+┌───────────────────────────┐
+│ sqlite shell              │
+├ + ────────────────────────┤
+│ crypto   ipaddr   text    │
+│ define   math     unicode │
+│ fileio   regexp   uuid    │
+│ fuzzy    stats    vsv     │
+└───────────────────────────┘
 ```
 
 ## 1. Downloading

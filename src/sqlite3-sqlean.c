@@ -7,7 +7,6 @@
 SQLITE_EXTENSION_INIT1
 
 // include most of the extensions,
-// except ipaddr, which does not support Windows
 #include "crypto/extension.h"
 #include "define/extension.h"
 #include "fileio/extension.h"

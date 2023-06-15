@@ -29,7 +29,7 @@ Think of them as the extended standard library for SQLite:
 -   [uuid](docs/uuid.md): Universally Unique IDentifiers
 -   [vsv](docs/vsv.md): CSV files as virtual tables
 
-The single-file `sqlean` bundle contains all extensions from the main set (except `ipaddr`).
+The single-file `sqlean` bundle contains all extensions from the main set.
 
 ## Incubator
 
