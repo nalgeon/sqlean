@@ -1,7 +1,6 @@
 -- Copyright (c) 2021 Anton Zhiyanov, MIT License
 -- https://github.com/nalgeon/sqlean
 
-.load dist/stats
 .load dist/json1
 
 -- total of 17 functions
