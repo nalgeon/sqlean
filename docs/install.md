@@ -19,6 +19,8 @@ Incubator extensions are [also available](https://github.com/nalgeon/sqlean/rele
 
 Examples below use the `stats` extension; you can specify any other supported extension. To load all extensions at once, use the single-file `sqlean` bundle.
 
+### Command-line or IDE
+
 SQLite command-line interface (CLI, aka 'sqlite3.exe' on Windows):
 
 ```
@@ -41,21 +43,41 @@ xattr -d com.apple.quarantine /path/to/folder/stats.dylib
 
 Also note that the "stock" SQLite CLI on macOS does not support extensions. Use the [custom build](https://github.com/nalgeon/sqlite).
 
----
+### Python
 
-Python:
+Install the `sqlean.py` package, which is a drop-in replacement for the default `sqlite3` module:
+
+```
+pip install sqlean.py
+```
+
+All extensions from the main set are already enabled:
+
+```python
+import sqlean as sqlite3
+
+conn = sqlite3.connect(":memory:")
+conn.execute("select median(value) from generate_series(1, 99)")
+conn.close()
+```
+
+You can also use the default `sqlite3` module and load extensions manually:
 
 ```python
 import sqlite3
 
-connection = sqlite3.connect(":memory:")
-connection.enable_load_extension(True)
-connection.load_extension("./stats")
-connection.execute("select median(value) from generate_series(1, 99)")
-connection.close()
+conn = sqlite3.connect(":memory:")
+conn.enable_load_extension(True)
+conn.load_extension("./stats")
+conn.execute("select median(value) from generate_series(1, 99)")
+conn.close()
 ```
 
-Node.js, using [better-sqlite3](https://github.com/WiseLibs/better-sqlite3):
+**Note for macOS users**. "Stock" SQLite on macOS does not support extensions, so the default `sqlite3` module won't work. Use the `sqlean.py` package.
+
+### Node.js
+
+Using [better-sqlite3](https://github.com/WiseLibs/better-sqlite3):
 
 ```js
 const sqlite3 = require("better-sqlite3");
