@@ -204,7 +204,7 @@ static void uuid_blob(sqlite3_context* context, int argc, sqlite3_value** argv) 
 
 int uuid_init(sqlite3* db) {
     static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS;
-    static const int det_flags = flags | SQLITE_DETERMINISTIC;
+    static const int det_flags = SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
     sqlite3_create_function(db, "uuid4", 0, flags, 0, uuid_generate, 0, 0);
     /* for postgresql compatibility */
     sqlite3_create_function(db, "gen_random_uuid", 0, flags, 0, uuid_generate, 0, 0);
