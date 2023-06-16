@@ -8,7 +8,9 @@ We do not try to gather all the existing extensions into one giant pile — that
 
 To achieve it, we split extensions that are too broad, merge the ones that are too narrow, refactor, add missing features, test, document, and do a ton of other small things.
 
-🌟 **Call for feedback**! Please [share your use cases](https://github.com/nalgeon/sqlean/issues/81) to help the project focus on important aspects.
+🌟 [**Call for feedback**](https://github.com/nalgeon/sqlean/issues/81): please share your use cases to help the project focus on important aspects.
+
+🌟 [**Python package**](https://github.com/nalgeon/sqlean.py): a drop-in replacement for the default `sqlite3` module.
 
 ## Main set
 
