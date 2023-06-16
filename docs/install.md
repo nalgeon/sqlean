@@ -86,3 +86,23 @@ db.loadExtension("./stats");
 db.exec("select median(value) from generate_series(1, 99)");
 db.close();
 ```
+
+### Browser JavaScript
+
+Using [sqlean.js](https://github.com/nalgeon/sqlean.js):
+
+```js
+import sqlite3Init from "./sqlean.mjs";
+
+async function init() {
+    return await sqlite3Init({
+        print: console.log,
+        printErr: console.error,
+    });
+}
+
+init().then((sqlite3) => {
+    const db = new sqlite3.oo1.DB();
+    db.exec("select median(value) from generate_series(1, 99)");
+});
+```

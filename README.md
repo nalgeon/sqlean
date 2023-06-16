@@ -8,9 +8,9 @@ We do not try to gather all the existing extensions into one giant pile — that
 
 To achieve it, we split extensions that are too broad, merge the ones that are too narrow, refactor, add missing features, test, document, and do a ton of other small things.
 
-🌟 [**Call for feedback**](https://github.com/nalgeon/sqlean/issues/81): please share your use cases to help the project focus on important aspects.
-
 🌟 [**Python package**](https://github.com/nalgeon/sqlean.py): a drop-in replacement for the default `sqlite3` module.
+
+🌟 [**JavaScript package**](https://github.com/nalgeon/sqlean.js): browser-based SQLite with extensions.
 
 ## Main set
 
@@ -32,6 +32,8 @@ Think of them as the extended standard library for SQLite:
 -   [vsv](docs/vsv.md): CSV files as virtual tables
 
 The single-file `sqlean` bundle contains all extensions from the main set.
+
+P.S. Please [share your use cases](https://github.com/nalgeon/sqlean/issues/81) to help the project focus on important aspects.
 
 ## Incubator
 
@@ -93,7 +95,7 @@ sqlite> .load ./sqlean
 sqlite> select median(value) from generate_series(1, 99);
 ```
 
-See [How to Install an Extension](docs/install.md) for usage with IDE, Python, etc.
+See [How to Install an Extension](docs/install.md) for usage with IDE, Python, JavaScript, etc.
 
 ## Building from source
 
