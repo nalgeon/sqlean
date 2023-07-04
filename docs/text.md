@@ -8,7 +8,7 @@ Note that some unicode-related functions like `upper` and `lower` are in the sep
 
 ## Substrings and slicing
 
-### `text_substring(str, start [,length])`
+<h3 name="text_substring"><code>text_substring(str, start [,length])</code></h3>
 
 Extracts a substring of `length` characters starting at the `start` position (1-based). By default, extracts all characters from `start` to the end of the string.
 
@@ -22,7 +22,7 @@ select text_substring('hello world', 7, 5);
 
 Postgres-compatible (`substr`), but not aliased as `substr` to avoid conflicts with the built-in `substr` SQLite function.
 
-### `text_slice(str, start [,end])`
+<h3 name="text_slice"><code>text_slice(str, start [,end])</code></h3>
 
 Extracts a substring from the `start` position inclusive to the `end` position non-inclusive (1-based). By default, `end` is the end of the string.
 
@@ -42,7 +42,7 @@ select text_slice('hello world', -5, -2);
 -- wor
 ```
 
-### `text_left(str, length)`
+<h3 name="text_left"><code>text_left(str, length)</code></h3>
 
 Extracts a substring of `length` characters from the beginning of the string. For negative `length`, extracts all but the last `|length|` characters.
 
@@ -56,7 +56,7 @@ select text_left('hello world', -6);
 
 Postgres-compatible, aliased as `left`.
 
-### `text_right(str, length)`
+<h3 name="text_right"><code>text_right(str, length)</code></h3>
 
 Extracts a substring of `length` characters from the end of the string. For negative `length`, extracts all but the first `|length|` characters.
 
@@ -72,7 +72,7 @@ Postgres-compatible, aliased as `right`.
 
 ## Search and match
 
-### `text_index(str, other)`
+<h3 name="text_index"><code>text_index(str, other)</code></h3>
 
 Returns the first index of the `other` substring in the original string.
 
@@ -86,7 +86,7 @@ select text_index('hello yellow', 'x');
 
 Postgres-compatible, aliased as `strpos`.
 
-### `text_last_index(str, other)`
+<h3 name="text_last_index"><code>text_last_index(str, other)</code></h3>
 
 Returns the last index of the `other` substring in the original string.
 
@@ -98,7 +98,7 @@ select text_last_index('hello yellow', 'x');
 -- 0
 ```
 
-### `text_contains(str, other)`
+<h3 name="text_contains"><code>text_contains(str, other)</code></h3>
 
 Checks if the string contains the `other` substring.
 
@@ -110,7 +110,7 @@ select text_contains('hello yellow', 'x');
 -- 0
 ```
 
-### `text_has_prefix(str, other)`
+<h3 name="text_has_prefix"><code>text_has_prefix(str, other)</code></h3>
 
 Checks if the string starts with the `other` substring.
 
@@ -124,7 +124,7 @@ select text_has_prefix('hello yellow', 'yellow');
 
 Postgres-compatible, aliased as `starts_with`.
 
-### `text_has_suffix(str, other)`
+<h3 name="text_has_suffix"><code>text_has_suffix(str, other)</code></h3>
 
 Checks if the string ends with the `other` substring.
 
@@ -136,7 +136,7 @@ select text_has_suffix('hello yellow', 'yellow');
 -- 1
 ```
 
-### `text_count(str, other)`
+<h3 name="text_count"><code>text_count(str, other)</code></h3>
 
 Counts how many times the `other` substring is contained in the original string.
 
@@ -150,7 +150,7 @@ select text_count('hello yellow', 'x') = 0;
 
 ## Split and join
 
-### `text_split(str, sep, n)`
+<h3 name="text_split"><code>text_split(str, sep, n)</code></h3>
 
 Splits a string by a separator and returns the n-th part (counting from one). When `n` is negative, returns the `|n|`th-from-last part.
 
@@ -167,7 +167,7 @@ text_split('one|two|three', ';', 2);
 
 Postgres-compatible, aliased as `split_part`.
 
-### `text_concat(str, ...)`
+<h3 name="text_concat"><code>text_concat(str, ...)</code></h3>
 
 Concatenates strings and returns the resulting string. Ignores nulls.
 
@@ -181,7 +181,7 @@ select text_concat('one', null, 'three');
 
 Postgres-compatible, aliased as `concat`.
 
-### `text_join(sep, str, ...)`
+<h3 name="text_join"><code>text_join(sep, str, ...)</code></h3>
 
 Joins strings using the separator and returns the resulting string. Ignores nulls.
 
@@ -195,7 +195,7 @@ select text_join('|', 'one', null, 'three');
 
 Postgres-compatible, aliased as `concat_ws`.
 
-### `text_repeat(str, count)`
+<h3 name="text_repeat"><code>text_repeat(str, count)</code></h3>
 
 Concatenates the string to itself a given number of times and returns the resulting string.
 
@@ -208,7 +208,7 @@ Postgres-compatible, aliased as `repeat`.
 
 ## Trim and pad
 
-### `text_ltrim(str [,chars])`
+<h3 name="text_ltrim"><code>text_ltrim(str [,chars])</code></h3>
 
 Trims certain characters (spaces by default) from the beginning of the string.
 
@@ -222,7 +222,7 @@ select text_ltrim('273hello', '123456789');
 
 Postgres-compatible, aliased as `ltrim`.
 
-### `text_rtrim(str [,chars])`
+<h3 name="text_rtrim"><code>text_rtrim(str [,chars])</code></h3>
 
 Trims certain characters (spaces by default) from the end of the string.
 
@@ -236,7 +236,7 @@ select text_rtrim('hello273', '123456789');
 
 Postgres-compatible, aliased as `rtrim`.
 
-### `text_trim(str [,chars])`
+<h3 name="text_trim"><code>text_trim(str [,chars])</code></h3>
 
 Trims certain characters (spaces by default) from the beginning and end of the string.
 
@@ -250,7 +250,7 @@ select text_trim('273hello273', '123456789');
 
 Postgres-compatible, aliased as `btrim`.
 
-## `text_lpad(str, length [,fill])`
+<h3 name="text_lpad"><code>text_lpad(str, length [,fill])</code></h3>
 
 Pads the string to the specified length by prepending certain characters (spaces by default).
 
@@ -266,7 +266,7 @@ Postgres-compatible, aliased as `lpad`.
 
 ℹ️ PostgreSQL does not support unicode strings in `lpad`, while this function does.
 
-## `text_rpad(str, length [,fill])`
+<h3 name="text_rpad"><code>text_rpad(str, length [,fill])</code></h3>
 
 Pads the string to the specified length by appending certain characters (spaces by default).
 
@@ -284,7 +284,7 @@ Postgres-compatible, aliased as `rpad`.
 
 ## Other modifications
 
-### `text_replace(str, old, new [,count])`
+<h3 name="text_replace"><code>text_replace(str, old, new [,count])</code></h3>
 
 Replaces `old` substrings with `new` substrings in the original string, but not more than `count` times. By default, replaces all `old` substrings.
 
@@ -298,7 +298,7 @@ select text_replace('hello', 'l', '*', 1);
 
 Postgres-compatible (`replace`), but not aliased as `replace` to avoid conflicts with the built-in `replace` SQLite function.
 
-### `text_translate(str, from, to)`
+<h3 name="text_translate"><code>text_translate(str, from, to)</code></h3>
 
 Replaces each string character that matches a character in the `from` set with the corresponding character in the `to` set. If `from` is longer than `to`, occurrences of the extra characters in `from` are deleted.
 
@@ -314,7 +314,7 @@ Postgres-compatible, aliased as `translate`.
 
 ℹ️ PostgreSQL does not support unicode strings in `translate`, while this function does.
 
-### `text_reverse(str)`
+<h3 name="text_reverse"><code>text_reverse(str)</code></h3>
 
 Reverses the order of the characters in the string.
 
@@ -329,7 +329,7 @@ Postgres-compatible, aliased as `reverse`.
 
 ## String properties
 
-### `text_length(str)`
+<h3 name="text_length"><code>text_length(str)</code></h3>
 
 Returns the number of characters in the string.
 
@@ -340,7 +340,7 @@ select text_length('𐌀𐌁𐌂');
 
 Postgres-compatible, aliased as `char_length` and `character_length`.
 
-### `text_size(str)`
+<h3 name="text_size"><code>text_size(str)</code></h3>
 
 Returns the number of bytes in the string.
 
@@ -351,7 +351,7 @@ select text_size('𐌀𐌁𐌂');
 
 Postgres-compatible, aliased as `octet_length`.
 
-### `text_bitsize(str)`
+<h3 name="text_bitsize"><code>text_bitsize(str)</code></h3>
 
 Returns the number of bits in the string.
 

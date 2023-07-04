@@ -9,7 +9,7 @@ Adapted from [uuid.c](https://sqlite.org/src/file/ext/misc/uuid.c) by D. Richard
 
 Provides following functions:
 
-### `uuid4()`
+<h3 name="uuid4"><code>uuid4()</code></h3>
 
 Generates a version 4 (random) UUID as a string. Aliased as `gen_random_uuid()` for PostgreSQL compatibility.
 
@@ -21,7 +21,7 @@ sqlite> select gen_random_uuid();
 8d144638-3baf-4901-a554-b541142c152b
 ```
 
-### `uuid_str(X)`
+<h3 name="uuid_str"><code>uuid_str(X)</code></h3>
 
 Converts a UUID `X` into a well-formed UUID string. `X` can be either a string or a blob.
 
@@ -30,7 +30,7 @@ sqlite> select uuid_str(randomblob(16));
 fb6f9675-7509-d8b7-0891-00d4e6230894
 ```
 
-### `uuid_blob(X)`
+<h3 name="uuid_blob"><code>uuid_blob(X)</code></h3>
 
 Converts a UUID `X` into a 16-byte blob. X can be either a string or a blob.
 

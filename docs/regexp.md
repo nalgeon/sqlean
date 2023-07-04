@@ -15,7 +15,7 @@ select true where 'the year is 2021' regexp '[0-9]+';
 -- 1
 ```
 
-### `regexp_like(source, pattern)`
+<h3 name="regexp_like"><code>regexp_like(source, pattern)</code></h3>
 
 Checks if the source string matches the pattern.
 
@@ -26,7 +26,7 @@ select regexp_like('the year is 2021', '2k21');
 -- 0
 ```
 
-### `regexp_substr(source, pattern)`
+<h3 name="regexp_substr"><code>regexp_substr(source, pattern)</code></h3>
 
 Returns a substring of the source string that matches the pattern.
 
@@ -37,7 +37,7 @@ select regexp_substr('the year is 2021', '2k21');
 -- (null)
 ```
 
-### `regexp_capture(source, pattern [, n])`
+<h3 name="regexp_capture"><code>regexp_capture(source, pattern [, n])</code></h3>
 
 Finds a substring of the source string that matches the pattern and returns the `n`th matching group within that substring. Group numbering starts at 1. `n = 0` (default) returns the entire substring.
 
@@ -48,7 +48,7 @@ select regexp_capture('years is 2021', '\d\d(\d\d)', 1);
 -- 21
 ```
 
-### `regexp_replace(source, pattern, replacement)`
+<h3 name="regexp_replace"><code>regexp_replace(source, pattern, replacement)</code></h3>
 
 Replaces all matching substrings with the replacement string.
 

@@ -12,7 +12,7 @@ Main features:
 -   Create a symlink.
 -   List files in a directory.
 
-### fileio_read(path [,offset [,limit]])
+<h3 name="fileio_read"><code>fileio_read(path [,offset [,limit]])</code></h3>
 
 Reads the file specified by `path` and returns its contents as `blob`.
 
@@ -40,7 +40,7 @@ select fileio_read('hello.txt', 0, 5);
 -- hello
 ```
 
-### fileio_scan(path)
+<h3 name="fileio_scan"><code>fileio_scan(path)</code></h3>
 
 Reads the file specified by `path` line by line, without loading the whole file into memory.
 
@@ -68,7 +68,7 @@ Each row has the following columns:
 
 Inspired by [sqlite-lines](https://github.com/asg017/sqlite-lines/) by Alex Garcia.
 
-### fileio_write(path, data [,perm [,mtime]])
+<h3 name="fileio_write"><code>fileio_write(path, data [,perm [,mtime]])</code></h3>
 
 Writes blob `data` to a file specified by `path`. Returns the number of written bytes. If an error occurs, returns NULL.
 
@@ -95,7 +95,7 @@ select fileio_write('hello.txt', 'hello world', 436);
 
 If the optional `mtime` argument is present, it expects an integer — the number of seconds since the unix epoch. The modification-time of the target file is set to this value before returning.
 
-### fileio_append(path, str)
+<h3 name="fileio_append"><code>fileio_append(path, str)</code></h3>
 
 Appends `str` string to a file specified by `path`. Returns the number of written bytes. If an error occurs, returns NULL.
 
@@ -118,7 +118,7 @@ three
 
 Using concatenation with `char(10)` adds `\n` to the end of the line.
 
-### fileio_mkdir(path [,perm])
+<h3 name="fileio_mkdir"><code>fileio_mkdir(path [,perm])</code></h3>
 
 Creates a directory named `path` with permission bits `perm` (octal `777` by default).
 
@@ -126,7 +126,7 @@ Creates a directory named `path` with permission bits `perm` (octal `777` by def
 select fileio_mkdir('hellodir');
 ```
 
-### fileio_symlink(src, dst)
+<h3 name="fileio_symlink"><code>fileio_symlink(src, dst)</code></h3>
 
 Creates a symbolic link named `dst`, pointing to `src`.
 
@@ -134,7 +134,7 @@ Creates a symbolic link named `dst`, pointing to `src`.
 select fileio_symlink('hello.txt', 'hello.lnk');
 ```
 
-### fileio_ls(path [,recursive])
+<h3 name="fileio_ls"><code>fileio_ls(path [,recursive])</code></h3>
 
 Lists files and directories as a virtual table.
 

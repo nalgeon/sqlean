@@ -4,7 +4,7 @@ Functions to manipulate IPs and subnets. Created by [Vincent Bernat](https://git
 
 ⚠️ This extension is not available on Windows.
 
-### `ipfamily(ip)`
+<h3 name="ipfamily"><code>ipfamily(ip)</code></h3>
 
 Returns the family of a specified IP address.
 
@@ -13,7 +13,7 @@ sqlite> select ipfamily('192.168.1.1');
 4
 ```
 
-### `iphost(ip)`
+<h3 name="iphost"><code>iphost(ip)</code></h3>
 
 Returns the host part of an IP address.
 
@@ -22,7 +22,7 @@ sqlite> select iphost('2001:db8::123/64');
 2001:db8::123
 ```
 
-### `ipmasklen(ip)`
+<h3 name="ipmasklen"><code>ipmasklen(ip)</code></h3>
 
 Returns the prefix length of an IP address.
 
@@ -31,7 +31,7 @@ sqlite> select ipmasklen('192.168.16.12/24');
 24
 ```
 
-### `ipnetwork(ip)`
+<h3 name="ipnetwork"><code>ipnetwork(ip)</code></h3>
 
 Returns the network part of an IP address.
 
@@ -40,7 +40,7 @@ sqlite> select ipnetwork('192.168.16.12/24');
 192.168.16.0/24
 ```
 
-### `ipcontains(subnet, ip)`
+<h3 name="ipcontains"><code>ipcontains(subnet, ip)</code></h3>
 
 Returns `1` if `subnet` contains `ip` (which can be another subnet).
 `0` otherwise.

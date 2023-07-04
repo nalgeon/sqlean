@@ -16,7 +16,7 @@ Common statistical functions. Adapted from [extension-functions.c](https://sqlit
 -   `variance(x)` or `var_samp(x)` — sample variance,
 -   `var_pop(x)` — population variance.
 
-### generate_series(start[, stop[, step]])
+<h3 name="generate_series"><code>generate_series(start[, stop[, step]])</code></h3>
 
 This table-valued function generates a sequence of integer values starting with `start`, ending with `stop` (inclusive) with an optional `step`.
 
