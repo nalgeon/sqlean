@@ -1,4 +1,0 @@
-#define SQLITE_PATH_DATE "*"
-#define SQLITE_PATH_VERSION "*"
-#define SQLITE_PATH_SOURCE "*"
-#define SQLITE_PATH_CWALK_VERSION "*"

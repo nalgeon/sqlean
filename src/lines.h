@@ -1,3 +1,0 @@
-#define SQLITE_LINES_DATE "*"
-#define SQLITE_LINES_VERSION "*"
-#define SQLITE_LINES_SOURCE "*"

@@ -24,14 +24,8 @@ download-external:
 	curl -L https://github.com/daschr/sqlite3_extensions/raw/master/cron.c --output src/cron.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/decimal.c --output src/decimal.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/ieee754.c --output src/ieee754.c
-	cat src/lines.h > src/lines.c
 	curl -L https://github.com/sqlite/sqlite/raw/branch-3.36/ext/misc/json1.c --output src/json1.c
-	curl -L https://github.com/asg017/sqlite-lines/raw/main/sqlite-lines.c >> src/lines.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/memstat.c --output src/memstat.c
-	cat src/path.h > src/path.c
-	curl -L https://github.com/asg017/sqlite-path/raw/main/sqlite-path.c >> src/path.c
-	curl -L https://github.com/likle/cwalk/raw/master/include/cwalk.h --output src/cwalk.h
-	curl -L https://github.com/likle/cwalk/raw/master/src/cwalk.c --output src/cwalk.c
 	curl -L https://raw.githubusercontent.com/jakethaw/pivot_vtab/08ab07973a02b74a91ab3a61f2afa26b658191d0/pivot_vtab.c --output src/pivotvtab.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/prefixes.c --output src/prefixes.c
 	curl -L https://github.com/sqlite/sqlite/raw/master/ext/misc/spellfix.c --output src/spellfix.c
@@ -62,10 +56,8 @@ compile-linux:
 	make compile-linux-extension name=isodate
 	make compile-linux-extension name=json1
 	# make compile-linux-extension name=json2 src="src/cJSON.c"
-	make compile-linux-extension name=lines
 	make compile-linux-extension name=math2
 	make compile-linux-extension name=memstat
-	make compile-linux-extension name=path src="src/cwalk.c"
 	make compile-linux-extension name=pearson
 	make compile-linux-extension name=pivotvtab
 	make compile-linux-extension name=prefixes
@@ -108,7 +100,6 @@ compile-windows:
 	# make compile-windows-extension name=json2 src="src/cJSON.c"
 	make compile-windows-extension name=math2
 	make compile-windows-extension name=memstat
-	make compile-windows-extension name=path src="src/cwalk.c"
 	make compile-windows-extension name=pearson
 	make compile-windows-extension name=pivotvtab
 	make compile-windows-extension name=prefixes
@@ -149,10 +140,8 @@ compile-macos:
 	make compile-macos-extension name=isodate
 	make compile-macos-extension name=json1
 	# make compile-macos-extension name=json2 src="src/cJSON.c"
-	make compile-macos-extension name=lines
 	make compile-macos-extension name=math2
 	make compile-macos-extension name=memstat
-	make compile-macos-extension name=path src="src/cwalk.c"
 	make compile-macos-extension name=pearson
 	make compile-macos-extension name=pivotvtab
 	make compile-macos-extension name=prefixes
@@ -200,7 +189,6 @@ test-all:
 	make test suite=json1
 	# tests fail on ubuntu with segmentation fault
 	# make test suite=json2
-	make test suite=lines
 	make test suite=math2
 	make test suite=memstat
 	make test suite=pearson
