@@ -135,4 +135,4 @@ The software is available under the MIT License.
 
 ## Stay tuned
 
-Follow [**@ohmypy**](https://twitter.com/ohmypy) on Twitter to keep up with new features 🚀
+[**Subscribe**](https://antonz.org/subscribe/) to stay on top of new features 🚀

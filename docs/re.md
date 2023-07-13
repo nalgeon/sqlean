@@ -86,4 +86,4 @@ sqlite> select regexp_like('abcdef', 'b.d');
 
 [⬇️ Download](https://github.com/nalgeon/sqlean/releases/latest) •
 [✨ Explore](https://github.com/nalgeon/sqlean) •
-[🚀 Follow](https://twitter.com/ohmypy)
+[🚀 Follow](https://antonz.org/subscribe/)
