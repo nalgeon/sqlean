@@ -8,9 +8,11 @@ We do not try to gather all the existing extensions into one giant pile — that
 
 To achieve it, we split extensions that are too broad, merge the ones that are too narrow, refactor, add missing features, test, document, and do a ton of other small things.
 
+🌟 [**Package registry**](https://sqlpkg.org/): a catalog of all SQLite extensions, with search, manual downloads and an automated packager manager (like `npm` for JS or `pip` for Python).
+
 🌟 [**Python package**](https://github.com/nalgeon/sqlean.py): a drop-in replacement for the default `sqlite3` module.
 
-🌟 [**JavaScript package**](https://github.com/nalgeon/sqlean.js): browser-based SQLite with extensions.
+🌟 [**JS package**](https://github.com/nalgeon/sqlean.js): browser-based SQLite with extensions.
 
 ## Main set
 
