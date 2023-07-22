@@ -8,6 +8,13 @@ We do not try to gather all the existing extensions into one giant pile — that
 
 To achieve it, we split extensions that are too broad, merge the ones that are too narrow, refactor, add missing features, test, document, and do a ton of other small things.
 
+[Main set](#main-set) •
+[Incubator](#incubator) •
+[Downloading](#downloading) •
+[Installation](#installation-and-usage) •
+[Sister projects](#sister-projects) •
+[Stay tuned](#stay-tuned)
+
 ## Main set
 
 These are the most popular functions. They are tested, documented and organized into the domain modules with clear API.
