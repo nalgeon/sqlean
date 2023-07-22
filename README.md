@@ -8,12 +8,6 @@ We do not try to gather all the existing extensions into one giant pile — that
 
 To achieve it, we split extensions that are too broad, merge the ones that are too narrow, refactor, add missing features, test, document, and do a ton of other small things.
 
-🌟 [**Package registry**](https://sqlpkg.org/): a catalog of all SQLite extensions, with search, manual downloads and an automated packager manager (like `npm` for JS or `pip` for Python).
-
-🌟 [**Python package**](https://github.com/nalgeon/sqlean.py): a drop-in replacement for the default `sqlite3` module.
-
-🌟 [**JS package**](https://github.com/nalgeon/sqlean.js): browser-based SQLite with extensions.
-
 ## Main set
 
 These are the most popular functions. They are tested, documented and organized into the domain modules with clear API.
@@ -128,6 +122,17 @@ Contributions are welcome! Submit your own or third-party extension to the incub
 We want every extension to be self-contained. So we limit the project scope to extensions without external dependencies (other than the C standard library and SQLite itself).
 
 Please note that we only accept extensions with permissive licenses (MIT License, Apache License etc) or public domain. Copyleft licenses like GPL won't do.
+
+## Sister projects
+
+Projects related to `sqlean`:
+
+-   [sqlpkg.org](https://sqlpkg.org/): a catalog of all SQLite extensions, with search and manual downloads.
+-   [sqlime.org](https://sqlime.org/): an online SQLite playground for debugging and sharing SQL snippets.
+-   [sqlpkg](https://github.com/nalgeon/sqlpkg-cli): an automated packager manager for SQLite (like `npm` for JS or `pip` for Python).
+-   [sqlean.py](https://github.com/nalgeon/sqlean.py): a drop-in replacement for the default `sqlite3` module.
+-   [sqlean.js](https://github.com/nalgeon/sqlean.js): browser-based SQLite with extensions.
+-   [shell](https://github.com/nalgeon/sqlite): custom builds for `sqlite` and `sqlean` shells.
 
 ## License
 
