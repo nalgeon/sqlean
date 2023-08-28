@@ -248,8 +248,8 @@ static int define_vtab_filter(sqlite3_vtab_cursor* cur,
         return ret;
 
     assert(((struct define_vtab*)cur->pVtab)->num_inputs >= argc);
-    if ((stmtcur->param_argc = argc))  // these seem to persist for the remainder of the statement,
-                                       // so just shallow copy
+    if ((stmtcur->param_argc = argc))  // shallow copy args as these are explicitly retained in
+                                       // sqlite3WhereCodeOneLoopStart
         memcpy(stmtcur->param_argv, argv, sizeof(*stmtcur->param_argv) * argc);
 
     return SQLITE_OK;
