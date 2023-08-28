@@ -291,7 +291,8 @@ static int define_vtab_best_index(sqlite3_vtab* pVTab, sqlite3_index_info* index
     // function) only support this optimization for up to 64 constrained columns since checking for
     // continuity more generally would cost nearly as much as just allocating the mapping
     sqlite_uint64 required_cols = (col_max < 64 ? 1ull << col_max : 0ull) - 1;
-    if (!out_constraints || (col_max <= 64 && used_cols == required_cols))
+    if (!out_constraints ||
+        (col_max <= 64 && used_cols == required_cols && out_constraints == col_max))
         return SQLITE_OK;
 
     // otherwise map the constraint index as provided to xFilter to column index for bindings
