@@ -7,6 +7,8 @@
 // Define table-valued functions.
 
 #include <assert.h>
+#include <limits.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -201,6 +203,27 @@ static int define_vtab_column(sqlite3_vtab_cursor* cur, sqlite3_context* ctx, in
     return SQLITE_OK;
 }
 
+// parameter map encoding for xBestIndex/xFilter
+// constraint -> param index mappings are stored in idxStr when not contiguous. idxStr is expected
+// to be NUL terminated and printable, so we use a 6 bit encoding in the ASCII range. for simplicity
+// encoded indexes are fixed to the length necessary to encode an int. this is overkill on most
+// systems due to sqlite's current hard limit on number of columns but makes define_vtab agnostic
+// to changes to this limit
+const static size_t param_idx_size = (sizeof(int) * CHAR_BIT + 5) / 6;
+
+static inline void encode_param_idx(int i, char* restrict param_map, int param_idx) {
+    assert(param_idx >= 0);
+    for (size_t j = 0; j < param_idx_size; j++)
+        param_map[i * param_idx_size + j] = ((param_idx >> 6 * j) & 63) + 33;
+}
+
+static inline int decode_param_idx(int i, const char* param_map) {
+    int param_idx = 0;
+    for (size_t j = 0; j < param_idx_size; j++)
+        param_idx |= (param_map[i * param_idx_size + j] - 33) << 6 * j;
+    return param_idx;
+}
+
 // xBestIndex needs to communicate which columns are constrained by the where clause to xFilter;
 // in terms of a statement table this translates to which parameters will be available to bind.
 static int define_vtab_filter(sqlite3_vtab_cursor* cur,
@@ -215,17 +238,18 @@ static int define_vtab_filter(sqlite3_vtab_cursor* cur,
     sqlite3_clear_bindings(stmt);
 
     int ret;
-    for (int i = 0; i < argc; i++)
-        if ((ret = sqlite3_bind_value(stmt, idxStr ? ((int*)idxStr)[i] : i + 1, argv[i])) !=
-            SQLITE_OK)
+    for (int i = 0; i < argc; i++) {
+        int param_idx = idxStr ? decode_param_idx(i, idxStr) : i + 1;
+        if ((ret = sqlite3_bind_value(stmt, param_idx, argv[i])) != SQLITE_OK)
             return ret;
+    }
     ret = sqlite3_step(stmt);
     if (!(ret == SQLITE_ROW || ret == SQLITE_DONE))
         return ret;
 
     assert(((struct define_vtab*)cur->pVtab)->num_inputs >= argc);
-    if ((stmtcur->param_argc = argc))  // these seem to persist for the remainder of the statement,
-                                       // so just shallow copy
+    if ((stmtcur->param_argc = argc))  // shallow copy args as these are explicitly retained in
+                                       // sqlite3WhereCodeOneLoopStart
         memcpy(stmtcur->param_argv, argv, sizeof(*stmtcur->param_argv) * argc);
 
     return SQLITE_OK;
@@ -265,27 +289,38 @@ static int define_vtab_best_index(sqlite3_vtab* pVTab, sqlite3_index_info* index
     // vector provided to xFilter in the same order as our column bindings, so there's no need to
     // map between these (this will always be the case when calling the vtab as a table-valued
     // function) only support this optimization for up to 64 constrained columns since checking for
-    // continuity more generally would cost as much as just allocating the mapping
+    // continuity more generally would cost nearly as much as just allocating the mapping
     sqlite_uint64 required_cols = (col_max < 64 ? 1ull << col_max : 0ull) - 1;
-    if (!out_constraints || (col_max <= 64 && used_cols == required_cols))
+    if (!out_constraints ||
+        (col_max <= 64 && used_cols == required_cols && out_constraints == col_max))
         return SQLITE_OK;
 
     // otherwise map the constraint index as provided to xFilter to column index for bindings
-    // if this is sparse e.g. where arg1 = x and arg3 = y then we store this separately in idxStr
-    int* colmap = sqlite3_malloc64(sizeof(*colmap) * out_constraints);
-    if (!colmap)
+    // this will only be necessary when constraints are not contiguous e.g. where arg1 = x and arg3
+    // = y in that case bound parameter indexes are encoded as a string in idxStr, in the order they
+    // appear in constriants
+    if ((size_t)out_constraints > (SIZE_MAX - 1) / param_idx_size) {
+        sqlite3_free(pVTab->zErrMsg);
+        if (!(pVTab->zErrMsg =
+                  sqlite3_mprintf("Too many constraints to index: %d", out_constraints)))
+            return SQLITE_NOMEM;
+        return SQLITE_ERROR;
+    }
+
+    if (!(index_info->idxStr = sqlite3_malloc64(out_constraints * param_idx_size + 1)))
         return SQLITE_NOMEM;
 
-    int argc = 0;
-    int old_index;
-    for (int i = 0; i < index_info->nConstraint; i++)
-        if ((old_index = index_info->aConstraintUsage[i].argvIndex)) {
-            colmap[argc] = old_index;
-            index_info->aConstraintUsage[i].argvIndex = ++argc;
-        }
-
-    index_info->idxStr = (char*)colmap;
     index_info->needToFreeIdxStr = 1;
+
+    for (int i = 0, constraint_idx = 0; i < index_info->nConstraint; i++) {
+        if (!index_info->aConstraintUsage[i].argvIndex)
+            continue;
+        encode_param_idx(constraint_idx, index_info->idxStr,
+                         index_info->aConstraintUsage[i].argvIndex);
+        index_info->aConstraintUsage[i].argvIndex = ++constraint_idx;
+    }
+
+    index_info->idxStr[out_constraints * param_idx_size] = '\0';
 
     return SQLITE_OK;
 }
