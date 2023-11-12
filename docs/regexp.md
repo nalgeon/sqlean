@@ -66,6 +66,16 @@ select regexp_replace('the year is 2021', '([0-9]+)', '$1 or 2050');
 -- the year is 2021 or 2050
 ```
 
+Supports case-insensitive matching with the `(?)` option:
+
+```sql
+select regexp_substr('the YEAR is 2021', 'year');
+-- (null)
+
+select regexp_substr('the YEAR is 2021', '(?i)year');
+-- YEAR
+```
+
 ## Supported syntax
 
 Basic expressions:
@@ -127,6 +137,12 @@ $        end of string
 \B       non-word boundary
 (?=...)  positive lookahead
 (?!...)  negative lookahead
+```
+
+Options:
+
+```
+(?i)    case-insensitive matching
 ```
 
 ## Installation and Usage
