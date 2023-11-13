@@ -13,7 +13,8 @@ on:
     workflow_dispatch:
 
 env:
-    SQLITE_EXTENSION: "stats3"
+    SQLEAN_NAME: "array"
+    SQLEAN_SOURCE: "src/array/*.c"
 
 jobs:
     build:
@@ -39,23 +40,23 @@ jobs:
             - name: Build for Linux
               if: matrix.os == 'ubuntu-latest'
               run: |
-                  make compile-linux-extension name=${{ env.SQLITE_EXTENSION }}
-                  make test suite=${{ env.SQLITE_EXTENSION }}
+                  make compile-linux-extension name=${{ env.SQLEAN_NAME }} src=${{ env.SQLEAN_SOURCE }}
+                  make test suite=${{ env.SQLEAN_NAME }}
 
             - name: Build for Windows
               if: matrix.os == 'windows-latest'
               shell: bash
-              run: make compile-windows-extension name=${{ env.SQLITE_EXTENSION }}
+              run: make compile-windows-extension name=${{ env.SQLEAN_NAME }} src=${{ env.SQLEAN_SOURCE }}
 
             - name: Build for macOS
               if: matrix.os == 'macos-latest'
-              run: make compile-macos-extension name=${{ env.SQLITE_EXTENSION }}
+              run: make compile-macos-extension name=${{ env.SQLEAN_NAME }} src=${{ env.SQLEAN_SOURCE }}
 
             - name: Upload binaries to release
               uses: svenstaro/upload-release-action@v2
               with:
                   repo_token: ${{ secrets.GITHUB_TOKEN }}
-                  file: dist/${{ env.SQLITE_EXTENSION }}.*
+                  file: dist/${{ env.SQLEAN_NAME }}.*
                   file_glob: true
                   overwrite: true
                   tag: incubator

@@ -23,6 +23,10 @@ typedef struct {
     Array* arr;
 } Cursor;
 
+#define COLUMN_ROWID -1
+#define COLUMN_VALUE 0
+#define COLUMN_DATA 1
+
 // Creates the virtual table.
 static int xconnect(sqlite3* db,
                     void* aux,
@@ -69,7 +73,9 @@ static int xopen(sqlite3_vtab* vtable, sqlite3_vtab_cursor** curptr) {
 // Destroys the cursor.
 static int xclose(sqlite3_vtab_cursor* cur) {
     Cursor* cursor = (Cursor*)cur;
-    array.free(cursor->arr);
+    if (cursor->arr != NULL) {
+        array.free(cursor->arr);
+    }
     sqlite3_free(cur);
     return SQLITE_OK;
 }
@@ -136,10 +142,13 @@ static int xfilter(sqlite3_vtab_cursor* cur,
         return SQLITE_ERROR;
     }
 
-    uint8_t* blob = (uint8_t*)sqlite3_value_blob(argv[0]);
-    if (blob == NULL) {
+    int size = sqlite3_value_bytes(argv[0]);
+    if (size < sizeof(Array)) {
+        // the input argument is not a valid array
         return SQLITE_ERROR;
     }
+
+    uint8_t* blob = (uint8_t*)sqlite3_value_blob(argv[0]);
     Array* arr = array.from_blob(blob);
     if (arr == NULL) {
         return SQLITE_ERROR;
@@ -153,30 +162,54 @@ static int xfilter(sqlite3_vtab_cursor* cur,
 
 // Instructs SQLite to pass the first argument to xFilter.
 static int xbest_index(sqlite3_vtab* vtable, sqlite3_index_info* index_info) {
-    bool unusable = false;
+    // the index of the required array data column
+    // (the first hidden column in the virtual table)
+    int col_idx = -1;
+
+    // the flag indicating if the constraint on the array data column is usable
+    bool usable = false;
+
     const struct sqlite3_index_constraint* constraint = index_info->aConstraint;
     for (int i = 0; i < index_info->nConstraint; i++, constraint++) {
-        if (constraint->usable == 0 || constraint->op != SQLITE_INDEX_CONSTRAINT_EQ) {
-            unusable = true;
+        if (constraint->iColumn == COLUMN_DATA) {
+            col_idx = i;
+            usable = constraint->op == SQLITE_INDEX_CONSTRAINT_EQ && constraint->usable;
             break;
         }
     }
-    if (unusable) {
-        // If there are unusable constraints then this plan is unusable
+
+    if (col_idx == -1) {
+        // The required array data column is not passed as an argument
+        vtable->zErrMsg = sqlite3_mprintf("unnest() expects an array argument");
+        return SQLITE_ERROR;
+    }
+
+    if (!usable) {
+        // The constraint on the array data column is unusable, so this plan is unusable.
         // Happens with joins, when xbest_index is called multiple times.
         return SQLITE_CONSTRAINT;
     }
 
-    if (index_info->nConstraint != 1) {
-        vtable->zErrMsg = sqlite3_mprintf("unnest() expects a single argument");
-        return SQLITE_ERROR;
-    }
-
-    // Pass the first argument to xFilter
-    index_info->aConstraintUsage[0].argvIndex = 1;
-    index_info->aConstraintUsage[0].omit = 1;
-    index_info->estimatedCost = (double)10;
+    // Pass the array data column to xFilter
+    index_info->aConstraintUsage[col_idx].argvIndex = COLUMN_DATA;
+    index_info->aConstraintUsage[col_idx].omit = 1;
+    index_info->estimatedCost = (double)1000;
     index_info->estimatedRows = 1000;
+
+    // Debug contraints
+    // printf("contraints:\n");
+    // for (size_t i = 0; i < index_info->nConstraint; i++) {
+    //     const struct sqlite3_index_constraint* constraint = index_info->aConstraint + i;
+    //     printf("  i=%zu iColumn=%d, op=%d, usable=%d\n", i, constraint->iColumn, constraint->op,
+    //            constraint->usable);
+    // }
+    // printf("usages:\n");
+    // for (size_t i = 0; i < index_info->nConstraint; i++) {
+    //     const struct sqlite3_index_constraint_usage* usage = index_info->aConstraintUsage + i;
+    //     printf("  i=%zu argvIndex=%d omit=%d\n", i, usage->argvIndex, usage->omit);
+    // }
+    // printf("---\n");
+
     return SQLITE_OK;
 }
 
