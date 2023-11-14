@@ -1,0 +1,19 @@
+{
+    "owner": "nalgeon",
+    "name": "crypto",
+    "version": "0.21.8",
+    "homepage": "https://github.com/nalgeon/sqlean",
+    "repository": "https://github.com/nalgeon/sqlean",
+    "authors": ["Anton Zhiyanov"],
+    "license": "MIT",
+    "description": "The ultimate set of SQLite extensions.",
+    "keywords": ["sqlean"],
+    "assets": {
+        "files": {
+            "darwin-amd64": "sqlean-macos-x86.zip",
+            "darwin-arm64": "sqlean-macos-arm64.zip",
+            "linux-amd64": "sqlean-linux-x86.zip",
+            "windows-amd64": "sqlean-win-x64.zip"
+        }
+    }
+}
