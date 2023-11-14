@@ -356,6 +356,29 @@ static uint8_t* array_to_blob(Array* arr) {
     return blob;
 }
 
+// array_is_valid returns true if the array header is valid, or false otherwise.
+static bool array_is_valid(Array* arr) {
+    if (arr == NULL) {
+        return false;
+    }
+    if (!(arr->type == TYPE_INT || arr->type == TYPE_REAL || arr->type == TYPE_TEXT)) {
+        return false;
+    }
+    if (arr->el_size == 0) {
+        return false;
+    }
+    if (arr->type == TYPE_INT && arr->el_size != sizeof(int64_t)) {
+        return false;
+    }
+    if (arr->type == TYPE_REAL && arr->el_size != sizeof(double)) {
+        return false;
+    }
+    if (arr->length > arr->capacity) {
+        return false;
+    }
+    return true;
+}
+
 static Array* array_from_blob(uint8_t* blob) {
     Array* arr = malloc(sizeof(Array));
     if (arr == NULL) {
@@ -373,6 +396,12 @@ static Array* array_from_blob(uint8_t* blob) {
     memcpy(&(arr->length), at, sizeof(arr->length));
     at += sizeof(arr->length);
     arr->capacity = arr->length;
+
+    // check if array is valid
+    if (!array_is_valid(arr)) {
+        free(arr);
+        return NULL;
+    }
 
     // set data
     if (arr->length == 0) {
