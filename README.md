@@ -36,8 +36,6 @@ Think of them as the extended standard library for SQLite:
 
 The single-file `sqlean` bundle contains all extensions from the main set.
 
-P.S. Please [share your use cases](https://github.com/nalgeon/sqlean/issues/81) to help the project focus on important aspects.
-
 ## Incubator
 
 These extensions haven't yet made their way to the main set. They may be untested, poorly documented, too broad, too narrow, or without a well-thought API.
@@ -143,7 +141,7 @@ Projects related to `sqlean`:
 
 ## License
 
-Copyright 2021+ [Anton Zhiyanov](https://antonz.org/), [Contributors](https://github.com/nalgeon/sqlean/graphs/contributors) and [Third-party Authors](docs/third-party.md).
+Copyright 2021-2024 [Anton Zhiyanov](https://antonz.org/), [Contributors](https://github.com/nalgeon/sqlean/graphs/contributors) and [Third-party Authors](docs/third-party.md).
 
 The software is available under the MIT License.
 
