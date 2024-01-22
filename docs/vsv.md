@@ -57,6 +57,8 @@ affinity=AFFINITY   affinity to apply to each returned value
 nulls=BOOL          empty fields are returned as NULL
 ```
 
+If `schema` is given, then `columns` is also required.
+
 ### Defaults
 
 ```
