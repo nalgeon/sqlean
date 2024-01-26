@@ -59,3 +59,4 @@ jobs:
                   file_glob: true
                   overwrite: true
                   tag: ${{ env.SQLITE_VERSION }}
+                  make_latest: false

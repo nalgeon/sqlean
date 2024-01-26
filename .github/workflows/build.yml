@@ -60,3 +60,4 @@ jobs:
                   file_glob: true
                   overwrite: true
                   tag: incubator
+                  make_latest: false
