@@ -8,7 +8,7 @@ SQLITE_VERSION := 3450000
 
 prepare-dist:
 	mkdir -p dist
-	rm -f dist/*
+	rm -rf dist/*
 
 prepare-misc:
 	mkdir -p dist/misc
@@ -23,7 +23,7 @@ download-misc:
 	curl -L http://sqlite.org/$(SQLITE_RELEASE_YEAR)/sqlite-src-$(SQLITE_VERSION).zip --output src.zip
 	unzip src.zip
 	mv sqlite-src-$(SQLITE_VERSION)/ext/misc src
-	mv sqlite-src-$(SQLITE_VERSION)/src/sqlite3ext.h src/misc
+	cp src/sqlite3.h src/sqlite3ext.h src/misc
 	rm -rf sqlite-src-$(SQLITE_VERSION)
 
 download-external:
