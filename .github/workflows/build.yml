@@ -4,7 +4,7 @@ on:
     push:
         branches: [incubator]
         paths:
-            - .github/**
+            - .github/workflows/build.yml
             - src/**
             - test/**
             - Makefile

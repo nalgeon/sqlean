@@ -23,7 +23,7 @@ download-misc:
 	curl -L http://sqlite.org/$(SQLITE_RELEASE_YEAR)/sqlite-src-$(SQLITE_VERSION).zip --output src.zip
 	unzip src.zip
 	mv sqlite-src-$(SQLITE_VERSION)/ext/misc src
-	mv sqlite-src-$(SQLITE_VERSION)/sqlite3ext.h src/misc
+	mv sqlite-src-$(SQLITE_VERSION)/src/sqlite3ext.h src/misc
 	rm -rf sqlite-src-$(SQLITE_VERSION)
 
 download-external:
