@@ -1,6 +1,11 @@
 name: build-misc
 
 on:
+    push:
+        branches: [incubator]
+        paths:
+            - .github/workflows/build-misc.yml
+            - Makefile
     workflow_dispatch:
 
 env:
