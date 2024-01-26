@@ -90,7 +90,7 @@ You'll find the compiled extensions in the `dist` folder.
 
 ## Contributing
 
-This project only accepts bug fixes. If you'd like to contribute a new extension, please submit it to the [extension hub](https://sqlpkg.org/).
+This project only accepts bug fixes. If you'd like to contribute a new extension, please submit it to the [extension hub repo](https://github.com/nalgeon/sqlpkg/).
 
 ## Sister projects
 
