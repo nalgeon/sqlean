@@ -5334,6 +5334,9 @@ SQLITE_PRIVATE void versionFunc(sqlite3_context* context, int argc, sqlite3_valu
 ** Register the UNICODE extension functions with database db.
 */
 SQLITE_EXPORT int sqlite3_unicode_init_impl(sqlite3* db) {
+    static const int flags16 = SQLITE_UTF16 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
+    static const int flagsAny = SQLITE_ANY | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
+
     struct FuncScalar {
         const char* zName; /* Function name */
         int nArg;          /* Number of arguments */
@@ -5341,30 +5344,30 @@ SQLITE_EXPORT int sqlite3_unicode_init_impl(sqlite3* db) {
         void* pContext;    /* sqlite3_user_data() context */
         void (*xFunc)(sqlite3_context*, int, sqlite3_value**);
     } scalars[] = {
-        {"unicode_version", 0, SQLITE_ANY, 0, versionFunc},
+        {"unicode_version", 0, flagsAny, 0, versionFunc},
 
 #ifdef SQLITE3_UNICODE_FOLD
-        {"like", 2, SQLITE_UTF16, (void*)&likeInfoNorm, likeFunc},
-        {"nlike", 2, SQLITE_ANY, (void*)&likeInfoNorm, likeFunc},
-        {"like", 3, SQLITE_UTF16, (void*)&likeInfoNorm, likeFunc},
-        {"nlike", 3, SQLITE_ANY, (void*)&likeInfoNorm, likeFunc},
+        {"like", 2, flags16, (void*)&likeInfoNorm, likeFunc},
+        {"nlike", 2, flagsAny, (void*)&likeInfoNorm, likeFunc},
+        {"like", 3, flags16, (void*)&likeInfoNorm, likeFunc},
+        {"nlike", 3, flagsAny, (void*)&likeInfoNorm, likeFunc},
 
-        {"casefold", 1, SQLITE_ANY, (void*)sqlite3_unicode_fold, caseFunc},
+        {"casefold", 1, flagsAny, (void*)sqlite3_unicode_fold, caseFunc},
 #endif
 #ifdef SQLITE3_UNICODE_LOWER
-        {"lower", 1, SQLITE_UTF16, (void*)sqlite3_unicode_lower, caseFunc},
-        {"nlower", 1, SQLITE_ANY, (void*)sqlite3_unicode_lower, caseFunc},
+        {"lower", 1, flags16, (void*)sqlite3_unicode_lower, caseFunc},
+        {"nlower", 1, flagsAny, (void*)sqlite3_unicode_lower, caseFunc},
 #endif
 #ifdef SQLITE3_UNICODE_UPPER
-        {"upper", 1, SQLITE_UTF16, (void*)sqlite3_unicode_upper, caseFunc},
-        {"nupper", 1, SQLITE_ANY, (void*)sqlite3_unicode_upper, caseFunc},
+        {"upper", 1, flags16, (void*)sqlite3_unicode_upper, caseFunc},
+        {"nupper", 1, flagsAny, (void*)sqlite3_unicode_upper, caseFunc},
 #endif
 #ifdef SQLITE3_UNICODE_TITLE
-        {"title", 1, SQLITE_ANY, (void*)sqlite3_unicode_title, caseFunc},
-        {"ntitle", 1, SQLITE_ANY, (void*)sqlite3_unicode_title, caseFunc},
+        {"title", 1, flagsAny, (void*)sqlite3_unicode_title, caseFunc},
+        {"ntitle", 1, flagsAny, (void*)sqlite3_unicode_title, caseFunc},
 #endif
 #ifdef SQLITE3_UNICODE_UNACC
-        {"unaccent", 1, SQLITE_ANY, 0, unaccFunc},
+        {"unaccent", 1, flagsAny, 0, unaccFunc},
 #endif
     };
 
