@@ -41,7 +41,7 @@ sqlite> select osa_distance('awesome', 'aewsme');
 3
 ```
 
-Only ASCII strings are supported.
+Only ASCII strings are supported. Use the [`translit`](#transliteration) function to convert the input string from UTF-8 to pure ASCII.
 
 ## Phonetic Codes
 
@@ -66,7 +66,7 @@ sqlite> select rsoundex('awesome');
 A03080
 ```
 
-Only ASCII strings are supported.
+Only ASCII strings are supported. Use the [`translit`](#transliteration) function to convert the input string from UTF-8 to pure ASCII.
 
 ## Transliteration
 
@@ -74,12 +74,22 @@ Transliteration converts the input string from UTF-8 into pure ASCII
 by converting all non-ASCII characters to some combination of characters
 in the ASCII subset.
 
-Distance and phonetics functions are ASCII-only, so to work
-with Unicode string one should transliterate it first.
+The distance and phonetic functions are ASCII only, so to work
+with a Unicode string, you should first transliterate it:
 
 ```
+sqlite> select translit('sí señor');
+si senor
+
 sqlite> select translit('привет');
 privet
+```
+
+Some characters may be lost:
+
+```
+sqlite> select translit('oh my 😅');
+oh my ?
 ```
 
 ## Installation and Usage
