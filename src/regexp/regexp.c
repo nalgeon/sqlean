@@ -33,6 +33,34 @@ static void re_free(pcre2_code* re) {
 }
 
 /*
+ * re_get_error returns the error message for a given pattern.
+ */
+static char* re_get_error(const char* pattern) {
+    size_t erroffset;
+    int errcode;
+    uint32_t options = PCRE2_UCP | PCRE2_UTF;
+    pcre2_code* re = pcre2_compile((PCRE2_SPTR8)pattern, PCRE2_ZERO_TERMINATED, options, &errcode,
+                                   &erroffset, NULL);
+
+    if (re != NULL) {
+        // free the compiled pattern if successful
+        pcre2_code_free(re);
+        return NULL;
+    }
+
+    PCRE2_UCHAR buffer[256];
+    pcre2_get_error_message(errcode, buffer, sizeof(buffer));
+
+    // Allocate memory for the error message
+    // (additional space for formatting)
+    char* msg = (char*)malloc(256 + 32);
+    if (msg != NULL) {
+        snprintf(msg, 256 + 32, "%s (offset %d)", buffer, (int)erroffset);
+    }
+    return msg;
+}
+
+/*
  * re_like checks if source string matches pattern.
  * returns:
  *     -1 if the pattern is invalid
@@ -143,6 +171,7 @@ static int re_replace(pcre2_code* re, const char* source, const char* repl, char
 struct regexp_ns regexp = {
     .compile = re_compile,
     .free = re_free,
+    .get_error = re_get_error,
     .like = re_like,
     .extract = re_extract,
     .replace = re_replace,

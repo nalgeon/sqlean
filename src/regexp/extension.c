@@ -62,7 +62,9 @@ static void regexp_statement(sqlite3_context* context, int argc, sqlite3_value**
     if (re == NULL) {
         re = regexp.compile(pattern);
         if (re == NULL) {
-            sqlite3_result_error_nomem(context);
+            char* msg = regexp.get_error(pattern);
+            sqlite3_result_error(context, msg, -1);
+            free(msg);
             return;
         }
         is_new_re = true;
@@ -121,7 +123,9 @@ static void regexp_like(sqlite3_context* context, int argc, sqlite3_value** argv
     if (re == NULL) {
         re = regexp.compile(pattern);
         if (re == NULL) {
-            sqlite3_result_error_nomem(context);
+            char* msg = regexp.get_error(pattern);
+            sqlite3_result_error(context, msg, -1);
+            free(msg);
             return;
         }
         is_new_re = true;
@@ -171,7 +175,9 @@ static void regexp_substr(sqlite3_context* context, int argc, sqlite3_value** ar
     if (re == NULL) {
         re = regexp.compile(pattern);
         if (re == NULL) {
-            sqlite3_result_error_nomem(context);
+            char* msg = regexp.get_error(pattern);
+            sqlite3_result_error(context, msg, -1);
+            free(msg);
             return;
         }
         is_new_re = true;
@@ -243,7 +249,9 @@ static void regexp_capture(sqlite3_context* context, int argc, sqlite3_value** a
     if (re == NULL) {
         re = regexp.compile(pattern);
         if (re == NULL) {
-            sqlite3_result_error_nomem(context);
+            char* msg = regexp.get_error(pattern);
+            sqlite3_result_error(context, msg, -1);
+            free(msg);
             return;
         }
         is_new_re = true;
@@ -309,7 +317,9 @@ static void regexp_replace(sqlite3_context* context, int argc, sqlite3_value** a
     if (re == NULL) {
         re = regexp.compile(pattern);
         if (re == NULL) {
-            sqlite3_result_error_nomem(context);
+            char* msg = regexp.get_error(pattern);
+            sqlite3_result_error(context, msg, -1);
+            free(msg);
             return;
         }
         is_new_re = true;
