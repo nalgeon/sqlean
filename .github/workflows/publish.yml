@@ -35,7 +35,10 @@ jobs:
             - name: Build for Linux
               if: matrix.os == 'ubuntu-20.04'
               run: |
-                  make compile-linux
+                  sudo apt update
+                  sudo apt install -y gcc-aarch64-linux-gnu
+                  make compile-linux-x86
+                  make compile-linux-arm64
                   make pack-linux
 
             - name: Build for Windows
