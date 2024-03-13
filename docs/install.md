@@ -9,7 +9,8 @@ Examples below use the `stats` extension; you can specify any other supported ex
 There are [precompiled binaries](https://github.com/nalgeon/sqlean/releases/latest) for every OS:
 
 -   `sqlean-win-x64.zip` - for Windows
--   `sqlean-linux-x86.zip` - for Linux
+-   `sqlean-linux-x86.zip` - for Linux (x86 CPU)
+-   `sqlean-linux-arm64.zip` - for Linux (ARM CPU)
 -   `sqlean-macos-x86.zip` - for Intel-based macOS
 -   `sqlean-macos-arm64.zip` - for Apple silicon (ARM-based) macOS
 
