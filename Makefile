@@ -40,8 +40,41 @@ compile-linux:
 	gcc -O3 $(LINIX_FLAGS) src/sqlite3-vsv.c src/vsv/*.c -o dist/vsv.so -lm
 	gcc -O1 $(LINIX_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/ipaddr/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/sqlean.so -lm
 
+compile-linux-x86:
+	mkdir -p dist/x86
+	gcc -O1 $(LINIX_FLAGS) src/sqlite3-crypto.c src/crypto/*.c -o dist/x86/crypto.so
+	gcc -O3 $(LINIX_FLAGS) src/sqlite3-define.c src/define/*.c -o dist/x86/define.so
+	gcc -O3 $(LINIX_FLAGS) src/sqlite3-fileio.c src/fileio/*.c -o dist/x86/fileio.so
+	gcc -O1 $(LINIX_FLAGS) src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/x86/fuzzy.so
+	gcc -O3 $(LINIX_FLAGS) src/sqlite3-ipaddr.c src/ipaddr/*.c -o dist/x86/ipaddr.so
+	gcc -O3 $(LINIX_FLAGS) src/sqlite3-math.c src/math/*.c -o dist/x86/math.so -lm
+	gcc -O3 $(LINIX_FLAGS) -include src/regexp/constants.h src/sqlite3-regexp.c src/regexp/*.c src/regexp/pcre2/*.c -o dist/x86/regexp.so
+	gcc -O3 $(LINIX_FLAGS) src/sqlite3-stats.c src/stats/*.c -o dist/x86/stats.so -lm
+	gcc -O3 $(LINIX_FLAGS) src/sqlite3-text.c src/text/*.c -o dist/x86/text.so
+	gcc -O3 $(LINIX_FLAGS) src/sqlite3-unicode.c src/unicode/*.c -o dist/x86/unicode.so
+	gcc -O3 $(LINIX_FLAGS) src/sqlite3-uuid.c src/uuid/*.c -o dist/x86/uuid.so
+	gcc -O3 $(LINIX_FLAGS) src/sqlite3-vsv.c src/vsv/*.c -o dist/x86/vsv.so -lm
+	gcc -O1 $(LINIX_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/ipaddr/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/x86/sqlean.so -lm
+
+compile-linux-arm64:
+	mkdir -p dist/arm64
+	aarch64-linux-gnu-gcc -O1 $(LINIX_FLAGS) src/sqlite3-crypto.c src/crypto/*.c -o dist/arm64/crypto.so
+	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) src/sqlite3-define.c src/define/*.c -o dist/arm64/define.so
+	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) src/sqlite3-fileio.c src/fileio/*.c -o dist/arm64/fileio.so
+	aarch64-linux-gnu-gcc -O1 $(LINIX_FLAGS) src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/arm64/fuzzy.so
+	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) src/sqlite3-ipaddr.c src/ipaddr/*.c -o dist/arm64/ipaddr.so
+	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) src/sqlite3-math.c src/math/*.c -o dist/arm64/math.so -lm
+	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) -include src/regexp/constants.h src/sqlite3-regexp.c src/regexp/*.c src/regexp/pcre2/*.c -o dist/arm64/regexp.so
+	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) src/sqlite3-stats.c src/stats/*.c -o dist/arm64/stats.so -lm
+	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) src/sqlite3-text.c src/text/*.c -o dist/arm64/text.so
+	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) src/sqlite3-unicode.c src/unicode/*.c -o dist/arm64/unicode.so
+	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) src/sqlite3-uuid.c src/uuid/*.c -o dist/arm64/uuid.so
+	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) src/sqlite3-vsv.c src/vsv/*.c -o dist/arm64/vsv.so -lm
+	aarch64-linux-gnu-gcc -O1 $(LINIX_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/ipaddr/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/arm64/sqlean.so -lm
+
 pack-linux:
-	zip -j dist/sqlean-linux-x86.zip dist/*.so
+	zip -j dist/sqlean-linux-x86.zip dist/x86/*.so
+	zip -j dist/sqlean-linux-arm64.zip dist/arm64/*.so
 
 compile-windows:
 	gcc -O1 $(WINDO_FLAGS) src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.dll
