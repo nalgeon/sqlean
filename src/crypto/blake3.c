@@ -3,7 +3,7 @@
 
 #include <stdlib.h>
 #include <memory.h>
-#include "blake3.h"
+#include "crypto/blake3.h"
 
 void* blake3_init() {
     blake3_hasher* context;
