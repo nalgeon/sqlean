@@ -143,3 +143,7 @@ select '15_06', decode('BOu!rDg-+', 'base85') = cast('hellowo' as blob);
 select '15_07', decode('d>cM`/0N<Pd(%JR+T', 'base85') = cast('эй, мир!' as blob);
 select '15_08', decode('.,_D(?f85_.0', 'base85') = cast('(ಠ_ಠ)' as blob);
 select '15_09', decode('<+ohcEHPu*CER),Dg-(An=QS8+DQ%9E-!.?G%G\:0f''qg@=!2An=PfN/c', 'base85') = cast('The quick brown 🦊 jumps over 13 lazy 🐶.' as blob);
+
+select '16_01', blake3(null) is NULL;
+select '16_02', hex(blake3('')) = upper('af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262');
+select '16_03', hex(blake3('abc')) = upper('6437b3ac38465133ffb63b75273a8db548c558465d79db03fd359c6cd5bd9d85');
