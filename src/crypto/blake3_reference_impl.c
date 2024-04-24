@@ -1,7 +1,10 @@
+// Originally from blake3 reference implementation, Public Domain
+// https://github.com/oconnor663/blake3_reference_impl_c
+
 #include <assert.h>
 #include <string.h>
 
-#include "reference_impl.h"
+#include "blake3_reference_impl.h"
 
 #define CHUNK_START 1 << 0
 #define CHUNK_END 1 << 1

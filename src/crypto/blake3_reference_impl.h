@@ -1,3 +1,6 @@
+// Originally from blake3 reference implementation, Public Domain
+// https://github.com/oconnor663/blake3_reference_impl_c
+
 #ifndef _BLAKE3_REFERENCE_IMPL_H
 #define _BLAKE3_REFERENCE_IMPL_H
 
