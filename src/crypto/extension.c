@@ -14,6 +14,7 @@ SQLITE_EXTENSION_INIT3
 #include "crypto/base32.h"
 #include "crypto/base64.h"
 #include "crypto/base85.h"
+#include "crypto/blake3.h"
 #include "crypto/hex.h"
 #include "crypto/md5.h"
 #include "crypto/sha1.h"
@@ -42,6 +43,12 @@ static void crypto_hash(sqlite3_context* context, int argc, sqlite3_value** argv
             update_func = (void*)sha1_update;
             final_func = (void*)sha1_final;
             algo = 1;
+            break;
+        case 3: /* Blake3 */
+            init_func = (void*)blake3_init;
+            update_func = (void*)blake3_update;
+            final_func = (void*)blake3_final;
+            algo = 3;
             break;
         case 5: /* MD5 */
             init_func = (void*)md5_init;
@@ -197,6 +204,7 @@ static void crypto_decode(sqlite3_context* context, int argc, sqlite3_value** ar
 
 int crypto_init(sqlite3* db) {
     static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
+    sqlite3_create_function(db, "blake3", 1, flags, (void*)3, crypto_hash, 0, 0);
     sqlite3_create_function(db, "md5", 1, flags, (void*)5, crypto_hash, 0, 0);
     sqlite3_create_function(db, "sha1", 1, flags, (void*)1, crypto_hash, 0, 0);
     sqlite3_create_function(db, "sha256", 1, flags, (void*)2256, crypto_hash, 0, 0);

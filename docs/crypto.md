@@ -9,6 +9,7 @@ Hashing, encoding and decoding functions.
 -   `sha256(data)`
 -   `sha384(data)`
 -   `sha512(data)`
+-   `blake3(data)`
 
 Each hash function expects `data` to be `TEXT` or `BLOB`. Returns a `BLOB` hash. Use the `hex()` or `encode()` functions to encode it into a textual representation.
 
