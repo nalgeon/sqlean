@@ -12,11 +12,12 @@
  *
  * Five SQL functions are implemented:
  *
- *     uuid4()              - generate a version 4 UUID as a string
- *     uuid7()              - generate a version 7 UUID as a string
- *     uuid_str(X)          - convert a UUID X into a well-formed UUID string
- *     uuid_blob(X)         - convert a UUID X into a 16-byte blob
- *     uuid7_datetime(X)    - extract datetime from UUID version 7 X
+ *     uuid4()                  - generate a version 4 UUID as a string
+ *     uuid7()                  - generate a version 7 UUID as a string
+ *     uuid_str(X)              - convert a UUID X into a well-formed UUID string
+ *     uuid_blob(X)             - convert a UUID X into a 16-byte blob
+ *     uuid7_timestamp_ms(X)    - extract unix timestamp in miliseconds
+ *                                from version 7 UUID X.
  *
  * The output from uuid4(), uuid7() and uuid_str(X) are always well-formed RFC-4122
  * UUID strings in this format:
@@ -204,12 +205,25 @@ static void uuid_v7_generate(sqlite3_context* context, int argc, sqlite3_value**
 }
 
 /*
- * uuid_v7_extract_datetime extract datetime from a version 7 UUID string.
+ * uuid_v7_extract_timestamp_ms extract unix timestamp in miliseconds
+ * from a version 7 UUID.
  * X can be either a string or a blob.
  * X is assumed to be version 7 format.
  */
-static void uuid_v7_extract_datetime(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    // TODO: implement
+static void uuid_v7_extract_timestamp_ms(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    unsigned char aBlob[16];
+    const unsigned char* pBlob;
+    (void)argc;
+    pBlob = sqlite3_uuid_input_to_blob(argv[0], aBlob);
+    if (pBlob == 0)
+        return;
+
+    unsigned long long timestampMs = 0;
+    for (size_t i = 0; i < 6; ++i) {
+        timestampMs = (timestampMs << 8) + pBlob[i];
+    }
+
+    sqlite3_result_int64(context, timestampMs);
 }
 
 /*
@@ -247,7 +261,7 @@ int uuid_init(sqlite3* db) {
     static const int det_flags = SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
     sqlite3_create_function(db, "uuid4", 0, flags, 0, uuid_v4_generate, 0, 0);
     sqlite3_create_function(db, "uuid7", 0, flags, 0, uuid_v7_generate, 0, 0);
-    // sqlite3_create_function(db, "uuid7_datetime", 0, flags, 0, uuid_v7_extract_datetime, 0, 0);
+    sqlite3_create_function(db, "uuid7_timestamp_ms", 1, det_flags, 0, uuid_v7_extract_timestamp_ms, 0, 0);
     /* for postgresql compatibility */
     sqlite3_create_function(db, "gen_random_uuid", 0, flags, 0, uuid_v4_generate, 0, 0);
     sqlite3_create_function(db, "uuid_str", 1, det_flags, 0, uuid_str, 0, 0);
