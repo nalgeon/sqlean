@@ -208,14 +208,14 @@ static void uuid_v7_generate(sqlite3_context* context, int argc, sqlite3_value**
  * uuid_v7_extract_timestamp_ms extract unix timestamp in miliseconds
  * from a version 7 UUID.
  * X can be either a string or a blob.
- * X is assumed to be version 7 format.
+ * If X is not a version 7 UUID, return NULL.
  */
 static void uuid_v7_extract_timestamp_ms(sqlite3_context* context, int argc, sqlite3_value** argv) {
     unsigned char aBlob[16];
     const unsigned char* pBlob;
     (void)argc;
     pBlob = sqlite3_uuid_input_to_blob(argv[0], aBlob);
-    if (pBlob == 0)
+    if (pBlob == 0 || (pBlob[6] >> 4) != 7)
         return;
 
     unsigned long long timestampMs = 0;

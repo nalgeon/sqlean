@@ -24,7 +24,7 @@ sqlite> select gen_random_uuid();
 
 <h3 name="uuid7"><code>uuid7()</code></h3>
 
-Generates a version 7 (random) UUID as a string. Version 7 UUIDs are time ordered.
+Generate a version 7 (time-ordered, random) UUID.
 
 ```
 sqlite> select uuid7();
@@ -54,7 +54,7 @@ sqlite> select hex(uuid_blob(uuid4()));
 
 <h3 name="uuid7_timestamp_ms"><code>uuid7_timestamp_ms(X)</code></h3>
 
-Extract unix timestamp in miliseconds from version 7 UUID `X`. It will output random time if used on UUIDs not on version 7 format.
+Extract unix timestamp in miliseconds from version 7 UUID `X`. Returns `NULL` if the detected UUID version is not 7.
 
 ```
 sqlite> SELECT uuid7();
@@ -65,6 +65,9 @@ sqlite> SELECT uuid7_timestamp_ms('018ff38a-a5c9-712d-bc80-0550b3ad41a2');
 
 sqlite> SELECT datetime(uuid7_timestamp_ms('018ff38a-a5c9-712d-bc80-0550b3ad41a2') / 1000, 'unixepoch');
 2024-06-07 16:31:41
+
+sqlite> SELECT uuid7_timestamp_ms(uuid4()) IS NULL;
+1
 ```
 
 ## Installation and Usage
