@@ -1,8 +1,9 @@
 # uuid: Universally Unique IDentifiers (UUIDs) in SQLite
 
-Limited support for [RFC 4122](https://www.ietf.org/rfc/rfc4122.txt) compliant UUIDs:
+Limited support for [RFC 4122](https://www.ietf.org/rfc/rfc4122.txt) and [RFC 9562](https://datatracker.ietf.org/doc/rfc9562/) compliant UUIDs:
 
 -   Generate a version 4 (random) UUID.
+-   Generate a version 7 (time-ordered, random) UUID.
 -   Convert a 16-byte blob into a well-formed UUID string and vice versa.
 
 Adapted from [uuid.c](https://sqlite.org/src/file/ext/misc/uuid.c) by D. Richard Hipp.
