@@ -24,3 +24,16 @@ select '13', typeof(uuid_blob(uuid4())) = 'blob';
 select '14', uuid_blob('hello') is null;
 select '15', uuid_blob('') is null;
 select '16', uuid_blob(null) is null;
+
+-- uuid7
+select '17', uuid7() like '________-____-7___-____-____________';
+
+-- uuid7_timestamp_ms
+select '18', uuid7_timestamp_ms('018ff38a-a5c9-712d-bc80-0550b3ad41a2') = 1717777901001;
+select '19', uuid7_timestamp_ms('00000000-0000-0000-0000-000000000000') = 0;
+select '20', uuid7_timestamp_ms('ffffffff-ffff-ffff-ffff-ffffffffffff') = 281474976710655;
+select '21', typeof(uuid7_timestamp_ms('018ff38a-a5c9-712d-bc80-0550b3ad41a2')) = 'integer';
+select '22', typeof(uuid7_timestamp_ms(uuid7())) = 'integer';
+select '23', uuid_blob('hello') is null;
+select '24', uuid_blob('') is null;
+select '25', uuid_blob(null) is null;
