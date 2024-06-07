@@ -7,14 +7,18 @@
 // Universally Unique IDentifiers (UUIDs) in SQLite
 
 /*
- * This SQLite extension implements functions that handling RFC-4122 UUIDs
- * Three SQL functions are implemented:
+ * This SQLite extension implements functions that handling RFC-4122 for UUIDv4
+ * and RFC-9562 for UUIDv7
  *
- *     uuid4()       - generate a version 4 UUID as a string
- *     uuid_str(X)   - convert a UUID X into a well-formed UUID string
- *     uuid_blob(X)  - convert a UUID X into a 16-byte blob
+ * Five SQL functions are implemented:
  *
- * The output from uuid4() and uuid_str(X) are always well-formed RFC-4122
+ *     uuid4()              - generate a version 4 UUID as a string
+ *     uuid7()              - generate a version 7 UUID as a string
+ *     uuid_str(X)          - convert a UUID X into a well-formed UUID string
+ *     uuid_blob(X)         - convert a UUID X into a 16-byte blob
+ *     uuid7_datetime(X)    - extract datetime from UUID version 7 X
+ *
+ * The output from uuid4(), uuid7() and uuid_str(X) are always well-formed RFC-4122
  * UUID strings in this format:
  *
  *        xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx
@@ -58,6 +62,7 @@
 #include <assert.h>
 #include <ctype.h>
 #include <string.h>
+#include <time.h>
 
 #include "sqlite3ext.h"
 SQLITE_EXTENSION_INIT3
@@ -158,9 +163,9 @@ static const unsigned char* sqlite3_uuid_input_to_blob(sqlite3_value* pIn, /* In
 }
 
 /*
- * uuid_generate generates a version 4 UUID as a string
+ * uuid_v4_generate generates a version 4 UUID as a string
  */
-static void uuid_generate(sqlite3_context* context, int argc, sqlite3_value** argv) {
+static void uuid_v4_generate(sqlite3_context* context, int argc, sqlite3_value** argv) {
     unsigned char aBlob[16];
     unsigned char zStr[37];
     (void)argc;
@@ -170,6 +175,41 @@ static void uuid_generate(sqlite3_context* context, int argc, sqlite3_value** ar
     aBlob[8] = (aBlob[8] & 0x3f) + 0x80;
     sqlite3_uuid_blob_to_str(aBlob, zStr);
     sqlite3_result_text(context, (char*)zStr, 36, SQLITE_TRANSIENT);
+}
+
+/*
+ * uuid_v7_generate generates a version 7 UUID as a string
+ */
+static void uuid_v7_generate(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    unsigned char aBlob[16];
+    unsigned char zStr[37];
+    (void)argc;
+    (void)argv;
+
+    struct timespec ts;
+    timespec_get(&ts, TIME_UTC);
+    unsigned long long timestampMs = ts.tv_sec * 1000ULL + ts.tv_nsec / 1000000;
+
+    sqlite3_randomness(16, aBlob);
+    aBlob[0] = timestampMs >> 40;
+    aBlob[1] = timestampMs >> 32;
+    aBlob[2] = timestampMs >> 24;
+    aBlob[3] = timestampMs >> 16;
+    aBlob[4] = timestampMs >> 8;
+    aBlob[5] = timestampMs;
+    aBlob[6] = (aBlob[6] & 0x0f) + 0x70;
+    aBlob[8] = (aBlob[8] & 0x3f) + 0x80;
+    sqlite3_uuid_blob_to_str(aBlob, zStr);
+    sqlite3_result_text(context, (char*)zStr, 36, SQLITE_TRANSIENT);
+}
+
+/*
+ * uuid_v7_extract_datetime extract datetime from a version 7 UUID string.
+ * X can be either a string or a blob.
+ * X is assumed to be version 7 format.
+ */
+static void uuid_v7_extract_datetime(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    // TODO: implement
 }
 
 /*
@@ -205,9 +245,11 @@ static void uuid_blob(sqlite3_context* context, int argc, sqlite3_value** argv) 
 int uuid_init(sqlite3* db) {
     static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS;
     static const int det_flags = SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
-    sqlite3_create_function(db, "uuid4", 0, flags, 0, uuid_generate, 0, 0);
+    sqlite3_create_function(db, "uuid4", 0, flags, 0, uuid_v4_generate, 0, 0);
+    sqlite3_create_function(db, "uuid7", 0, flags, 0, uuid_v7_generate, 0, 0);
+    // sqlite3_create_function(db, "uuid7_datetime", 0, flags, 0, uuid_v7_extract_datetime, 0, 0);
     /* for postgresql compatibility */
-    sqlite3_create_function(db, "gen_random_uuid", 0, flags, 0, uuid_generate, 0, 0);
+    sqlite3_create_function(db, "gen_random_uuid", 0, flags, 0, uuid_v4_generate, 0, 0);
     sqlite3_create_function(db, "uuid_str", 1, det_flags, 0, uuid_str, 0, 0);
     sqlite3_create_function(db, "uuid_blob", 1, det_flags, 0, uuid_blob, 0, 0);
     return SQLITE_OK;
