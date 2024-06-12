@@ -1,8 +1,9 @@
 # uuid: Universally Unique IDentifiers (UUIDs) in SQLite
 
-Limited support for [RFC 4122](https://www.ietf.org/rfc/rfc4122.txt) compliant UUIDs:
+Limited support for [RFC 4122](https://www.ietf.org/rfc/rfc4122.txt) and [RFC 9562](https://datatracker.ietf.org/doc/rfc9562/) compliant UUIDs:
 
 -   Generate a version 4 (random) UUID.
+-   Generate a version 7 (time-ordered, random) UUID.
 -   Convert a 16-byte blob into a well-formed UUID string and vice versa.
 
 Adapted from [uuid.c](https://sqlite.org/src/file/ext/misc/uuid.c) by D. Richard Hipp.
@@ -19,6 +20,18 @@ c476b6e9-35f1-4afd-9552-704cd7edbe27
 
 sqlite> select gen_random_uuid();
 8d144638-3baf-4901-a554-b541142c152b
+```
+
+<h3 name="uuid7"><code>uuid7()</code></h3>
+
+Generate a version 7 (time-ordered, random) UUID.
+
+```
+sqlite> select uuid7();
+018ff383-3e37-7615-b764-c241f544e573
+
+sqlite> select uuid7();
+018ff383-94fd-70fa-8da6-339180b8e15d
 ```
 
 <h3 name="uuid_str"><code>uuid_str(X)</code></h3>
@@ -39,6 +52,24 @@ sqlite> select hex(uuid_blob(uuid4()));
 7192B1B452964E809500CF0364476CD3
 ```
 
+<h3 name="uuid7_timestamp_ms"><code>uuid7_timestamp_ms(X)</code></h3>
+
+Extract unix timestamp in miliseconds from version 7 UUID `X`. Returns `NULL` if the detected UUID version is not 7.
+
+```
+sqlite> SELECT uuid7();
+018ff38a-a5c9-712d-bc80-0550b3ad41a2
+
+sqlite> SELECT uuid7_timestamp_ms('018ff38a-a5c9-712d-bc80-0550b3ad41a2');
+1717777901001
+
+sqlite> SELECT datetime(uuid7_timestamp_ms('018ff38a-a5c9-712d-bc80-0550b3ad41a2') / 1000, 'unixepoch');
+2024-06-07 16:31:41
+
+sqlite> SELECT uuid7_timestamp_ms(uuid4()) IS NULL;
+1
+```
+
 ## Installation and Usage
 
 SQLite command-line interface:
@@ -46,6 +77,7 @@ SQLite command-line interface:
 ```
 sqlite> .load ./uuid
 sqlite> select uuid4();
+sqlite> select uuid7();
 ```
 
 See [How to Install an Extension](install.md) for usage with IDE, Python, etc.
