@@ -44,10 +44,20 @@ jobs:
                   make compile-linux
                   make test-all
 
+            - name: Install MSYS2 and 'mingw-w64-i686-toolchain'
+              if: matrix.os == 'windows-latest'
+              uses: msys2/setup-msys2@v2
+              with:
+                  cache: true
+                  install: mingw-w64-i686-toolchain
+                  update: true
+
             - name: Build for Windows
               if: matrix.os == 'windows-latest'
               shell: bash
-              run: make compile-windows
+              run: |
+                  $RUNNER_TEMP/msys64/msys2_shell.cmd -defterm -no-start -mingw32 -lc "mingw32-make compile-windows-x86"
+                  make compile-windows
 
             - name: Build for macOS
               if: matrix.os == 'macos-latest'

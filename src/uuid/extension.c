@@ -178,6 +178,8 @@ static void uuid_v4_generate(sqlite3_context* context, int argc, sqlite3_value**
     sqlite3_result_text(context, (char*)zStr, 36, SQLITE_TRANSIENT);
 }
 
+// Time functions are not available on Windows 32-bit.
+#if !defined(_WIN32) || defined(_WIN64)
 /*
  * uuid_v7_generate generates a version 7 UUID as a string
  */
@@ -226,6 +228,8 @@ static void uuid_v7_extract_timestamp_ms(sqlite3_context* context, int argc, sql
     sqlite3_result_int64(context, timestampMs);
 }
 
+#endif
+
 /*
  * uuid_str converts a UUID X into a well-formed UUID string.
  * X can be either a string or a blob.
@@ -260,8 +264,11 @@ int uuid_init(sqlite3* db) {
     static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS;
     static const int det_flags = SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
     sqlite3_create_function(db, "uuid4", 0, flags, 0, uuid_v4_generate, 0, 0);
+#if !defined(_WIN32) || defined(_WIN64)
     sqlite3_create_function(db, "uuid7", 0, flags, 0, uuid_v7_generate, 0, 0);
-    sqlite3_create_function(db, "uuid7_timestamp_ms", 1, det_flags, 0, uuid_v7_extract_timestamp_ms, 0, 0);
+    sqlite3_create_function(db, "uuid7_timestamp_ms", 1, det_flags, 0, uuid_v7_extract_timestamp_ms,
+                            0, 0);
+#endif
     /* for postgresql compatibility */
     sqlite3_create_function(db, "gen_random_uuid", 0, flags, 0, uuid_v4_generate, 0, 0);
     sqlite3_create_function(db, "uuid_str", 1, det_flags, 0, uuid_str, 0, 0);
