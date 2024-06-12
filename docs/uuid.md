@@ -6,7 +6,7 @@ Limited support for [RFC 4122](https://www.ietf.org/rfc/rfc4122.txt) and [RFC 95
 -   Generate a version 7 (time-ordered, random) UUID.
 -   Convert a 16-byte blob into a well-formed UUID string and vice versa.
 
-Adapted from [uuid.c](https://sqlite.org/src/file/ext/misc/uuid.c) by D. Richard Hipp.
+UUIDv4 adapted from [uuid.c](https://sqlite.org/src/file/ext/misc/uuid.c) by D. Richard Hipp. UUIDv7 contributed by [Nguyễn Hoàng Đức](https://github.com/nghduc97).
 
 Provides following functions:
 
@@ -34,6 +34,24 @@ sqlite> select uuid7();
 018ff383-94fd-70fa-8da6-339180b8e15d
 ```
 
+<h3 name="uuid7_timestamp_ms"><code>uuid7_timestamp_ms(X)</code></h3>
+
+Extract unix timestamp in miliseconds from version 7 UUID `X`. Returns `null` if the detected UUID version is not 7.
+
+```
+sqlite> select uuid7();
+018ff38a-a5c9-712d-bc80-0550b3ad41a2
+
+sqlite> select uuid7_timestamp_ms('018ff38a-a5c9-712d-bc80-0550b3ad41a2');
+1717777901001
+
+sqlite> select datetime(uuid7_timestamp_ms('018ff38a-a5c9-712d-bc80-0550b3ad41a2') / 1000, 'unixepoch');
+2024-06-07 16:31:41
+
+sqlite> select uuid7_timestamp_ms(uuid4()) is null;
+1
+```
+
 <h3 name="uuid_str"><code>uuid_str(X)</code></h3>
 
 Converts a UUID `X` into a well-formed UUID string. `X` can be either a string or a blob.
@@ -52,24 +70,6 @@ sqlite> select hex(uuid_blob(uuid4()));
 7192B1B452964E809500CF0364476CD3
 ```
 
-<h3 name="uuid7_timestamp_ms"><code>uuid7_timestamp_ms(X)</code></h3>
-
-Extract unix timestamp in miliseconds from version 7 UUID `X`. Returns `NULL` if the detected UUID version is not 7.
-
-```
-sqlite> SELECT uuid7();
-018ff38a-a5c9-712d-bc80-0550b3ad41a2
-
-sqlite> SELECT uuid7_timestamp_ms('018ff38a-a5c9-712d-bc80-0550b3ad41a2');
-1717777901001
-
-sqlite> SELECT datetime(uuid7_timestamp_ms('018ff38a-a5c9-712d-bc80-0550b3ad41a2') / 1000, 'unixepoch');
-2024-06-07 16:31:41
-
-sqlite> SELECT uuid7_timestamp_ms(uuid4()) IS NULL;
-1
-```
-
 ## Installation and Usage
 
 SQLite command-line interface:
@@ -77,7 +77,6 @@ SQLite command-line interface:
 ```
 sqlite> .load ./uuid
 sqlite> select uuid4();
-sqlite> select uuid7();
 ```
 
 See [How to Install an Extension](install.md) for usage with IDE, Python, etc.
