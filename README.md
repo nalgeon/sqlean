@@ -112,9 +112,9 @@ The software is available under the MIT License.
 
 ## Funding
 
-Sqlean is a community project, not backed by any company or fund.
+Sqlean is kindly sponsored by [Paul Harrington](https://github.com/phrrngtn). Thank you, Paul!
 
-If you find it useful, please consider sponsoring it on GitHub. It really helps to move the project forward.
+If you find Sqlean useful, please consider sponsoring it on GitHub. It really helps to move the project forward.
 
 ♥ [Become a sponsor](https://github.com/sponsors/nalgeon) to support Sqlean.
 
