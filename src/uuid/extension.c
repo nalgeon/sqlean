@@ -178,8 +178,8 @@ static void uuid_v4_generate(sqlite3_context* context, int argc, sqlite3_value**
     sqlite3_result_text(context, (char*)zStr, 36, SQLITE_TRANSIENT);
 }
 
-// Time functions are available on C11+ or 64-bit Windows.
-#if __STDC_VERSION__ >= 201112L || (defined(_WIN32) && defined(_WIN64))
+// Time functions are not available of some older systems like 32-bit Windows.
+#ifndef SQLEAN_OMIT_UUID7
 /*
  * uuid_v7_generate generates a version 7 UUID as a string
  */
@@ -264,7 +264,7 @@ int uuid_init(sqlite3* db) {
     static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS;
     static const int det_flags = SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
     sqlite3_create_function(db, "uuid4", 0, flags, 0, uuid_v4_generate, 0, 0);
-#if __STDC_VERSION__ >= 201112L || (defined(_WIN32) && defined(_WIN64))
+#ifndef SQLEAN_OMIT_UUID7
     sqlite3_create_function(db, "uuid7", 0, flags, 0, uuid_v7_generate, 0, 0);
     sqlite3_create_function(db, "uuid7_timestamp_ms", 1, det_flags, 0, uuid_v7_extract_timestamp_ms,
                             0, 0);
