@@ -4,7 +4,7 @@
 #include <assert.h>
 #include <string.h>
 
-#include "blake3_reference_impl.h"
+#include "crypto/blake3_reference_impl.h"
 
 #define CHUNK_START 1 << 0
 #define CHUNK_END 1 << 1
