@@ -273,8 +273,8 @@ static void define_free(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
  */
 static void define_undefine(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
     char* template =
-        "delete from sqlean_define where name = '%s';"
-        "drop table if exists \"%s\";";
+        "delete from sqlean_define where name = '%q';"
+        "drop table if exists \"%w\";";
     const char* name = (const char*)sqlite3_value_text(argv[0]);
     char* sql = sqlite3_mprintf(template, name, name);
     if (!sql) {
