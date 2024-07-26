@@ -6,15 +6,11 @@
 
 #include "regexp/pcre2/pcre2.h"
 
-struct regexp_ns {
-    pcre2_code* (*compile)(const char* pattern);
-    void (*free)(pcre2_code* re);
-    char* (*get_error)(const char* pattern);
-    int (*like)(pcre2_code* re, const char* source);
-    int (*extract)(pcre2_code* re, const char* source, size_t group_idx, char** substr);
-    int (*replace)(pcre2_code* re, const char* source, const char* repl, char** dest);
-};
-
-extern struct regexp_ns regexp;
+pcre2_code* regexp_compile(const char* pattern);
+void regexp_free(pcre2_code* re);
+char* regexp_get_error(const char* pattern);
+int regexp_like(pcre2_code* re, const char* source);
+int regexp_extract(pcre2_code* re, const char* source, size_t group_idx, char** substr);
+int regexp_replace(pcre2_code* re, const char* source, const char* repl, char** dest);
 
 #endif /* REGEXP_H */

@@ -32,7 +32,7 @@ SQLITE_EXTENSION_INIT3
  * E.g.:
  * select true where 'abc' regexp 'a.c';
  */
-static void regexp_statement(sqlite3_context* context, int argc, sqlite3_value** argv) {
+static void fn_statement(sqlite3_context* context, int argc, sqlite3_value** argv) {
     const char* source;
     const char* pattern;
     int is_match = 0;
@@ -40,18 +40,12 @@ static void regexp_statement(sqlite3_context* context, int argc, sqlite3_value**
     assert(argc == 2);
 
     source = (const char*)sqlite3_value_text(argv[1]);
-#ifdef DEBUG
-    fprintf(stderr, "source = %s\n", source);
-#endif
     if (!source) {
         sqlite3_result_int(context, is_match);
         return;
     }
 
     pattern = (const char*)sqlite3_value_text(argv[0]);
-#ifdef DEBUG
-    fprintf(stderr, "pattern = %s\n", pattern);
-#endif
     if (!pattern) {
         sqlite3_result_error(context, "missing regexp pattern", -1);
         return;
@@ -60,9 +54,9 @@ static void regexp_statement(sqlite3_context* context, int argc, sqlite3_value**
     bool is_new_re = false;
     pcre2_code* re = sqlite3_get_auxdata(context, 0);
     if (re == NULL) {
-        re = regexp.compile(pattern);
+        re = regexp_compile(pattern);
         if (re == NULL) {
-            char* msg = regexp.get_error(pattern);
+            char* msg = regexp_get_error(pattern);
             sqlite3_result_error(context, msg, -1);
             free(msg);
             return;
@@ -70,10 +64,10 @@ static void regexp_statement(sqlite3_context* context, int argc, sqlite3_value**
         is_new_re = true;
     }
 
-    int rc = regexp.like(re, source);
+    int rc = regexp_like(re, source);
     if (rc == -1) {
         if (is_new_re) {
-            regexp.free(re);
+            regexp_free(re);
         }
         sqlite3_result_error(context, "invalid regexp pattern", -1);
         return;
@@ -83,7 +77,7 @@ static void regexp_statement(sqlite3_context* context, int argc, sqlite3_value**
     sqlite3_result_int(context, is_match);
 
     if (is_new_re) {
-        sqlite3_set_auxdata(context, 0, re, (void (*)(void*))regexp.free);
+        sqlite3_set_auxdata(context, 0, re, (void (*)(void*))regexp_free);
     }
 }
 
@@ -93,7 +87,7 @@ static void regexp_statement(sqlite3_context* context, int argc, sqlite3_value**
  * E.g.:
  * select regexp_like('abc', 'a.c');
  */
-static void regexp_like(sqlite3_context* context, int argc, sqlite3_value** argv) {
+static void fn_like(sqlite3_context* context, int argc, sqlite3_value** argv) {
     const char* source;
     const char* pattern;
     int is_match = 0;
@@ -101,18 +95,12 @@ static void regexp_like(sqlite3_context* context, int argc, sqlite3_value** argv
     assert(argc == 2);
 
     source = (const char*)sqlite3_value_text(argv[0]);
-#ifdef DEBUG
-    fprintf(stderr, "source = %s\n", source);
-#endif
     if (!source) {
         sqlite3_result_int(context, is_match);
         return;
     }
 
     pattern = (const char*)sqlite3_value_text(argv[1]);
-#ifdef DEBUG
-    fprintf(stderr, "pattern = %s\n", pattern);
-#endif
     if (!pattern) {
         sqlite3_result_error(context, "missing regexp pattern", -1);
         return;
@@ -121,9 +109,9 @@ static void regexp_like(sqlite3_context* context, int argc, sqlite3_value** argv
     bool is_new_re = false;
     pcre2_code* re = sqlite3_get_auxdata(context, 1);
     if (re == NULL) {
-        re = regexp.compile(pattern);
+        re = regexp_compile(pattern);
         if (re == NULL) {
-            char* msg = regexp.get_error(pattern);
+            char* msg = regexp_get_error(pattern);
             sqlite3_result_error(context, msg, -1);
             free(msg);
             return;
@@ -131,10 +119,10 @@ static void regexp_like(sqlite3_context* context, int argc, sqlite3_value** argv
         is_new_re = true;
     }
 
-    int rc = regexp.like(re, source);
+    int rc = regexp_like(re, source);
     if (rc == -1) {
         if (is_new_re) {
-            regexp.free(re);
+            regexp_free(re);
         }
         sqlite3_result_error(context, "invalid regexp pattern", -1);
         return;
@@ -144,7 +132,7 @@ static void regexp_like(sqlite3_context* context, int argc, sqlite3_value** argv
     sqlite3_result_int(context, is_match);
 
     if (is_new_re) {
-        sqlite3_set_auxdata(context, 1, re, (void (*)(void*))regexp.free);
+        sqlite3_set_auxdata(context, 1, re, (void (*)(void*))regexp_free);
     }
 }
 
@@ -153,7 +141,7 @@ static void regexp_like(sqlite3_context* context, int argc, sqlite3_value** argv
  * regexp_substr(source, pattern)
  * E.g.: select regexp_substr('abcdef', 'b.d') = 'bcd';
  */
-static void regexp_substr(sqlite3_context* context, int argc, sqlite3_value** argv) {
+static void fn_substr(sqlite3_context* context, int argc, sqlite3_value** argv) {
     const char* source;
     const char* pattern;
 
@@ -173,9 +161,9 @@ static void regexp_substr(sqlite3_context* context, int argc, sqlite3_value** ar
     bool is_new_re = false;
     pcre2_code* re = sqlite3_get_auxdata(context, 1);
     if (re == NULL) {
-        re = regexp.compile(pattern);
+        re = regexp_compile(pattern);
         if (re == NULL) {
-            char* msg = regexp.get_error(pattern);
+            char* msg = regexp_get_error(pattern);
             sqlite3_result_error(context, msg, -1);
             free(msg);
             return;
@@ -184,10 +172,10 @@ static void regexp_substr(sqlite3_context* context, int argc, sqlite3_value** ar
     }
 
     char* matched_str;
-    int rc = regexp.extract(re, source, 0, &matched_str);
+    int rc = regexp_extract(re, source, 0, &matched_str);
     if (rc == -1) {
         if (is_new_re) {
-            regexp.free(re);
+            regexp_free(re);
         }
         sqlite3_result_error(context, "invalid regexp pattern", -1);
         return;
@@ -195,20 +183,16 @@ static void regexp_substr(sqlite3_context* context, int argc, sqlite3_value** ar
 
     if (rc == 0) {
         if (is_new_re) {
-            regexp.free(re);
+            regexp_free(re);
         }
         return;
     }
-
-#ifdef DEBUG
-    fprintf(stderr, "matched_str = '%s'\n", matched_str);
-#endif
 
     sqlite3_result_text(context, matched_str, -1, SQLITE_TRANSIENT);
     free(matched_str);
 
     if (is_new_re) {
-        sqlite3_set_auxdata(context, 1, re, (void (*)(void*))regexp.free);
+        sqlite3_set_auxdata(context, 1, re, (void (*)(void*))regexp_free);
     }
 }
 
@@ -218,7 +202,7 @@ static void regexp_substr(sqlite3_context* context, int argc, sqlite3_value** ar
  * regexp_capture(source, pattern[, n])
  * E.g.: select regexp_capture('abcdef', 'b(.)d', 1) = 'c';
  */
-static void regexp_capture(sqlite3_context* context, int argc, sqlite3_value** argv) {
+static void fn_capture(sqlite3_context* context, int argc, sqlite3_value** argv) {
     const char* source;
     const char* pattern;
 
@@ -247,9 +231,9 @@ static void regexp_capture(sqlite3_context* context, int argc, sqlite3_value** a
     bool is_new_re = false;
     pcre2_code* re = sqlite3_get_auxdata(context, 1);
     if (re == NULL) {
-        re = regexp.compile(pattern);
+        re = regexp_compile(pattern);
         if (re == NULL) {
-            char* msg = regexp.get_error(pattern);
+            char* msg = regexp_get_error(pattern);
             sqlite3_result_error(context, msg, -1);
             free(msg);
             return;
@@ -258,10 +242,10 @@ static void regexp_capture(sqlite3_context* context, int argc, sqlite3_value** a
     }
 
     char* matched_str;
-    int rc = regexp.extract(re, source, group_idx, &matched_str);
+    int rc = regexp_extract(re, source, group_idx, &matched_str);
     if (rc == -1) {
         if (is_new_re) {
-            regexp.free(re);
+            regexp_free(re);
         }
         sqlite3_result_error(context, "invalid regexp pattern", -1);
         return;
@@ -269,7 +253,7 @@ static void regexp_capture(sqlite3_context* context, int argc, sqlite3_value** a
 
     if (rc == 0) {
         if (is_new_re) {
-            regexp.free(re);
+            regexp_free(re);
         }
         return;
     }
@@ -278,7 +262,7 @@ static void regexp_capture(sqlite3_context* context, int argc, sqlite3_value** a
     free(matched_str);
 
     if (is_new_re) {
-        sqlite3_set_auxdata(context, 1, re, (void (*)(void*))regexp.free);
+        sqlite3_set_auxdata(context, 1, re, (void (*)(void*))regexp_free);
     }
 }
 
@@ -287,7 +271,7 @@ static void regexp_capture(sqlite3_context* context, int argc, sqlite3_value** a
  * regexp_replace(source, pattern, replacement)
  * E.g.: select regexp_replace('abcdef', 'b.d', '...') = 'a...ef';
  */
-static void regexp_replace(sqlite3_context* context, int argc, sqlite3_value** argv) {
+static void fn_replace(sqlite3_context* context, int argc, sqlite3_value** argv) {
     const char* source;
     const char* pattern;
     const char* replacement;
@@ -315,9 +299,9 @@ static void regexp_replace(sqlite3_context* context, int argc, sqlite3_value** a
     bool is_new_re = false;
     pcre2_code* re = sqlite3_get_auxdata(context, 1);
     if (re == NULL) {
-        re = regexp.compile(pattern);
+        re = regexp_compile(pattern);
         if (re == NULL) {
-            char* msg = regexp.get_error(pattern);
+            char* msg = regexp_get_error(pattern);
             sqlite3_result_error(context, msg, -1);
             free(msg);
             return;
@@ -325,10 +309,10 @@ static void regexp_replace(sqlite3_context* context, int argc, sqlite3_value** a
         is_new_re = true;
     }
 
-    int rc = regexp.replace(re, source, replacement, &result);
+    int rc = regexp_replace(re, source, replacement, &result);
     if (rc == -1) {
         if (is_new_re) {
-            regexp.free(re);
+            regexp_free(re);
         }
         sqlite3_result_error(context, "invalid regexp pattern", -1);
         return;
@@ -336,31 +320,27 @@ static void regexp_replace(sqlite3_context* context, int argc, sqlite3_value** a
 
     if (rc == 0) {
         if (is_new_re) {
-            regexp.free(re);
+            regexp_free(re);
         }
         sqlite3_result_value(context, argv[0]);
         return;
     }
 
-#ifdef DEBUG
-    fprintf(stderr, "result = '%s'\n", result);
-#endif
-
     sqlite3_result_text(context, result, -1, SQLITE_TRANSIENT);
     free(result);
 
     if (is_new_re) {
-        sqlite3_set_auxdata(context, 1, re, (void (*)(void*))regexp.free);
+        sqlite3_set_auxdata(context, 1, re, (void (*)(void*))regexp_free);
     }
 }
 
 int regexp_init(sqlite3* db) {
     static const int flags = SQLITE_UTF8 | SQLITE_DETERMINISTIC;
-    sqlite3_create_function(db, "regexp", 2, flags, 0, regexp_statement, 0, 0);
-    sqlite3_create_function(db, "regexp_like", 2, flags, 0, regexp_like, 0, 0);
-    sqlite3_create_function(db, "regexp_substr", 2, flags, 0, regexp_substr, 0, 0);
-    sqlite3_create_function(db, "regexp_capture", 2, flags, 0, regexp_capture, 0, 0);
-    sqlite3_create_function(db, "regexp_capture", 3, flags, 0, regexp_capture, 0, 0);
-    sqlite3_create_function(db, "regexp_replace", 3, flags, 0, regexp_replace, 0, 0);
+    sqlite3_create_function(db, "regexp", 2, flags, 0, fn_statement, 0, 0);
+    sqlite3_create_function(db, "regexp_like", 2, flags, 0, fn_like, 0, 0);
+    sqlite3_create_function(db, "regexp_substr", 2, flags, 0, fn_substr, 0, 0);
+    sqlite3_create_function(db, "regexp_capture", 2, flags, 0, fn_capture, 0, 0);
+    sqlite3_create_function(db, "regexp_capture", 3, flags, 0, fn_capture, 0, 0);
+    sqlite3_create_function(db, "regexp_replace", 3, flags, 0, fn_replace, 0, 0);
     return SQLITE_OK;
 }

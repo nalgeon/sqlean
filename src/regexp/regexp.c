@@ -13,10 +13,8 @@
 #include "regexp/pcre2/pcre2.h"
 #include "regexp/regexp.h"
 
-/*
- * re_compile compiles and returns the compiled regexp.
- */
-static pcre2_code* re_compile(const char* pattern) {
+// regexp_compile compiles and returns the compiled regexp.
+pcre2_code* regexp_compile(const char* pattern) {
     size_t erroffset;
     int errcode;
     uint32_t options = PCRE2_UCP | PCRE2_UTF;
@@ -25,17 +23,13 @@ static pcre2_code* re_compile(const char* pattern) {
     return re;
 }
 
-/*
- * re_free frees the compiled regexp.
- */
-static void re_free(pcre2_code* re) {
+// regexp_free frees the compiled regexp.
+void regexp_free(pcre2_code* re) {
     pcre2_code_free(re);
 }
 
-/*
- * re_get_error returns the error message for a given pattern.
- */
-static char* re_get_error(const char* pattern) {
+// regexp_get_error returns the error message for a given pattern.
+char* regexp_get_error(const char* pattern) {
     size_t erroffset;
     int errcode;
     uint32_t options = PCRE2_UCP | PCRE2_UTF;
@@ -60,14 +54,12 @@ static char* re_get_error(const char* pattern) {
     return msg;
 }
 
-/*
- * re_like checks if source string matches pattern.
- * returns:
- *     -1 if the pattern is invalid
- *      0 if there is no match
- *      1 if there is a match
- */
-static int re_like(pcre2_code* re, const char* source) {
+// regexp_like checks if source string matches pattern.
+// Returns:
+//  -1 if the pattern is invalid
+//  0 if there is no match
+//  1 if there is a match
+int regexp_like(pcre2_code* re, const char* source) {
     if (re == NULL) {
         return -1;
     }
@@ -88,15 +80,13 @@ static int re_like(pcre2_code* re, const char* source) {
     }
 }
 
-/*
- * re_extract extracts source substring matching pattern into `substr`.
- * if `group_idx` > 0, returns the corresponding group instead of the whole matched substring.
- * returns:
- *     -1 if the pattern is invalid
- *      0 if there is no match
- *      1 if there is a match
- */
-static int re_extract(pcre2_code* re, const char* source, size_t group_idx, char** substr) {
+// regexp_extract extracts source substring matching pattern into substr.
+// If group_idx > 0, returns the corresponding group instead of the whole matched substring.
+// Returns:
+//  -1 if the pattern is invalid
+//  0 if there is no match
+//  1 if there is a match
+int regexp_extract(pcre2_code* re, const char* source, size_t group_idx, char** substr) {
     if (re == NULL) {
         return -1;
     }
@@ -130,14 +120,12 @@ static int re_extract(pcre2_code* re, const char* source, size_t group_idx, char
     return 1;
 }
 
-/*
- * re_replace replaces matching substring with replacement string into `dest`.
- * returns:
- *     -1 if the pattern is invalid
- *      0 if there is no match
- *      1 if there is a match
- */
-static int re_replace(pcre2_code* re, const char* source, const char* repl, char** dest) {
+// regexp_replace replaces matching substring with replacement string into `dest`.
+// Returns:
+//  -1 if the pattern is invalid
+//  0 if there is no match
+//  1 if there is a match
+int regexp_replace(pcre2_code* re, const char* source, const char* repl, char** dest) {
     if (re == NULL) {
         return -1;
     }
@@ -167,12 +155,3 @@ static int re_replace(pcre2_code* re, const char* source, const char* repl, char
     free(output);
     return 1;
 }
-
-struct regexp_ns regexp = {
-    .compile = re_compile,
-    .free = re_free,
-    .get_error = re_get_error,
-    .like = re_like,
-    .extract = re_extract,
-    .replace = re_replace,
-};
