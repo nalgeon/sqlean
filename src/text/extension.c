@@ -39,12 +39,12 @@ static void text_substring2(sqlite3_context* context, int argc, sqlite3_value** 
     // postgres-compatible: treat negative index as zero
     start = start > 0 ? start - 1 : 0;
 
-    RuneString s_src = rstring.from_cstring(src);
-    RuneString s_res = rstring.slice(s_src, start, s_src.length);
-    char* res = rstring.to_cstring(s_res);
+    RuneString s_src = rstring_from_cstring(src);
+    RuneString s_res = rstring_slice(s_src, start, s_src.length);
+    char* res = rstring_to_cstring(s_res);
     sqlite3_result_text(context, res, -1, free);
-    rstring.free(s_src);
-    rstring.free(s_res);
+    rstring_free(s_src);
+    rstring_free(s_res);
 }
 
 // Extracts a substring of `length` characters starting at the `start` position (1-based).
@@ -89,18 +89,18 @@ static void text_substring3(sqlite3_context* context, int argc, sqlite3_value** 
         return;
     }
 
-    RuneString s_src = rstring.from_cstring(src);
+    RuneString s_src = rstring_from_cstring(src);
 
     // postgres-compatible: the substring cannot be longer the the original string
     if ((size_t)length > s_src.length) {
         length = s_src.length;
     }
 
-    RuneString s_res = rstring.substring(s_src, start, length);
-    char* res = rstring.to_cstring(s_res);
+    RuneString s_res = rstring_substring(s_src, start, length);
+    char* res = rstring_to_cstring(s_res);
     sqlite3_result_text(context, res, -1, free);
-    rstring.free(s_src);
-    rstring.free(s_res);
+    rstring_free(s_src);
+    rstring_free(s_res);
 }
 
 // Extracts a substring starting at the `start` position (1-based).
@@ -123,21 +123,21 @@ static void text_slice2(sqlite3_context* context, int argc, sqlite3_value** argv
     // convert to 0-based index
     start = start > 0 ? start - 1 : start;
 
-    RuneString s_src = rstring.from_cstring(src);
+    RuneString s_src = rstring_from_cstring(src);
 
     // python-compatible: treat negative index larger than the length of the string as zero
     // and return the original string
     if (start < -(int)s_src.length) {
         sqlite3_result_text(context, src, -1, SQLITE_TRANSIENT);
-        rstring.free(s_src);
+        rstring_free(s_src);
         return;
     }
 
-    RuneString s_res = rstring.slice(s_src, start, s_src.length);
-    char* res = rstring.to_cstring(s_res);
+    RuneString s_res = rstring_slice(s_src, start, s_src.length);
+    char* res = rstring_to_cstring(s_res);
     sqlite3_result_text(context, res, -1, free);
-    rstring.free(s_src);
-    rstring.free(s_res);
+    rstring_free(s_src);
+    rstring_free(s_res);
 }
 
 // Extracts a substring from `start` position inclusive to `end` position non-inclusive (1-based).
@@ -167,12 +167,12 @@ static void text_slice3(sqlite3_context* context, int argc, sqlite3_value** argv
     // convert to 0-based index
     end = end > 0 ? end - 1 : end;
 
-    RuneString s_src = rstring.from_cstring(src);
-    RuneString s_res = rstring.slice(s_src, start, end);
-    char* res = rstring.to_cstring(s_res);
+    RuneString s_src = rstring_from_cstring(src);
+    RuneString s_res = rstring_slice(s_src, start, end);
+    char* res = rstring_to_cstring(s_res);
     sqlite3_result_text(context, res, -1, free);
-    rstring.free(s_src);
-    rstring.free(s_res);
+    rstring_free(s_src);
+    rstring_free(s_res);
 }
 
 // Extracts a substring of `length` characters from the beginning of the string.
@@ -194,16 +194,16 @@ static void text_left(sqlite3_context* context, int argc, sqlite3_value** argv) 
     }
     int length = sqlite3_value_int(argv[1]);
 
-    RuneString s_src = rstring.from_cstring(src);
+    RuneString s_src = rstring_from_cstring(src);
     if (length < 0) {
         length = s_src.length + length;
         length = length >= 0 ? length : 0;
     }
-    RuneString s_res = rstring.substring(s_src, 0, length);
-    char* res = rstring.to_cstring(s_res);
+    RuneString s_res = rstring_substring(s_src, 0, length);
+    char* res = rstring_to_cstring(s_res);
     sqlite3_result_text(context, res, -1, free);
-    rstring.free(s_src);
-    rstring.free(s_res);
+    rstring_free(s_src);
+    rstring_free(s_res);
 }
 
 // Extracts a substring of `length` characters from the end of the string.
@@ -225,17 +225,17 @@ static void text_right(sqlite3_context* context, int argc, sqlite3_value** argv)
     }
     int length = sqlite3_value_int(argv[1]);
 
-    RuneString s_src = rstring.from_cstring(src);
+    RuneString s_src = rstring_from_cstring(src);
 
     length = (length < 0) ? (int)s_src.length + length : length;
     int start = (int)s_src.length - length;
     start = start < 0 ? 0 : start;
 
-    RuneString s_res = rstring.substring(s_src, start, length);
-    char* res = rstring.to_cstring(s_res);
+    RuneString s_res = rstring_substring(s_src, start, length);
+    char* res = rstring_to_cstring(s_res);
     sqlite3_result_text(context, res, -1, free);
-    rstring.free(s_src);
-    rstring.free(s_res);
+    rstring_free(s_src);
+    rstring_free(s_res);
 }
 
 #pragma endregion
@@ -260,12 +260,12 @@ static void text_index(sqlite3_context* context, int argc, sqlite3_value** argv)
         return;
     }
 
-    RuneString s_src = rstring.from_cstring(src);
-    RuneString s_other = rstring.from_cstring(other);
-    int idx = rstring.index(s_src, s_other);
+    RuneString s_src = rstring_from_cstring(src);
+    RuneString s_other = rstring_from_cstring(other);
+    int idx = rstring_index(s_src, s_other);
     sqlite3_result_int64(context, idx + 1);
-    rstring.free(s_src);
-    rstring.free(s_other);
+    rstring_free(s_src);
+    rstring_free(s_other);
 }
 
 // Returns the last index of the substring in the original string.
@@ -285,15 +285,15 @@ static void text_last_index(sqlite3_context* context, int argc, sqlite3_value** 
         return;
     }
 
-    RuneString s_src = rstring.from_cstring(src);
-    RuneString s_other = rstring.from_cstring(other);
-    int idx = rstring.last_index(s_src, s_other);
+    RuneString s_src = rstring_from_cstring(src);
+    RuneString s_other = rstring_from_cstring(other);
+    int idx = rstring_last_index(s_src, s_other);
     sqlite3_result_int64(context, idx + 1);
-    rstring.free(s_src);
-    rstring.free(s_other);
+    rstring_free(s_src);
+    rstring_free(s_other);
 }
 
-// Checks if the string contains the substring.
+// Checks if the string contains the substring_
 // text_contains(str, other)
 static void text_contains(sqlite3_context* context, int argc, sqlite3_value** argv) {
     assert(argc == 2);
@@ -310,15 +310,15 @@ static void text_contains(sqlite3_context* context, int argc, sqlite3_value** ar
         return;
     }
 
-    ByteString s_src = bstring.from_cstring(src, sqlite3_value_bytes(argv[0]));
-    ByteString s_other = bstring.from_cstring(other, sqlite3_value_bytes(argv[1]));
-    bool found = bstring.contains(s_src, s_other);
+    ByteString s_src = bstring_from_cstring(src, sqlite3_value_bytes(argv[0]));
+    ByteString s_other = bstring_from_cstring(other, sqlite3_value_bytes(argv[1]));
+    bool found = bstring_contains(s_src, s_other);
     sqlite3_result_int(context, found);
-    bstring.free(s_src);
-    bstring.free(s_other);
+    bstring_free(s_src);
+    bstring_free(s_other);
 }
 
-// Checks if the string starts with the substring.
+// Checks if the string starts with the substring_
 // text_has_prefix(str, other)
 // [pg-compatible] starts_with(string, prefix)
 static void text_has_prefix(sqlite3_context* context, int argc, sqlite3_value** argv) {
@@ -336,15 +336,15 @@ static void text_has_prefix(sqlite3_context* context, int argc, sqlite3_value** 
         return;
     }
 
-    ByteString s_src = bstring.from_cstring(src, sqlite3_value_bytes(argv[0]));
-    ByteString s_other = bstring.from_cstring(other, sqlite3_value_bytes(argv[1]));
-    bool found = bstring.has_prefix(s_src, s_other);
+    ByteString s_src = bstring_from_cstring(src, sqlite3_value_bytes(argv[0]));
+    ByteString s_other = bstring_from_cstring(other, sqlite3_value_bytes(argv[1]));
+    bool found = bstring_has_prefix(s_src, s_other);
     sqlite3_result_int(context, found);
-    bstring.free(s_src);
-    bstring.free(s_other);
+    bstring_free(s_src);
+    bstring_free(s_other);
 }
 
-// Checks if the string ends with the substring.
+// Checks if the string ends with the substring_
 // text_has_suffix(str, other)
 static void text_has_suffix(sqlite3_context* context, int argc, sqlite3_value** argv) {
     assert(argc == 2);
@@ -361,12 +361,12 @@ static void text_has_suffix(sqlite3_context* context, int argc, sqlite3_value** 
         return;
     }
 
-    ByteString s_src = bstring.from_cstring(src, sqlite3_value_bytes(argv[0]));
-    ByteString s_other = bstring.from_cstring(other, sqlite3_value_bytes(argv[1]));
-    bool found = bstring.has_suffix(s_src, s_other);
+    ByteString s_src = bstring_from_cstring(src, sqlite3_value_bytes(argv[0]));
+    ByteString s_other = bstring_from_cstring(other, sqlite3_value_bytes(argv[1]));
+    bool found = bstring_has_suffix(s_src, s_other);
     sqlite3_result_int(context, found);
-    bstring.free(s_src);
-    bstring.free(s_other);
+    bstring_free(s_src);
+    bstring_free(s_other);
 }
 
 // Counts how many times the substring is contained in the original string.
@@ -386,12 +386,12 @@ static void text_count(sqlite3_context* context, int argc, sqlite3_value** argv)
         return;
     }
 
-    ByteString s_src = bstring.from_cstring(src, sqlite3_value_bytes(argv[0]));
-    ByteString s_other = bstring.from_cstring(other, sqlite3_value_bytes(argv[1]));
-    size_t count = bstring.count(s_src, s_other);
+    ByteString s_src = bstring_from_cstring(src, sqlite3_value_bytes(argv[0]));
+    ByteString s_other = bstring_from_cstring(other, sqlite3_value_bytes(argv[1]));
+    size_t count = bstring_count(s_src, s_other);
     sqlite3_result_int(context, count);
-    bstring.free(s_src);
-    bstring.free(s_other);
+    bstring_free(s_src);
+    bstring_free(s_other);
 }
 
 #pragma endregion
@@ -430,20 +430,20 @@ static void text_split(sqlite3_context* context, int argc, sqlite3_value** argv)
     // convert to 0-based index
     part = part > 0 ? part - 1 : part;
 
-    ByteString s_src = bstring.from_cstring(src, strlen(src));
-    ByteString s_sep = bstring.from_cstring(sep, strlen(sep));
+    ByteString s_src = bstring_from_cstring(src, strlen(src));
+    ByteString s_sep = bstring_from_cstring(sep, strlen(sep));
 
     // count from the last part backwards
     if (part < 0) {
-        int n_parts = bstring.count(s_src, s_sep) + 1;
+        int n_parts = bstring_count(s_src, s_sep) + 1;
         part = n_parts + part;
     }
 
-    ByteString s_part = bstring.split_part(s_src, s_sep, part);
+    ByteString s_part = bstring_split_part(s_src, s_sep, part);
     sqlite3_result_text(context, s_part.bytes, -1, SQLITE_TRANSIENT);
-    bstring.free(s_src);
-    bstring.free(s_sep);
-    bstring.free(s_part);
+    bstring_free(s_src);
+    bstring_free(s_sep);
+    bstring_free(s_part);
 }
 
 // Joins strings using the separator and returns the resulting string. Ignores nulls.
@@ -461,7 +461,7 @@ static void text_join(sqlite3_context* context, int argc, sqlite3_value** argv) 
         sqlite3_result_null(context);
         return;
     }
-    ByteString s_sep = bstring.from_cstring(sep, sqlite3_value_bytes(argv[0]));
+    ByteString s_sep = bstring_from_cstring(sep, sqlite3_value_bytes(argv[0]));
 
     // parts
     size_t n_parts = argc - 1;
@@ -478,16 +478,16 @@ static void text_join(sqlite3_context* context, int argc, sqlite3_value** argv) 
         }
         const char* part = (char*)sqlite3_value_text(argv[i]);
         int part_len = sqlite3_value_bytes(argv[i]);
-        s_parts[part_idx] = bstring.from_cstring(part, part_len);
+        s_parts[part_idx] = bstring_from_cstring(part, part_len);
         part_idx++;
     }
 
     // join parts with separator
-    ByteString s_res = bstring.join(s_parts, n_parts, s_sep);
-    const char* res = bstring.to_cstring(s_res);
+    ByteString s_res = bstring_join(s_parts, n_parts, s_sep);
+    const char* res = bstring_to_cstring(s_res);
     sqlite3_result_text(context, res, -1, SQLITE_TRANSIENT);
-    bstring.free(s_sep);
-    bstring.free(s_res);
+    bstring_free(s_sep);
+    bstring_free(s_res);
     free(s_parts);
 }
 
@@ -515,15 +515,15 @@ static void text_concat(sqlite3_context* context, int argc, sqlite3_value** argv
         }
         const char* part = (char*)sqlite3_value_text(argv[i]);
         int part_len = sqlite3_value_bytes(argv[i]);
-        s_parts[part_idx] = bstring.from_cstring(part, part_len);
+        s_parts[part_idx] = bstring_from_cstring(part, part_len);
         part_idx++;
     }
 
     // join parts
-    ByteString s_res = bstring.concat(s_parts, n_parts);
-    const char* res = bstring.to_cstring(s_res);
+    ByteString s_res = bstring_concat(s_parts, n_parts);
+    const char* res = bstring_to_cstring(s_res);
     sqlite3_result_text(context, res, -1, SQLITE_TRANSIENT);
-    bstring.free(s_res);
+    bstring_free(s_res);
     free(s_parts);
 }
 
@@ -547,12 +547,12 @@ static void text_repeat(sqlite3_context* context, int argc, sqlite3_value** argv
     // pg-compatible: treat negative count as zero
     count = count >= 0 ? count : 0;
 
-    ByteString s_src = bstring.from_cstring(src, sqlite3_value_bytes(argv[0]));
-    ByteString s_res = bstring.repeat(s_src, count);
-    const char* res = bstring.to_cstring(s_res);
+    ByteString s_src = bstring_from_cstring(src, sqlite3_value_bytes(argv[0]));
+    ByteString s_res = bstring_repeat(s_src, count);
+    const char* res = bstring_to_cstring(s_res);
     sqlite3_result_text(context, res, -1, SQLITE_TRANSIENT);
-    bstring.free(s_src);
-    bstring.free(s_res);
+    bstring_free(s_src);
+    bstring_free(s_res);
 }
 
 #pragma endregion
@@ -586,14 +586,14 @@ static void text_trim(sqlite3_context* context, int argc, sqlite3_value** argv) 
 
     RuneString (*trim_func)(RuneString, RuneString) = (void*)sqlite3_user_data(context);
 
-    RuneString s_src = rstring.from_cstring(src);
-    RuneString s_chars = rstring.from_cstring(chars);
+    RuneString s_src = rstring_from_cstring(src);
+    RuneString s_chars = rstring_from_cstring(chars);
     RuneString s_res = trim_func(s_src, s_chars);
-    const char* res = rstring.to_cstring(s_res);
+    const char* res = rstring_to_cstring(s_res);
     sqlite3_result_text(context, res, -1, free);
-    rstring.free(s_src);
-    rstring.free(s_chars);
-    rstring.free(s_res);
+    rstring_free(s_src);
+    rstring_free(s_chars);
+    rstring_free(s_res);
 }
 
 // Pads the string to the specified length by prepending/appending certain characters
@@ -631,14 +631,14 @@ static void text_pad(sqlite3_context* context, int argc, sqlite3_value** argv) {
 
     RuneString (*pad_func)(RuneString, size_t, RuneString) = (void*)sqlite3_user_data(context);
 
-    RuneString s_src = rstring.from_cstring(src);
-    RuneString s_fill = rstring.from_cstring(fill);
+    RuneString s_src = rstring_from_cstring(src);
+    RuneString s_fill = rstring_from_cstring(fill);
     RuneString s_res = pad_func(s_src, length, s_fill);
-    const char* res = rstring.to_cstring(s_res);
+    const char* res = rstring_to_cstring(s_res);
     sqlite3_result_text(context, res, -1, free);
-    rstring.free(s_src);
-    rstring.free(s_fill);
-    rstring.free(s_res);
+    rstring_free(s_src);
+    rstring_free(s_fill);
+    rstring_free(s_res);
 }
 
 #pragma endregion
@@ -669,16 +669,16 @@ static void text_replace_all(sqlite3_context* context, int argc, sqlite3_value**
         return;
     }
 
-    ByteString s_src = bstring.from_cstring(src, sqlite3_value_bytes(argv[0]));
-    ByteString s_old = bstring.from_cstring(old, sqlite3_value_bytes(argv[1]));
-    ByteString s_new = bstring.from_cstring(new, sqlite3_value_bytes(argv[2]));
-    ByteString s_res = bstring.replace_all(s_src, s_old, s_new);
-    const char* res = bstring.to_cstring(s_res);
+    ByteString s_src = bstring_from_cstring(src, sqlite3_value_bytes(argv[0]));
+    ByteString s_old = bstring_from_cstring(old, sqlite3_value_bytes(argv[1]));
+    ByteString s_new = bstring_from_cstring(new, sqlite3_value_bytes(argv[2]));
+    ByteString s_res = bstring_replace_all(s_src, s_old, s_new);
+    const char* res = bstring_to_cstring(s_res);
     sqlite3_result_text(context, res, -1, SQLITE_TRANSIENT);
-    bstring.free(s_src);
-    bstring.free(s_old);
-    bstring.free(s_new);
-    bstring.free(s_res);
+    bstring_free(s_src);
+    bstring_free(s_old);
+    bstring_free(s_new);
+    bstring_free(s_res);
 }
 
 // Replaces old substrings with new substrings in the original string,
@@ -713,16 +713,16 @@ static void text_replace(sqlite3_context* context, int argc, sqlite3_value** arg
     // treat negative count as zero
     count = count < 0 ? 0 : count;
 
-    ByteString s_src = bstring.from_cstring(src, sqlite3_value_bytes(argv[0]));
-    ByteString s_old = bstring.from_cstring(old, sqlite3_value_bytes(argv[1]));
-    ByteString s_new = bstring.from_cstring(new, sqlite3_value_bytes(argv[2]));
-    ByteString s_res = bstring.replace(s_src, s_old, s_new, count);
-    const char* res = bstring.to_cstring(s_res);
+    ByteString s_src = bstring_from_cstring(src, sqlite3_value_bytes(argv[0]));
+    ByteString s_old = bstring_from_cstring(old, sqlite3_value_bytes(argv[1]));
+    ByteString s_new = bstring_from_cstring(new, sqlite3_value_bytes(argv[2]));
+    ByteString s_res = bstring_replace(s_src, s_old, s_new, count);
+    const char* res = bstring_to_cstring(s_res);
     sqlite3_result_text(context, res, -1, SQLITE_TRANSIENT);
-    bstring.free(s_src);
-    bstring.free(s_old);
-    bstring.free(s_new);
-    bstring.free(s_res);
+    bstring_free(s_src);
+    bstring_free(s_old);
+    bstring_free(s_new);
+    bstring_free(s_res);
 }
 
 // Replaces each string character that matches a character in the `from` set
@@ -752,16 +752,16 @@ static void text_translate(sqlite3_context* context, int argc, sqlite3_value** a
         return;
     }
 
-    RuneString s_src = rstring.from_cstring(src);
-    RuneString s_from = rstring.from_cstring(from);
-    RuneString s_to = rstring.from_cstring(to);
-    RuneString s_res = rstring.translate(s_src, s_from, s_to);
-    char* res = rstring.to_cstring(s_res);
+    RuneString s_src = rstring_from_cstring(src);
+    RuneString s_from = rstring_from_cstring(from);
+    RuneString s_to = rstring_from_cstring(to);
+    RuneString s_res = rstring_translate(s_src, s_from, s_to);
+    char* res = rstring_to_cstring(s_res);
     sqlite3_result_text(context, res, -1, free);
-    rstring.free(s_src);
-    rstring.free(s_from);
-    rstring.free(s_to);
-    rstring.free(s_res);
+    rstring_free(s_src);
+    rstring_free(s_from);
+    rstring_free(s_to);
+    rstring_free(s_res);
 }
 
 // Reverses the order of the characters in the string.
@@ -777,12 +777,12 @@ static void text_reverse(sqlite3_context* context, int argc, sqlite3_value** arg
         return;
     }
 
-    RuneString s_src = rstring.from_cstring(src);
-    RuneString s_res = rstring.reverse(s_src);
-    char* res = rstring.to_cstring(s_res);
+    RuneString s_src = rstring_from_cstring(src);
+    RuneString s_res = rstring_reverse(s_src);
+    char* res = rstring_to_cstring(s_res);
     sqlite3_result_text(context, res, -1, free);
-    rstring.free(s_src);
-    rstring.free(s_res);
+    rstring_free(s_src);
+    rstring_free(s_res);
 }
 
 #pragma endregion
@@ -803,9 +803,9 @@ static void text_length(sqlite3_context* context, int argc, sqlite3_value** argv
         return;
     }
 
-    RuneString s_src = rstring.from_cstring(src);
+    RuneString s_src = rstring_from_cstring(src);
     sqlite3_result_int64(context, s_src.length);
-    rstring.free(s_src);
+    rstring_free(s_src);
 }
 
 // Returns the number of bytes in the string.
@@ -875,16 +875,16 @@ int text_init(sqlite3* db) {
     sqlite3_create_function(db, "repeat", 2, flags, 0, text_repeat, 0, 0);
 
     // trim and pad
-    sqlite3_create_function(db, "text_ltrim", -1, flags, rstring.trim_left, text_trim, 0, 0);
-    sqlite3_create_function(db, "ltrim", -1, flags, rstring.trim_left, text_trim, 0, 0);
-    sqlite3_create_function(db, "text_rtrim", -1, flags, rstring.trim_right, text_trim, 0, 0);
-    sqlite3_create_function(db, "rtrim", -1, flags, rstring.trim_right, text_trim, 0, 0);
-    sqlite3_create_function(db, "text_trim", -1, flags, rstring.trim, text_trim, 0, 0);
-    sqlite3_create_function(db, "btrim", -1, flags, rstring.trim, text_trim, 0, 0);
-    sqlite3_create_function(db, "text_lpad", -1, flags, rstring.pad_left, text_pad, 0, 0);
-    sqlite3_create_function(db, "lpad", -1, flags, rstring.pad_left, text_pad, 0, 0);
-    sqlite3_create_function(db, "text_rpad", -1, flags, rstring.pad_right, text_pad, 0, 0);
-    sqlite3_create_function(db, "rpad", -1, flags, rstring.pad_right, text_pad, 0, 0);
+    sqlite3_create_function(db, "text_ltrim", -1, flags, rstring_trim_left, text_trim, 0, 0);
+    sqlite3_create_function(db, "ltrim", -1, flags, rstring_trim_left, text_trim, 0, 0);
+    sqlite3_create_function(db, "text_rtrim", -1, flags, rstring_trim_right, text_trim, 0, 0);
+    sqlite3_create_function(db, "rtrim", -1, flags, rstring_trim_right, text_trim, 0, 0);
+    sqlite3_create_function(db, "text_trim", -1, flags, rstring_trim, text_trim, 0, 0);
+    sqlite3_create_function(db, "btrim", -1, flags, rstring_trim, text_trim, 0, 0);
+    sqlite3_create_function(db, "text_lpad", -1, flags, rstring_pad_left, text_pad, 0, 0);
+    sqlite3_create_function(db, "lpad", -1, flags, rstring_pad_left, text_pad, 0, 0);
+    sqlite3_create_function(db, "text_rpad", -1, flags, rstring_pad_right, text_pad, 0, 0);
+    sqlite3_create_function(db, "rpad", -1, flags, rstring_pad_right, text_pad, 0, 0);
 
     // other modifications
     sqlite3_create_function(db, "text_replace", 3, flags, 0, text_replace_all, 0, 0);

@@ -41,7 +41,7 @@ static size_t utf8_length(const char* str) {
 }
 
 // rstring_new creates an empty string.
-static RuneString rstring_new(void) {
+RuneString rstring_new(void) {
     RuneString str = {.runes = NULL, .length = 0, .size = 0, .owning = true};
     return str;
 }
@@ -55,26 +55,26 @@ static RuneString rstring_from_runes(const int32_t* const runes, size_t length, 
 }
 
 // rstring_from_cstring creates a new string from a zero-terminated C string.
-static RuneString rstring_from_cstring(const char* const utf8str) {
+RuneString rstring_from_cstring(const char* const utf8str) {
     size_t length = utf8_length(utf8str);
     int32_t* runes = length > 0 ? runes_from_cstring(utf8str, length) : NULL;
     return rstring_from_runes(runes, length, true);
 }
 
 // rstring_to_cstring converts the string to a zero-terminated C string.
-static char* rstring_to_cstring(RuneString str) {
+char* rstring_to_cstring(RuneString str) {
     return runes_to_cstring(str.runes, str.length);
 }
 
 // rstring_free destroys the string, freeing resources if necessary.
-static void rstring_free(RuneString str) {
+void rstring_free(RuneString str) {
     if (str.owning && str.runes != NULL) {
         free((void*)str.runes);
     }
 }
 
 // rstring_at returns a character by its index in the string.
-static int32_t rstring_at(RuneString str, size_t idx) {
+int32_t rstring_at(RuneString str, size_t idx) {
     if (str.length == 0) {
         return 0;
     }
@@ -87,7 +87,7 @@ static int32_t rstring_at(RuneString str, size_t idx) {
 // rstring_slice returns a slice of the string,
 // from the `start` index (inclusive) to the `end` index (non-inclusive).
 // Negative `start` and `end` values count from the end of the string.
-static RuneString rstring_slice(RuneString str, int start, int end) {
+RuneString rstring_slice(RuneString str, int start, int end) {
     if (str.length == 0) {
         return rstring_new();
     }
@@ -124,7 +124,7 @@ static RuneString rstring_slice(RuneString str, int start, int end) {
 
 // rstring_substring returns a substring of `length` characters,
 // starting from the `start` index.
-static RuneString rstring_substring(RuneString str, size_t start, size_t length) {
+RuneString rstring_substring(RuneString str, size_t start, size_t length) {
     if (length > str.length - start) {
         length = str.length - start;
     }
@@ -195,12 +195,12 @@ static int rstring_index_after(RuneString str, RuneString other, size_t start) {
 }
 
 // rstring_index returns the first index of the substring in the original string.
-static int rstring_index(RuneString str, RuneString other) {
+int rstring_index(RuneString str, RuneString other) {
     return rstring_index_after(str, other, 0);
 }
 
 // rstring_last_index returns the last index of the substring in the original string.
-static int rstring_last_index(RuneString str, RuneString other) {
+int rstring_last_index(RuneString str, RuneString other) {
     if (other.length == 0) {
         return str.length - 1;
     }
@@ -226,7 +226,7 @@ static int rstring_last_index(RuneString str, RuneString other) {
 // rstring_translate replaces each string character that matches a character in the `from` set with
 // the corresponding character in the `to` set. If `from` is longer than `to`, occurrences of the
 // extra characters in `from` are deleted.
-static RuneString rstring_translate(RuneString str, RuneString from, RuneString to) {
+RuneString rstring_translate(RuneString str, RuneString from, RuneString to) {
     if (str.length == 0) {
         return rstring_new();
     }
@@ -274,7 +274,7 @@ static RuneString rstring_translate(RuneString str, RuneString from, RuneString 
 }
 
 // rstring_reverse returns the reversed string.
-static RuneString rstring_reverse(RuneString str) {
+RuneString rstring_reverse(RuneString str) {
     int32_t* runes = (int32_t*)str.runes;
     for (size_t i = 0; i < str.length / 2; i++) {
         int32_t r = runes[i];
@@ -286,7 +286,7 @@ static RuneString rstring_reverse(RuneString str) {
 }
 
 // rstring_trim_left trims certain characters from the beginning of the string.
-static RuneString rstring_trim_left(RuneString str, RuneString chars) {
+RuneString rstring_trim_left(RuneString str, RuneString chars) {
     if (str.length == 0) {
         return rstring_new();
     }
@@ -300,7 +300,7 @@ static RuneString rstring_trim_left(RuneString str, RuneString chars) {
 }
 
 // rstring_trim_right trims certain characters from the end of the string.
-static RuneString rstring_trim_right(RuneString str, RuneString chars) {
+RuneString rstring_trim_right(RuneString str, RuneString chars) {
     if (str.length == 0) {
         return rstring_new();
     }
@@ -314,7 +314,7 @@ static RuneString rstring_trim_right(RuneString str, RuneString chars) {
 }
 
 // rstring_trim trims certain characters from the beginning and end of the string.
-static RuneString rstring_trim(RuneString str, RuneString chars) {
+RuneString rstring_trim(RuneString str, RuneString chars) {
     if (str.length == 0) {
         return rstring_new();
     }
@@ -406,7 +406,7 @@ RuneString rstring_pad_right(RuneString str, size_t length, RuneString fill) {
 }
 
 // rstring_print prints the string to stdout.
-static void rstring_print(RuneString str) {
+void rstring_print(RuneString str) {
     if (str.length == 0) {
         printf("'' (len=0)\n");
         return;
@@ -418,23 +418,3 @@ static void rstring_print(RuneString str) {
     printf("' (len=%zu)", str.length);
     printf("\n");
 }
-
-struct rstring_ns rstring = {
-    .new = rstring_new,
-    .from_cstring = rstring_from_cstring,
-    .to_cstring = rstring_to_cstring,
-    .free = rstring_free,
-    .at = rstring_at,
-    .index = rstring_index,
-    .last_index = rstring_last_index,
-    .slice = rstring_slice,
-    .substring = rstring_substring,
-    .translate = rstring_translate,
-    .reverse = rstring_reverse,
-    .trim_left = rstring_trim_left,
-    .trim_right = rstring_trim_right,
-    .trim = rstring_trim,
-    .pad_left = rstring_pad_left,
-    .pad_right = rstring_pad_right,
-    .print = rstring_print,
-};

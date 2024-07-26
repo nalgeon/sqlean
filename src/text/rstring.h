@@ -24,31 +24,27 @@ typedef struct {
 } RuneString;
 
 // RuneString methods.
-struct rstring_ns {
-    RuneString (*new)(void);
-    RuneString (*from_cstring)(const char* const utf8str);
-    char* (*to_cstring)(RuneString str);
-    void (*free)(RuneString str);
+RuneString rstring_new(void);
+RuneString rstring_from_cstring(const char* const utf8str);
+char* rstring_to_cstring(RuneString str);
+void rstring_free(RuneString str);
 
-    int32_t (*at)(RuneString str, size_t idx);
-    RuneString (*slice)(RuneString str, int start, int end);
-    RuneString (*substring)(RuneString str, size_t start, size_t length);
+int32_t rstring_at(RuneString str, size_t idx);
+RuneString rstring_slice(RuneString str, int start, int end);
+RuneString rstring_substring(RuneString str, size_t start, size_t length);
 
-    int (*index)(RuneString str, RuneString other);
-    int (*last_index)(RuneString str, RuneString other);
+int rstring_index(RuneString str, RuneString other);
+int rstring_last_index(RuneString str, RuneString other);
 
-    RuneString (*translate)(RuneString str, RuneString from, RuneString to);
-    RuneString (*reverse)(RuneString str);
+RuneString rstring_translate(RuneString str, RuneString from, RuneString to);
+RuneString rstring_reverse(RuneString str);
 
-    RuneString (*trim_left)(RuneString str, RuneString chars);
-    RuneString (*trim_right)(RuneString str, RuneString chars);
-    RuneString (*trim)(RuneString str, RuneString chars);
-    RuneString (*pad_left)(RuneString str, size_t length, RuneString fill);
-    RuneString (*pad_right)(RuneString str, size_t length, RuneString fill);
+RuneString rstring_trim_left(RuneString str, RuneString chars);
+RuneString rstring_trim_right(RuneString str, RuneString chars);
+RuneString rstring_trim(RuneString str, RuneString chars);
+RuneString rstring_pad_left(RuneString str, size_t length, RuneString fill);
+RuneString rstring_pad_right(RuneString str, size_t length, RuneString fill);
 
-    void (*print)(RuneString str);
-};
-
-extern struct rstring_ns rstring;
+void rstring_print(RuneString str);
 
 #endif /* RSTRING_H */

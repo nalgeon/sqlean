@@ -14,14 +14,14 @@
 #include "text/bstring.h"
 
 // bstring_new creates an empty string.
-static ByteString bstring_new(void) {
+ByteString bstring_new(void) {
     char* bytes = "\0";
     ByteString str = {.bytes = bytes, .length = 0, .owning = false};
     return str;
 }
 
 // bstring_from_cstring creates a new string that wraps an existing C string.
-static ByteString bstring_from_cstring(const char* const cstring, size_t length) {
+ByteString bstring_from_cstring(const char* const cstring, size_t length) {
     ByteString str = {.bytes = cstring, .length = length, .owning = false};
     return str;
 }
@@ -39,7 +39,7 @@ static ByteString bstring_clone(const char* const cstring, size_t length) {
 }
 
 // bstring_to_cstring converts the string to a zero-terminated C string.
-static const char* bstring_to_cstring(ByteString str) {
+const char* bstring_to_cstring(ByteString str) {
     if (str.bytes == NULL) {
         return NULL;
     }
@@ -47,14 +47,14 @@ static const char* bstring_to_cstring(ByteString str) {
 }
 
 // bstring_free destroys the string, freeing resources if necessary.
-static void bstring_free(ByteString str) {
+void bstring_free(ByteString str) {
     if (str.owning && str.bytes != NULL) {
         free((void*)str.bytes);
     }
 }
 
 // bstring_at returns a character by its index in the string.
-static char bstring_at(ByteString str, size_t idx) {
+char bstring_at(ByteString str, size_t idx) {
     if (str.length == 0) {
         return 0;
     }
@@ -67,7 +67,7 @@ static char bstring_at(ByteString str, size_t idx) {
 // bstring_slice returns a slice of the string,
 // from the `start` index (inclusive) to the `end` index (non-inclusive).
 // Negative `start` and `end` values count from the end of the string.
-static ByteString bstring_slice(ByteString str, int start, int end) {
+ByteString bstring_slice(ByteString str, int start, int end) {
     if (str.length == 0) {
         return bstring_new();
     }
@@ -104,7 +104,7 @@ static ByteString bstring_slice(ByteString str, int start, int end) {
 
 // bstring_substring returns a substring of `length` characters,
 // starting from the `start` index.
-static ByteString bstring_substring(ByteString str, size_t start, size_t length) {
+ByteString bstring_substring(ByteString str, size_t start, size_t length) {
     if (length > str.length - start) {
         length = str.length - start;
     }
@@ -175,12 +175,12 @@ static int bstring_index_after(ByteString str, ByteString other, size_t start) {
 }
 
 // bstring_index returns the first index of the substring in the original string.
-static int bstring_index(ByteString str, ByteString other) {
+int bstring_index(ByteString str, ByteString other) {
     return bstring_index_after(str, other, 0);
 }
 
 // bstring_last_index returns the last index of the substring in the original string.
-static int bstring_last_index(ByteString str, ByteString other) {
+int bstring_last_index(ByteString str, ByteString other) {
     if (other.length == 0) {
         return str.length - 1;
     }
@@ -204,12 +204,12 @@ static int bstring_last_index(ByteString str, ByteString other) {
 }
 
 // bstring_contains checks if the string contains the substring.
-static bool bstring_contains(ByteString str, ByteString other) {
+bool bstring_contains(ByteString str, ByteString other) {
     return bstring_index(str, other) != -1;
 }
 
 // bstring_equals checks if two strings are equal character by character.
-static bool bstring_equals(ByteString str, ByteString other) {
+bool bstring_equals(ByteString str, ByteString other) {
     if (str.bytes == NULL && other.bytes == NULL) {
         return true;
     }
@@ -223,12 +223,12 @@ static bool bstring_equals(ByteString str, ByteString other) {
 }
 
 // bstring_has_prefix checks if the string starts with the `other` substring.
-static bool bstring_has_prefix(ByteString str, ByteString other) {
+bool bstring_has_prefix(ByteString str, ByteString other) {
     return bstring_index(str, other) == 0;
 }
 
 // bstring_has_suffix checks if the string ends with the `other` substring.
-static bool bstring_has_suffix(ByteString str, ByteString other) {
+bool bstring_has_suffix(ByteString str, ByteString other) {
     if (other.length == 0) {
         return true;
     }
@@ -237,7 +237,7 @@ static bool bstring_has_suffix(ByteString str, ByteString other) {
 }
 
 // bstring_count counts how many times the `other` substring is contained in the original string.
-static size_t bstring_count(ByteString str, ByteString other) {
+size_t bstring_count(ByteString str, ByteString other) {
     if (str.length == 0 || other.length == 0 || other.length > str.length) {
         return 0;
     }
@@ -257,7 +257,7 @@ static size_t bstring_count(ByteString str, ByteString other) {
 }
 
 // bstring_split_part splits the string by the separator and returns the nth part (0-based).
-static ByteString bstring_split_part(ByteString str, ByteString sep, size_t part) {
+ByteString bstring_split_part(ByteString str, ByteString sep, size_t part) {
     if (str.length == 0 || sep.length > str.length) {
         return bstring_new();
     }
@@ -293,7 +293,7 @@ static ByteString bstring_split_part(ByteString str, ByteString sep, size_t part
 }
 
 // bstring_join joins strings using the separator and returns the resulting string.
-static ByteString bstring_join(ByteString* strings, size_t count, ByteString sep) {
+ByteString bstring_join(ByteString* strings, size_t count, ByteString sep) {
     // calculate total string length
     size_t total_length = 0;
     for (size_t idx = 0; idx < count; idx++) {
@@ -331,14 +331,14 @@ static ByteString bstring_join(ByteString* strings, size_t count, ByteString sep
 }
 
 // bstring_concat concatenates strings and returns the resulting string.
-static ByteString bstring_concat(ByteString* strings, size_t count) {
+ByteString bstring_concat(ByteString* strings, size_t count) {
     ByteString sep = bstring_new();
     return bstring_join(strings, count, sep);
 }
 
 // bstring_repeat concatenates the string to itself a given number of times
 // and returns the resulting string.
-static ByteString bstring_repeat(ByteString str, size_t count) {
+ByteString bstring_repeat(ByteString str, size_t count) {
     // calculate total string length
     size_t total_length = str.length * count;
 
@@ -364,10 +364,7 @@ static ByteString bstring_repeat(ByteString str, size_t count) {
 
 // bstring_replace replaces the `old` substring with the `new` substring in the original string,
 // but not more than `max_count` times.
-static ByteString bstring_replace(ByteString str,
-                                  ByteString old,
-                                  ByteString new,
-                                  size_t max_count) {
+ByteString bstring_replace(ByteString str, ByteString old, ByteString new, size_t max_count) {
     // count matches of the old string in the source string
     size_t count = bstring_count(str, old);
     if (count == 0) {
@@ -417,12 +414,12 @@ static ByteString bstring_replace(ByteString str,
 
 // bstring_replace_all replaces all `old` substrings with the `new` substrings
 // in the original string.
-static ByteString bstring_replace_all(ByteString str, ByteString old, ByteString new) {
+ByteString bstring_replace_all(ByteString str, ByteString old, ByteString new) {
     return bstring_replace(str, old, new, -1);
 }
 
 // bstring_reverse returns the reversed string.
-static ByteString bstring_reverse(ByteString str) {
+ByteString bstring_reverse(ByteString str) {
     ByteString res = bstring_clone(str.bytes, str.length);
     char* bytes = (char*)res.bytes;
     for (size_t i = 0; i < str.length / 2; i++) {
@@ -434,7 +431,7 @@ static ByteString bstring_reverse(ByteString str) {
 }
 
 // bstring_trim_left trims whitespaces from the beginning of the string.
-static ByteString bstring_trim_left(ByteString str) {
+ByteString bstring_trim_left(ByteString str) {
     if (str.length == 0) {
         return bstring_new();
     }
@@ -448,7 +445,7 @@ static ByteString bstring_trim_left(ByteString str) {
 }
 
 // bstring_trim_right trims whitespaces from the end of the string.
-static ByteString bstring_trim_right(ByteString str) {
+ByteString bstring_trim_right(ByteString str) {
     if (str.length == 0) {
         return bstring_new();
     }
@@ -462,7 +459,7 @@ static ByteString bstring_trim_right(ByteString str) {
 }
 
 // bstring_trim trims whitespaces from the beginning and end of the string.
-static ByteString bstring_trim(ByteString str) {
+ByteString bstring_trim(ByteString str) {
     if (str.length == 0) {
         return bstring_new();
     }
@@ -482,38 +479,10 @@ static ByteString bstring_trim(ByteString str) {
 }
 
 // bstring_print prints the string to stdout.
-static void bstring_print(ByteString str) {
+void bstring_print(ByteString str) {
     if (str.bytes == NULL) {
         printf("<null>\n");
         return;
     }
     printf("'%s' (len=%zu)\n", str.bytes, str.length);
 }
-
-struct bstring_ns bstring = {
-    .new = bstring_new,
-    .to_cstring = bstring_to_cstring,
-    .from_cstring = bstring_from_cstring,
-    .free = bstring_free,
-    .at = bstring_at,
-    .slice = bstring_slice,
-    .substring = bstring_substring,
-    .index = bstring_index,
-    .last_index = bstring_last_index,
-    .contains = bstring_contains,
-    .equals = bstring_equals,
-    .has_prefix = bstring_has_prefix,
-    .has_suffix = bstring_has_suffix,
-    .count = bstring_count,
-    .split_part = bstring_split_part,
-    .join = bstring_join,
-    .concat = bstring_concat,
-    .repeat = bstring_repeat,
-    .replace = bstring_replace,
-    .replace_all = bstring_replace_all,
-    .reverse = bstring_reverse,
-    .trim_left = bstring_trim_left,
-    .trim_right = bstring_trim_right,
-    .trim = bstring_trim,
-    .print = bstring_print,
-};
