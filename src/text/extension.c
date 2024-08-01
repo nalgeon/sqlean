@@ -913,7 +913,6 @@ static int collate_nocase(void* unused, int n1, const void* s1, int n2, const vo
 
 int text_init(sqlite3* db) {
     static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
-    static const int flags16 = SQLITE_UTF16 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
 
     // substrings
     sqlite3_create_function(db, "text_substring", 2, flags, 0, text_substring2, 0, 0);
@@ -935,7 +934,6 @@ int text_init(sqlite3* db) {
     sqlite3_create_function(db, "text_has_suffix", 2, flags, 0, text_has_suffix, 0, 0);
     sqlite3_create_function(db, "text_count", 2, flags, 0, text_count, 0, 0);
     sqlite3_create_function(db, "text_like", 2, flags, 0, text_like, 0, 0);
-    sqlite3_create_function(db, "like", 2, flags16, 0, text_like, 0, 0);
 
     // split and join
     sqlite3_create_function(db, "text_split", 3, flags, 0, text_split, 0, 0);
@@ -961,9 +959,7 @@ int text_init(sqlite3* db) {
 
     // change case
     sqlite3_create_function(db, "text_upper", 1, flags, utf8_toupper, text_change_case, 0, 0);
-    sqlite3_create_function(db, "upper", 1, flags16, utf8_toupper, text_change_case, 0, 0);
     sqlite3_create_function(db, "text_lower", 1, flags, utf8_tolower, text_change_case, 0, 0);
-    sqlite3_create_function(db, "lower", 1, flags16, utf8_tolower, text_change_case, 0, 0);
     sqlite3_create_function(db, "text_title", 1, flags, utf8_totitle, text_change_case, 0, 0);
     sqlite3_create_function(db, "text_casefold", 1, flags, utf8_casefold, text_change_case, 0, 0);
 
@@ -985,7 +981,7 @@ int text_init(sqlite3* db) {
     sqlite3_create_function(db, "bit_length", 1, flags, 0, text_bit_size, 0, 0);
 
     // collation
-    sqlite3_create_collation(db, "nocase", SQLITE_UTF8, NULL, collate_nocase);
+    sqlite3_create_collation(db, "text_nocase", SQLITE_UTF8, NULL, collate_nocase);
 
     return SQLITE_OK;
 }

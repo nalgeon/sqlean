@@ -479,14 +479,13 @@ select '29_01', text_like(null, 'hello') is null;
 select '29_02', text_like('hello', null) is null;
 select '29_03', text_like('hello', 'hello') = 1;
 select '29_04', text_like('h%', 'hello') = 1;
-select '29_05', like('Hel_o, w__ld!', 'hello, world!') = 1;
-select '29_06', like('H%l_, w%ld!', 'hello, world!') = 1;
-select '29_07', like('H%l_, w%ld.', 'hello, world!') = 0;
-select '29_08', like('c_mo est_s', 'cómo estás') = 1;
-select '29_09', like('прив_т', 'пРиВеТ') = 1;
-select '29_10', ('пРиВеТ' like 'прив_т') = 1;
+select '29_05', text_like('Hel_o, w__ld!', 'hello, world!') = 1;
+select '29_06', text_like('H%l_, w%ld!', 'hello, world!') = 1;
+select '29_07', text_like('H%l_, w%ld.', 'hello, world!') = 0;
+select '29_08', text_like('c_mo est_s', 'cómo estás') = 1;
+select '29_09', text_like('прив_т', 'пРиВеТ') = 1;
 
 -- nocase collation
-select '31_01', (select 1 where 'hello' = 'hello' collate nocase) = 1;
-select '31_02', (select 1 where 'hell0' = 'hello' collate nocase) is null;
-select '31_03', (select 1 where 'привет' = 'ПРИВЕТ' collate nocase) = 1;
+select '31_01', (select 1 where 'hello' = 'hello' collate text_nocase) = 1;
+select '31_02', (select 1 where 'hell0' = 'hello' collate text_nocase) is null;
+select '31_03', (select 1 where 'привет' = 'ПРИВЕТ' collate text_nocase) = 1;
