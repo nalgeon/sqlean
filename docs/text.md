@@ -2,9 +2,11 @@
 
 A rich set of string functions, from `slice`, `contains` and `count` to `split_part`, `trim` and `repeat`.
 
-Provides 25 functions, many of which are postgres-compatible (i.e. they have the same alias and logic as in PostgreSQL). It can be useful when migrating from SQLite to PostgreSQL or vice versa.
+Many of the functions are Postgres-compatible (i.e. they have the same alias and logic as in PostgreSQL). It can be useful when migrating from SQLite to PostgreSQL or vice versa.
 
-Note that some unicode-related functions like `upper` and `lower` are in the separate [`unicode`](unicode.md) extension. Regular expression functions are in the separate [`regexp`](regexp.md) extension.
+Provides Unicode-aware functions for changing text case (upper, lower, title), plus a custom nocase collation.
+
+Regular expression functions are in the separate [regexp](regexp.md) extension.
 
 ## Substrings and slicing
 
@@ -148,6 +150,20 @@ select text_count('hello yellow', 'x') = 0;
 -- 0
 ```
 
+<h3 name="text_like"><code>text_like(pattern, str)</code></h3>
+
+Reports whether a string matches a pattern using the LIKE syntax.
+
+```sql
+select text_like('cóm_ está_', 'CÓMO ESTÁS');
+-- 1
+
+select text_like('ça%', 'Ça roule');
+-- 1
+```
+
+Not aliased as `like` to avoid conflicts with the built-in `like` SQLite function.
+
 ## Split and join
 
 <h3 name="text_split"><code>text_split(str, sep, n)</code></h3>
@@ -281,6 +297,51 @@ select text_rpad('hello', 7, '*');
 Postgres-compatible, aliased as `rpad`.
 
 ℹ️ PostgreSQL does not support unicode strings in `rpad`, while this function does.
+
+## Change case
+
+<h3 name="text_upper"><code>text_upper(str)</code></h3>
+
+Transforms a string to upper case.
+
+```sql
+select text_upper('cómo estás');
+-- CÓMO ESTÁS
+```
+
+Not aliased as `upper` to avoid conflicts with the built-in `upper` SQLite function.
+
+<h3 name="text_lower"><code>text_lower(str)</code></h3>
+
+Transforms a string to lower case.
+
+```sql
+select text_lower('CÓMO ESTÁS');
+-- cómo estás
+```
+
+Not aliased as `lower` to avoid conflicts with the built-in `lower` SQLite function.
+
+<h3 name="text_title"><code>text_title(str)</code></h3>
+
+Transforms a string to title case.
+
+```sql
+select text_title('cómo estás');
+-- Cómo Estás
+```
+
+<h3 name="text_nocase"><code>text_nocase</code></h3>
+
+The `text_nocase` collating sequence compares strings without regard to case.
+
+```sql
+select 1 where 'cómo estás' = 'CÓMO ESTÁS';
+-- (null)
+
+select 1 where 'cómo estás' = 'CÓMO ESTÁS' collate text_nocase;
+-- 1
+```
 
 ## Other modifications
 

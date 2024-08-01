@@ -1,5 +1,7 @@
 # unicode: Unicode Support for SQLite
 
+**⛔️ This extension is deprecated. Use [text](text.md) instead.**
+
 Implements case-insensitive string comparison for Unicode strings. Has no external dependencies (like libicu). Adapted from [sqlite3_unicode](https://github.com/Zensey/sqlite3_unicode).
 
 Provides the following unicode features:

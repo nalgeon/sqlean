@@ -29,8 +29,7 @@ Think of them as the extended standard library for SQLite:
 -   [math](docs/math.md): math functions
 -   [regexp](docs/regexp.md): regular expressions
 -   [stats](docs/stats.md): math statistics
--   [text](docs/text.md): string functions
--   [unicode](docs/unicode.md): Unicode support
+-   [text](docs/text.md): string functions and Unicode
 -   [uuid](docs/uuid.md): Universally Unique IDentifiers
 -   [vsv](docs/vsv.md): CSV files as virtual tables
 
@@ -114,7 +113,7 @@ The software is available under the MIT License.
 
 Sqlean is kindly sponsored by [Paul Harrington](https://github.com/phrrngtn). Thank you, Paul!
 
-If you find Sqlean useful, please consider sponsoring it on GitHub. It really helps to move the project forward.
+If you find Sqlean useful, consider sponsoring me on GitHub. It really helps to move the project forward.
 
 ♥ [Become a sponsor](https://github.com/sponsors/nalgeon) to support Sqlean.
 
