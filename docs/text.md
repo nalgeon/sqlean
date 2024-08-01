@@ -8,6 +8,37 @@ Provides Unicode-aware functions for changing text case (upper, lower, title), p
 
 Regular expression functions are in the separate [regexp](regexp.md) extension.
 
+[`bitsize`](#text_bitsize) •
+[`concat`](#text_concat) •
+[`contains`](#text_contains) •
+[`count`](#text_count) •
+[`has_prefix`](#text_has_prefix) •
+[`has_suffix`](#text_has_suffix) •
+[`index`](#text_index) •
+[`join`](#text_join) •
+[`last_index`](#text_last_index) •
+[`left`](#text_left) •
+[`length`](#text_length) •
+[`like`](#text_like) •
+[`lower`](#text_lower) •
+[`lpad`](#text_lpad) •
+[`ltrim`](#text_ltrim) •
+[`nocase`](#text_nocase) •
+[`repeat`](#text_repeat) •
+[`replace`](#text_replace) •
+[`reverse`](#text_reverse) •
+[`right`](#text_right) •
+[`rpad`](#text_rpad) •
+[`rtrim`](#text_rtrim) •
+[`size`](#text_size) •
+[`slice`](#text_slice) •
+[`split`](#text_split) •
+[`substring`](#text_substring) •
+[`title`](#text_title) •
+[`translate`](#text_translate) •
+[`trim`](#text_trim) •
+[`upper`](#text_upper)
+
 ## Substrings and slicing
 
 <h3 name="text_substring"><code>text_substring(str, start [,length])</code></h3>
