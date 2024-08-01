@@ -14,6 +14,7 @@ SQLITE_EXTENSION_INIT3
 
 #include "text/bstring.h"
 #include "text/rstring.h"
+#include "text/utf8/utf8.h"
 
 #pragma region Substrings
 
@@ -394,6 +395,33 @@ static void text_count(sqlite3_context* context, int argc, sqlite3_value** argv)
     bstring_free(s_other);
 }
 
+// Checks if the string matches the pattern using the SQL LIKE syntax.
+// text_like(pattern, str)
+// like(pattern, str)
+// str LIKE pattern
+static void text_like(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    assert(argc == 2);
+
+    const char* pattern = (char*)sqlite3_value_text(argv[0]);
+    if (pattern == NULL) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    const char* str = (char*)sqlite3_value_text(argv[1]);
+    if (str == NULL) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    RuneString s_pattern = rstring_from_cstring(pattern);
+    RuneString s_str = rstring_from_cstring(str);
+    bool match = rstring_like(s_pattern, s_str);
+    sqlite3_result_int(context, match);
+    rstring_free(s_pattern);
+    rstring_free(s_str);
+}
+
 #pragma endregion
 
 #pragma region Split and join
@@ -643,6 +671,39 @@ static void text_pad(sqlite3_context* context, int argc, sqlite3_value** argv) {
 
 #pragma endregion
 
+#pragma region Change case
+
+// Changes the case of the string.
+// text_upper(str)
+// text_lower(str)
+// text_title(str)
+// text_casefold(str)
+static void text_change_case(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    assert(argc == 1);
+
+    const char* src = (const char*)sqlite3_value_text(argv[0]);
+    if (src == NULL) {
+        sqlite3_result_null(context);
+        return;
+    }
+    size_t n = sqlite3_value_bytes(argv[0]);
+
+    char* res = malloc(n + 1);
+    if (res == NULL) {
+        sqlite3_result_error_nomem(context);
+        return;
+    }
+    memcpy(res, src, n);
+    res[n] = '\0';
+
+    bool (*fn)(char*, size_t) = sqlite3_user_data(context);
+    fn(res, n);
+
+    sqlite3_result_text(context, res, n, free);
+}
+
+#pragma endregion
+
 #pragma region Other modifications
 
 // Replaces all old substrings with new substrings in the original string.
@@ -841,8 +902,18 @@ static void text_bit_size(sqlite3_context* context, int argc, sqlite3_value** ar
 
 #pragma endregion
 
+#pragma region Collation
+
+static int collate_nocase(void* unused, int n1, const void* s1, int n2, const void* s2) {
+    (void)unused;
+    return utf8_icmp((const char*)s1, (size_t)n1, (const char*)s2, (size_t)n2);
+}
+
+#pragma endregion
+
 int text_init(sqlite3* db) {
     static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
+    static const int flags16 = SQLITE_UTF16 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
 
     // substrings
     sqlite3_create_function(db, "text_substring", 2, flags, 0, text_substring2, 0, 0);
@@ -863,6 +934,8 @@ int text_init(sqlite3* db) {
     sqlite3_create_function(db, "starts_with", 2, flags, 0, text_has_prefix, 0, 0);
     sqlite3_create_function(db, "text_has_suffix", 2, flags, 0, text_has_suffix, 0, 0);
     sqlite3_create_function(db, "text_count", 2, flags, 0, text_count, 0, 0);
+    sqlite3_create_function(db, "text_like", 2, flags, 0, text_like, 0, 0);
+    sqlite3_create_function(db, "like", 2, flags16, 0, text_like, 0, 0);
 
     // split and join
     sqlite3_create_function(db, "text_split", 3, flags, 0, text_split, 0, 0);
@@ -886,6 +959,14 @@ int text_init(sqlite3* db) {
     sqlite3_create_function(db, "text_rpad", -1, flags, rstring_pad_right, text_pad, 0, 0);
     sqlite3_create_function(db, "rpad", -1, flags, rstring_pad_right, text_pad, 0, 0);
 
+    // change case
+    sqlite3_create_function(db, "text_upper", 1, flags, utf8_toupper, text_change_case, 0, 0);
+    sqlite3_create_function(db, "upper", 1, flags16, utf8_toupper, text_change_case, 0, 0);
+    sqlite3_create_function(db, "text_lower", 1, flags, utf8_tolower, text_change_case, 0, 0);
+    sqlite3_create_function(db, "lower", 1, flags16, utf8_tolower, text_change_case, 0, 0);
+    sqlite3_create_function(db, "text_title", 1, flags, utf8_totitle, text_change_case, 0, 0);
+    sqlite3_create_function(db, "text_casefold", 1, flags, utf8_casefold, text_change_case, 0, 0);
+
     // other modifications
     sqlite3_create_function(db, "text_replace", 3, flags, 0, text_replace_all, 0, 0);
     sqlite3_create_function(db, "text_replace", 4, flags, 0, text_replace, 0, 0);
@@ -902,6 +983,9 @@ int text_init(sqlite3* db) {
     sqlite3_create_function(db, "octet_length", 1, flags, 0, text_size, 0, 0);
     sqlite3_create_function(db, "text_bitsize", 1, flags, 0, text_bit_size, 0, 0);
     sqlite3_create_function(db, "bit_length", 1, flags, 0, text_bit_size, 0, 0);
+
+    // collation
+    sqlite3_create_collation(db, "nocase", SQLITE_UTF8, NULL, collate_nocase);
 
     return SQLITE_OK;
 }

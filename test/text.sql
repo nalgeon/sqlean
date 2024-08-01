@@ -441,3 +441,52 @@ select '23_02', text_bitsize('') = 0;
 select '23_03', text_bitsize('h') = 1*8;
 select '23_04', text_bitsize('hello') = 5*8;
 select '23_05', text_bitsize('привет') = 2*6*8;
+
+-- Upper
+select '25_01', text_upper(null) is null;
+select '25_02', text_upper('') = '';
+select '25_03', text_upper('hello') = 'HELLO';
+select '25_04', text_upper('cómo estás') = 'CÓMO ESTÁS';
+select '25_05', text_upper('привет') = 'ПРИВЕТ';
+select '25_06', text_upper('пРиВеТ') = 'ПРИВЕТ';
+
+-- Lower
+select '26_01', text_lower(null) is null;
+select '26_02', text_lower('') = '';
+select '26_03', text_lower('HELLO') = 'hello';
+select '26_04', text_lower('CÓMO ESTÁS') = 'cómo estás';
+select '26_05', text_lower('ПРИВЕТ') = 'привет';
+select '26_06', text_lower('пРиВеТ') = 'привет';
+
+-- Title
+select '27_01', text_title(null) is null;
+select '27_02', text_title('') = '';
+select '27_03', text_title('hello world') = 'Hello World';
+select '27_04', text_title('cómo estás') = 'Cómo Estás';
+select '27_05', text_title('привет мир') = 'Привет Мир';
+select '27_06', text_title('пРиВеТ мир') = 'Привет Мир';
+
+-- Casefold
+select '28_01', text_casefold(null) is null;
+select '28_02', text_casefold('') = '';
+select '28_03', text_casefold('HELLO') = 'hello';
+select '28_04', text_casefold('CÓMO ESTÁS') = 'cómo estás';
+select '28_05', text_casefold('ПРИВЕТ') = 'привет';
+select '28_06', text_casefold('пРиВеТ') = 'привет';
+
+-- Like
+select '29_01', text_like(null, 'hello') is null;
+select '29_02', text_like('hello', null) is null;
+select '29_03', text_like('hello', 'hello') = 1;
+select '29_04', text_like('h%', 'hello') = 1;
+select '29_05', like('Hel_o, w__ld!', 'hello, world!') = 1;
+select '29_06', like('H%l_, w%ld!', 'hello, world!') = 1;
+select '29_07', like('H%l_, w%ld.', 'hello, world!') = 0;
+select '29_08', like('c_mo est_s', 'cómo estás') = 1;
+select '29_09', like('прив_т', 'пРиВеТ') = 1;
+select '29_10', ('пРиВеТ' like 'прив_т') = 1;
+
+-- nocase collation
+select '31_01', (select 1 where 'hello' = 'hello' collate nocase) = 1;
+select '31_02', (select 1 where 'hell0' = 'hello' collate nocase) is null;
+select '31_03', (select 1 where 'привет' = 'ПРИВЕТ' collate nocase) = 1;

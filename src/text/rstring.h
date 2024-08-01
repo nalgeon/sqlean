@@ -35,6 +35,7 @@ RuneString rstring_substring(RuneString str, size_t start, size_t length);
 
 int rstring_index(RuneString str, RuneString other);
 int rstring_last_index(RuneString str, RuneString other);
+bool rstring_like(RuneString pattern, RuneString str);
 
 RuneString rstring_translate(RuneString str, RuneString from, RuneString to);
 RuneString rstring_reverse(RuneString str);

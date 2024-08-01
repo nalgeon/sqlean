@@ -12,6 +12,7 @@
 
 #include "text/rstring.h"
 #include "text/runes.h"
+#include "text/utf8/rune.h"
 
 // utf8_length returns the number of utf-8 characters in a string.
 static size_t utf8_length(const char* str) {
@@ -221,6 +222,37 @@ int rstring_last_index(RuneString str, RuneString other) {
     }
 
     return -1;
+}
+
+// rstring_like returns true if the string matches a LIKE pattern.
+bool rstring_like(RuneString pattern, RuneString str) {
+    size_t pidx = 0, sidx = 0, star_idx = SIZE_MAX, match = 0;
+
+    while (sidx < str.length) {
+        int32_t prune = (pidx < pattern.length) ? pattern.runes[pidx] : 0;
+        int32_t srune = str.runes[sidx];
+
+        if (prune == '%') {
+            star_idx = ++pidx;
+            match = ++sidx;
+            if (pidx == pattern.length) {
+                return true;
+            }
+        } else if (prune == '_' || rune_casefold(prune) == rune_casefold(srune)) {
+            pidx++;
+            sidx++;
+        } else if (star_idx != SIZE_MAX) {
+            pidx = star_idx;
+            sidx = match++;
+        } else {
+            return false;
+        }
+    }
+
+    while (pidx < pattern.length && pattern.runes[pidx] == '%') {
+        pidx++;
+    }
+    return pidx == pattern.length;
 }
 
 // rstring_translate replaces each string character that matches a character in the `from` set with

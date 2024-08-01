@@ -857,6 +857,80 @@ static void test_pad_right(void) {
     printf("OK\n");
 }
 
+static void test_like(void) {
+    printf("test_like...");
+    struct test {
+        const char* pattern;
+        const char* str;
+        bool match;
+    };
+    const struct test tests[] = {
+        {"%", "H", true},
+        {"_", "H", true},
+        {"H%", "Hi", true},
+        {"H_", "Hi", true},
+        {"%i", "Hi", true},
+        {"_%", "Hi", true},
+        {"%", "Hello", true},
+        {"H_", "Ho", true},
+        {"%llo", "Hello", true},
+        {"H%o", "Hello", true},
+        {"H_l_o", "Halo", false},
+        {"%o, world", "Hello, world", true},
+        {"% world", "Hello, world", true},
+        {"Hel%rld", "Hello, world", true},
+        {"H%lo, w%ld", "Hello, world", true},
+        {"Hel_o, w__ld", "Hello, world", true},
+        {"H%l_, w%ld", "Hello, world", true},
+        {"H%l_, w%ld.", "Hello, world!", false},
+        {"HeLLo, WoRlD", "Hello, world", true},
+        {"%world", "Hello, world", true},
+        {"H_llo, w_rld", "Hello, world", true},
+        {"H__lo, w__ld", "Hello, world", true},
+        {"H%world", "Hello, world", true},
+        {"Hello, %d", "Hello, world", true},
+        {"%o, w%ld", "Hello, world", true},
+        {"H%lo, w%rld", "Hello, world", true},
+        {"H_llo, w_rld.", "Hello, world!", false},
+        {"He%o, wo%ld", "Hello, world", true},
+        {"He%o, wo%ld.", "Hello, world!", false},
+        {"Hello, world", "Hello, world", true},
+        {"%ello, %orld", "Hello, world", true},
+        {"H__lo, w___d", "Hello, world", true},
+        {"H____, w____", "Hello, world", true},
+        {"_ello, _orld", "Hello, world", true},
+        {"H_llo, w__ld", "Hello, world!", false},
+        {"Hello, world%", "Hello, world", true},
+        {"Hello, world%11", "Hello, world", false},
+        {"H%lo, w%ld%", "Hello, world", true},
+        {"%", "", true},
+        {"%", "a", true},
+        {"_", "", false},
+        {"_", "a", true},
+        {"_%", "ab", true},
+        {"a%", "ab", true},
+        {"a_", "ab", true},
+        {"a%z", "abcdefghijklmnopqrstuvwxyz", true},
+        {"%bcdefghijklmnopqrstuvwxyz", "abcdefghijklmnopqrstuvwxyz", true},
+        {"a%y", "abcdefghijklmnopqrstuvwyz", false},
+        {"%mnopqrst%", "abcdefghijklmnopqrstuvwyz", true},
+        {"a%z", "ab", false},
+        {"_b%", "ab", true},
+        {"%c%", "abc", true},
+        {"a_c", "abc", true},
+        {"%bc", "abc", true}
+        // test cases
+    };
+    for (size_t i = 0; i < sizeof(tests) / sizeof(tests[0]); ++i) {
+        const struct test* t = &tests[i];
+        RuneString pattern = rstring_from_cstring(t->pattern);
+        RuneString str = rstring_from_cstring(t->str);
+        // printf("pattern: %s, s: %s, match: %d\n", t->pattern, t->s, t->match);
+        assert(rstring_like(pattern, str) == t->match);
+    }
+    printf("OK\n");
+}
+
 int main(void) {
     test_cstring();
     test_at();
@@ -871,5 +945,6 @@ int main(void) {
     test_trim();
     test_pad_left();
     test_pad_right();
+    test_like();
     return 0;
 }
