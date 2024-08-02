@@ -2,22 +2,16 @@
 
 Hashing, encoding and decoding functions.
 
--   Hasing: [blake3](#crypto_blake3) •
-    [md5](#crypto_md5) •
-    [sha1](#crypto_sha1) •
-    [sha256](#crypto_sha256) •
-    [sha384](#crypto_sha384) •
-    [sha512](#crypto_sha512)
-
--   Encode/decode: [base32](#base32) •
-    [base64](#base64) •
-    [base85](#base85) •
-    [hex](#hex) •
-    [url](#url)
-
 ## Hashing and message digest functions
 
 Each hash function expects `data` to be TEXT or BLOB. Returns a BLOB hash. Use the `hex()` or `crypto_encode()` functions to encode it into a textual representation.
+
+[blake3](#crypto_blake3) •
+[md5](#crypto_md5) •
+[sha1](#crypto_sha1) •
+[sha256](#crypto_sha256) •
+[sha384](#crypto_sha384) •
+[sha512](#crypto_sha512)
 
 ### crypto_blake3
 
@@ -111,13 +105,10 @@ crypto_decode(text, algo)
 
 Decodes binary data from a textual representation using the specified algorithm.
 
-Supported algorithms:
-
--   `base32`
--   `base64`
--   `base85`
--   `hex`
--   `url`
+Supported algorithms: [base64](#base64) •
+[base85](#base85) •
+[hex](#hex) •
+[url](#url)
 
 ### base32
 
