@@ -25,8 +25,8 @@ static bool is_ascii(const unsigned char* str) {
 // Below are functions extracted from the
 // https://github.com/Rostepher/libstrcmp/
 
-// fuzzy_dlevenshtein implements Damerau-Levenshtein distance
-static void fuzzy_dlevenshtein(sqlite3_context* context, int argc, sqlite3_value** argv) {
+// fuzzy_damlev implements Damerau-Levenshtein distance
+static void fuzzy_damlev(sqlite3_context* context, int argc, sqlite3_value** argv) {
     assert(argc == 2);
     const unsigned char* str1 = sqlite3_value_text(argv[0]);
     const unsigned char* str2 = sqlite3_value_text(argv[1]);
@@ -59,8 +59,8 @@ static void fuzzy_hamming(sqlite3_context* context, int argc, sqlite3_value** ar
     sqlite3_result_int(context, distance);
 }
 
-// fuzzy_jaro_winkler implements Jaro-Winkler distance
-static void fuzzy_jaro_winkler(sqlite3_context* context, int argc, sqlite3_value** argv) {
+// fuzzy_jarowin implements Jaro-Winkler distance
+static void fuzzy_jarowin(sqlite3_context* context, int argc, sqlite3_value** argv) {
     assert(argc == 2);
     const unsigned char* str1 = sqlite3_value_text(argv[0]);
     const unsigned char* str2 = sqlite3_value_text(argv[1]);
@@ -76,8 +76,8 @@ static void fuzzy_jaro_winkler(sqlite3_context* context, int argc, sqlite3_value
     sqlite3_result_double(context, distance);
 }
 
-// fuzzy_levenshtein implements Levenshtein distance
-static void fuzzy_levenshtein(sqlite3_context* context, int argc, sqlite3_value** argv) {
+// fuzzy_leven implements Levenshtein distance
+static void fuzzy_leven(sqlite3_context* context, int argc, sqlite3_value** argv) {
     assert(argc == 2);
     const unsigned char* str1 = sqlite3_value_text(argv[0]);
     const unsigned char* str2 = sqlite3_value_text(argv[1]);
@@ -93,8 +93,8 @@ static void fuzzy_levenshtein(sqlite3_context* context, int argc, sqlite3_value*
     sqlite3_result_int(context, distance);
 }
 
-// fuzzy_osa_distance implements Optimal String Alignment distance
-static void fuzzy_osa_distance(sqlite3_context* context, int argc, sqlite3_value** argv) {
+// fuzzy_osadist implements Optimal String Alignment distance
+static void fuzzy_osadist(sqlite3_context* context, int argc, sqlite3_value** argv) {
     assert(argc == 2);
     const unsigned char* str1 = sqlite3_value_text(argv[0]);
     const unsigned char* str2 = sqlite3_value_text(argv[1]);
@@ -144,7 +144,7 @@ static void fuzzy_rsoundex(sqlite3_context* context, int argc, sqlite3_value** a
 // https://www.sqlite.org/src/file/ext/misc/spellfix.c
 
 /*
-** phonetic_hash(X)
+** fuzzy_phonetic(X)
 **
 ** Generate a "phonetic hash" from a string of ASCII characters in X.
 **
@@ -160,7 +160,7 @@ static void fuzzy_rsoundex(sqlite3_context* context, int argc, sqlite3_value** a
 **
 ** Return NULL if memory allocation fails.
 */
-static void fuzzy_phonetic_hash(sqlite3_context* context, int argc, sqlite3_value** argv) {
+static void fuzzy_phonetic(sqlite3_context* context, int argc, sqlite3_value** argv) {
     const unsigned char* zIn;
     unsigned char* zOut;
 
@@ -176,14 +176,14 @@ static void fuzzy_phonetic_hash(sqlite3_context* context, int argc, sqlite3_valu
 }
 
 /*
-** edit_distance(A,B)
+** fuzzy_editdist(A,B)
 **
 ** Return the cost of transforming string A into string B.  Both strings
 ** must be pure ASCII text.  If A ends with '*' then it is assumed to be
 ** a prefix of B and extra characters on the end of B have minimal additional
 ** cost.
 */
-static void fuzzy_edit_distance(sqlite3_context* context, int argc, sqlite3_value** argv) {
+static void fuzzy_editdist(sqlite3_context* context, int argc, sqlite3_value** argv) {
     int res = edit_distance((const char*)sqlite3_value_text(argv[0]),
                             (const char*)sqlite3_value_text(argv[1]), 0);
     if (res < 0) {
@@ -200,12 +200,12 @@ static void fuzzy_edit_distance(sqlite3_context* context, int argc, sqlite3_valu
 }
 
 /*
-** translit(X)
+** fuzzy_translit(X)
 **
 ** Convert a string that contains non-ASCII Roman characters into
 ** pure ASCII.
 */
-static void fuzzy_transliterate(sqlite3_context* context, int argc, sqlite3_value** argv) {
+static void fuzzy_translit(sqlite3_context* context, int argc, sqlite3_value** argv) {
     const unsigned char* zIn = sqlite3_value_text(argv[0]);
     int nIn = sqlite3_value_bytes(argv[0]);
     unsigned char* zOut = transliterate(zIn, nIn);
@@ -217,7 +217,7 @@ static void fuzzy_transliterate(sqlite3_context* context, int argc, sqlite3_valu
 }
 
 /*
-** script_code(X)
+** fuzzy_script(X)
 **
 ** Try to determine the dominant script used by the word X and return
 ** its ISO 15924 numeric code.
@@ -232,7 +232,7 @@ static void fuzzy_transliterate(sqlite3_context* context, int argc, sqlite3_valu
 ** two or more of the above scripts or 999 if X contains no characters
 ** from any of the above scripts.
 */
-static void fuzzy_script_code(sqlite3_context* context, int argc, sqlite3_value** argv) {
+static void fuzzy_script(sqlite3_context* context, int argc, sqlite3_value** argv) {
     const unsigned char* zIn = sqlite3_value_text(argv[0]);
     int nIn = sqlite3_value_bytes(argv[0]);
     int res = script_code(zIn, nIn);
@@ -241,8 +241,8 @@ static void fuzzy_script_code(sqlite3_context* context, int argc, sqlite3_value*
 
 // Below are custom functions
 
-// fuzzy_caverphone implements Caverphone coding
-static void fuzzy_caverphone(sqlite3_context* context, int argc, sqlite3_value** argv) {
+// fuzzy_caver implements Caverphone coding
+static void fuzzy_caver(sqlite3_context* context, int argc, sqlite3_value** argv) {
     assert(argc == 1);
     const unsigned char* source = sqlite3_value_text(argv[0]);
     if (source == 0) {
@@ -259,19 +259,31 @@ static void fuzzy_caverphone(sqlite3_context* context, int argc, sqlite3_value**
 int fuzzy_init(sqlite3* db) {
     static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
     // libstrcmp
-    sqlite3_create_function(db, "dlevenshtein", 2, flags, 0, fuzzy_dlevenshtein, 0, 0);
+    sqlite3_create_function(db, "fuzzy_damlev", 2, flags, 0, fuzzy_damlev, 0, 0);
+    sqlite3_create_function(db, "dlevenshtein", 2, flags, 0, fuzzy_damlev, 0, 0);
+    sqlite3_create_function(db, "fuzzy_hamming", 2, flags, 0, fuzzy_hamming, 0, 0);
     sqlite3_create_function(db, "hamming", 2, flags, 0, fuzzy_hamming, 0, 0);
-    sqlite3_create_function(db, "jaro_winkler", 2, flags, 0, fuzzy_jaro_winkler, 0, 0);
-    sqlite3_create_function(db, "levenshtein", 2, flags, 0, fuzzy_levenshtein, 0, 0);
-    sqlite3_create_function(db, "osa_distance", 2, flags, 0, fuzzy_osa_distance, 0, 0);
+    sqlite3_create_function(db, "fuzzy_jarowin", 2, flags, 0, fuzzy_jarowin, 0, 0);
+    sqlite3_create_function(db, "jaro_winkler", 2, flags, 0, fuzzy_jarowin, 0, 0);
+    sqlite3_create_function(db, "fuzzy_leven", 2, flags, 0, fuzzy_leven, 0, 0);
+    sqlite3_create_function(db, "levenshtein", 2, flags, 0, fuzzy_leven, 0, 0);
+    sqlite3_create_function(db, "fuzzy_osadist", 2, flags, 0, fuzzy_osadist, 0, 0);
+    sqlite3_create_function(db, "osa_distance", 2, flags, 0, fuzzy_osadist, 0, 0);
+    sqlite3_create_function(db, "fuzzy_soundex", 1, flags, 0, fuzzy_soundex, 0, 0);
     sqlite3_create_function(db, "soundex", 1, flags, 0, fuzzy_soundex, 0, 0);
+    sqlite3_create_function(db, "fuzzy_rsoundex", 1, flags, 0, fuzzy_rsoundex, 0, 0);
     sqlite3_create_function(db, "rsoundex", 1, flags, 0, fuzzy_rsoundex, 0, 0);
     // spellfix
-    sqlite3_create_function(db, "edit_distance", 2, flags, 0, fuzzy_edit_distance, 0, 0);
-    sqlite3_create_function(db, "phonetic_hash", 1, flags, 0, fuzzy_phonetic_hash, 0, 0);
-    sqlite3_create_function(db, "script_code", 1, flags, 0, fuzzy_script_code, 0, 0);
-    sqlite3_create_function(db, "translit", 1, flags, 0, fuzzy_transliterate, 0, 0);
+    sqlite3_create_function(db, "fuzzy_editdist", 2, flags, 0, fuzzy_editdist, 0, 0);
+    sqlite3_create_function(db, "edit_distance", 2, flags, 0, fuzzy_editdist, 0, 0);
+    sqlite3_create_function(db, "fuzzy_phonetic", 1, flags, 0, fuzzy_phonetic, 0, 0);
+    sqlite3_create_function(db, "phonetic_hash", 1, flags, 0, fuzzy_phonetic, 0, 0);
+    sqlite3_create_function(db, "fuzzy_script", 1, flags, 0, fuzzy_script, 0, 0);
+    sqlite3_create_function(db, "script_code", 1, flags, 0, fuzzy_script, 0, 0);
+    sqlite3_create_function(db, "fuzzy_translit", 1, flags, 0, fuzzy_translit, 0, 0);
+    sqlite3_create_function(db, "translit", 1, flags, 0, fuzzy_translit, 0, 0);
     // custom
-    sqlite3_create_function(db, "caverphone", 1, flags, 0, fuzzy_caverphone, 0, 0);
+    sqlite3_create_function(db, "fuzzy_caver", 1, flags, 0, fuzzy_caver, 0, 0);
+    sqlite3_create_function(db, "caverphone", 1, flags, 0, fuzzy_caver, 0, 0);
     return SQLITE_OK;
 }
