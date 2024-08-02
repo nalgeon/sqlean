@@ -4,15 +4,19 @@ Access the file system directly from SQL. Partly based on the [fileio.c](https:/
 
 Main features:
 
--   Read file contents as a blob.
--   Read a file line by line.
--   Write a blob to a file.
--   Append a string to a file.
--   Create a directory.
--   Create a symlink.
--   List files in a directory.
+-   [fileio_read](#fileio_read) - Read file contents as a blob.
+-   [fileio_scan](#fileio_scan) - Read a file line by line.
+-   [fileio_write](#fileio_write) - Write a blob to a file.
+-   [fileio_append](#fileio_append) - Append a string to a file.
+-   [fileio_mkdir](#fileio_mkdir) - Create a directory.
+-   [fileio_symlink](#fileio_symlink) - Create a symlink.
+-   [fileio_ls](#fileio_ls) - List files in a directory.
 
-<h3 name="fileio_read"><code>fileio_read(path [,offset [,limit]])</code></h3>
+### fileio_read
+
+```text
+fileio_read(path [,offset [,limit]])
+```
 
 Reads the file specified by `path` and returns its contents as `blob`.
 
@@ -40,7 +44,11 @@ select fileio_read('hello.txt', 0, 5);
 -- hello
 ```
 
-<h3 name="fileio_scan"><code>fileio_scan(path)</code></h3>
+### fileio_scan
+
+```text
+fileio_scan(path)
+```
 
 Reads the file specified by `path` line by line, without loading the whole file into memory.
 
@@ -68,7 +76,11 @@ Each row has the following columns:
 
 Inspired by [sqlite-lines](https://github.com/asg017/sqlite-lines/) by Alex Garcia.
 
-<h3 name="fileio_write"><code>fileio_write(path, data [,perm [,mtime]])</code></h3>
+### fileio_write
+
+```text
+fileio_write(path, data [,perm [,mtime]])
+```
 
 Writes blob `data` to a file specified by `path`. Returns the number of written bytes. If an error occurs, returns NULL.
 
@@ -95,7 +107,11 @@ select fileio_write('hello.txt', 'hello world', 436);
 
 If the optional `mtime` argument is present, it expects an integer — the number of seconds since the unix epoch. The modification-time of the target file is set to this value before returning.
 
-<h3 name="fileio_append"><code>fileio_append(path, str)</code></h3>
+### fileio_append
+
+```text
+fileio_append(path, str)
+```
 
 Appends `str` string to a file specified by `path`. Returns the number of written bytes. If an error occurs, returns NULL.
 
@@ -118,7 +134,11 @@ three
 
 Using concatenation with `char(10)` adds `\n` to the end of the line.
 
-<h3 name="fileio_mkdir"><code>fileio_mkdir(path [,perm])</code></h3>
+### fileio_mkdir
+
+```text
+fileio_mkdir(path [,perm])
+```
 
 Creates a directory named `path` with permission bits `perm` (octal `777` by default).
 
@@ -126,7 +146,11 @@ Creates a directory named `path` with permission bits `perm` (octal `777` by def
 select fileio_mkdir('hellodir');
 ```
 
-<h3 name="fileio_symlink"><code>fileio_symlink(src, dst)</code></h3>
+### fileio_symlink
+
+```text
+fileio_symlink(src, dst)
+```
 
 Creates a symbolic link named `dst`, pointing to `src`.
 
@@ -134,7 +158,11 @@ Creates a symbolic link named `dst`, pointing to `src`.
 select fileio_symlink('hello.txt', 'hello.lnk');
 ```
 
-<h3 name="fileio_ls"><code>fileio_ls(path [,recursive])</code></h3>
+### fileio_ls
+
+```text
+fileio_ls(path [,recursive])
+```
 
 Lists files and directories as a virtual table.
 
