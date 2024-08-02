@@ -204,13 +204,22 @@ static void crypto_decode(sqlite3_context* context, int argc, sqlite3_value** ar
 
 int crypto_init(sqlite3* db) {
     static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
+    sqlite3_create_function(db, "crypto_blake3", 1, flags, (void*)3, crypto_hash, 0, 0);
     sqlite3_create_function(db, "blake3", 1, flags, (void*)3, crypto_hash, 0, 0);
+    sqlite3_create_function(db, "crypto_md5", 1, flags, (void*)5, crypto_hash, 0, 0);
     sqlite3_create_function(db, "md5", 1, flags, (void*)5, crypto_hash, 0, 0);
+    sqlite3_create_function(db, "crypto_sha1", 1, flags, (void*)1, crypto_hash, 0, 0);
     sqlite3_create_function(db, "sha1", 1, flags, (void*)1, crypto_hash, 0, 0);
+    sqlite3_create_function(db, "crypto_sha256", 1, flags, (void*)2256, crypto_hash, 0, 0);
     sqlite3_create_function(db, "sha256", 1, flags, (void*)2256, crypto_hash, 0, 0);
+    sqlite3_create_function(db, "crypto_sha384", 1, flags, (void*)2384, crypto_hash, 0, 0);
     sqlite3_create_function(db, "sha384", 1, flags, (void*)2384, crypto_hash, 0, 0);
+    sqlite3_create_function(db, "crypto_sha512", 1, flags, (void*)2512, crypto_hash, 0, 0);
     sqlite3_create_function(db, "sha512", 1, flags, (void*)2512, crypto_hash, 0, 0);
+
+    sqlite3_create_function(db, "crypto_encode", 2, flags, 0, crypto_encode, 0, 0);
     sqlite3_create_function(db, "encode", 2, flags, 0, crypto_encode, 0, 0);
+    sqlite3_create_function(db, "crypto_decode", 2, flags, 0, crypto_decode, 0, 0);
     sqlite3_create_function(db, "decode", 2, flags, 0, crypto_decode, 0, 0);
     return SQLITE_OK;
 }
