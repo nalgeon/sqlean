@@ -4,9 +4,13 @@ Regexp search and replace functions. Based on the [PCRE2](https://github.com/pcr
 
 Supports Unicode in character classes (like `\w`) and assertions (like `\b`).
 
-Provides the following functions:
+[regexp](#regexp-statement) •
+[like](#regexp_like) •
+[substr](#regexp_substr) •
+[capture](#regexp_capture) •
+[replace](#regexp_replace) •
 
-### `REGEXP` statement
+### REGEXP statement
 
 Checks if the source string matches the pattern.
 
@@ -15,7 +19,11 @@ select true where 'the year is 2021' regexp '[0-9]+';
 -- 1
 ```
 
-<h3 name="regexp_like"><code>regexp_like(source, pattern)</code></h3>
+### regexp_like
+
+```text
+regexp_like(source, pattern)
+```
 
 Checks if the source string matches the pattern.
 
@@ -26,7 +34,11 @@ select regexp_like('the year is 2021', '2k21');
 -- 0
 ```
 
-<h3 name="regexp_substr"><code>regexp_substr(source, pattern)</code></h3>
+### regexp_substr
+
+```text
+regexp_substr(source, pattern)
+```
 
 Returns a substring of the source string that matches the pattern.
 
@@ -37,7 +49,11 @@ select regexp_substr('the year is 2021', '2k21');
 -- (null)
 ```
 
-<h3 name="regexp_capture"><code>regexp_capture(source, pattern [, n])</code></h3>
+### regexp_capture
+
+```text
+regexp_capture(source, pattern [, n])
+```
 
 Finds a substring of the source string that matches the pattern and returns the `n`th matching group within that substring. Group numbering starts at 1. `n = 0` (default) returns the entire substring.
 
@@ -48,7 +64,11 @@ select regexp_capture('years is 2021', '\d\d(\d\d)', 1);
 -- 21
 ```
 
-<h3 name="regexp_replace"><code>regexp_replace(source, pattern, replacement)</code></h3>
+### regexp_replace
+
+```text
+regexp_replace(source, pattern, replacement)
+```
 
 Replaces all matching substrings with the replacement string.
 
@@ -64,16 +84,6 @@ Supports backreferences to captured groups `$1` trough `$9` in the replacement s
 ```sql
 select regexp_replace('the year is 2021', '([0-9]+)', '$1 or 2050');
 -- the year is 2021 or 2050
-```
-
-Supports case-insensitive matching with the `(?)` option:
-
-```sql
-select regexp_substr('the YEAR is 2021', 'year');
--- (null)
-
-select regexp_substr('the YEAR is 2021', '(?i)year');
--- YEAR
 ```
 
 ## Supported syntax
@@ -143,6 +153,13 @@ Options:
 
 ```
 (?i)    case-insensitive matching
+```
+
+```sql
+select regexp_substr('the YEAR is 2021', 'year');
+-- (null)
+select regexp_substr('the YEAR is 2021', '(?i)year');
+-- YEAR
 ```
 
 ## Installation and Usage
