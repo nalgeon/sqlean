@@ -264,13 +264,12 @@ int uuid_init(sqlite3* db) {
     static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS;
     static const int det_flags = SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
     sqlite3_create_function(db, "uuid4", 0, flags, 0, uuid_v4_generate, 0, 0);
+    sqlite3_create_function(db, "gen_random_uuid", 0, flags, 0, uuid_v4_generate, 0, 0);
 #ifndef SQLEAN_OMIT_UUID7
     sqlite3_create_function(db, "uuid7", 0, flags, 0, uuid_v7_generate, 0, 0);
     sqlite3_create_function(db, "uuid7_timestamp_ms", 1, det_flags, 0, uuid_v7_extract_timestamp_ms,
                             0, 0);
 #endif
-    /* for postgresql compatibility */
-    sqlite3_create_function(db, "gen_random_uuid", 0, flags, 0, uuid_v4_generate, 0, 0);
     sqlite3_create_function(db, "uuid_str", 1, det_flags, 0, uuid_str, 0, 0);
     sqlite3_create_function(db, "uuid_blob", 1, det_flags, 0, uuid_blob, 0, 0);
     return SQLITE_OK;
