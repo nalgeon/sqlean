@@ -366,6 +366,7 @@ static sqlite3_module series_module = {
 };
 
 int stats_series_init(sqlite3* db) {
+    sqlite3_create_module(db, "stats_seq", &series_module, 0);
     sqlite3_create_module(db, "generate_series", &series_module, 0);
     return SQLITE_OK;
 }

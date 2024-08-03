@@ -297,6 +297,21 @@ static void percentFinal(sqlite3_context* pCtx) {
 
 int stats_scalar_init(sqlite3* db) {
     static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS;
+    sqlite3_create_function(db, "stats_stddev", 1, flags, 0, 0, varianceStep, stddevFinalize);
+    sqlite3_create_function(db, "stats_stddev_samp", 1, flags, 0, 0, varianceStep, stddevFinalize);
+    sqlite3_create_function(db, "stats_stddev_pop", 1, flags, 0, 0, varianceStep,
+                            stddevpopFinalize);
+    sqlite3_create_function(db, "stats_var", 1, flags, 0, 0, varianceStep, varianceFinalize);
+    sqlite3_create_function(db, "stats_var_samp", 1, flags, 0, 0, varianceStep, varianceFinalize);
+    sqlite3_create_function(db, "stats_var_pop", 1, flags, 0, 0, varianceStep, variancepopFinalize);
+    sqlite3_create_function(db, "stats_median", 1, flags, 0, 0, percentStep50, percentFinal);
+    sqlite3_create_function(db, "stats_perc", 2, flags, 0, 0, percentStepCustom, percentFinal);
+    sqlite3_create_function(db, "stats_p25", 1, flags, 0, 0, percentStep25, percentFinal);
+    sqlite3_create_function(db, "stats_p75", 1, flags, 0, 0, percentStep75, percentFinal);
+    sqlite3_create_function(db, "stats_p90", 1, flags, 0, 0, percentStep90, percentFinal);
+    sqlite3_create_function(db, "stats_p95", 1, flags, 0, 0, percentStep95, percentFinal);
+    sqlite3_create_function(db, "stats_p99", 1, flags, 0, 0, percentStep99, percentFinal);
+
     sqlite3_create_function(db, "stddev", 1, flags, 0, 0, varianceStep, stddevFinalize);
     sqlite3_create_function(db, "stddev_samp", 1, flags, 0, 0, varianceStep, stddevFinalize);
     sqlite3_create_function(db, "stddev_pop", 1, flags, 0, 0, varianceStep, stddevpopFinalize);
@@ -310,5 +325,6 @@ int stats_scalar_init(sqlite3* db) {
     sqlite3_create_function(db, "percentile_90", 1, flags, 0, 0, percentStep90, percentFinal);
     sqlite3_create_function(db, "percentile_95", 1, flags, 0, 0, percentStep95, percentFinal);
     sqlite3_create_function(db, "percentile_99", 1, flags, 0, 0, percentStep99, percentFinal);
+
     return SQLITE_OK;
 }
