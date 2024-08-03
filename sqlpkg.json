@@ -1,7 +1,7 @@
 {
     "owner": "nalgeon",
     "name": "sqlean",
-    "version": "0.25.0",
+    "version": "0.26.0",
     "homepage": "https://github.com/nalgeon/sqlean",
     "repository": "https://github.com/nalgeon/sqlean",
     "authors": ["Anton Zhiyanov"],
