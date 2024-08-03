@@ -1,4 +1,5 @@
 // Originally from SQLite 3.42.0 source code (func.c), Public Domain
+// Updated as of 3.46.0
 
 // Modified by Anton Zhiyanov, MIT License
 // https://github.com/nalgeon/sqlean/
@@ -7,21 +8,19 @@
 
 #include <assert.h>
 #include <math.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "sqlite3ext.h"
 SQLITE_EXTENSION_INIT3
 
 #if defined(HAVE_STDINT_H) /* Use this case if we have ANSI headers */
-#define SQLITE_INT_TO_PTR(X) ((void*)(intptr_t)(X))
 #define SQLITE_PTR_TO_INT(X) ((int)(intptr_t)(X))
 #elif defined(__PTRDIFF_TYPE__) /* This case should work for GCC */
-#define SQLITE_INT_TO_PTR(X) ((void*)(__PTRDIFF_TYPE__)(X))
 #define SQLITE_PTR_TO_INT(X) ((int)(__PTRDIFF_TYPE__)(X))
 #elif !defined(__GNUC__) /* Works for compilers other than LLVM */
-#define SQLITE_INT_TO_PTR(X) ((void*)&((char*)0)[X])
 #define SQLITE_PTR_TO_INT(X) ((int)(((char*)X) - (char*)0))
 #else /* Generates a warning - but it always works */
-#define SQLITE_INT_TO_PTR(X) ((void*)(X))
 #define SQLITE_PTR_TO_INT(X) ((int)(X))
 #endif
 
@@ -200,8 +199,81 @@ static void piFunc(sqlite3_context* context, int argc, sqlite3_value** argv) {
     sqlite3_result_double(context, M_PI);
 }
 
+/*
+** Implementation of the round() function
+*/
+static void roundFunc(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    int n = 0;
+    double r;
+    char* zBuf;
+    assert(argc == 1 || argc == 2);
+    if (argc == 2) {
+        if (SQLITE_NULL == sqlite3_value_type(argv[1]))
+            return;
+        n = sqlite3_value_int(argv[1]);
+        if (n > 30)
+            n = 30;
+        if (n < 0)
+            n = 0;
+    }
+    if (sqlite3_value_type(argv[0]) == SQLITE_NULL)
+        return;
+    r = sqlite3_value_double(argv[0]);
+    /* If Y==0 and X will fit in a 64-bit int,
+    ** handle the rounding directly,
+    ** otherwise use printf.
+    */
+    if (r < -4503599627370496.0 || r > +4503599627370496.0) {
+        /* The value has no fractional part so there is nothing to round */
+    } else if (n == 0) {
+        r = (double)((sqlite_int64)(r + (r < 0 ? -0.5 : +0.5)));
+    } else {
+        zBuf = sqlite3_mprintf("%!.*f", n, r);
+        if (zBuf == 0) {
+            sqlite3_result_error_nomem(context);
+            return;
+        }
+        // sqlite3AtoF(zBuf, &r, sqlite3Strlen30(zBuf), SQLITE_UTF8);
+        r = strtod(zBuf, NULL);
+        sqlite3_free(zBuf);
+    }
+    sqlite3_result_double(context, r);
+}
+
 int math_init(sqlite3* db) {
     static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
+
+    sqlite3_create_function(db, "math_round", 1, flags, 0, roundFunc, 0, 0);
+    sqlite3_create_function(db, "math_round", 2, flags, 0, roundFunc, 0, 0);
+    sqlite3_create_function(db, "math_ceil", 1, flags, xCeil, ceilingFunc, 0, 0);
+    sqlite3_create_function(db, "math_floor", 1, flags, xFloor, ceilingFunc, 0, 0);
+    sqlite3_create_function(db, "math_trunc", 1, flags, trunc, ceilingFunc, 0, 0);
+    sqlite3_create_function(db, "math_ln", 1, flags, 0, logFunc, 0, 0);
+    sqlite3_create_function(db, "math_log", 1, flags, (void*)(1), logFunc, 0, 0);
+    sqlite3_create_function(db, "math_log10", 1, flags, (void*)(1), logFunc, 0, 0);
+    sqlite3_create_function(db, "math_log2", 1, flags, (void*)(2), logFunc, 0, 0);
+    sqlite3_create_function(db, "math_log", 2, flags, 0, logFunc, 0, 0);
+    sqlite3_create_function(db, "math_exp", 1, flags, exp, math1Func, 0, 0);
+    sqlite3_create_function(db, "math_pow", 2, flags, pow, math2Func, 0, 0);
+    sqlite3_create_function(db, "math_mod", 2, flags, fmod, math2Func, 0, 0);
+    sqlite3_create_function(db, "math_acos", 1, flags, acos, math1Func, 0, 0);
+    sqlite3_create_function(db, "math_asin", 1, flags, asin, math1Func, 0, 0);
+    sqlite3_create_function(db, "math_atan", 1, flags, atan, math1Func, 0, 0);
+    sqlite3_create_function(db, "math_atan2", 2, flags, atan2, math2Func, 0, 0);
+    sqlite3_create_function(db, "math_cos", 1, flags, cos, math1Func, 0, 0);
+    sqlite3_create_function(db, "math_sin", 1, flags, sin, math1Func, 0, 0);
+    sqlite3_create_function(db, "math_tan", 1, flags, tan, math1Func, 0, 0);
+    sqlite3_create_function(db, "math_cosh", 1, flags, cosh, math1Func, 0, 0);
+    sqlite3_create_function(db, "math_sinh", 1, flags, sinh, math1Func, 0, 0);
+    sqlite3_create_function(db, "math_tanh", 1, flags, tanh, math1Func, 0, 0);
+    sqlite3_create_function(db, "math_acosh", 1, flags, acosh, math1Func, 0, 0);
+    sqlite3_create_function(db, "math_asinh", 1, flags, asinh, math1Func, 0, 0);
+    sqlite3_create_function(db, "math_atanh", 1, flags, atanh, math1Func, 0, 0);
+    sqlite3_create_function(db, "math_sqrt", 1, flags, sqrt, math1Func, 0, 0);
+    sqlite3_create_function(db, "math_radians", 1, flags, degToRad, math1Func, 0, 0);
+    sqlite3_create_function(db, "math_degrees", 1, flags, radToDeg, math1Func, 0, 0);
+    sqlite3_create_function(db, "math_pi", 0, flags, 0, piFunc, 0, 0);
+
     sqlite3_create_function(db, "ceil", 1, flags, xCeil, ceilingFunc, 0, 0);
     sqlite3_create_function(db, "ceiling", 1, flags, xCeil, ceilingFunc, 0, 0);
     sqlite3_create_function(db, "floor", 1, flags, xFloor, ceilingFunc, 0, 0);
@@ -232,5 +304,6 @@ int math_init(sqlite3* db) {
     sqlite3_create_function(db, "radians", 1, flags, degToRad, math1Func, 0, 0);
     sqlite3_create_function(db, "degrees", 1, flags, radToDeg, math1Func, 0, 0);
     sqlite3_create_function(db, "pi", 0, flags, 0, piFunc, 0, 0);
+
     return SQLITE_OK;
 }
