@@ -4,50 +4,75 @@ Functions to manipulate IPs and subnets. Created by [Vincent Bernat](https://git
 
 ⚠️ This extension is not available on Windows.
 
-<h3 name="ipfamily"><code>ipfamily(ip)</code></h3>
+[contains](#ipcontains) •
+[family](#ipfamily) •
+[host](#iphost) •
+[masklen](#ipmasklen) •
+[network](#ipnetwork)
+
+### ipcontains
+
+```text
+ipcontains(subnet, ip)
+```
+
+Reports whether `subnet` contains `ip` (which may be another subnet).
+
+```sql
+select ipcontains('192.168.16.0/24', '192.168.16.3');
+-- 1
+```
+
+### ipfamily
+
+```text
+ipfamily(ip)
+```
 
 Returns the family of a specified IP address.
 
-```
-sqlite> select ipfamily('192.168.1.1');
-4
+```sql
+select ipfamily('192.168.1.1');
+-- 4
 ```
 
-<h3 name="iphost"><code>iphost(ip)</code></h3>
+### iphost
+
+```text
+iphost(ip)
+```
 
 Returns the host part of an IP address.
 
-```
-sqlite> select iphost('2001:db8::123/64');
-2001:db8::123
+```sql
+select iphost('2001:db8::123/64');
+-- 2001:db8::123
 ```
 
-<h3 name="ipmasklen"><code>ipmasklen(ip)</code></h3>
+### ipmasklen
+
+```text
+ipmasklen(ip)
+```
 
 Returns the prefix length of an IP address.
 
-```
-sqlite> select ipmasklen('192.168.16.12/24');
-24
+```sql
+select ipmasklen('192.168.16.12/24');
+-- 24
 ```
 
-<h3 name="ipnetwork"><code>ipnetwork(ip)</code></h3>
+### ipnetwork
+
+```text
+ipnetwork(ip)
+```
 
 Returns the network part of an IP address.
 
-```
-sqlite> select ipnetwork('192.168.16.12/24');
-192.168.16.0/24
-```
-
-<h3 name="ipcontains"><code>ipcontains(subnet, ip)</code></h3>
-
-Returns `1` if `subnet` contains `ip` (which can be another subnet).
-`0` otherwise.
-
-```
-sqlite> select ipcontains('192.168.16.0/24', '192.168.16.3');
-1
+```sql
+select ipnetwork('192.168.16.12/24');
+-- 192.168.16.0/24
 ```
 
 ## Installation and Usage
