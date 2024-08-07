@@ -759,8 +759,7 @@ Time time_parse(const char* value) {
         return zero;
     }
 
-    int year = 1, day = 1, hour = 0, min = 0, sec = 0, nsec = 0, offset_sec = TIMEX_UTC;
-    enum Month month = 1;
+    int year = 1, month = 1, day = 1, hour = 0, min = 0, sec = 0, nsec = 0, offset_sec = TIMEX_UTC;
     char tz[7] = "";
 
     if (len == 35) {
@@ -826,7 +825,7 @@ Time time_parse(const char* value) {
         offset_sec += ((tz[4] - '0') * 10 + (tz[5] - '0')) * 60 * sign;
     }
 
-    return time_date(year, month, day, hour, min, sec, nsec, offset_sec);
+    return time_date(year, (enum Month)month, day, hour, min, sec, nsec, offset_sec);
 }
 
 #pragma endregion
