@@ -39,7 +39,7 @@ unsigned levenshtein(const char* str1, const char* str2) {
 
     // declare variables
     unsigned row, col;
-    unsigned last_diag, cur, cost;
+    unsigned last_diag = 0, cur, cost;
 
     // initialize array to hold values
     unsigned* vector = calloc(str1_len + 1, sizeof(unsigned));
