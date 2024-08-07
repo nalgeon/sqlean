@@ -198,7 +198,7 @@ ctest-all:
 	make ctest package=text module=utf8
 	gcc -Wall -Isrc test/time/time.test.c src/time/*.c -o time.time
 	make ctest package=time module=time
-	gcc -Wall -Isrc test/time/duration.test.c src/time/*.c -o time.duration
+	gcc -Wall -Isrc test/time/duration.test.c src/time/*.c -o time.duration -lm
 	make ctest package=time module=duration
 
 ctest:
