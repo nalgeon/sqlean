@@ -13,6 +13,7 @@ LINIX_FLAGS := -z now -z relro -Wall -Wsign-compare -Wno-unknown-pragmas -fPIC -
 WINDO_FLAGS := -shared -Isrc -DSQLEAN_VERSION=$(SQLEAN_VERSION)
 WIN32_FLAGS := $(WINDO_FLAGS) -DSQLEAN_OMIT_UUID7
 MACOS_FLAGS := -Wall -Wsign-compare -fPIC -dynamiclib -Isrc -DSQLEAN_VERSION=$(SQLEAN_VERSION)
+CTEST_FLAGS := -Wall -Wsign-compare -Wno-unknown-pragmas -Isrc
 
 prepare-dist:
 	mkdir -p dist
@@ -191,15 +192,15 @@ test:
 	@cat test.log | (! grep -Ex "[0-9_]+.[^1]")
 
 ctest-all:
-	gcc -Wall -Isrc test/text/bstring.test.c src/text/*.c src/text/*/*.c -o text.bstring
+	gcc $(CTEST_FLAGS) test/text/bstring.test.c src/text/*.c src/text/*/*.c -o text.bstring
 	make ctest package=text module=bstring
-	gcc -Wall -Isrc test/text/rstring.test.c src/text/*.c src/text/*/*.c -o text.rstring
+	gcc $(CTEST_FLAGS) test/text/rstring.test.c src/text/*.c src/text/*/*.c -o text.rstring
 	make ctest package=text module=rstring
-	gcc -Wall -Isrc test/text/utf8.test.c src/text/utf8/*.c -o text.utf8
+	gcc $(CTEST_FLAGS) test/text/utf8.test.c src/text/utf8/*.c -o text.utf8
 	make ctest package=text module=utf8
-	gcc -Wall -Isrc test/time/time.test.c src/time/*.c -o time.time
+	gcc $(CTEST_FLAGS) test/time/time.test.c src/time/*.c -o time.time
 	make ctest package=time module=time
-	gcc -Wall -Isrc test/time/duration.test.c src/time/*.c -o time.duration -lm
+	gcc $(CTEST_FLAGS) test/time/duration.test.c src/time/*.c -o time.duration -lm
 	make ctest package=time module=duration
 
 ctest:

@@ -118,7 +118,7 @@ static void test_get_part(void) {
         DateTest test = date_tests[i];
         Time t = time_unix(test.epoch, 0);
         assert(time_get_year(t) == test.year);
-        assert(time_get_month(t) == test.month);
+        assert((int)time_get_month(t) == test.month);
         assert(time_get_day(t) == test.day);
         assert(time_get_hour(t) == test.hour);
         assert(time_get_minute(t) == test.min);
