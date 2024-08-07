@@ -4,6 +4,7 @@
 // Duration tests.
 
 #include <assert.h>
+#include <limits.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -196,7 +197,7 @@ static RoundTest round_tests[] = {
     {8e18, 3e18, 9e18},
     {9e18, 5e18, 9223372036854775807},
     {-8e18, 3e18, -9e18},
-    {-9e18, 5e18, -(1LL << 63)},
+    {-9e18, 5e18, LLONG_MIN},
     {(3LL << 61) - 1, 3LL << 61, 3LL << 61},
 };
 
