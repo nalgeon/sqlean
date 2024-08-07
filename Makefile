@@ -52,6 +52,7 @@ compile-linux-x86:
 	gcc -O3 $(LINIX_FLAGS) -include src/regexp/constants.h src/sqlite3-regexp.c src/regexp/*.c src/regexp/pcre2/*.c -o dist/x86/regexp.so
 	gcc -O3 $(LINIX_FLAGS) src/sqlite3-stats.c src/stats/*.c -o dist/x86/stats.so -lm
 	gcc -O3 $(LINIX_FLAGS) src/sqlite3-text.c src/text/*.c src/text/*/*.c -o dist/x86/text.so
+	gcc -O3 $(LINIX_FLAGS) src/sqlite3-time.c src/time/*.c -o dist/x86/time.so
 	gcc -O3 $(LINIX_FLAGS) src/sqlite3-unicode.c src/unicode/*.c -o dist/x86/unicode.so
 	gcc -O3 $(LINIX_FLAGS) src/sqlite3-uuid.c src/uuid/*.c -o dist/x86/uuid.so
 	gcc -O3 $(LINIX_FLAGS) src/sqlite3-vsv.c src/vsv/*.c -o dist/x86/vsv.so -lm
@@ -68,6 +69,7 @@ compile-linux-arm64:
 	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) -include src/regexp/constants.h src/sqlite3-regexp.c src/regexp/*.c src/regexp/pcre2/*.c -o dist/arm64/regexp.so
 	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) src/sqlite3-stats.c src/stats/*.c -o dist/arm64/stats.so -lm
 	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) src/sqlite3-text.c src/text/*.c src/text/*/*.c -o dist/arm64/text.so
+	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) src/sqlite3-time.c src/time/*.c -o dist/arm64/time.so
 	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) src/sqlite3-unicode.c src/unicode/*.c -o dist/arm64/unicode.so
 	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) src/sqlite3-uuid.c src/uuid/*.c -o dist/arm64/uuid.so
 	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) src/sqlite3-vsv.c src/vsv/*.c -o dist/arm64/vsv.so -lm
@@ -86,6 +88,7 @@ compile-windows:
 	gcc -O3 $(WINDO_FLAGS) src/sqlite3-regexp.c -include src/regexp/constants.h src/regexp/*.c src/regexp/pcre2/*.c -o dist/regexp.dll
 	gcc -O3 $(WINDO_FLAGS) src/sqlite3-stats.c src/stats/*.c -o dist/stats.dll -lm
 	gcc -O3 $(WINDO_FLAGS) src/sqlite3-text.c src/text/*.c src/text/*/*.c -o dist/text.dll
+	gcc -O3 $(WINDO_FLAGS) src/sqlite3-time.c src/time/*.c -o dist/time.dll
 	gcc -O3 $(WINDO_FLAGS) src/sqlite3-unicode.c src/unicode/*.c -o dist/unicode.dll
 	gcc -O3 $(WINDO_FLAGS) src/sqlite3-uuid.c src/uuid/*.c -o dist/uuid.dll
 	gcc -O3 $(WINDO_FLAGS) src/sqlite3-vsv.c src/vsv/*.c -o dist/vsv.dll -lm
@@ -120,6 +123,7 @@ compile-macos:
 	gcc -O3 $(MACOS_FLAGS) -include src/regexp/constants.h src/sqlite3-regexp.c src/regexp/*.c src/regexp/pcre2/*.c -o dist/regexp.dylib
 	gcc -O3 $(MACOS_FLAGS) src/sqlite3-stats.c src/stats/*.c -o dist/stats.dylib -lm
 	gcc -O3 $(MACOS_FLAGS) src/sqlite3-text.c src/text/*.c src/text/*/*.c -o dist/text.dylib
+	gcc -O3 $(MACOS_FLAGS) src/sqlite3-time.c src/time/*.c -o dist/time.dylib
 	gcc -O3 $(MACOS_FLAGS) src/sqlite3-unicode.c src/unicode/*.c -o dist/unicode.dylib
 	gcc -O3 $(MACOS_FLAGS) src/sqlite3-uuid.c src/uuid/*.c -o dist/uuid.dylib
 	gcc -O3 $(MACOS_FLAGS) src/sqlite3-vsv.c src/vsv/*.c -o dist/vsv.dylib -lm
@@ -136,6 +140,7 @@ compile-macos-x86:
 	gcc -O3 $(MACOS_FLAGS) -include src/regexp/constants.h src/sqlite3-regexp.c src/regexp/*.c src/regexp/pcre2/*.c -o dist/x86/regexp.dylib -target x86_64-apple-macos10.12
 	gcc -O3 $(MACOS_FLAGS) src/sqlite3-stats.c src/stats/*.c -o dist/x86/stats.dylib -target x86_64-apple-macos10.12 -lm
 	gcc -O3 $(MACOS_FLAGS) src/sqlite3-text.c src/text/*.c src/text/*/*.c -o dist/x86/text.dylib -target x86_64-apple-macos10.12
+	gcc -O3 $(MACOS_FLAGS) src/sqlite3-time.c src/time/*.c -o dist/x86/time.dylib -target x86_64-apple-macos10.12
 	gcc -O3 $(MACOS_FLAGS) src/sqlite3-unicode.c src/unicode/*.c -o dist/x86/unicode.dylib -target x86_64-apple-macos10.12
 	gcc -O3 $(MACOS_FLAGS) src/sqlite3-uuid.c src/uuid/*.c -o dist/x86/uuid.dylib -target x86_64-apple-macos10.12
 	gcc -O3 $(MACOS_FLAGS) src/sqlite3-vsv.c src/vsv/*.c -o dist/x86/vsv.dylib -target x86_64-apple-macos10.12 -lm
@@ -152,6 +157,7 @@ compile-macos-arm64:
 	gcc -O3 $(MACOS_FLAGS) -include src/regexp/constants.h src/sqlite3-regexp.c src/regexp/*.c src/regexp/pcre2/*.c -o dist/arm64/regexp.dylib -target arm64-apple-macos11
 	gcc -O3 $(MACOS_FLAGS) src/sqlite3-stats.c src/stats/*.c -o dist/arm64/stats.dylib -target arm64-apple-macos11 -lm
 	gcc -O3 $(MACOS_FLAGS) src/sqlite3-text.c src/text/*.c src/text/*/*.c -o dist/arm64/text.dylib -target arm64-apple-macos11
+	gcc -O3 $(MACOS_FLAGS) src/sqlite3-time.c src/time/*.c -o dist/arm64/time.dylib -target arm64-apple-macos11
 	gcc -O3 $(MACOS_FLAGS) src/sqlite3-unicode.c src/unicode/*.c -o dist/arm64/unicode.dylib -target arm64-apple-macos11
 	gcc -O3 $(MACOS_FLAGS) src/sqlite3-uuid.c src/uuid/*.c -o dist/arm64/uuid.dylib -target arm64-apple-macos11
 	gcc -O3 $(MACOS_FLAGS) src/sqlite3-vsv.c src/vsv/*.c -o dist/arm64/vsv.dylib -target arm64-apple-macos11 -lm
@@ -170,6 +176,7 @@ test-all:
 	make test suite=math
 	make test suite=regexp
 	make test suite=stats
+	make test suite=time
 	make test suite=text
 	make test suite=unicode
 	make test suite=uuid
@@ -189,6 +196,10 @@ ctest-all:
 	make ctest package=text module=rstring
 	gcc -Wall -Isrc test/text/utf8.test.c src/text/utf8/*.c -o text.utf8
 	make ctest package=text module=utf8
+	gcc -Wall -Isrc test/time/time.test.c src/time/*.c -o time.time
+	make ctest package=time module=time
+	gcc -Wall -Isrc test/time/duration.test.c src/time/*.c -o time.duration
+	make ctest package=time module=duration
 
 ctest:
 	@chmod +x $(package).$(module)

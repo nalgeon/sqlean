@@ -42,6 +42,7 @@ jobs:
               if: matrix.os == 'ubuntu-20.04'
               run: |
                   make compile-linux
+                  make ctest-all
                   make test-all
 
             - name: Build for Windows
