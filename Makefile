@@ -36,6 +36,7 @@ compile-linux:
 	gcc -O3 $(LINIX_FLAGS) -include src/regexp/constants.h src/sqlite3-regexp.c src/regexp/*.c src/regexp/pcre2/*.c -o dist/regexp.so
 	gcc -O3 $(LINIX_FLAGS) src/sqlite3-stats.c src/stats/*.c -o dist/stats.so -lm
 	gcc -O3 $(LINIX_FLAGS) src/sqlite3-text.c src/text/*.c src/text/*/*.c -o dist/text.so
+	gcc -O3 $(LINIX_FLAGS) src/sqlite3-time.c src/time/*.c -o dist/time.so
 	gcc -O3 $(LINIX_FLAGS) src/sqlite3-unicode.c src/unicode/*.c -o dist/unicode.so
 	gcc -O3 $(LINIX_FLAGS) src/sqlite3-uuid.c src/uuid/*.c -o dist/uuid.so
 	gcc -O3 $(LINIX_FLAGS) src/sqlite3-vsv.c src/vsv/*.c -o dist/vsv.so -lm
