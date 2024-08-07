@@ -1,6 +1,12 @@
-# fileio: Read and Write Files in SQLite
+# fileio: Read and write files in SQLite
 
-Access the file system directly from SQL. Partly based on the [fileio.c](https://sqlite.org/src/file/ext/misc/fileio.c) by D. Richard Hipp.
+The `sqlean-fileio` extension provides means to access the file system directly from SQL.
+
+[Reference](#reference) •
+[Acknowledgements](#acknowledgements) •
+[Installation and usage](#installation-and-usage)
+
+## Reference
 
 Main features:
 
@@ -248,7 +254,11 @@ lsdir     = fileio_ls
 lsmode    = fileio_mode
 ```
 
-## Installation and Usage
+## Acknowledgements
+
+Partly based on the [fileio.c](https://sqlite.org/src/file/ext/misc/fileio.c) by D. Richard Hipp.
+
+## Installation and usage
 
 SQLite command-line interface:
 
@@ -257,8 +267,10 @@ sqlite> .load ./fileio
 sqlite> select fileio_read('whatever.txt');
 ```
 
-See [How to Install an Extension](install.md) for usage with IDE, Python, etc.
+See [How to install an extension](install.md) for usage with IDE, Python, etc.
 
-[⬇️ Download](https://github.com/nalgeon/sqlean/releases/latest) •
-[✨ Explore](https://github.com/nalgeon/sqlean) •
-[🚀 Follow](https://antonz.org/subscribe/)
+↓ [Download](https://github.com/nalgeon/sqlean/releases/latest) the extension.
+
+⛱ [Explore](https://github.com/nalgeon/sqlean) other extensions.
+
+★ [Subscribe](https://antonz.org/subscribe/) to stay on top of new features.

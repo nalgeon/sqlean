@@ -1,7 +1,6 @@
 # math: Mathematics in SQLite
 
-Common math functions for SQLite versions compiled without the `SQLITE_ENABLE_MATH_FUNCTIONS` flag.
-Adapted from SQLite source code ([func.c](https://sqlite.org/src/file/src/func.c)).
+The `sqlean-math` extension provides common math functions for SQLite versions compiled without the `SQLITE_ENABLE_MATH_FUNCTIONS` flag.
 
 Provides following functions:
 
@@ -17,7 +16,11 @@ Provides following functions:
 
 [Full description](https://sqlite.org/lang_mathfunc.html)
 
-## Installation and Usage
+## Acknowledgements
+
+Adapted from SQLite source code ([func.c](https://sqlite.org/src/file/src/func.c)).
+
+## Installation and usage
 
 SQLite command-line interface:
 
@@ -26,8 +29,10 @@ sqlite> .load ./math
 sqlite> select math_sqrt(9);
 ```
 
-See [How to Install an Extension](install.md) for usage with IDE, Python, etc.
+See [How to install an extension](install.md) for usage with IDE, Python, etc.
 
-[⬇️ Download](https://github.com/nalgeon/sqlean/releases/latest) •
-[✨ Explore](https://github.com/nalgeon/sqlean) •
-[🚀 Follow](https://antonz.org/subscribe/)
+↓ [Download](https://github.com/nalgeon/sqlean/releases/latest) the extension.
+
+⛱ [Explore](https://github.com/nalgeon/sqlean) other extensions.
+
+★ [Subscribe](https://antonz.org/subscribe/) to stay on top of new features.

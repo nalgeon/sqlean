@@ -1,4 +1,4 @@
-# All the Missing SQLite Functions
+# All the missing SQLite functions
 
 SQLite has few functions compared to other database management systems. SQLite authors see this as a feature rather than a problem, because SQLite has an extension mechanism in place.
 
@@ -66,7 +66,7 @@ sqlite> .load ./sqlean
 sqlite> select median(value) from generate_series(1, 99);
 ```
 
-See [How to Install an Extension](docs/install.md) for usage with IDE, Python, JavaScript, etc.
+See [How to install an extension](docs/install.md) for usage with IDE, Python, JavaScript, etc.
 
 ## Building from source
 

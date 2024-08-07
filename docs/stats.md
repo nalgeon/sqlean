@@ -1,8 +1,16 @@
-# stats: Mathematical Statistics in SQLite
+# stats: Mathematical statistics in SQLite
 
-Common statistical functions. Adapted from [extension-functions.c](https://sqlite.org/contrib/) by Liam Healy, [percentile.c](https://sqlite.org/src/file/ext/misc/percentile.c) and [series.c](https://sqlite.org/src/file/ext/misc/series.c) by D. Richard Hipp.
+The `sqlean-stats` extension provides common statistical functions.
 
-### Aggregate Functions
+[Reference](#reference) •
+[Acknowledgements](#acknowledgements) •
+[Installation and usage](#installation-and-usage)
+
+## Reference
+
+There are aggregate functions such as median and percentile, and a table-valued sequence function for generating sequences.
+
+### Aggregate functions
 
 -   `stats_median(x)` — median (50th percentile),
 -   `stats_p25(x)` — 25th percentile,
@@ -47,7 +55,11 @@ The `stats_seq()` table has a single result column named `value` holding integer
 
 `stop` defaults to 9223372036854775807. `step` defaults to 1.
 
-## Installation and Usage
+## Acknowledgements
+
+Adapted from [extension-functions.c](https://sqlite.org/contrib/) by Liam Healy, [percentile.c](https://sqlite.org/src/file/ext/misc/percentile.c) and [series.c](https://sqlite.org/src/file/ext/misc/series.c) by D. Richard Hipp.
+
+## Installation and usage
 
 SQLite command-line interface:
 
@@ -56,8 +68,10 @@ sqlite> .load ./stats
 sqlite> select stats_median(value) from stats_seq(1, 99);
 ```
 
-See [How to Install an Extension](install.md) for usage with IDE, Python, etc.
+See [How to install an extension](install.md) for usage with IDE, Python, etc.
 
-[⬇️ Download](https://github.com/nalgeon/sqlean/releases/latest) •
-[✨ Explore](https://github.com/nalgeon/sqlean) •
-[🚀 Follow](https://antonz.org/subscribe/)
+↓ [Download](https://github.com/nalgeon/sqlean/releases/latest) the extension.
+
+⛱ [Explore](https://github.com/nalgeon/sqlean) other extensions.
+
+★ [Subscribe](https://antonz.org/subscribe/) to stay on top of new features.

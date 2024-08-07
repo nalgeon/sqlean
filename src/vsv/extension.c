@@ -1,5 +1,5 @@
 // vsv extension by Keith Medcalf, Public Domain
-// http://www.dessus.com/files/vsv.c
+// https://github.com/ncruces/kmedcalf-sqlite/blob/main/vsv.c
 
 // Modified by Anton Zhiyanov, MIT License
 // https://github.com/nalgeon/sqlean/

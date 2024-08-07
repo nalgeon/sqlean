@@ -1,14 +1,21 @@
-# regexp: Regular Expressions in SQLite
+# regexp: Regular expressions in SQLite
 
-Regexp search and replace functions. Based on the [PCRE2](https://github.com/pcre2project/pcre2) engine, this extension supports all major regular expression features (see the section on syntax below).
+The `sqlean-regexp` extension provides regexp search and replace functions. Supports all major regular expression features (see the section on syntax below).
 
 Supports Unicode in character classes (like `\w`) and assertions (like `\b`).
+
+[Reference](#reference) •
+[Supported syntax](#supported-syntax) •
+[Acknowledgements](#acknowledgements) •
+[Installation and usage](#installation-and-usage)
+
+## Reference
 
 [regexp](#regexp-statement) •
 [like](#regexp_like) •
 [substr](#regexp_substr) •
 [capture](#regexp_capture) •
-[replace](#regexp_replace) •
+[replace](#regexp_replace)
 
 ### REGEXP statement
 
@@ -162,7 +169,11 @@ select regexp_substr('the YEAR is 2021', '(?i)year');
 -- YEAR
 ```
 
-## Installation and Usage
+## Acknowledgements
+
+Based on the [PCRE2](https://github.com/pcre2project/pcre2) engine.
+
+## Installation and usage
 
 SQLite command-line interface:
 
@@ -171,7 +182,7 @@ sqlite> .load ./regexp
 sqlite> select regexp_like('abcdef', 'b.d');
 ```
 
-See [How to Install an Extension](install.md) for usage with IDE, Python, etc.
+See [How to install an extension](install.md) for usage with IDE, Python, etc.
 
 [⬇️ Download](https://github.com/nalgeon/sqlean/releases/latest) •
 [✨ Explore](https://github.com/nalgeon/sqlean) •

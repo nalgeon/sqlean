@@ -1,6 +1,10 @@
-# crypto: Hashing, Encoding and Decoding in SQLite
+# crypto: Hashing, encoding and decoding in SQLite
 
-Hashing, encoding and decoding functions.
+The `sqlean-crypto` extension provides hashing, encoding and decoding functions.
+
+[Hashing](#hashing-and-message-digest-functions) •
+[Encoding/decoding](#encoding-and-decoding-functions) •
+[Installation and usage](#installation-and-usage)
 
 ## Hashing and message digest functions
 
@@ -165,7 +169,7 @@ select crypto_decode('%2Fhello%3Ft%3D%28%E0%B2%A0_%E0%B2%A0%29', 'url');
 -- /hello?t=(ಠ_ಠ)
 ```
 
-## Installation and Usage
+## Installation and usage
 
 SQLite command-line interface:
 
@@ -174,8 +178,10 @@ sqlite> .load ./crypto
 sqlite> select hex(crypto_md5('abc'));
 ```
 
-See [How to Install an Extension](install.md) for usage with IDE, Python, etc.
+See [How to install an extension](install.md) for usage with IDE, Python, etc.
 
-[⬇️ Download](https://github.com/nalgeon/sqlean/releases/latest) •
-[✨ Explore](https://github.com/nalgeon/sqlean) •
-[🚀 Follow](https://antonz.org/subscribe/)
+↓ [Download](https://github.com/nalgeon/sqlean/releases/latest) the extension.
+
+⛱ [Explore](https://github.com/nalgeon/sqlean) other extensions.
+
+★ [Subscribe](https://antonz.org/subscribe/) to stay on top of new features.

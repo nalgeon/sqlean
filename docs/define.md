@@ -1,10 +1,16 @@
-# define: User-Defined Functions in SQLite
+# define: User-defined functions in SQLite
 
-Write arbitrary functions in SQL (as opposed to [application-defined functions](https://sqlite.org/appfunc.html), which require programming in C, Python, or another language). Or even execute arbitrary SQL from a string.
+The `sqlean-define` extension allows writing arbitrary functions in SQL (as opposed to [application-defined functions](https://sqlite.org/appfunc.html), which require programming in C, Python, or another language). Or even execute arbitrary SQL from a string.
 
-Adapted from [statement_vtab.c](https://github.com/0x09/sqlite-statement-vtab/blob/master/statement_vtab.c) by 0x09 and [eval.c](https://www.sqlite.org/src/file/ext/misc/eval.c) by D. Richard Hipp.
+[Scalar Functions](#scalar-functions) •
+[Table-valued functions](#table-valued-functions) •
+[Arbitrary SQL statements](#arbitrary-sql-statements) •
+[Performance](#performance) •
+[Reference](#reference) •
+[Acknowledgements](#acknowledgements) •
+[Installation and usage](#installation-and-usage)
 
-## Scalar Functions
+## Scalar functions
 
 `select define(NAME, BODY)`
 
@@ -85,7 +91,7 @@ sqlite> select sumn(5);
 Parse error: no such function: sumn
 ```
 
-## Table-Valued Functions
+## Table-valued functions
 
 `create virtual table NAME using define((BODY))`
 
@@ -155,7 +161,7 @@ sqlite> select * from strcut('one;two', ';');
 Parse error: no such table: strcut
 ```
 
-## Arbitrary SQL Statements
+## Arbitrary SQL statements
 
 `eval(SQL[, SEPARATOR])`
 
@@ -259,7 +265,11 @@ Executes arbitrary SQL and returns the result as string (if any).
 
 Deletes a previously defined function (scalar or table-valued).
 
-## Installation and Usage
+## Acknowledgements
+
+Adapted from [statement_vtab.c](https://github.com/0x09/sqlite-statement-vtab/blob/master/statement_vtab.c) by 0x09 and [eval.c](https://www.sqlite.org/src/file/ext/misc/eval.c) by D. Richard Hipp.
+
+## Installation and usage
 
 SQLite command-line interface:
 
@@ -269,8 +279,10 @@ sqlite> select define('sumn', ':n * (:n + 1) / 2');
 sqlite> select sumn(5);
 ```
 
-See [How to Install an Extension](install.md) for usage with IDE, Python, etc.
+See [How to install an extension](install.md) for usage with IDE, Python, etc.
 
-[⬇️ Download](https://github.com/nalgeon/sqlean/releases/latest) •
-[✨ Explore](https://github.com/nalgeon/sqlean) •
-[🚀 Follow](https://antonz.org/subscribe/)
+↓ [Download](https://github.com/nalgeon/sqlean/releases/latest) the extension.
+
+⛱ [Explore](https://github.com/nalgeon/sqlean) other extensions.
+
+★ [Subscribe](https://antonz.org/subscribe/) to stay on top of new features.

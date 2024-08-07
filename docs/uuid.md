@@ -1,12 +1,18 @@
 # uuid: Universally Unique IDentifiers (UUIDs) in SQLite
 
-Limited support for [RFC 4122](https://www.ietf.org/rfc/rfc4122.txt) and [RFC 9562](https://datatracker.ietf.org/doc/rfc9562/) compliant UUIDs:
+The `sqlean-uuid` extension provides limited support for [RFC 4122](https://www.ietf.org/rfc/rfc4122.txt) and [RFC 9562](https://datatracker.ietf.org/doc/rfc9562/) compliant UUIDs.
+
+[Reference](#reference) •
+[Acknowledgements](#acknowledgements) •
+[Installation and usage](#installation-and-usage)
+
+## Reference
+
+Supported features:
 
 -   Generate a version 4 (random) UUID.
 -   Generate a version 7 (time-ordered, random) UUID.
 -   Convert a 16-byte blob into a well-formed UUID string and vice versa.
-
-UUIDv4 adapted from [uuid.c](https://sqlite.org/src/file/ext/misc/uuid.c) by D. Richard Hipp. UUIDv7 contributed by [Nguyễn Hoàng Đức](https://github.com/nghduc97).
 
 [uuid4](#uuid4) •
 [uuid7](#uuid7) •
@@ -94,7 +100,11 @@ select hex(uuid_blob(uuid4()));
 -- 7192B1B452964E809500CF0364476CD3
 ```
 
-## Installation and Usage
+## Acknowledgements
+
+UUIDv4 adapted from [uuid.c](https://sqlite.org/src/file/ext/misc/uuid.c) by D. Richard Hipp. UUIDv7 contributed by [Nguyễn Hoàng Đức](https://github.com/nghduc97).
+
+## Installation and usage
 
 SQLite command-line interface:
 
@@ -103,8 +113,10 @@ sqlite> .load ./uuid
 sqlite> select uuid4();
 ```
 
-See [How to Install an Extension](install.md) for usage with IDE, Python, etc.
+See [How to install an extension](install.md) for usage with IDE, Python, etc.
 
-[⬇️ Download](https://github.com/nalgeon/sqlean/releases/latest) •
-[✨ Explore](https://github.com/nalgeon/sqlean) •
-[🚀 Follow](https://antonz.org/subscribe/)
+↓ [Download](https://github.com/nalgeon/sqlean/releases/latest) the extension.
+
+⛱ [Explore](https://github.com/nalgeon/sqlean) other extensions.
+
+★ [Subscribe](https://antonz.org/subscribe/) to stay on top of new features.

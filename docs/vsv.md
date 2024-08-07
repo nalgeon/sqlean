@@ -1,8 +1,11 @@
-# vsv: CSV Files as Virtual Tables in SQLite
+# vsv: CSV files as virtual tables in SQLite
 
-Provides virtual table for working directly with CSV files, without importing data into the database. Useful for very large datasets.
+The `sqlean-vsv` extension provides virtual table for working directly with CSV files, without importing data into the database. Useful for very large datasets.
 
-Adapted from [vsv.c](http://www.dessus.com/files/vsv.c) by Keith Medcalf.
+[Example](#example) •
+[Parameters](#parameters) •
+[Acknowledgements](#acknowledgements) •
+[Installation and usage](#installation-and-usage)
 
 ## Example
 
@@ -167,7 +170,11 @@ escape sequence. Recognized escape sequences are:
 \xhh specific byte where hh is hexadecimal
 ```
 
-## Installation and Usage
+## Acknowledgements
+
+Adapted from [vsv.c](https://github.com/ncruces/kmedcalf-sqlite/blob/main/vsv.c) by Keith Medcalf.
+
+## Installation and usage
 
 SQLite command-line interface:
 
@@ -177,8 +184,10 @@ sqlite> create virtual table temp.vsv using vsv(...);
 sqlite> select * from vsv;
 ```
 
-See [How to Install an Extension](install.md) for usage with IDE, Python, etc.
+See [How to install an extension](install.md) for usage with IDE, Python, etc.
 
-[⬇️ Download](https://github.com/nalgeon/sqlean/releases/latest) •
-[✨ Explore](https://github.com/nalgeon/sqlean) •
-[🚀 Follow](https://antonz.org/subscribe/)
+↓ [Download](https://github.com/nalgeon/sqlean/releases/latest) the extension.
+
+⛱ [Explore](https://github.com/nalgeon/sqlean) other extensions.
+
+★ [Subscribe](https://antonz.org/subscribe/) to stay on top of new features.

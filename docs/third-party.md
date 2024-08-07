@@ -9,6 +9,7 @@ SQLean relies heavily on third-party SQLite extensions and open source libraries
 | [eval.c](https://www.sqlite.org/src/file/ext/misc/eval.c)                                      | D. Richard Hipp                               | Public Domain        |
 | extension-functions.c                                                                          | Liam Healy                                    | Public Domain        |
 | [fileio.c](https://www.sqlite.org/src/file/ext/misc/fileio.c)                                  | D. Richard Hipp                               | Public Domain        |
+| [go](https://github.com/golang/go)                                                             | The Go Authors                                | 3-Clause BSD License |
 | [libstrcmp](https://github.com/Rostepher/libstrcmp)                                            | Ross Bayer                                    | MIT License          |
 | [percentile.c](https://sqlite.org/src/file/ext/misc/percentile.c)                              | D. Richard Hipp                               | Public Domain        |
 | [pcre2](https://github.com/pcre2project/pcre2)                                                 | Philip Hazel                                  | 3-Clause BSD License |
@@ -20,4 +21,4 @@ SQLean relies heavily on third-party SQLite extensions and open source libraries
 | [statement_vtab.c](https://github.com/0x09/sqlite-statement-vtab/blob/master/statement_vtab.c) | 0x09                                          | Public Domain        |
 | [stc](https://github.com/stclib/stc)                                                           | Tyge Løvset                                   | MIT License          |
 | [uuid.c](https://sqlite.org/src/file/ext/misc/uuid.c)                                          | D. Richard Hipp                               | Public Domain        |
-| [vsv.c](http://www.dessus.com/files/vsv.c)                                                     | Keith Medcalf                                 | Public Domain        |
+| [vsv.c](https://github.com/ncruces/kmedcalf-sqlite/blob/main/vsv.c)                            | Keith Medcalf                                 | Public Domain        |

@@ -1,16 +1,20 @@
-# fuzzy: Fuzzy String Matching and Phonetics in SQLite
+# fuzzy: Fuzzy string matching and phonetics in SQLite
 
-Fuzzy-matching helpers:
+The `sqlean-fuzzy` extension provides fuzzy-matching helpers:
 
 -   Measure distance between two strings.
 -   Compute phonetic string code.
 -   Transliterate a string.
 
-Adapted from [libstrcmp](https://github.com/Rostepher/libstrcmp) by Ross Bayer and [spellfix.c](https://www.sqlite.org/src/file/ext/misc/spellfix.c) by D. Richard Hipp.
+If you want a ready-to-use mechanism to search a large vocabulary for close matches, see the [spellfix](https://github.com/nalgeon/sqlean/issues/27#issuecomment-1002297477) extension instead.
 
-If you want a ready-to-use mechanism to search a large vocabulary for close matches, see the [spellfix](https://github.com/nalgeon/sqlean/issues/27#issuecomment-1002297477) extension.
+[String distances](#string-distances) •
+[Phonetic codes](#phonetic-codes) •
+[Transliteration](#transliteration) •
+[Acknowledgements](#acknowledgements) •
+[Installation and usage](#installation-and-usage)
 
-## String Distances
+## String distances
 
 These functions measure the distance between two strings.
 
@@ -97,7 +101,7 @@ select fuzzy_osadist('awesome', 'aewsme');
 -- 3
 ```
 
-## Phonetic Codes
+## Phonetic codes
 
 These functions compute phonetic string codes.
 
@@ -188,7 +192,11 @@ select fuzzy_translit('oh my 😅');
 -- oh my ?
 ```
 
-## Installation and Usage
+## Acknowledgements
+
+Adapted from [libstrcmp](https://github.com/Rostepher/libstrcmp) by Ross Bayer and [spellfix.c](https://www.sqlite.org/src/file/ext/misc/spellfix.c) by D. Richard Hipp.
+
+## Installation and usage
 
 SQLite command-line interface:
 
@@ -197,8 +205,10 @@ sqlite> .load ./fuzzy
 sqlite> select fuzzy_soundex('hello');
 ```
 
-See [How to Install an Extension](install.md) for usage with IDE, Python, etc.
+See [How to install an extension](install.md) for usage with IDE, Python, etc.
 
-[⬇️ Download](https://github.com/nalgeon/sqlean/releases/latest) •
-[✨ Explore](https://github.com/nalgeon/sqlean) •
-[🚀 Follow](https://antonz.org/subscribe/)
+↓ [Download](https://github.com/nalgeon/sqlean/releases/latest) the extension.
+
+⛱ [Explore](https://github.com/nalgeon/sqlean) other extensions.
+
+★ [Subscribe](https://antonz.org/subscribe/) to stay on top of new features.

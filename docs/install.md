@@ -1,10 +1,19 @@
-# How to Install an Extension
+# How to install an extension
 
-The easiest way to try out `sqlean` extensions is to use the [pre-bundled shell](shell.md). But if you prefer to use the standard SQLite shell, IDEs or software APIs — read on.
+The easiest way to try out Sqlean extensions is to use the [pre-bundled shell](shell.md). But if you prefer to use the standard SQLite shell, IDEs or software APIs — read on.
 
 Examples below use the `stats` extension; you can specify any other supported extension. To load all extensions at once, use the single-file `sqlean` bundle.
 
-## Download: manually
+-   [Download: Manually](#download-manually)
+-   [Download: Package manager](#download-package-manager)
+-   [Install: Command-line interface](#install-command-line-interface)
+-   [Install: GUI database browser](#install-gui-database-browser)
+-   [Install: Python](#install-python)
+-   [Install: Node.js](#install-nodejs)
+-   [Install: Browser JavaScript](#install-browser-javascript)
+-   [Install: Go](#install-go)
+
+## Download: Manually
 
 There are [precompiled binaries](https://github.com/nalgeon/sqlean/releases/latest) for every OS:
 
@@ -18,7 +27,7 @@ Binaries are 64-bit and require a 64-bit SQLite version. If you are using SQLite
 
 Other extensions are available for download from [sqlpkg.org](https://sqlpkg.org/).
 
-## Download: package manager
+## Download: Package manager
 
 Personally, I'm not a fan of managing the extensions manually. I always tend to put them in different places and can't find them later. So I created [`sqlpkg`](https://github.com/nalgeon/sqlpkg-cli) — a package manager for SQLite extensions.
 
@@ -184,14 +193,14 @@ import (
 )
 
 func main() {
-    sql.Register("sqlite3_with_extensions",
+    sql.Register("sqlite_ext",
         &sqlite3.SQLiteDriver{
             Extensions: []string{
                 `c:\Users\anton\sqlite\stats`,
             },
         })
 
-    db, err := sql.Open("sqlite3_with_extensions", ":memory:")
+    db, err := sql.Open("sqlite_ext", ":memory:")
     db.Query("select median(value) from generate_series(1, 99)")
     db.Close()
 }
@@ -210,17 +219,17 @@ import (
 )
 
 func main() {
-    sql.Register("sqlite3_with_extensions",
+    sql.Register("sqlite_ext",
         &sqlite3.SQLiteDriver{
             Extensions: []string{
                 "/Users/anton/Downloads/stats",
             },
         })
 
-    db, err := sql.Open("sqlite3_with_extensions", ":memory:")
+    db, err := sql.Open("sqlite_ext", ":memory:")
     db.Query("select median(value) from generate_series(1, 99)")
     db.Close()
 }
 ```
 
-Note that we use the same identifier `sqlite3_with_extensions` in the `sql.Register` and `sql.Open`.
+Note that we use the same identifier `sqlite_ext` in the `sql.Register` and `sql.Open`.
