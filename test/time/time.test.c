@@ -38,7 +38,7 @@ typedef struct {
 
 typedef struct {
     int year, month, day, hour, min, sec, nsec, offset_sec;
-    int64_t unix;
+    int64_t epoch;
 } DateTest;
 
 static DateTest date_tests[] = {
@@ -80,7 +80,7 @@ static void test_date(void) {
         DateTest test = date_tests[i];
         Time t = time_date(test.year, test.month, test.day, test.hour, test.min, test.sec,
                            test.nsec, test.offset_sec);
-        assert(time_to_unix(t) == test.unix);
+        assert(time_to_unix(t) == test.epoch);
     }
     printf("OK\n");
 }
@@ -116,7 +116,7 @@ static void test_get_part(void) {
     }
     for (size_t i = 0; i < 8; i++) {
         DateTest test = date_tests[i];
-        Time t = time_unix(test.unix, 0);
+        Time t = time_unix(test.epoch, 0);
         assert(time_get_year(t) == test.year);
         assert(time_get_month(t) == test.month);
         assert(time_get_day(t) == test.day);
