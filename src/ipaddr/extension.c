@@ -34,7 +34,7 @@ static struct ipaddress* parse_ipaddress(const char* address) {
     struct ipaddress* ip = NULL;
     unsigned char buf[sizeof(struct in6_addr)];
     char* sep = strchr(address, '/');
-    unsigned long masklen;
+    unsigned long masklen = 0;
     if (sep) {
         char* end;
         errno = 0;
