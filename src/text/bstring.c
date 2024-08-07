@@ -73,7 +73,7 @@ ByteString bstring_slice(ByteString str, int start, int end) {
     }
 
     // adjusted start index
-    start = start < 0 ? str.length + start : start;
+    start = start < 0 ? (int)str.length + start : start;
     // python-compatible: treat negative start index larger than the length of the string as zero
     start = start < 0 ? 0 : start;
     // adjusted start index should be less the the length of the string
@@ -82,7 +82,7 @@ ByteString bstring_slice(ByteString str, int start, int end) {
     }
 
     // adjusted end index
-    end = end < 0 ? str.length + end : end;
+    end = end < 0 ? (int)str.length + end : end;
     // python-compatible: treat end index larger than the length of the string
     // as equal to the length
     end = end > (int)str.length ? (int)str.length : end;
