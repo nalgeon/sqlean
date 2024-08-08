@@ -6,7 +6,7 @@ The `sqlean-time` extension provides functionality for working with time and dur
 [Creating values](#creating-time-values) •
 [Extracting fields](#extracting-time-fields) •
 [Unix time](#unix-time) •
-[Time comparison](#comparing-time) •
+[Time comparison](#time-comparison) •
 [Time arithmetic](#time-arithmetic) •
 [Rounding](#rounding) •
 [Formatting](#formatting) •
@@ -395,7 +395,7 @@ Returns t as a Unix time, the number of seconds elapsed since January 1, 1970 UT
 Unix-like operating systems often record time as a 32-bit number of seconds, but since `time_to_unix` returns a 64-bit value, it is valid for billions of years into the past or future.
 
 ```sql
-select time_to_unix(time_now()));
+select time_to_unix(time_now());
 -- 1722979335
 ```
 
@@ -410,7 +410,7 @@ Returns t as a Unix time, the number of milliseconds elapsed since January 1, 19
 The result is undefined if the Unix time in milliseconds cannot be represented by a 64-bit integer (a date more than 292 million years before or after 1970).
 
 ```sql
-select time_to_milli(time_now()));
+select time_to_milli(time_now());
 -- 1722979335431
 ```
 
@@ -425,7 +425,7 @@ Returns t as a Unix time, the number of microseconds elapsed since January 1, 19
 The result is undefined if the Unix time in microseconds cannot be represented by a 64-bit integer (a date before year -290307 or after year 294246).
 
 ```sql
-select time_to_micro(time_now()));
+select time_to_micro(time_now());
 -- 1722979335431295
 ```
 
@@ -440,7 +440,7 @@ Returns t as a Unix time, the number of nanoseconds elapsed since January 1, 197
 The result is undefined if the Unix time in nanoseconds cannot be represented by a 64-bit integer (a date before the year 1678 or after 2262).
 
 ```sql
-select time_to_nano(time_now()));
+select time_to_nano(time_now());
 -- 1722979335431295000
 ```
 
