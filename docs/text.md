@@ -234,7 +234,7 @@ select text_split('one|two|three', '|', 2);
 select text_split('one|two|three', '|', -1);
 -- three
 
-text_split('one|two|three', ';', 2);
+select text_split('one|two|three', ';', 2);
 -- (empty string)
 ```
 
@@ -554,7 +554,7 @@ SQLite command-line interface:
 
 ```
 sqlite> .load ./text
-sqlite> select reverse('hello');
+sqlite> select text_reverse('hello');
 ```
 
 See [How to install an extension](install.md) for usage with IDE, Python, etc.
