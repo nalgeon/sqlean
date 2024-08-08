@@ -209,15 +209,15 @@ void abs_clock(uint64_t abs, int* hour, int* min, int* sec) {
     *sec -= *min * seconds_per_minute;
 }
 
-// less_than_half reports whether x+x < y but avoids overflow,
+// tless_than_half reports whether x+x < y but avoids overflow,
 // assuming x and y are both positive (Duration is signed).
-static bool less_than_half(Duration x, Duration y) {
+static bool tless_than_half(Duration x, Duration y) {
     return (uint64_t)x + (uint64_t)x < (uint64_t)y;
 }
 
-// div divides t by d and returns the remainder.
+// time_div divides t by d and returns the remainder.
 // Only supports d which is a multiple of 1 second.
-static Duration div(Time t, Duration d) {
+static Duration time_div(Time t, Duration d) {
     if (d % Second != 0) {
         return 0;
     }
@@ -631,7 +631,7 @@ Time time_truncate(Time t, Duration d) {
     if (d <= 0) {
         return t;
     }
-    Duration r = div(t, d);
+    Duration r = time_div(t, d);
     return time_add(t, -r);
 }
 
@@ -642,8 +642,8 @@ Time time_round(Time t, Duration d) {
     if (d <= 0) {
         return t;
     }
-    Duration r = div(t, d);
-    if (less_than_half(r, d)) {
+    Duration r = time_div(t, d);
+    if (tless_than_half(r, d)) {
         return time_add(t, -r);
     }
     return time_add(t, d - r);

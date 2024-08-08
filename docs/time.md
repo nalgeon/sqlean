@@ -51,7 +51,7 @@ Time is always stored and operated in UTC, but you can convert it from/to a spec
 
 Duration is a 64-bit number of nanoseconds, so it can represent values up to about 290 years. You can store duration values as NUMBER.
 
-The calendrical calculations always assume a Gregorian calendar, with no leap seconds.
+The calendarical calculations always assume a Gregorian calendar, with no leap seconds.
 
 ## Creating time values
 

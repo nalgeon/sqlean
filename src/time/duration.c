@@ -56,10 +56,10 @@ double dur_to_hours(Duration d) {
 
 #pragma region Rounding
 
-// less_than_half reports whether x+x < y but avoids overflow,
+// dless_than_half reports whether x+x < y but avoids overflow,
 // assuming x and y are both positive (Duration is signed).
-static bool less_than_half(Duration x, Duration y) {
-    return x < y - x;
+static bool dless_than_half(Duration x, Duration y) {
+    return (uint64_t)x + (uint64_t)x < (uint64_t)y;
 }
 
 // dur_truncate returns the result of rounding d toward zero to a multiple of m.
@@ -85,7 +85,7 @@ Duration dur_round(Duration d, Duration m) {
 
     if (d < 0) {
         r = -r;
-        if (less_than_half(r, m)) {
+        if (dless_than_half(r, m)) {
             return d + r;
         }
         int64_t d1 = d - m + r;
@@ -95,7 +95,7 @@ Duration dur_round(Duration d, Duration m) {
         return MIN_DURATION;  // overflow
     }
 
-    if (less_than_half(r, m)) {
+    if (dless_than_half(r, m)) {
         return d - r;
     }
     int64_t d1 = d + m - r;
