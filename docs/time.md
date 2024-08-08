@@ -498,7 +498,7 @@ select time_compare(time_date(2011, 11, 18), time_date(2011, 11, 18));
 ### time_equal
 
 ```text
-time_before(t, u)
+time_equal(t, u)
 ```
 
 Reports whether t and u represent the same time instant.

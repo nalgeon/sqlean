@@ -30,6 +30,7 @@ Think of them as the extended standard library for SQLite:
 -   [regexp](docs/regexp.md): regular expressions
 -   [stats](docs/stats.md): math statistics
 -   [text](docs/text.md): string functions and Unicode
+-   [time](docs/time.md): high-precision date/time
 -   [uuid](docs/uuid.md): Universally Unique IDentifiers
 -   [vsv](docs/vsv.md): CSV files as virtual tables
 
