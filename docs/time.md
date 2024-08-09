@@ -51,7 +51,7 @@ Time is always stored and operated in UTC, but you can convert it from/to a spec
 
 Duration is a 64-bit number of nanoseconds, so it can represent values up to about 290 years. You can store duration values as NUMBER.
 
-The calendarical calculations always assume a Gregorian calendar, with no leap seconds.
+The calendrical calculations always assume a Gregorian calendar, with no leap seconds.
 
 ## Creating time values
 
@@ -892,7 +892,7 @@ select dur_h();
 
 ## Acknowledgements
 
-While this extension is implemented in C, its design and implementation is largely based on Go's stdlib [time](https://github.com/golang/go/tree/master/src/time) package (BSD 3-Clause License), which I think is awesome (except for the formatting).
+While this extension is implemented in C, its design and implementation is largely based on Go's stdlib [time](https://github.com/golang/go/tree/master/src/time) package (BSD 3-Clause License), which I think is awesome (except for the formatting part).
 
 ## Installation and usage
 
