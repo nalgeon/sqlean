@@ -100,17 +100,22 @@ Linux/macOS:
 ```sql
 select load_extension('/Users/anton/Downloads/stats');
 ```
+
 ## Install: rqlite
-[rqlite](https://www.rqlite.io) users can load sqlean extensions at launch time. Download a suitable release of sqlean (x86 for Linux is demonstrated below):
+
+To load extensions in [rqlite](https://www.rqlite.io), first download a suitable release (x86 for Linux is demonstrated below):
+
 ```bash
 curl -L https://github.com/nalgeon/sqlean/releases/download/0.27/sqlean-linux-x86.zip
 ```
 
-Pass the zipfile to rqlite when you launch your rqlite node:
+Then pass the zipfile to rqlite when you start the rqlite node:
+
 ```bash
 rqlited -extensions-path=sqlean.zip data
 ```
-sqleam extensions are then available in rqlite. Full details available on [rqlite.io](https://rqlite.io/docs/guides/extensions/).
+
+See full details on [rqlite.io](https://rqlite.io/docs/guides/extensions/).
 
 ## Install: Python
 
