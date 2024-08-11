@@ -8,6 +8,7 @@ Examples below use the `stats` extension; you can specify any other supported ex
 -   [Download: Package manager](#download-package-manager)
 -   [Install: Command-line interface](#install-command-line-interface)
 -   [Install: GUI database browser](#install-gui-database-browser)
+-   [Install: rqlite](#install-rqlite)
 -   [Install: Python](#install-python)
 -   [Install: Node.js](#install-nodejs)
 -   [Install: Browser JavaScript](#install-browser-javascript)
@@ -99,6 +100,17 @@ Linux/macOS:
 ```sql
 select load_extension('/Users/anton/Downloads/stats');
 ```
+## Install: rqlite
+[rqlite](https://www.rqlite.io) users can load sqlean extensions at launch time. Download a suitable release of sqlean (x86 for Linux is demonstrated below):
+```bash
+curl -L https://github.com/nalgeon/sqlean/releases/download/0.27/sqlean-linux-x86.zip
+```
+
+Pass the zipfile to rqlite when you launch your rqlite node:
+```bash
+rqlited -extensions-path=sqlean.zip data
+```
+sqleam extensions are then available in rqlite. Full details available on [rqlite.io](https://rqlite.io/docs/guides/extensions/).
 
 ## Install: Python
 
