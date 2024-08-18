@@ -61,21 +61,21 @@ compile-linux-x86:
 	gcc -O1 $(LINIX_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/ipaddr/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/text/*/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/x86/sqlean.so -lm
 
 compile-linux-musl:
-        mkdir -p dist/musl
-        musl-gcc -O1 $(LINIX_FLAGS) src/sqlite3-crypto.c src/crypto/*.c -o dist/musl/crypto.so
-        musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-define.c src/define/*.c -o dist/musl/define.so
-        musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-fileio.c src/fileio/*.c -o dist/musl/fileio.so
-        musl-gcc -O1 $(LINIX_FLAGS) src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/musl/fuzzy.so
-        musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-ipaddr.c src/ipaddr/*.c -o dist/musl/ipaddr.so
-        musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-math.c src/math/*.c -o dist/musl/math.so -lm
-        musl-gcc -O3 $(LINIX_FLAGS) -include src/regexp/constants.h src/sqlite3-regexp.c src/regexp/*.c src/regexp/pcre2/*.c -o dist/musl/regexp.so
-        musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-stats.c src/stats/*.c -o dist/musl/stats.so -lm
-        musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-text.c src/text/*.c src/text/*/*.c -o dist/musl/text.so
-        musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-time.c src/time/*.c -o dist/musl/time.so
-        musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-unicode.c src/unicode/*.c -o dist/musl/unicode.so
-        musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-uuid.c src/uuid/*.c -o dist/musl/uuid.so
-        musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-vsv.c src/vsv/*.c -o dist/musl/vsv.so -lm
-        musl-gcc -O1 $(LINIX_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/ipaddr/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/text/*/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/musl/sqlean.so -lm
+	mkdir -p dist/musl
+	musl-gcc -O1 $(LINIX_FLAGS) src/sqlite3-crypto.c src/crypto/*.c -o dist/musl/crypto.so
+	musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-define.c src/define/*.c -o dist/musl/define.so
+	musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-fileio.c src/fileio/*.c -o dist/musl/fileio.so
+	musl-gcc -O1 $(LINIX_FLAGS) src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/musl/fuzzy.so
+	musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-ipaddr.c src/ipaddr/*.c -o dist/musl/ipaddr.so
+	musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-math.c src/math/*.c -o dist/musl/math.so -lm
+	musl-gcc -O3 $(LINIX_FLAGS) -include src/regexp/constants.h src/sqlite3-regexp.c src/regexp/*.c src/regexp/pcre2/*.c -o dist/musl/regexp.so
+	musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-stats.c src/stats/*.c -o dist/musl/stats.so -lm
+	musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-text.c src/text/*.c src/text/*/*.c -o dist/musl/text.so
+	musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-time.c src/time/*.c -o dist/musl/time.so
+	musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-unicode.c src/unicode/*.c -o dist/musl/unicode.so
+	musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-uuid.c src/uuid/*.c -o dist/musl/uuid.so
+	musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-vsv.c src/vsv/*.c -o dist/musl/vsv.so -lm
+	musl-gcc -O1 $(LINIX_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/ipaddr/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/text/*/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/musl/sqlean.so -lm
 
 compile-linux-arm64:
 	mkdir -p dist/arm64
