@@ -49,7 +49,9 @@ __declspec(dllexport)
     regexp_init(db);
     stats_init(db);
     text_init(db);
+#if !defined(_WIN32) || defined(_WIN64)
     time_init(db);
+#endif
     unicode_init(db);
     uuid_init(db);
     vsv_init(db);

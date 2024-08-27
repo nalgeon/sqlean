@@ -126,7 +126,7 @@ compile-windows-x86:
 	gcc -O3 $(WIN32_FLAGS) src/sqlite3-unicode.c src/unicode/*.c -o dist/x86/unicode.dll
 	gcc -O3 $(WIN32_FLAGS) src/sqlite3-uuid.c src/uuid/*.c -o dist/x86/uuid.dll
 	gcc -O3 $(WIN32_FLAGS) src/sqlite3-vsv.c src/vsv/*.c -o dist/x86/vsv.dll -lm
-	gcc -O1 $(WIN32_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/text/*/*.c src/time/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/x86/sqlean.dll -lm
+	gcc -O1 $(WIN32_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/text/*/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/x86/sqlean.dll -lm
 
 pack-windows:
 	7z a -tzip dist/sqlean-win-x86.zip ./dist/x86/*.dll
