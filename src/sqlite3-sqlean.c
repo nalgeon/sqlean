@@ -18,6 +18,7 @@ SQLITE_EXTENSION_INIT1
 #include "regexp/extension.h"
 #include "stats/extension.h"
 #include "text/extension.h"
+#include "time/extension.h"
 #include "unicode/extension.h"
 #include "uuid/extension.h"
 #include "vsv/extension.h"
@@ -48,6 +49,7 @@ __declspec(dllexport)
     regexp_init(db);
     stats_init(db);
     text_init(db);
+    time_init(db);
     unicode_init(db);
     uuid_init(db);
     vsv_init(db);
