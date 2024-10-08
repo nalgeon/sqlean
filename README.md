@@ -108,14 +108,14 @@ Projects related to Sqlean:
 
 Copyright 2021-2024 [Anton Zhiyanov](https://antonz.org/), [Contributors](https://github.com/nalgeon/sqlean/graphs/contributors) and [Third-party Authors](docs/third-party.md).
 
+Sqlean was kindly sponsored by [Paul Harrington](https://github.com/phrrngtn). Thank you, Paul!
+
 The software is available under the MIT License.
 
-## Funding
+## Support
 
-Sqlean is kindly sponsored by [Paul Harrington](https://github.com/phrrngtn). Thank you, Paul!
+Sqlean is mostly a [one-man](https://antonz.org/) project, not backed by a VC fund or anything.
 
-If you find Sqlean useful, consider sponsoring me on GitHub. It really helps to move the project forward.
-
-♥ [Become a sponsor](https://github.com/sponsors/nalgeon) to support Sqlean.
+If you find Sqlean useful, please star it on GitHub and spread the word among your peers. It really helps to move the project forward.
 
 ★ [Subscribe](https://antonz.org/subscribe/) to stay on top of new features.
