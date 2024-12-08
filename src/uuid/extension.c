@@ -14,7 +14,8 @@
  *
  *     uuid4()                  - generate a version 4 UUID as a string
  *     uuid7()                  - generate a version 7 UUID as a string
- *     uuid7(X)                 - generate a version 7 UUID as a string using X seconds since the unix epoch as the timestamp
+ *     uuid7(X)                 - generate a version 7 UUID as a string
+ *                                with a unix timestamp of X seconds.
  *     uuid_str(X)              - convert a UUID X into a well-formed UUID string
  *     uuid_blob(X)             - convert a UUID X into a 16-byte blob
  *     uuid7_timestamp_ms(X)    - extract unix timestamp in miliseconds
@@ -191,11 +192,12 @@ static void uuid_v7_generate(sqlite3_context* context, int argc, sqlite3_value**
     (void)argv;
 
     struct timespec ts;
-    if (argc == 1 && sqlite3_value_type(argv[0])==SQLITE_INTEGER) {
-      sqlite3_int64 seconds = sqlite3_value_int64(argv[0]);
-      ts.tv_sec = seconds;
+    if (argc == 1 && sqlite3_value_type(argv[0]) == SQLITE_INTEGER) {
+        sqlite3_int64 seconds = sqlite3_value_int64(argv[0]);
+        ts.tv_sec = seconds;
+        ts.tv_nsec = 0;
     } else {
-      timespec_get(&ts, TIME_UTC);
+        timespec_get(&ts, TIME_UTC);
     }
     unsigned long long timestampMs = ts.tv_sec * 1000ULL + ts.tv_nsec / 1000000;
 
@@ -272,7 +274,8 @@ int uuid_init(sqlite3* db) {
     sqlite3_create_function(db, "uuid4", 0, flags, 0, uuid_v4_generate, 0, 0);
     sqlite3_create_function(db, "gen_random_uuid", 0, flags, 0, uuid_v4_generate, 0, 0);
 #ifndef SQLEAN_OMIT_UUID7
-    sqlite3_create_function(db, "uuid7", -1, flags, 0, uuid_v7_generate, 0, 0);
+    sqlite3_create_function(db, "uuid7", 0, flags, 0, uuid_v7_generate, 0, 0);
+    sqlite3_create_function(db, "uuid7", 1, flags, 0, uuid_v7_generate, 0, 0);
     sqlite3_create_function(db, "uuid7_timestamp_ms", 1, det_flags, 0, uuid_v7_extract_timestamp_ms,
                             0, 0);
 #endif
