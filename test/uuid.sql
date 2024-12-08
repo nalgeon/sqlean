@@ -30,6 +30,7 @@ select '3_07', uuid_blob(null) is null;
 
 -- uuid7
 select '4_01', uuid7() like '________-____-7___-____-____________';
+select '4_02', uuid7(0) like '00000000-0000-7___-____-____________';
 
 -- uuid7_timestamp_ms
 select '5_01', uuid7_timestamp_ms('018ff38a-a5c9-712d-bc80-0550b3ad41a2') = 1717777901001;

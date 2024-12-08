@@ -52,6 +52,18 @@ select uuid7();
 -- 018ff383-94fd-70fa-8da6-339180b8e15d
 ```
 
+The timestamp used for creating the UUID can be specified explicitly by passing the number of seconds since 1 January 1970.
+
+```sql
+select uuid7(0);
+-- 00000000-0000-7558-a13b-e7014913d8ad
+```
+
+```sql
+select uuid7(1700000000);
+-- 018bcfe5-6800-7b8a-8a96-e315717d31bb
+```
+
 ### uuid7_timestamp_ms
 
 ```text
