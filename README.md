@@ -118,4 +118,6 @@ Sqlean is mostly a [one-man](https://antonz.org/) project, not backed by a VC fu
 
 If you find Sqlean useful, please star it on GitHub and spread the word among your peers. It really helps to move the project forward.
 
+If you use Sqlean for commercial purposes, consider [purchasing support](https://antonz.gumroad.com/l/sqlean-plus).
+
 ★ [Subscribe](https://antonz.org/subscribe/) to stay on top of new features.
