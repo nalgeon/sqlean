@@ -13,7 +13,7 @@ To achieve it, we split extensions that are too broad, merge the ones that are t
 [Downloading](#downloading) •
 [Installation](#installation-and-usage) •
 [Sister projects](#sister-projects) •
-[Funding](#funding)
+[Support](#support)
 
 ## Main set
 
@@ -106,9 +106,7 @@ Projects related to Sqlean:
 
 ## License
 
-Copyright 2021-2024 [Anton Zhiyanov](https://antonz.org/), [Contributors](https://github.com/nalgeon/sqlean/graphs/contributors) and [Third-party Authors](docs/third-party.md).
-
-Sqlean was kindly sponsored by [Paul Harrington](https://github.com/phrrngtn). Thank you, Paul!
+Copyright 2021-2025 [Anton Zhiyanov](https://antonz.org/), [Contributors](https://github.com/nalgeon/sqlean/graphs/contributors) and [Third-party Authors](docs/third-party.md).
 
 The software is available under the MIT License.
 
