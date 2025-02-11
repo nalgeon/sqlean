@@ -511,6 +511,10 @@ static char* vsv_read_one_field(VsvReader* p) {
     }
     if (p->z) {
         p->z[p->n] = 0;
+    } else {
+        // p->z is initially NULL, so if the content row starts with empty fields,
+        // we need to set p->z to an empty string (see issue #139).
+        vsv_append(p, 0);
     }
     p->bNotFirst = 1;
     return p->z;
