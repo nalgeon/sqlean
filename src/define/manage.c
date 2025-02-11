@@ -188,6 +188,11 @@ static void define_free(sqlite3_context* ctx, int argc, sqlite3_value** argv) {}
 static void define_exec(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
     int ret = SQLITE_OK;
     sqlite3_stmt* stmt = sqlite3_user_data(ctx);
+    if (cache_head == NULL) {
+        // Calling defined functions after define_free is not allowed.
+        sqlite3_result_error_code(ctx, SQLITE_MISUSE);
+        return;
+    }
     for (int i = 0; i < argc; i++) {
         if ((ret = sqlite3_bind_value(stmt, i + 1, argv[i])) != SQLITE_OK) {
             sqlite3_reset(stmt);
