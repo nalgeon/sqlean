@@ -18,7 +18,7 @@ jobs:
         strategy:
             matrix:
                 include:
-                    - os: ubuntu-20.04
+                    - os: ubuntu-latest
                     - os: windows-latest
                     - os: macos-latest
 
@@ -33,7 +33,7 @@ jobs:
                   make download-external
 
             - name: Build for Linux
-              if: matrix.os == 'ubuntu-20.04'
+              if: matrix.os == 'ubuntu-latest'
               run: |
                   sudo apt update
                   sudo apt install -y gcc-aarch64-linux-gnu
