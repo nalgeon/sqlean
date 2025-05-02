@@ -60,12 +60,15 @@ static ssize_t readline(char** lineptr, size_t* n, FILE* stream) {
     }
     p = bufptr;
     while (c != EOF) {
-        if ((ssize_t)(p - bufptr) > (ssize_t)(size - 1)) {
-            size = size + 128;
-            bufptr = realloc(bufptr, size);
-            if (bufptr == NULL) {
+        if ((ssize_t)(p - bufptr)+1 > (ssize_t)(size)) {
+            size_t offset = p - bufptr; // save offset
+	    size = size + 128;
+	    char * new_buf = realloc(bufptr, size);
+            if (new_buf == NULL) {
                 return -1;
             }
+	    bufptr = new_buf;
+	    p = bufptr + offset; // recalculate p using the saved offset
         }
         *p++ = c;
         if (c == '\n') {
