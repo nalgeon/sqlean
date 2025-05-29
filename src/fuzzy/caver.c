@@ -45,9 +45,12 @@ static char* replace_start(const char* src, const char* old, const char* new) {
     }
 
     if (strncmp(src, old, old_len) == 0) {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-truncation"
         strncpy(res, new, new_len);
         strncpy(res + new_len, src + old_len, src_len - old_len);
         *(res + src_len - old_len + new_len) = '\0';
+#pragma GCC diagnostic pop
     } else {
         strcpy(res, src);
     }
@@ -72,6 +75,8 @@ static char* replace_end(const char* src, const char* old, const char* new) {
     }
 
     strncpy(res, src, src_len - old_len);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-truncation"
     if (strncmp(src + src_len - old_len, old, old_len) == 0) {
         strncpy(res + src_len - old_len, new, new_len);
         *(res + src_len - old_len + new_len) = '\0';
@@ -79,6 +84,7 @@ static char* replace_end(const char* src, const char* old, const char* new) {
         strncpy(res + src_len - old_len, src + src_len - old_len, old_len);
         *(res + src_len) = '\0';
     }
+#pragma GCC diagnostic pop
     return res;
 }
 
@@ -101,6 +107,8 @@ static char* replace(const char* src, const char* old, const char* new) {
 
     const char* src_it;
     char* res_it = res;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-truncation"
     for (size_t idx = 0; idx < src_len;) {
         src_it = src + idx;
         if (strncmp(src_it, old, old_len) == 0) {
@@ -114,6 +122,7 @@ static char* replace(const char* src, const char* old, const char* new) {
         }
     }
     *res_it = '\0';
+#pragma GCC diagnostic pop
     return res;
 }
 
@@ -126,6 +135,8 @@ static char* replace_seq(const char* src, const char old, const char* new) {
     const char* src_it;
     char* res_it = res;
     size_t match_len = 0;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-truncation"
     for (size_t idx = 0; idx < src_len;) {
         src_it = src + idx;
         if (*src_it == old) {
@@ -147,6 +158,7 @@ static char* replace_seq(const char* src, const char old, const char* new) {
         res_it += new_len;
     }
     *res_it = '\0';
+#pragma GCC diagnostic pop
     return res;
 }
 
