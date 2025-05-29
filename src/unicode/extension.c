@@ -4183,8 +4183,10 @@ static unsigned short* unicode_unacc_data_table[UNICODE_UNACC_BLOCK_COUNT] = {
 SQLITE_EXPORT u16 sqlite3_unicode_unacc(u16 c, u16** p, int* l) {
     if (c < 0x80) {
         if (l) {
+            static u16 sc;
+            sc = c;
             *l = 1;
-            *p = &c;
+            *p = &sc;
         }
         return c;
     } else {
