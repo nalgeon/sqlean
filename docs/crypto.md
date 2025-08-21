@@ -109,7 +109,8 @@ crypto_decode(text, algo)
 
 Decodes binary data from a textual representation using the specified algorithm.
 
-Supported algorithms: [base64](#base64) •
+Supported algorithms: [base32](#base32) •
+[base64](#base64) •
 [base85](#base85) •
 [hex](#hex) •
 [url](#url)
