@@ -67,12 +67,34 @@
 #include <string.h>
 #include <time.h>
 
+// Some older systems do not support timespec_get() from time.h
+#if !defined(__STDC_VERSION__) || __STDC_VERSION__ < 201112L || \
+    (!defined(TIME_UTC) && (!defined(_POSIX_TIMERS) || _POSIX_TIMERS <= 0))
+#include <sys/time.h>
+#endif
+
 #include "sqlite3ext.h"
 SQLITE_EXTENSION_INIT3
 
 #if !defined(SQLITE_ASCII) && !defined(SQLITE_EBCDIC)
 #define SQLITE_ASCII 1
 #endif
+
+// timespec_now returns the current time with nanosecond precision.
+static struct timespec timespec_now(void) {
+    struct timespec ts;
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && defined(TIME_UTC)
+    timespec_get(&ts, TIME_UTC);
+#elif defined(_POSIX_TIMERS) && (_POSIX_TIMERS > 0)
+    clock_gettime(CLOCK_REALTIME, &ts);
+#else
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    ts.tv_sec = tv.tv_sec;
+    ts.tv_nsec = tv.tv_usec * 1000;
+#endif
+    return ts;
+}
 
 /*
  * Translate a single byte of Hex into an integer.
@@ -191,23 +213,22 @@ static void uuid_v7_generate(sqlite3_context* context, int argc, sqlite3_value**
     (void)argc;
     (void)argv;
 
-    struct timespec ts;
+    unsigned long long timestamp_ms;
     if (argc == 1 && sqlite3_value_type(argv[0]) == SQLITE_INTEGER) {
         sqlite3_int64 seconds = sqlite3_value_int64(argv[0]);
-        ts.tv_sec = seconds;
-        ts.tv_nsec = 0;
+        timestamp_ms = seconds * 1000ULL;
     } else {
-        timespec_get(&ts, TIME_UTC);
+        struct timespec ts = timespec_now();
+        timestamp_ms = ts.tv_sec * 1000ULL + ts.tv_nsec / 1000000;
     }
-    unsigned long long timestampMs = ts.tv_sec * 1000ULL + ts.tv_nsec / 1000000;
 
     sqlite3_randomness(16, aBlob);
-    aBlob[0] = timestampMs >> 40;
-    aBlob[1] = timestampMs >> 32;
-    aBlob[2] = timestampMs >> 24;
-    aBlob[3] = timestampMs >> 16;
-    aBlob[4] = timestampMs >> 8;
-    aBlob[5] = timestampMs;
+    aBlob[0] = timestamp_ms >> 40;
+    aBlob[1] = timestamp_ms >> 32;
+    aBlob[2] = timestamp_ms >> 24;
+    aBlob[3] = timestamp_ms >> 16;
+    aBlob[4] = timestamp_ms >> 8;
+    aBlob[5] = timestamp_ms;
     aBlob[6] = (aBlob[6] & 0x0f) + 0x70;
     aBlob[8] = (aBlob[8] & 0x3f) + 0x80;
     sqlite3_uuid_blob_to_str(aBlob, zStr);
@@ -228,12 +249,12 @@ static void uuid_v7_extract_timestamp_ms(sqlite3_context* context, int argc, sql
     if (pBlob == 0 || (pBlob[6] >> 4) != 7)
         return;
 
-    unsigned long long timestampMs = 0;
+    unsigned long long timestamp_ms = 0;
     for (size_t i = 0; i < 6; ++i) {
-        timestampMs = (timestampMs << 8) + pBlob[i];
+        timestamp_ms = (timestamp_ms << 8) + pBlob[i];
     }
 
-    sqlite3_result_int64(context, timestampMs);
+    sqlite3_result_int64(context, timestamp_ms);
 }
 
 #endif
