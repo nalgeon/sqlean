@@ -13,6 +13,12 @@
 #include <time.h>
 #include "time/timex.h"
 
+// Some older systems do not support timespec_get() from time.h
+#if !defined(__STDC_VERSION__) || __STDC_VERSION__ < 201112L || \
+    (!defined(TIME_UTC) && (!defined(_POSIX_TIMERS) || _POSIX_TIMERS <= 0))
+#include <sys/time.h>
+#endif
+
 #pragma region Private
 
 static const int64_t seconds_per_minute = 60;
@@ -246,14 +252,29 @@ static Duration time_div(Time t, Duration d) {
     return r;
 }
 
+// timespec_now returns the current time with nanosecond precision.
+static struct timespec timespec_now(void) {
+    struct timespec ts;
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && defined(TIME_UTC)
+    timespec_get(&ts, TIME_UTC);
+#elif defined(_POSIX_TIMERS) && (_POSIX_TIMERS > 0)
+    clock_gettime(CLOCK_REALTIME, &ts);
+#else
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    ts.tv_sec = tv.tv_sec;
+    ts.tv_nsec = tv.tv_usec * 1000;
+#endif
+    return ts;
+}
+
 #pragma endregion
 
 #pragma region Constructors
 
 // time_now returns the current time in UTC.
 Time time_now(void) {
-    struct timespec ts;
-    timespec_get(&ts, TIME_UTC);
+    struct timespec ts = timespec_now();
     return unix_time(ts.tv_sec, ts.tv_nsec);
 }
 
