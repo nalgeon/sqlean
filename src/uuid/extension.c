@@ -67,8 +67,10 @@
 #include <string.h>
 #include <time.h>
 
-// Some older systems do not support timespec_get() from time.h
-#if !defined(__STDC_VERSION__) || __STDC_VERSION__ < 201112L || \
+// Some platforms do not support timespec_get() from time.h.
+#if defined(_WIN32)
+#include <sys/timeb.h>
+#elif !defined(__STDC_VERSION__) || __STDC_VERSION__ < 201112L || \
     (!defined(TIME_UTC) && (!defined(_POSIX_TIMERS) || _POSIX_TIMERS <= 0))
 #include <sys/time.h>
 #endif
@@ -83,11 +85,21 @@ SQLITE_EXTENSION_INIT3
 // timespec_now returns the current time with nanosecond precision.
 static struct timespec timespec_now(void) {
     struct timespec ts;
-#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && defined(TIME_UTC)
-    timespec_get(&ts, TIME_UTC);
+#if defined(_WIN32)
+    // Windows.
+    struct __timeb64 tb;
+    _ftime64(&tb);
+    ts.tv_sec = (time_t)tb.time;
+    ts.tv_nsec = tb.millitm * 1000000;
 #elif defined(_POSIX_TIMERS) && (_POSIX_TIMERS > 0)
+    // POSIX.
     clock_gettime(CLOCK_REALTIME, &ts);
+#elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && defined(TIME_UTC) && \
+    !defined(__ANDROID__)
+    // C11.
+    timespec_get(&ts, TIME_UTC);
 #else
+    // Fallback for older systems.
     struct timeval tv;
     gettimeofday(&tv, NULL);
     ts.tv_sec = tv.tv_sec;
