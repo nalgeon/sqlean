@@ -257,19 +257,19 @@ static Duration time_div(Time t, Duration d) {
 // timespec_now returns the current time with nanosecond precision.
 static struct timespec timespec_now(void) {
     struct timespec ts;
-#if defined(_WIN32)
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && defined(TIME_UTC) && \
+    !defined(__ANDROID__)
+    // C11.
+    timespec_get(&ts, TIME_UTC);
+#elif defined(_POSIX_TIMERS) && (_POSIX_TIMERS > 0)
+    // POSIX.
+    clock_gettime(CLOCK_REALTIME, &ts);
+#elif defined(_WIN32)
     // Windows.
     struct __timeb64 tb;
     _ftime64(&tb);
     ts.tv_sec = (time_t)tb.time;
     ts.tv_nsec = tb.millitm * 1000000;
-#elif defined(_POSIX_TIMERS) && (_POSIX_TIMERS > 0)
-    // POSIX.
-    clock_gettime(CLOCK_REALTIME, &ts);
-#elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && defined(TIME_UTC) && \
-    !defined(__ANDROID__)
-    // C11.
-    timespec_get(&ts, TIME_UTC);
 #else
     // Fallback for older systems.
     struct timeval tv;
