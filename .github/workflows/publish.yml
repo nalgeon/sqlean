@@ -41,14 +41,6 @@ jobs:
                   make compile-linux-arm64
                   make pack-linux
 
-            - name: Install MSYS2 and 'mingw-w64-i686-toolchain'
-              if: matrix.os == 'windows-latest'
-              uses: msys2/setup-msys2@v2
-              with:
-                  cache: true
-                  install: mingw-w64-i686-toolchain
-                  update: true
-
             - name: Build for Windows
               if: matrix.os == 'windows-latest'
               shell: bash
