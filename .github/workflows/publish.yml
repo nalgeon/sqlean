@@ -37,7 +37,7 @@ jobs:
               run: |
                   sudo apt update
                   sudo apt install -y gcc-aarch64-linux-gnu
-                  make compile-linux-x86
+                  make compile-linux-x64
                   make compile-linux-arm64
                   make pack-linux
 
@@ -53,14 +53,13 @@ jobs:
               if: matrix.os == 'windows-latest'
               shell: bash
               run: |
-                  $RUNNER_TEMP/msys64/msys2_shell.cmd -defterm -no-start -mingw32 -lc "mingw32-make compile-windows-x86"
                   make compile-windows
                   make pack-windows
 
             - name: Build for macOS
               if: matrix.os == 'macos-latest'
               run: |
-                  make compile-macos-x86
+                  make compile-macos-x64
                   make compile-macos-arm64
                   make pack-macos
 

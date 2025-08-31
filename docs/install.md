@@ -18,11 +18,11 @@ Examples below use the `stats` extension; you can specify any other supported ex
 
 There are [precompiled binaries](https://github.com/nalgeon/sqlean/releases/latest) for every OS:
 
--   `sqlean-win-x64.zip` - for Windows
--   `sqlean-linux-x86.zip` - for Linux (x86 CPU)
--   `sqlean-linux-arm64.zip` - for Linux (ARM CPU)
--   `sqlean-macos-x86.zip` - for Intel-based macOS
--   `sqlean-macos-arm64.zip` - for Apple silicon (ARM-based) macOS
+-   `sqlean-win-x64.zip` - Windows (Intel/AMD x64 CPU)
+-   `sqlean-linux-x64.zip` - Linux (Intel/AMD x64 CPU)
+-   `sqlean-linux-arm64.zip` - Linux (ARM CPU)
+-   `sqlean-macos-x64.zip` - Intel-based macOS
+-   `sqlean-macos-arm64.zip` - Apple silicon (ARM-based) macOS
 
 Binaries are 64-bit and require a 64-bit SQLite version. If you are using SQLite shell on Windows (`sqlite.exe`), its 64-bit version is available at https://github.com/nalgeon/sqlite.
 
@@ -103,10 +103,10 @@ select load_extension('/Users/anton/Downloads/stats');
 
 ## Install: rqlite
 
-To load extensions in [rqlite](https://www.rqlite.io), first download a suitable release (x86 for Linux is demonstrated below):
+To load extensions in [rqlite](https://www.rqlite.io), first download a suitable release (x64 for Linux is demonstrated below):
 
 ```bash
-curl -L https://github.com/nalgeon/sqlean/releases/download/0.27.0/sqlean-linux-x86.zip -o sqlean.zip
+curl -L https://github.com/nalgeon/sqlean/releases/download/0.27.0/sqlean-linux-x64.zip -o sqlean.zip
 ```
 
 Then pass the zipfile to rqlite when you start the rqlite node:

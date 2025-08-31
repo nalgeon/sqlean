@@ -1,7 +1,7 @@
 {
     "owner": "nalgeon",
     "name": "sqlean",
-    "version": "0.27.2",
+    "version": "0.27.4",
     "homepage": "https://github.com/nalgeon/sqlean",
     "repository": "https://github.com/nalgeon/sqlean",
     "authors": ["Anton Zhiyanov"],
@@ -10,9 +10,9 @@
     "keywords": ["sqlean"],
     "assets": {
         "files": {
-            "darwin-amd64": "sqlean-macos-x86.zip",
+            "darwin-amd64": "sqlean-macos-x64.zip",
             "darwin-arm64": "sqlean-macos-arm64.zip",
-            "linux-amd64": "sqlean-linux-x86.zip",
+            "linux-amd64": "sqlean-linux-x64.zip",
             "linux-arm64": "sqlean-linux-arm64.zip",
             "windows-amd64": "sqlean-win-x64.zip"
         }

@@ -46,11 +46,11 @@ There are a lot of useful extensions that do not quite fit the scope for various
 
 There are [precompiled binaries](https://github.com/nalgeon/sqlean/releases/latest) for every OS:
 
--   `sqlean-win-x64.zip` - for Windows
--   `sqlean-linux-x86.zip` - for Linux (x86 CPU)
--   `sqlean-linux-arm64.zip` - for Linux (ARM CPU)
--   `sqlean-macos-x86.zip` - for Intel-based macOS
--   `sqlean-macos-arm64.zip` - for Apple silicon (ARM-based) macOS
+-   `sqlean-win-x64.zip` - Windows (Intel/AMD x64 CPU)
+-   `sqlean-linux-x64.zip` - Linux (Intel/AMD x64 CPU)
+-   `sqlean-linux-arm64.zip` - Linux (ARM CPU)
+-   `sqlean-macos-x64.zip` - Intel-based macOS
+-   `sqlean-macos-arm64.zip` - Apple silicon (ARM-based) macOS
 
 Binaries are 64-bit and require a 64-bit SQLite version. If you are using SQLite shell on Windows (`sqlite.exe`), its 64-bit version is available at https://github.com/nalgeon/sqlite.
 
