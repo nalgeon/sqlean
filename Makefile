@@ -15,7 +15,7 @@ COMMON_CFLAGS := -Isrc -DSQLEAN_VERSION=$(SQLEAN_VERSION)
 
 LINIX_FLAGS := $(CFLAGS) -z now -z relro -Wall -Wsign-compare -Wno-unknown-pragmas -fPIC -shared $(COMMON_CFLAGS)
 WINDO_FLAGS := $(CFLAGS) -shared $(COMMON_CFLAGS)
-WIN32_FLAGS := $(CFLAGS) $(WINDO_FLAGS) -DSQLEAN_OMIT_UUID7
+WIN32_FLAGS := $(WINDO_FLAGS)
 MACOS_FLAGS := $(CFLAGS) -Wall -Wsign-compare -fPIC -dynamiclib $(COMMON_CFLAGS)
 CTEST_FLAGS := $(CFLAGS) -Wall -Wsign-compare -Wno-unknown-pragmas -Isrc
 
