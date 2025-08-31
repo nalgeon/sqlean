@@ -15,7 +15,11 @@ Each hash function expects `data` to be TEXT or BLOB. Returns a BLOB hash. Use t
 [sha1](#crypto_sha1) •
 [sha256](#crypto_sha256) •
 [sha384](#crypto_sha384) •
-[sha512](#crypto_sha512)
+[sha512](#crypto_sha512) •
+[xxh32](#crypto_xxh32) •
+[xxh64](#crypto_xxh64) •
+[xxh3_64](#crypto_xxh3_64) •
+[xxh3_128](#crypto_xxh3_128)
 
 ### crypto_blake3
 
@@ -93,6 +97,58 @@ Returns a SHA2-512 hash of the data as a blob.
 ```sql
 select hex(crypto_sha512('abc'));
 -- DDAF35A193617ABACC417349AE20413112E6FA4E89A97EA20A9EEEE64B55D39A2192992A274FC1A836BA3C23A3FEEBBD454D4423643CE80E2A9AC94FA54CA49F
+```
+
+### crypto_xxh32
+
+```text
+crypto_xxh32(data)
+```
+
+Returns a XXH32 hash of the data as a blob.
+
+```sql
+select hex(crypto_xxh32('abc'));
+-- 32D153FF
+```
+
+### crypto_xx64
+
+```text
+crypto_xx64(data)
+```
+
+Returns a XXH64 hash of the data as a blob.
+
+```sql
+select hex(crypto_xx64('abc'));
+-- 44BC2CF5AD770999
+```
+
+### crypto_xxh3_64
+
+```text
+crypto_xxh3_64(data)
+```
+
+Returns a XXH3_64 hash of the data as a blob.
+
+```sql
+select hex(crypto_xxh3_64('abc'));
+-- 78AF5F94892F3950
+```
+
+### crypto_xxh3_128
+
+```text
+crypto_xxh3_128(data)
+```
+
+Returns a XXH3_128 hash of the data as a blob.
+
+```sql
+select hex(crypto_xxh3_128('abc'));
+-- 06B05AB6733A618578AF5F94892F3950
 ```
 
 ## Encoding and decoding functions

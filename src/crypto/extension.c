@@ -20,6 +20,7 @@ SQLITE_EXTENSION_INIT3
 #include "crypto/sha1.h"
 #include "crypto/sha2.h"
 #include "crypto/url.h"
+#include "crypto/xxhash.h"
 
 // encoder/decoder function
 typedef uint8_t* (*encdec_fn)(const uint8_t* src, size_t len, size_t* out_len);
@@ -54,6 +55,30 @@ static void crypto_hash(sqlite3_context* context, int argc, sqlite3_value** argv
             init_func = (void*)md5_init;
             update_func = (void*)md5_update;
             final_func = (void*)md5_final;
+            algo = 1;
+            break;
+        case 1032: /* XXH32 */
+            init_func = (void*)xxh32_init;
+            update_func = (void*)xxh32_update;
+            final_func = (void*)xxh32_final;
+            algo = 1;
+            break;
+        case 1064: /* XXH64 */
+            init_func = (void*)xxh64_init;
+            update_func = (void*)xxh64_update;
+            final_func = (void*)xxh64_final;
+            algo = 1;
+            break;
+        case 3064: /* XXH3 64-bit */
+            init_func = (void*)xxh3_64_init;
+            update_func = (void*)xxh3_64_update;
+            final_func = (void*)xxh3_64_final;
+            algo = 1;
+            break;
+        case 3128: /* XXH3 128-bit */
+            init_func = (void*)xxh3_128_init;
+            update_func = (void*)xxh3_128_update;
+            final_func = (void*)xxh3_128_final;
             algo = 1;
             break;
         case 2256: /* SHA2-256 */
@@ -216,6 +241,14 @@ int crypto_init(sqlite3* db) {
     sqlite3_create_function(db, "sha384", 1, flags, (void*)2384, crypto_hash, 0, 0);
     sqlite3_create_function(db, "crypto_sha512", 1, flags, (void*)2512, crypto_hash, 0, 0);
     sqlite3_create_function(db, "sha512", 1, flags, (void*)2512, crypto_hash, 0, 0);
+    sqlite3_create_function(db, "crypto_xxh32", 1, flags, (void*)1032, crypto_hash, 0, 0);
+    sqlite3_create_function(db, "xxh32", 1, flags, (void*)1032, crypto_hash, 0, 0);
+    sqlite3_create_function(db, "crypto_xxh64", 1, flags, (void*)1064, crypto_hash, 0, 0);
+    sqlite3_create_function(db, "xxh64", 1, flags, (void*)1064, crypto_hash, 0, 0);
+    sqlite3_create_function(db, "crypto_xxh3_64", 1, flags, (void*)3064, crypto_hash, 0, 0);
+    sqlite3_create_function(db, "xxh3_64", 1, flags, (void*)3064, crypto_hash, 0, 0);
+    sqlite3_create_function(db, "crypto_xxh3_128", 1, flags, (void*)3128, crypto_hash, 0, 0);
+    sqlite3_create_function(db, "xxh3_128", 1, flags, (void*)3128, crypto_hash, 0, 0);
 
     sqlite3_create_function(db, "crypto_encode", 2, flags, 0, crypto_encode, 0, 0);
     sqlite3_create_function(db, "encode", 2, flags, 0, crypto_encode, 0, 0);

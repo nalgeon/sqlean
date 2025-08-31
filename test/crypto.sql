@@ -147,3 +147,23 @@ select '15_09', crypto_decode('<+ohcEHPu*CER),Dg-(An=QS8+DQ%9E-!.?G%G\:0f''qg@=!
 select '16_01', crypto_blake3(null) is NULL;
 select '16_02', hex(crypto_blake3('')) = upper('af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262');
 select '16_03', hex(crypto_blake3('abc')) = upper('6437b3ac38465133ffb63b75273a8db548c558465d79db03fd359c6cd5bd9d85');
+
+select '17_01', crypto_xxh32(null) is NULL;
+select '17_02', hex(crypto_xxh32('')) = '02CC5D05';
+select '17_03', hex(crypto_xxh32('abc')) = '32D153FF';
+select '17_04', hex(crypto_xxh32('The quick brown 🦊 jumps over 13 lazy 🐶.')) = '2C4A0402';
+
+select '18_01', crypto_xxh64(null) is NULL;
+select '18_02', hex(crypto_xxh64('')) = 'EF46DB3751D8E999';
+select '18_03', hex(crypto_xxh64('abc')) = '44BC2CF5AD770999';
+select '18_04', hex(crypto_xxh64('The quick brown 🦊 jumps over 13 lazy 🐶.')) = '1ED3E109F48F652C';
+
+select '19_01', crypto_xxh3_64(null) is NULL;
+select '19_02', hex(crypto_xxh3_64('')) = '2D06800538D394C2';
+select '19_03', hex(crypto_xxh3_64('abc')) = '78AF5F94892F3950';
+select '19_04', hex(crypto_xxh3_64('The quick brown 🦊 jumps over 13 lazy 🐶.')) = '09A3FF1CBDB28B84';
+
+select '20_01', crypto_xxh3_128(null) is NULL;
+select '20_02', hex(crypto_xxh3_128('')) = '99AA06D3014798D86001C324468D497F';
+select '20_03', hex(crypto_xxh3_128('abc')) = '06B05AB6733A618578AF5F94892F3950';
+select '20_04', hex(crypto_xxh3_128('The quick brown 🦊 jumps over 13 lazy 🐶.')) = 'E688EC7B9C40A08C87C989C0484E449E';

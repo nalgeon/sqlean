@@ -28,7 +28,8 @@ download-sqlite:
 	mv sqlite-amalgamation-$(SQLITE_VERSION)/* src
 
 download-external:
-	curl -L https://github.com/mackyle/sqlite/raw/branch-$(SQLITE_BRANCH)/src/test_windirent.h --output src/test_windirent.h
+	curl -L --silent https://github.com/mackyle/sqlite/raw/branch-$(SQLITE_BRANCH)/src/test_windirent.h --output src/test_windirent.h
+	curl -L --silent https://github.com/cyan4973/xxhash/raw/v0.8.3/xxhash.h --output src/crypto/xxhash.impl.h
 
 compile-linux:
 	$(CC) -O1 $(LINIX_FLAGS) src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.so
