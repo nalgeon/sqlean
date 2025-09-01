@@ -32,10 +32,10 @@ download-external:
 	curl -L --silent https://github.com/cyan4973/xxhash/raw/v0.8.3/xxhash.h --output src/crypto/xxhash.impl.h
 
 compile-linux:
-	$(CC) -O1 $(LINIX_FLAGS) src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.so
+	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.so
 	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-define.c src/define/*.c -o dist/define.so
 	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-fileio.c src/fileio/*.c -o dist/fileio.so
-	$(CC) -O1 $(LINIX_FLAGS) src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/fuzzy.so
+	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/fuzzy.so
 	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-ipaddr.c src/ipaddr/*.c -o dist/ipaddr.so
 	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-math.c src/math/*.c -o dist/math.so -lm
 	$(CC) -O3 $(LINIX_FLAGS) -include src/regexp/constants.h src/sqlite3-regexp.c src/regexp/*.c src/regexp/pcre2/*.c -o dist/regexp.so
@@ -45,14 +45,14 @@ compile-linux:
 	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-unicode.c src/unicode/*.c -o dist/unicode.so
 	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-uuid.c src/uuid/*.c -o dist/uuid.so
 	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-vsv.c src/vsv/*.c -o dist/vsv.so -lm
-	$(CC) -O1 $(LINIX_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/ipaddr/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/text/*/*.c src/time/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/sqlean.so -lm
+	$(CC) -O3 $(LINIX_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/ipaddr/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/text/*/*.c src/time/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/sqlean.so -lm
 
 compile-linux-x64:
 	mkdir -p dist/x64
-	$(CC) -O1 $(LINIX_FLAGS) src/sqlite3-crypto.c src/crypto/*.c -o dist/x64/crypto.so
+	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-crypto.c src/crypto/*.c -o dist/x64/crypto.so
 	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-define.c src/define/*.c -o dist/x64/define.so
 	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-fileio.c src/fileio/*.c -o dist/x64/fileio.so
-	$(CC) -O1 $(LINIX_FLAGS) src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/x64/fuzzy.so
+	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/x64/fuzzy.so
 	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-ipaddr.c src/ipaddr/*.c -o dist/x64/ipaddr.so
 	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-math.c src/math/*.c -o dist/x64/math.so -lm
 	$(CC) -O3 $(LINIX_FLAGS) -include src/regexp/constants.h src/sqlite3-regexp.c src/regexp/*.c src/regexp/pcre2/*.c -o dist/x64/regexp.so
@@ -62,14 +62,14 @@ compile-linux-x64:
 	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-unicode.c src/unicode/*.c -o dist/x64/unicode.so
 	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-uuid.c src/uuid/*.c -o dist/x64/uuid.so
 	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-vsv.c src/vsv/*.c -o dist/x64/vsv.so -lm
-	$(CC) -O1 $(LINIX_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/ipaddr/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/text/*/*.c src/time/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/x64/sqlean.so -lm
+	$(CC) -O3 $(LINIX_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/ipaddr/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/text/*/*.c src/time/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/x64/sqlean.so -lm
 
 compile-linux-musl:
 	mkdir -p dist/musl
-	musl-gcc -O1 $(LINIX_FLAGS) src/sqlite3-crypto.c src/crypto/*.c -o dist/musl/crypto.so
+	musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-crypto.c src/crypto/*.c -o dist/musl/crypto.so
 	musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-define.c src/define/*.c -o dist/musl/define.so
 	musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-fileio.c src/fileio/*.c -o dist/musl/fileio.so
-	musl-gcc -O1 $(LINIX_FLAGS) src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/musl/fuzzy.so
+	musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/musl/fuzzy.so
 	musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-ipaddr.c src/ipaddr/*.c -o dist/musl/ipaddr.so
 	musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-math.c src/math/*.c -o dist/musl/math.so -lm
 	musl-gcc -O3 $(LINIX_FLAGS) -include src/regexp/constants.h src/sqlite3-regexp.c src/regexp/*.c src/regexp/pcre2/*.c -o dist/musl/regexp.so
@@ -79,14 +79,14 @@ compile-linux-musl:
 	musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-unicode.c src/unicode/*.c -o dist/musl/unicode.so
 	musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-uuid.c src/uuid/*.c -o dist/musl/uuid.so
 	musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-vsv.c src/vsv/*.c -o dist/musl/vsv.so -lm
-	musl-gcc -O1 $(LINIX_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/ipaddr/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/text/*/*.c src/time/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/musl/sqlean.so -lm
+	musl-gcc -O3 $(LINIX_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/ipaddr/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/text/*/*.c src/time/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/musl/sqlean.so -lm
 
 compile-linux-arm64:
 	mkdir -p dist/arm64
-	aarch64-linux-gnu-gcc -O1 $(LINIX_FLAGS) src/sqlite3-crypto.c src/crypto/*.c -o dist/arm64/crypto.so
+	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) src/sqlite3-crypto.c src/crypto/*.c -o dist/arm64/crypto.so
 	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) src/sqlite3-define.c src/define/*.c -o dist/arm64/define.so
 	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) src/sqlite3-fileio.c src/fileio/*.c -o dist/arm64/fileio.so
-	aarch64-linux-gnu-gcc -O1 $(LINIX_FLAGS) src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/arm64/fuzzy.so
+	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/arm64/fuzzy.so
 	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) src/sqlite3-ipaddr.c src/ipaddr/*.c -o dist/arm64/ipaddr.so
 	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) src/sqlite3-math.c src/math/*.c -o dist/arm64/math.so -lm
 	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) -include src/regexp/constants.h src/sqlite3-regexp.c src/regexp/*.c src/regexp/pcre2/*.c -o dist/arm64/regexp.so
@@ -96,17 +96,17 @@ compile-linux-arm64:
 	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) src/sqlite3-unicode.c src/unicode/*.c -o dist/arm64/unicode.so
 	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) src/sqlite3-uuid.c src/uuid/*.c -o dist/arm64/uuid.so
 	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) src/sqlite3-vsv.c src/vsv/*.c -o dist/arm64/vsv.so -lm
-	aarch64-linux-gnu-gcc -O1 $(LINIX_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/ipaddr/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/text/*/*.c src/time/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/arm64/sqlean.so -lm
+	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/ipaddr/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/text/*/*.c src/time/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/arm64/sqlean.so -lm
 
 pack-linux:
 	zip -j dist/sqlean-linux-x64.zip dist/x64/*.so
 	zip -j dist/sqlean-linux-arm64.zip dist/arm64/*.so
 
 compile-windows:
-	gcc -O1 $(WINDO_FLAGS) src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.dll
+	gcc -O3 $(WINDO_FLAGS) src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.dll
 	gcc -O3 $(WINDO_FLAGS) src/sqlite3-define.c src/define/*.c -o dist/define.dll
 	gcc -O3 $(WINDO_FLAGS) src/sqlite3-fileio.c src/fileio/*.c -o dist/fileio.dll
-	gcc -O1 $(WINDO_FLAGS) src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/fuzzy.dll
+	gcc -O3 $(WINDO_FLAGS) src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/fuzzy.dll
 	gcc -O3 $(WINDO_FLAGS) src/sqlite3-math.c src/math/*.c -o dist/math.dll -lm
 	gcc -O3 $(WINDO_FLAGS) src/sqlite3-regexp.c -include src/regexp/constants.h src/regexp/*.c src/regexp/pcre2/*.c -o dist/regexp.dll
 	gcc -O3 $(WINDO_FLAGS) src/sqlite3-stats.c src/stats/*.c -o dist/stats.dll -lm
@@ -115,16 +115,16 @@ compile-windows:
 	gcc -O3 $(WINDO_FLAGS) src/sqlite3-unicode.c src/unicode/*.c -o dist/unicode.dll
 	gcc -O3 $(WINDO_FLAGS) src/sqlite3-uuid.c src/uuid/*.c -o dist/uuid.dll
 	gcc -O3 $(WINDO_FLAGS) src/sqlite3-vsv.c src/vsv/*.c -o dist/vsv.dll -lm
-	gcc -O1 $(WINDO_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/text/*/*.c src/time/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/sqlean.dll -lm
+	gcc -O3 $(WINDO_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/text/*/*.c src/time/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/sqlean.dll -lm
 
 pack-windows:
 	7z a -tzip dist/sqlean-win-x64.zip ./dist/*.dll
 
 compile-macos:
-	$(CC) -O1 $(MACOS_FLAGS) src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.dylib
+	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.dylib
 	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-define.c src/define/*.c -o dist/define.dylib
 	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-fileio.c src/fileio/*.c -o dist/fileio.dylib
-	$(CC) -O1 $(MACOS_FLAGS) src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/fuzzy.dylib
+	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/fuzzy.dylib
 	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-ipaddr.c src/ipaddr/*.c -o dist/ipaddr.dylib
 	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-math.c src/math/*.c -o dist/math.dylib -lm
 	$(CC) -O3 $(MACOS_FLAGS) -include src/regexp/constants.h src/sqlite3-regexp.c src/regexp/*.c src/regexp/pcre2/*.c -o dist/regexp.dylib
@@ -134,14 +134,14 @@ compile-macos:
 	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-unicode.c src/unicode/*.c -o dist/unicode.dylib
 	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-uuid.c src/uuid/*.c -o dist/uuid.dylib
 	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-vsv.c src/vsv/*.c -o dist/vsv.dylib -lm
-	$(CC) -O1 $(MACOS_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/ipaddr/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/text/*/*.c src/time/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/sqlean.dylib -lm
+	$(CC) -O3 $(MACOS_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/ipaddr/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/text/*/*.c src/time/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/sqlean.dylib -lm
 
 compile-macos-x64:
 	mkdir -p dist/x64
-	$(CC) -O1 $(MACOS_FLAGS) src/sqlite3-crypto.c src/crypto/*.c -o dist/x64/crypto.dylib -target x86_64-apple-macos10.12
+	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-crypto.c src/crypto/*.c -o dist/x64/crypto.dylib -target x86_64-apple-macos10.12
 	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-define.c src/define/*.c -o dist/x64/define.dylib -target x86_64-apple-macos10.12
 	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-fileio.c src/fileio/*.c -o dist/x64/fileio.dylib -target x86_64-apple-macos10.12
-	$(CC) -O1 $(MACOS_FLAGS) src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/x64/fuzzy.dylib -target x86_64-apple-macos10.12
+	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/x64/fuzzy.dylib -target x86_64-apple-macos10.12
 	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-ipaddr.c src/ipaddr/*.c -o dist/x64/ipaddr.dylib -target x86_64-apple-macos10.12
 	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-math.c src/math/*.c -o dist/x64/math.dylib -target x86_64-apple-macos10.12 -lm
 	$(CC) -O3 $(MACOS_FLAGS) -include src/regexp/constants.h src/sqlite3-regexp.c src/regexp/*.c src/regexp/pcre2/*.c -o dist/x64/regexp.dylib -target x86_64-apple-macos10.12
@@ -151,14 +151,14 @@ compile-macos-x64:
 	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-unicode.c src/unicode/*.c -o dist/x64/unicode.dylib -target x86_64-apple-macos10.12
 	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-uuid.c src/uuid/*.c -o dist/x64/uuid.dylib -target x86_64-apple-macos10.12
 	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-vsv.c src/vsv/*.c -o dist/x64/vsv.dylib -target x86_64-apple-macos10.12 -lm
-	$(CC) -O1 $(MACOS_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/ipaddr/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/text/*/*.c src/time/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/x64/sqlean.dylib -target x86_64-apple-macos10.12 -lm
+	$(CC) -O3 $(MACOS_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/ipaddr/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/text/*/*.c src/time/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/x64/sqlean.dylib -target x86_64-apple-macos10.12 -lm
 
 compile-macos-arm64:
 	mkdir -p dist/arm64
-	$(CC) -O1 $(MACOS_FLAGS) src/sqlite3-crypto.c src/crypto/*.c -o dist/arm64/crypto.dylib -target arm64-apple-macos11
+	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-crypto.c src/crypto/*.c -o dist/arm64/crypto.dylib -target arm64-apple-macos11
 	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-define.c src/define/*.c -o dist/arm64/define.dylib -target arm64-apple-macos11
 	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-fileio.c src/fileio/*.c -o dist/arm64/fileio.dylib -target arm64-apple-macos11
-	$(CC) -O1 $(MACOS_FLAGS) src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/arm64/fuzzy.dylib -target arm64-apple-macos11
+	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/arm64/fuzzy.dylib -target arm64-apple-macos11
 	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-ipaddr.c src/ipaddr/*.c -o dist/arm64/ipaddr.dylib -target arm64-apple-macos11
 	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-math.c src/math/*.c -o dist/arm64/math.dylib -target arm64-apple-macos11 -lm
 	$(CC) -O3 $(MACOS_FLAGS) -include src/regexp/constants.h src/sqlite3-regexp.c src/regexp/*.c src/regexp/pcre2/*.c -o dist/arm64/regexp.dylib -target arm64-apple-macos11
@@ -168,7 +168,7 @@ compile-macos-arm64:
 	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-unicode.c src/unicode/*.c -o dist/arm64/unicode.dylib -target arm64-apple-macos11
 	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-uuid.c src/uuid/*.c -o dist/arm64/uuid.dylib -target arm64-apple-macos11
 	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-vsv.c src/vsv/*.c -o dist/arm64/vsv.dylib -target arm64-apple-macos11 -lm
-	$(CC) -O1 $(MACOS_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/ipaddr/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/text/*/*.c src/time/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/arm64/sqlean.dylib -target arm64-apple-macos11 -lm
+	$(CC) -O3 $(MACOS_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/ipaddr/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/text/*/*.c src/time/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/arm64/sqlean.dylib -target arm64-apple-macos11 -lm
 
 pack-macos:
 	zip -j dist/sqlean-macos-x64.zip dist/x64/*.dylib
