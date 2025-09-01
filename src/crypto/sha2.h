@@ -1,8 +1,8 @@
 /*
- * FILE:    sha2.h
- * AUTHOR:  Aaron D. Gifford - http://www.aarongifford.com/
+ * FIPS 180-2 SHA-224/256/384/512 implementation
  *
- * Copyright (c) 2000-2001, Aaron D. Gifford
+ * Copyright (C) 2005-2023 Olivier Gay <olivier.gay@a3.epfl.ch>
+ * https://github.com/ogay/sha2, BSD 3-Clause License
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -13,14 +13,14 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. Neither the name of the copyright holder nor the names of contributors
+ * 3. Neither the name of the project nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTOR(S) ``AS IS'' AND
+ * THIS SOFTWARE IS PROVIDED BY THE PROJECT AND CONTRIBUTORS ``AS IS'' AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTOR(S) BE LIABLE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE PROJECT OR CONTRIBUTORS BE LIABLE
  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
  * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
@@ -28,69 +28,62 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
- * $Id: sha2.h,v 1.1 2001/11/08 00:02:01 adg Exp adg $
  */
 
 #ifndef __SHA2_H__
 #define __SHA2_H__
 
-#define SHA2_USE_INTTYPES_H
-#define SHA2_UNROLL_TRANSFORM
-#define NOPROTO
+#include <stddef.h>
+#include <stdint.h>
 
-/*
- * Import u_intXX_t size_t type definitions from system headers.  You
- * may need to change this, or define these things yourself in this
- * file.
- */
-#include <sys/types.h>
+#define SHA224_DIGEST_SIZE (224 / 8)
+#define SHA256_DIGEST_SIZE (256 / 8)
+#define SHA384_DIGEST_SIZE (384 / 8)
+#define SHA512_DIGEST_SIZE (512 / 8)
 
-#ifdef SHA2_USE_INTTYPES_H
+#define SHA256_BLOCK_SIZE (512 / 8)
+#define SHA512_BLOCK_SIZE (1024 / 8)
+#define SHA384_BLOCK_SIZE SHA512_BLOCK_SIZE
+#define SHA224_BLOCK_SIZE SHA256_BLOCK_SIZE
 
-#include <inttypes.h>
+#ifndef SHA2_TYPES
+#define SHA2_TYPES
+typedef unsigned char uint8;
+typedef unsigned int uint32;
+typedef unsigned long long uint64;
+#endif
 
-#endif /* SHA2_USE_INTTYPES_H */
+typedef struct {
+    uint64 tot_len;
+    uint64 len;
+    uint8 block[2 * SHA256_BLOCK_SIZE];
+    uint32 h[8];
+} sha256_ctx;
 
-/*** SHA-256/384/512 Various Length Definitions ***********************/
-#define SHA256_BLOCK_LENGTH 64
-#define SHA256_DIGEST_LENGTH 32
-#define SHA256_DIGEST_STRING_LENGTH (SHA256_DIGEST_LENGTH * 2 + 1)
-#define SHA384_BLOCK_LENGTH 128
-#define SHA384_DIGEST_LENGTH 48
-#define SHA384_DIGEST_STRING_LENGTH (SHA384_DIGEST_LENGTH * 2 + 1)
-#define SHA512_BLOCK_LENGTH 128
-#define SHA512_DIGEST_LENGTH 64
-#define SHA512_DIGEST_STRING_LENGTH (SHA512_DIGEST_LENGTH * 2 + 1)
+typedef struct {
+    uint64 tot_len;
+    uint64 len;
+    uint8 block[2 * SHA512_BLOCK_SIZE];
+    uint64 h[8];
+} sha512_ctx;
 
-/*** SHA-256/384/512 Context Structures *******************************/
+typedef sha512_ctx sha384_ctx;
+typedef sha256_ctx sha224_ctx;
 
-typedef struct _SHA256_CTX {
-    uint32_t state[8];
-    uint64_t bitcount;
-    uint8_t buffer[SHA256_BLOCK_LENGTH];
-} SHA256_CTX;
+sha224_ctx* sha224_init(void);
+void sha224_update(sha224_ctx* ctx, const uint8* message, uint64 len);
+int sha224_final(sha224_ctx* ctx, uint8* digest);
 
-typedef struct _SHA512_CTX {
-    uint64_t state[8];
-    uint64_t bitcount[2];
-    uint8_t buffer[SHA512_BLOCK_LENGTH];
-} SHA512_CTX;
+sha256_ctx* sha256_init(void);
+void sha256_update(sha256_ctx* ctx, const uint8* message, uint64 len);
+int sha256_final(sha256_ctx* ctx, uint8* digest);
 
-typedef SHA512_CTX SHA384_CTX;
+sha384_ctx* sha384_init(void);
+void sha384_update(sha384_ctx* ctx, const uint8* message, uint64 len);
+int sha384_final(sha384_ctx* ctx, uint8* digest);
 
-/*** SHA-256/384/512 Function Prototypes ******************************/
+sha512_ctx* sha512_init(void);
+void sha512_update(sha512_ctx* ctx, const uint8* message, uint64 len);
+int sha512_final(sha512_ctx* ctx, uint8* digest);
 
-void* sha256_init();
-void sha256_update(SHA256_CTX*, const uint8_t*, size_t);
-int sha256_final(SHA256_CTX*, uint8_t[SHA256_DIGEST_LENGTH]);
-
-void* sha384_init();
-void sha384_update(SHA384_CTX*, const uint8_t*, size_t);
-int sha384_final(SHA384_CTX*, uint8_t[SHA384_DIGEST_LENGTH]);
-
-void* sha512_init();
-void sha512_update(SHA512_CTX*, const uint8_t*, size_t);
-int sha512_final(SHA512_CTX*, uint8_t[SHA512_DIGEST_LENGTH]);
-
-#endif  // MD5_H
+#endif
