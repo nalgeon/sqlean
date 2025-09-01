@@ -4171,7 +4171,7 @@ static unsigned short* unicode_unacc_data_table[UNICODE_UNACC_BLOCK_COUNT] = {
 #define unicode_unacc(c, p, l)                                                              \
     {                                                                                       \
         unsigned short index = unicode_unacc_indexes[(c) >> UNICODE_UNACC_BLOCK_SHIFT];     \
-        unsigned char position = (c)&UNICODE_UNACC_BLOCK_MASK;                              \
+        unsigned char position = (c) & UNICODE_UNACC_BLOCK_MASK;                            \
         (p) = &(unicode_unacc_data_table[index][unicode_unacc_positions[index][position]]); \
         (l) = unicode_unacc_positions[index][position + 1] -                                \
               unicode_unacc_positions[index][position];                                     \
@@ -4182,9 +4182,11 @@ static unsigned short* unicode_unacc_data_table[UNICODE_UNACC_BLOCK_COUNT] = {
     }
 SQLITE_EXPORT u16 sqlite3_unicode_unacc(u16 c, u16** p, int* l) {
     if (c < 0x80) {
+        static u16 ascii;
+        ascii = c;
         if (l) {
             *l = 1;
-            *p = &c;
+            *p = &ascii;
         }
         return c;
     } else {
