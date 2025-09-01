@@ -38,19 +38,17 @@ static char* replace_start(const char* src, const char* old, const char* new) {
     char* res = malloc((src_len + 1) * sizeof(char));
 
     if (src_len < old_len) {
-        // source string is shorter than the substring to replace,
-        // so there is definitely no match
         strcpy(res, src);
         return res;
     }
 
     if (strncmp(src, old, old_len) == 0) {
-        strncpy(res, new, new_len);
-        strncpy(res + new_len, src + old_len, src_len - old_len);
-        *(res + src_len - old_len + new_len) = '\0';
+        memcpy(res, new, new_len);
+        strcpy(res + new_len, src + old_len);
     } else {
         strcpy(res, src);
     }
+    res[src_len - old_len + new_len] = '\0';
     return res;
 }
 
@@ -65,19 +63,17 @@ static char* replace_end(const char* src, const char* old, const char* new) {
     char* res = malloc((src_len + 1) * sizeof(char));
 
     if (src_len < old_len) {
-        // source string is shorter than the substring to replace,
-        // so there is definitely no match
         strcpy(res, src);
         return res;
     }
 
-    strncpy(res, src, src_len - old_len);
+    memcpy(res, src, src_len - old_len);
     if (strncmp(src + src_len - old_len, old, old_len) == 0) {
-        strncpy(res + src_len - old_len, new, new_len);
-        *(res + src_len - old_len + new_len) = '\0';
+        memcpy(res + src_len - old_len, new, new_len);
+        res[src_len - old_len + new_len] = '\0';
     } else {
-        strncpy(res + src_len - old_len, src + src_len - old_len, old_len);
-        *(res + src_len) = '\0';
+        memcpy(res + src_len - old_len, src + src_len - old_len, old_len);
+        res[src_len] = '\0';
     }
     return res;
 }
@@ -93,8 +89,6 @@ static char* replace(const char* src, const char* old, const char* new) {
     char* res = malloc((src_len + 1) * sizeof(char));
 
     if (src_len < old_len) {
-        // source string is shorter than the substring to replace,
-        // so there is definitely no match
         strcpy(res, src);
         return res;
     }
@@ -104,7 +98,7 @@ static char* replace(const char* src, const char* old, const char* new) {
     for (size_t idx = 0; idx < src_len;) {
         src_it = src + idx;
         if (strncmp(src_it, old, old_len) == 0) {
-            strncpy(res_it, new, new_len);
+            memcpy(res_it, new, new_len);
             res_it += new_len;
             idx += old_len;
         } else {
@@ -133,7 +127,7 @@ static char* replace_seq(const char* src, const char old, const char* new) {
             idx++;
         } else {
             if (match_len > 0) {
-                strncpy(res_it, new, new_len);
+                memcpy(res_it, new, new_len);
                 res_it += new_len;
                 match_len = 0;
             }
@@ -143,7 +137,7 @@ static char* replace_seq(const char* src, const char old, const char* new) {
         }
     }
     if (match_len > 0) {
-        strncpy(res_it, new, new_len);
+        memcpy(res_it, new, new_len);
         res_it += new_len;
     }
     *res_it = '\0';

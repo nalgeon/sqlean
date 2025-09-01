@@ -50,7 +50,7 @@ unsigned damerau_levenshtein(const char* str1, const char* str2) {
     size_t m_cols = str2_len + 2;  // matrix cols
 
     // matrix to hold computed values
-    unsigned** matrix = malloc(m_rows * sizeof(unsigned*));
+    unsigned** matrix = calloc(m_rows, sizeof(unsigned*));
     for (unsigned i = 0; i < m_rows; i++) {
         matrix[i] = calloc(m_cols, sizeof(unsigned));
     }
