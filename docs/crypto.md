@@ -112,7 +112,7 @@ select hex(crypto_xxh32('abc'));
 -- 32D153FF
 ```
 
-### crypto_xx64
+### crypto_xxh64
 
 ```text
 crypto_xx64(data)

@@ -1,8 +1,8 @@
 // Copyright (c) 2025 Anton Zhiyanov, MIT License
 // https://github.com/nalgeon/sqlean
 
-#ifndef __XXHASH3_H__
-#define __XXHASH3_H__
+#ifndef __XXHASH_H__
+#define __XXHASH_H__
 
 #include <stddef.h>
 #include <stdint.h>
