@@ -89,6 +89,8 @@ make compile-macos
 
 You'll find the compiled extensions in the `dist` folder.
 
+See also: Instructions for building on [iOS and Android platforms](https://github.com/nalgeon/sqlean/issues/156).
+
 ## Contributing
 
 This project only accepts bug fixes and minor improvements. If you'd like to contribute a new extension, please submit it to the [extension hub repo](https://github.com/nalgeon/sqlpkg/).
