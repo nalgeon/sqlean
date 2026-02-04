@@ -92,7 +92,7 @@ See also: Instructions for building on [iOS and Android platforms](https://githu
 
 ## Contributing
 
-This project only accepts bug fixes and minor improvements. If you'd like to contribute a new extension, please submit it to the [extension hub repo](https://github.com/nalgeon/sqlpkg/).
+This project only accepts bug fixes.
 
 ## License
 
