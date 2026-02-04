@@ -12,7 +12,6 @@ To achieve it, we split extensions that are too broad, merge the ones that are t
 [Other extensions](#other-extensions) •
 [Downloading](#downloading) •
 [Installation](#installation-and-usage) •
-[Sister projects](#sister-projects) •
 [Support](#support)
 
 ## Main set
@@ -95,17 +94,6 @@ See also: Instructions for building on [iOS and Android platforms](https://githu
 
 This project only accepts bug fixes and minor improvements. If you'd like to contribute a new extension, please submit it to the [extension hub repo](https://github.com/nalgeon/sqlpkg/).
 
-## Sister projects
-
-Projects related to Sqlean:
-
--   [sqlpkg.org](https://sqlpkg.org/): a catalog of all SQLite extensions, with search and manual downloads.
--   [sqlime.org](https://sqlime.org/): an online SQLite playground for debugging and sharing SQL snippets.
--   [sqlpkg](https://github.com/nalgeon/sqlpkg-cli): an automated packager manager for SQLite (like `npm` for JS or `pip` for Python).
--   [sqlean.py](https://github.com/nalgeon/sqlean.py): a drop-in replacement for the default `sqlite3` module.
--   [sqlean.js](https://github.com/nalgeon/sqlean.js): browser-based SQLite with extensions.
--   [shell](https://github.com/nalgeon/sqlite): custom builds for SQLite and Sqlean shells.
-
 ## License
 
 Copyright 2021-2025 [Anton Zhiyanov](https://antonz.org/), [Contributors](https://github.com/nalgeon/sqlean/graphs/contributors) and [Third-party Authors](docs/third-party.md).
@@ -114,10 +102,4 @@ The software is available under the MIT License.
 
 ## Support
 
-Sqlean is mostly a [one-man](https://antonz.org/) project, not backed by a VC fund or anything.
-
-If you find Sqlean useful, please star it on GitHub and spread the word among your peers. It really helps to move the project forward.
-
-If you use Sqlean for commercial purposes, consider [purchasing support](https://antonz.gumroad.com/l/sqlean-plus).
-
-★ [Subscribe](https://antonz.org/subscribe/) to stay on top of new features.
+Sqlean is mostly a [one-man](https://antonz.org/) project. It's currently in maintenance mode, and no new features are planned.
