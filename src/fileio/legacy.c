@@ -164,7 +164,7 @@ static void readFileContents(sqlite3_context* ctx,
 #if defined(_WIN32)
     LPWSTR zUnicodeName;
     extern LPWSTR sqlite3_win32_utf8_to_unicode(const char*);
-    zUnicodeName = sqlite3_win32_utf8_to_unicode(zPath);
+    zUnicodeName = sqlite3_win32_utf8_to_unicode(zName);
 
     if (zUnicodeName) {
         in = _wfopen(zUnicodeName, L"rb");
