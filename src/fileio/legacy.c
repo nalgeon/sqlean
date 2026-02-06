@@ -72,6 +72,71 @@ SQLITE_EXTENSION_INIT3
 #define FSDIR_COLUMN_PATH 4  /* Path to top of search */
 #define FSDIR_COLUMN_REC 5   /* Recursive flag */
 
+#if defined(_WIN32)
+/*
+** This function is designed to convert a Win32 FILETIME structure into the
+** number of seconds since the Unix Epoch (1970-01-01 00:00:00 UTC).
+*/
+static sqlite3_uint64 fileTimeToUnixTime(LPFILETIME pFileTime) {
+    SYSTEMTIME epochSystemTime;
+    ULARGE_INTEGER epochIntervals;
+    FILETIME epochFileTime;
+    ULARGE_INTEGER fileIntervals;
+
+    memset(&epochSystemTime, 0, sizeof(SYSTEMTIME));
+    epochSystemTime.wYear = 1970;
+    epochSystemTime.wMonth = 1;
+    epochSystemTime.wDay = 1;
+    SystemTimeToFileTime(&epochSystemTime, &epochFileTime);
+    epochIntervals.LowPart = epochFileTime.dwLowDateTime;
+    epochIntervals.HighPart = epochFileTime.dwHighDateTime;
+
+    fileIntervals.LowPart = pFileTime->dwLowDateTime;
+    fileIntervals.HighPart = pFileTime->dwHighDateTime;
+
+    return (fileIntervals.QuadPart - epochIntervals.QuadPart) / 10000000;
+}
+
+#if defined(FILEIO_WIN32_DLL) && (defined(_WIN32) || defined(WIN32))
+#/* To allow a standalone DLL, use this next replacement function: */
+#undef sqlite3_win32_utf8_to_unicode
+#define sqlite3_win32_utf8_to_unicode utf8_to_utf16
+#
+LPWSTR utf8_to_utf16(const char* z) {
+    int nAllot = MultiByteToWideChar(CP_UTF8, 0, z, -1, NULL, 0);
+    LPWSTR rv = sqlite3_malloc(nAllot * sizeof(WCHAR));
+    if (rv != 0 && 0 < MultiByteToWideChar(CP_UTF8, 0, z, -1, rv, nAllot))
+        return rv;
+    sqlite3_free(rv);
+    return 0;
+}
+#endif
+
+/*
+** This function attempts to normalize the time values found in the stat()
+** buffer to UTC.  This is necessary on Win32, where the runtime library
+** appears to return these values as local times.
+*/
+static void statTimesToUtc(const char* zPath, struct stat* pStatBuf) {
+    HANDLE hFindFile;
+    WIN32_FIND_DATAW fd;
+    LPWSTR zUnicodeName;
+    extern LPWSTR sqlite3_win32_utf8_to_unicode(const char*);
+    zUnicodeName = sqlite3_win32_utf8_to_unicode(zPath);
+    if (zUnicodeName) {
+        memset(&fd, 0, sizeof(WIN32_FIND_DATAW));
+        hFindFile = FindFirstFileW(zUnicodeName, &fd);
+        if (hFindFile != NULL) {
+            pStatBuf->st_ctime = (time_t)fileTimeToUnixTime(&fd.ftCreationTime);
+            pStatBuf->st_atime = (time_t)fileTimeToUnixTime(&fd.ftLastAccessTime);
+            pStatBuf->st_mtime = (time_t)fileTimeToUnixTime(&fd.ftLastWriteTime);
+            FindClose(hFindFile);
+        }
+        sqlite3_free(zUnicodeName);
+    }
+}
+#endif
+
 /*
 ** Set the result stored by context ctx to a blob containing the
 ** contents of file zName.  Or, leave the result unchanged (NULL)
@@ -96,7 +161,23 @@ static void readFileContents(sqlite3_context* ctx,
     assert(nOffset >= 0);
     assert(nLimit >= 0);
 
+#if defined(_WIN32)
+    LPWSTR zUnicodeName;
+    extern LPWSTR sqlite3_win32_utf8_to_unicode(const char*);
+    zUnicodeName = sqlite3_win32_utf8_to_unicode(zPath);
+
+    if (zUnicodeName) {
+        in = _wfopen(zUnicodeName, L"rb");
+        sqlite3_free(zUnicodeName);
+    } else {
+        /* File does not exist or is unreadable. Leave the result set to NULL. */
+        return;
+    }
+
+#else
     in = fopen(zName, "rb");
+#endif
+
     if (in == 0) {
         /* File does not exist or is unreadable. Leave the result set to NULL. */
         return;
@@ -187,71 +268,6 @@ static void ctxErrorMsg(sqlite3_context* ctx, const char* zFmt, ...) {
     sqlite3_free(zMsg);
     va_end(ap);
 }
-
-#if defined(_WIN32)
-/*
-** This function is designed to convert a Win32 FILETIME structure into the
-** number of seconds since the Unix Epoch (1970-01-01 00:00:00 UTC).
-*/
-static sqlite3_uint64 fileTimeToUnixTime(LPFILETIME pFileTime) {
-    SYSTEMTIME epochSystemTime;
-    ULARGE_INTEGER epochIntervals;
-    FILETIME epochFileTime;
-    ULARGE_INTEGER fileIntervals;
-
-    memset(&epochSystemTime, 0, sizeof(SYSTEMTIME));
-    epochSystemTime.wYear = 1970;
-    epochSystemTime.wMonth = 1;
-    epochSystemTime.wDay = 1;
-    SystemTimeToFileTime(&epochSystemTime, &epochFileTime);
-    epochIntervals.LowPart = epochFileTime.dwLowDateTime;
-    epochIntervals.HighPart = epochFileTime.dwHighDateTime;
-
-    fileIntervals.LowPart = pFileTime->dwLowDateTime;
-    fileIntervals.HighPart = pFileTime->dwHighDateTime;
-
-    return (fileIntervals.QuadPart - epochIntervals.QuadPart) / 10000000;
-}
-
-#if defined(FILEIO_WIN32_DLL) && (defined(_WIN32) || defined(WIN32))
-#/* To allow a standalone DLL, use this next replacement function: */
-#undef sqlite3_win32_utf8_to_unicode
-#define sqlite3_win32_utf8_to_unicode utf8_to_utf16
-#
-LPWSTR utf8_to_utf16(const char* z) {
-    int nAllot = MultiByteToWideChar(CP_UTF8, 0, z, -1, NULL, 0);
-    LPWSTR rv = sqlite3_malloc(nAllot * sizeof(WCHAR));
-    if (rv != 0 && 0 < MultiByteToWideChar(CP_UTF8, 0, z, -1, rv, nAllot))
-        return rv;
-    sqlite3_free(rv);
-    return 0;
-}
-#endif
-
-/*
-** This function attempts to normalize the time values found in the stat()
-** buffer to UTC.  This is necessary on Win32, where the runtime library
-** appears to return these values as local times.
-*/
-static void statTimesToUtc(const char* zPath, struct stat* pStatBuf) {
-    HANDLE hFindFile;
-    WIN32_FIND_DATAW fd;
-    LPWSTR zUnicodeName;
-    extern LPWSTR sqlite3_win32_utf8_to_unicode(const char*);
-    zUnicodeName = sqlite3_win32_utf8_to_unicode(zPath);
-    if (zUnicodeName) {
-        memset(&fd, 0, sizeof(WIN32_FIND_DATAW));
-        hFindFile = FindFirstFileW(zUnicodeName, &fd);
-        if (hFindFile != NULL) {
-            pStatBuf->st_ctime = (time_t)fileTimeToUnixTime(&fd.ftCreationTime);
-            pStatBuf->st_atime = (time_t)fileTimeToUnixTime(&fd.ftLastAccessTime);
-            pStatBuf->st_mtime = (time_t)fileTimeToUnixTime(&fd.ftLastWriteTime);
-            FindClose(hFindFile);
-        }
-        sqlite3_free(zUnicodeName);
-    }
-}
-#endif
 
 /*
 ** This function is used in place of stat().  On Windows, special handling
