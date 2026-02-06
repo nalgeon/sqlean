@@ -51,13 +51,11 @@ There are [precompiled binaries](https://github.com/nalgeon/sqlean/releases/late
 -   `sqlean-macos-x64.zip` - Intel-based macOS
 -   `sqlean-macos-arm64.zip` - Apple silicon (ARM-based) macOS
 
-Binaries are 64-bit and require a 64-bit SQLite version. If you are using SQLite shell on Windows (`sqlite.exe`), its 64-bit version is available at https://github.com/nalgeon/sqlite.
+Binaries are 64-bit and require a 64-bit SQLite version.
 
 ## Installation and usage
 
-The easiest way to try out Sqlean extensions is to use the [pre-bundled shell](docs/shell.md). But you can also load them individually.
-
-For example, using the SQLite command-line interface:
+The easiest way to try out Sqlean extensions is to load them in the SQLite command-line interface:
 
 ```
 sqlite> .load ./sqlean

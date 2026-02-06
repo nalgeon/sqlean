@@ -1,7 +1,5 @@
 # How to install an extension
 
-The easiest way to try out Sqlean extensions is to use the [pre-bundled shell](shell.md). But if you prefer to use the standard SQLite shell, IDEs or software APIs — read on.
-
 Examples below use the `stats` extension; you can specify any other supported extension. To load all extensions at once, use the single-file `sqlean` bundle.
 
 -   [Download](#download)
@@ -23,7 +21,7 @@ There are [precompiled binaries](https://github.com/nalgeon/sqlean/releases/late
 -   `sqlean-macos-x64.zip` - Intel-based macOS
 -   `sqlean-macos-arm64.zip` - Apple silicon (ARM-based) macOS
 
-Binaries are 64-bit and require a 64-bit SQLite version. If you are using SQLite shell on Windows (`sqlite.exe`), its 64-bit version is available at https://github.com/nalgeon/sqlite.
+Binaries are 64-bit and require a 64-bit SQLite version.
 
 ## Install: Command-line interface
 
@@ -55,7 +53,7 @@ select median(value) from generate_series(1, 99);
 xattr -d com.apple.quarantine /Users/anton/Downloads/stats.dylib
 ```
 
-Also note that the "stock" SQLite CLI on macOS does not support extensions. Use the [custom build](https://github.com/nalgeon/sqlite).
+Also note that the "stock" SQLite CLI on macOS might not support extensions.
 
 ## Install: GUI database browser
 
