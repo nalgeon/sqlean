@@ -49,8 +49,8 @@ select '41', cast(fileio_read('hello.txt', 6, 10) as text) = 'world';
 
 -- fileio_read + unicode
 .shell printf 'hello世界' > hello世界.txt
-select '42', typeof(fileio_read('hello世界')) = 'blob';
-select '43', cast(fileio_read('hello世界') as text) = 'hello世界';
+select '42', typeof(fileio_read('hello世界.txt')) = 'blob';
+select '43', cast(fileio_read('hello世界.txt') as text) = 'hello世界';
 
 -- fileio_symlink
 .shell printf 'hello world' > hello.txt
