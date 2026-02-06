@@ -78,7 +78,7 @@ select load_extension('/Users/anton/Downloads/stats');
 To load extensions in [rqlite](https://www.rqlite.io), first download a suitable release (x64 for Linux is demonstrated below):
 
 ```bash
-curl -L https://github.com/nalgeon/sqlean/releases/download/0.28.0/sqlean-linux-x64.zip -o sqlean.zip
+curl -L https://github.com/nalgeon/sqlean/releases/latest/download/sqlean-linux-x64.zip -o sqlean.zip
 ```
 
 Then pass the zipfile to rqlite when you start the rqlite node:
