@@ -62,7 +62,7 @@ To load extension in SQLiteStudio, SQLiteSpy, DBeaver and other similar tools, u
 Windows:
 
 ```sql
-select load_extension('c:\Users\anton\sqlite\stats');
+select load_extension('c:\Users\anton\Downloads\stats');
 ```
 
 Linux/macOS:
@@ -89,35 +89,33 @@ See full details on [rqlite.io](https://rqlite.io/docs/guides/extensions/).
 
 ## Install: Python
 
-Install the `sqlean.py` package, which is a drop-in replacement for the default `sqlite3` module:
+Use the default `sqlite3` module to load the extension.
 
-```
-pip install sqlean.py
-```
-
-All extensions from the main set are already enabled:
-
-```python
-import sqlean as sqlite3
-
-conn = sqlite3.connect(":memory:")
-conn.execute("select median(value) from generate_series(1, 99)")
-conn.close()
-```
-
-You can also use the default `sqlite3` module and load extensions manually:
+Windows:
 
 ```python
 import sqlite3
 
 conn = sqlite3.connect(":memory:")
 conn.enable_load_extension(True)
-conn.load_extension("./stats")
+conn.load_extension(r"c:\Users\anton\Downloads\stats")
 conn.execute("select median(value) from generate_series(1, 99)")
 conn.close()
 ```
 
-**Note for macOS users**. "Stock" SQLite on macOS does not support extensions, so the default `sqlite3` module won't work. Use the `sqlean.py` package.
+Linux/macOS:
+
+```python
+import sqlite3
+
+conn = sqlite3.connect(":memory:")
+conn.enable_load_extension(True)
+conn.load_extension("/Users/anton/Downloads/stats")
+conn.execute("select median(value) from generate_series(1, 99)")
+conn.close()
+```
+
+Note that the "stock" SQLite on macOS might not support extensions, so this method might not work.
 
 ## Install: Node.js
 
@@ -128,7 +126,7 @@ Windows:
 ```js
 const sqlite3 = require("better-sqlite3");
 const db = new sqlite3(":memory:");
-db.loadExtension(`c:\Users\anton\sqlite\stats`);
+db.loadExtension(`c:\Users\anton\Downloads\stats`);
 db.exec("select median(value) from generate_series(1, 99)");
 db.close();
 ```
@@ -183,7 +181,7 @@ func main() {
     sql.Register("sqlite_ext",
         &sqlite3.SQLiteDriver{
             Extensions: []string{
-                `c:\Users\anton\sqlite\stats`,
+                `c:\Users\anton\sqlDownloadsite\stats`,
             },
         })
 
