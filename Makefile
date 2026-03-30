@@ -107,6 +107,7 @@ compile-windows:
 	gcc -O3 $(WINDO_FLAGS) src/sqlite3-define.c src/define/*.c -o dist/define.dll
 	gcc -O3 $(WINDO_FLAGS) src/sqlite3-fileio.c src/fileio/*.c -o dist/fileio.dll
 	gcc -O3 $(WINDO_FLAGS) src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/fuzzy.dll
+	gcc -O3 $(WINDO_FLAGS) src/sqlite3-ipaddr.c src/ipaddr/*.c -o dist/ipaddr.dll -lws2_32
 	gcc -O3 $(WINDO_FLAGS) src/sqlite3-math.c src/math/*.c -o dist/math.dll -lm
 	gcc -O3 $(WINDO_FLAGS) src/sqlite3-regexp.c -include src/regexp/constants.h src/regexp/*.c src/regexp/pcre2/*.c -o dist/regexp.dll
 	gcc -O3 $(WINDO_FLAGS) src/sqlite3-stats.c src/stats/*.c -o dist/stats.dll -lm
