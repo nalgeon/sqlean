@@ -3,7 +3,12 @@
 
 // IP address manipulation in SQLite.
 
+#ifdef __MINGW32__
+#include <ws2tcpip.h>
+#else
 #include <arpa/inet.h>
+#endif
+
 #include <assert.h>
 #include <errno.h>
 #include <inttypes.h>

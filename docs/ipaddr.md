@@ -2,8 +2,6 @@
 
 The `sqlean-ipaddr` extension provides functions to manipulate IPs and subnets.
 
-⚠️ This extension is not available on Windows.
-
 [Reference](#reference) •
 [Acknowledgements](#acknowledgements) •
 [Installation and usage](#installation-and-usage)
