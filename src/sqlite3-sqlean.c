@@ -39,7 +39,6 @@ __declspec(dllexport)
     static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
     sqlite3_create_function(db, "sqlean_version", 0, flags, 0, sqlean_version, 0, 0);
     crypto_init(db);
-    define_init(db);
     fileio_init(db);
     fuzzy_init(db);
 #if !defined(_WIN32)
@@ -55,5 +54,11 @@ __declspec(dllexport)
     unicode_init(db);
     uuid_init(db);
     vsv_init(db);
+    // The above init functions will create various sqlean functions. A user defined function (UDF)
+    // could reasonably invoke any sqlean function within its body. If a sqlean function isn't
+    // registered when define_init runs then any UDF that uses said function within its body will
+    // fail claiming "no such function". Thus, we load this extension last to ensure all sqlean
+    // functions are registered before define_init runs.
+    define_init(db);
     return SQLITE_OK;
 }
