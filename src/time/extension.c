@@ -22,6 +22,7 @@ static void result_blob(sqlite3_context* context, Time t) {
     sqlite3_result_blob(context, buf, sizeof(buf), SQLITE_TRANSIENT);
 }
 
+// has_null reports whether any of the arguments is NULL.
 static bool has_null(int argc, sqlite3_value** argv) {
     for (int i = 0; i < argc; i++) {
         if (sqlite3_value_type(argv[i]) == SQLITE_NULL) {
