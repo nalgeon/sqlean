@@ -55,18 +55,8 @@ The calendrical calculations always assume a Gregorian calendar, with no leap se
 
 ### NULL handling
 
-Time functions are strict: if any argument is `NULL`, the result is `NULL`. This
-holds in every argument position and is checked before argument types, so
-`time_add(NULL, 'not a duration')` and `time_add('not a time', NULL)` both return
-`NULL` instead of reporting the invalid argument. Functions that take no
-arguments, such as `time_now`, never return `NULL`.
-
-`time_get_year` requires a 13-byte time blob. Passing text, such as
-`time_get_year('2024-01-01')`, reports an error.
-
-A `CHECK` constraint is satisfied when its expression is `NULL`, so
-`check (time_get_year(at) >= 2000)` does not reject a `NULL` value. Add
-`NOT NULL` to the column to require one.
+All functions with arguments propagate SQL `NULL`: if any argument is `NULL`,
+the function returns `NULL` before validating argument types.
 
 ## Creating time values
 
