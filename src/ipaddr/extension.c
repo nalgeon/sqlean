@@ -153,7 +153,7 @@ static void ipaddr_ipnetwork(sqlite3_context* context, int argc, sqlite3_value**
             if (ip->masklen / 8 < i)
                 ip->ipv6.s6_addr[i] = 0;
             else if (ip->masklen / 8 == i)
-                ip->ipv6.s6_addr[i] &= ~(ip->masklen % 8);
+                ip->ipv6.s6_addr[i] &= (0xffu << (8 - ip->masklen % 8));
         }
         inet_ntop(AF_INET6, &ip->ipv6, buf, INET6_ADDRSTRLEN);
         char* result = sqlite3_malloc(INET6_ADDRSTRLEN + 4);
@@ -197,8 +197,8 @@ static void ipaddr_ipcontains(sqlite3_context* context, int argc, sqlite3_value*
                 ip1->ipv6.s6_addr[i] = 0;
                 ip2->ipv6.s6_addr[i] = 0;
             } else if (ip1->masklen / 8 == i) {
-                ip1->ipv6.s6_addr[i] &= ~(ip1->masklen % 8);
-                ip2->ipv6.s6_addr[i] &= ~(ip1->masklen % 8);
+                ip1->ipv6.s6_addr[i] &= (0xffu << (8 - ip1->masklen % 8));
+                ip2->ipv6.s6_addr[i] &= (0xffu << (8 - ip1->masklen % 8));
             }
             if (ip1->ipv6.s6_addr[i] != ip2->ipv6.s6_addr[i]) {
                 sqlite3_result_int(context, 0);

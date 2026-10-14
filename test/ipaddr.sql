@@ -31,3 +31,25 @@ select '25', ipcontains('192.168.16.0/25', '192.168.16.128/26') = 0;
 select '26', ipcontains('2001:db8::/48', '2001:db8::/64') = 1;
 select '27', ipcontains('2001:db8::/56', '2001:db8::/48') = 0;
 select '28', ipcontains('2001:db8::/56', '2001:db8:1::/64') = 0;
+
+-- Clear all host bits, including the boundary byte for byte-aligned prefixes.
+select '29', ipnetwork('2001:db8:1111:2222:3333:4444:5555:6666/64') = '2001:db8:1111:2222::/64';
+select '30', ipnetwork('ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff/0') = '::/0';
+select '31', ipnetwork('ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff/120') = 'ffff:ffff:ffff:ffff:ffff:ffff:ffff:ff00/120';
+select '32', ipnetwork('ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff/121') = 'ffff:ffff:ffff:ffff:ffff:ffff:ffff:ff80/121';
+select '33', ipnetwork('ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff/122') = 'ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffc0/122';
+select '34', ipnetwork('ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff/123') = 'ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffe0/123';
+select '35', ipnetwork('ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff/124') = 'ffff:ffff:ffff:ffff:ffff:ffff:ffff:fff0/124';
+select '36', ipnetwork('ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff/125') = 'ffff:ffff:ffff:ffff:ffff:ffff:ffff:fff8/125';
+select '37', ipnetwork('ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff/126') = 'ffff:ffff:ffff:ffff:ffff:ffff:ffff:fffc/126';
+select '38', ipnetwork('ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff/127') = 'ffff:ffff:ffff:ffff:ffff:ffff:ffff:fffe/127';
+select '39', ipnetwork('ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff/128') = 'ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff/128';
+-- The same prefix mask applies to both operands of ipcontains.
+select '40', ipcontains('2001:db8::/64', '2001:db8:0:0:ff00::1') = 1;
+select '41', ipcontains('::/0', 'ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff') = 1;
+select '42', ipcontains('2001:db8::/127', '2001:db8::1') = 1;
+select '43', ipcontains('2001:db8::/127', '2001:db8::2') = 0;
+select '44', ipcontains('2001:db8::1/127', '2001:db8::') = 1;
+select '45', ipcontains('2001:db8::1/128', '2001:db8::') = 0;
+select '46', ipcontains('2001:db8::/64', '2001:db8:0:0:ff00::/72') = 1;
+select '47', ipcontains('2001:db8::/72', '2001:db8::/64') = 0;
