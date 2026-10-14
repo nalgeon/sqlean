@@ -124,7 +124,7 @@ static void ipaddr_ipmasklen(sqlite3_context* context, int argc, sqlite3_value**
         return;
     }
     sqlite3_result_int(context, ip->masklen);
-    return;
+    sqlite3_free(ip);
 }
 
 static void ipaddr_ipnetwork(sqlite3_context* context, int argc, sqlite3_value** argv) {
