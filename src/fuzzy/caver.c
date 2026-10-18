@@ -8,19 +8,22 @@
 #include <stdlib.h>
 #include <string.h>
 
-// remove_non_letters deletes everything from the source string,
-// except lowercased letters a-z
+// remove_non_letters lowercases the source string and deletes everything
+// from it, except lowercased letters a-z
 static char* remove_non_letters(const char* src) {
     size_t src_len = strlen(src);
     char* res = malloc((src_len + 1) * sizeof(char));
-    const char* src_it;
+    char ch;
     char* res_it = res;
     for (size_t idx = 0; idx < src_len; idx++) {
-        src_it = src + idx;
-        if (*src_it < 97 || *src_it > 122) {
+        ch = src[idx];
+        if (ch >= 'A' && ch <= 'Z') {
+            ch = ch - 'A' + 'a';
+        }
+        if (ch < 'a' || ch > 'z') {
             continue;
         }
-        *res_it = *src_it;
+        *res_it = ch;
         res_it++;
     }
     *res_it = '\0';
@@ -181,7 +184,7 @@ char* caverphone(const char* src) {
 
     strcpy(res, src);
 
-    // Remove anything not in the standard alphabet
+    // Convert to lowercase, remove anything not in the standard alphabet
     res = step(remove_non_letters((const char*)res), res);
 
     // Remove final e
