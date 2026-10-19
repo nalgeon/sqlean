@@ -80,3 +80,6 @@ select '132', fuzzy_caver('') = '';
 select '133', fuzzy_caver('phonetics') = 'FNTKS11111';
 select '134', fuzzy_caver('is') = 'AS11111111';
 select '135', fuzzy_caver('awesome') = 'AWSM111111';
+select '136', fuzzy_caver('Peter') = 'PTA1111111';
+select '137', fuzzy_caver('STEVENSON') = 'STFNSN1111';
+select '138', fuzzy_caver('Lee') = fuzzy_caver('lee');
