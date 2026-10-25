@@ -159,7 +159,7 @@ Put repeated result encoding in a helper (`result_blob`), and repeated argument 
 
 ### Argument handling
 
-Follow what SQLite's own built-in functions do. Bad _data_ gives NULL, never an error, so one bad row doesn't abort a whole query. A bad _query_ raises an error, so a typo doesn't silently turn into NULLs. This is what the date/time, math, `unhex`, JSON, and REGEXP functions do (checked against SQLite 3.36, the version pinned in the `Makefile`):
+Follow what SQLite's own built-in functions do. Bad _data_ gives NULL, never an error, so one bad row doesn't abort a whole query. A bad _query_ raises an error, so a typo doesn't silently turn into NULLs. This is what the date/time, math, `unhex`, JSON, and REGEXP functions do (checked against SQLite 3.47, the version pinned in the `Makefile`):
 
 | Input                             | SQLite built-ins                                            | Sqlean rule                        |
 | --------------------------------- | ----------------------------------------------------------- | ---------------------------------- |
