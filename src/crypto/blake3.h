@@ -32,8 +32,13 @@ typedef struct blake3_hasher {
     uint32_t flags;
 } blake3_hasher;
 
-void* blake3_init();
-void blake3_update(blake3_hasher* ctx, const unsigned char data[], size_t len);
-int blake3_final(blake3_hasher* ctx, unsigned char hash[]);
+// Incremental hashing: init, then update any number of times, then final.
+// The hasher is owned by the caller. The data may be NULL if len is 0.
+void blake3_init(blake3_hasher* ctx);
+void blake3_update(blake3_hasher* ctx, const uint8_t* data, size_t len);
+void blake3_final(blake3_hasher* ctx, uint8_t hash[BLAKE3_OUT_LEN]);
+
+// One-shot hashing of len bytes. The data may be NULL if len is 0.
+void blake3_hash(const uint8_t* data, size_t len, uint8_t hash[BLAKE3_OUT_LEN]);
 
 #endif

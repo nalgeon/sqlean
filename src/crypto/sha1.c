@@ -2,9 +2,7 @@
 // https://sqlite.org/src/file/ext/misc/sha1.c
 // Modified by Anton Zhiyanov, https://github.com/nalgeon/sqlean/, MIT License
 
-#include <assert.h>
-#include <stdarg.h>
-#include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 
 #include "crypto/sha1.h"
@@ -13,23 +11,16 @@
 #define rol(x, k) SHA_ROT(x, k, 32 - (k))
 #define ror(x, k) SHA_ROT(x, 32 - (k), k)
 
-#define blk0le(i) (block[i] = (ror(block[i], 8) & 0xFF00FF00) | (rol(block[i], 8) & 0x00FF00FF))
-#define blk0be(i) block[i]
+#define blk0(i) block[i]
 #define blk(i)       \
     (block[i & 15] = \
          rol(block[(i + 13) & 15] ^ block[(i + 8) & 15] ^ block[(i + 2) & 15] ^ block[i & 15], 1))
 
 /*
  * (R0+R1), R2, R3, R4 are the different operations (rounds) used in SHA1
- *
- * Rl0() for little-endian and Rb0() for big-endian.  Endianness is
- * determined at run-time.
  */
-#define Rl0(v, w, x, y, z, i)                                      \
-    z += ((w & (x ^ y)) ^ y) + blk0le(i) + 0x5A827999 + rol(v, 5); \
-    w = ror(w, 2);
-#define Rb0(v, w, x, y, z, i)                                      \
-    z += ((w & (x ^ y)) ^ y) + blk0be(i) + 0x5A827999 + rol(v, 5); \
+#define R0(v, w, x, y, z, i)                                     \
+    z += ((w & (x ^ y)) ^ y) + blk0(i) + 0x5A827999 + rol(v, 5); \
     w = ror(w, 2);
 #define R1(v, w, x, y, z, i)                                    \
     z += ((w & (x ^ y)) ^ y) + blk(i) + 0x5A827999 + rol(v, 5); \
@@ -47,12 +38,15 @@
 /*
  * Hash a single 512-bit block. This is the core of the algorithm.
  */
-void SHA1Transform(unsigned int state[5], const unsigned char buffer[64]) {
-    unsigned int qq[5]; /* a, b, c, d, e; */
-    static int one = 1;
-    unsigned int block[16];
-    memcpy(block, buffer, 64);
-    memcpy(qq, state, 5 * sizeof(unsigned int));
+static void sha1_transform(uint32_t state[5], const uint8_t buffer[64]) {
+    uint32_t qq[5]; /* a, b, c, d, e; */
+    uint32_t block[16];
+    /* SHA1 reads the message as big-endian words */
+    for (size_t i = 0; i < 16; i++) {
+        block[i] = ((uint32_t)buffer[4 * i] << 24) | ((uint32_t)buffer[4 * i + 1] << 16) |
+                   ((uint32_t)buffer[4 * i + 2] << 8) | (uint32_t)buffer[4 * i + 3];
+    }
+    memcpy(qq, state, sizeof(qq));
 
 #define a qq[0]
 #define b qq[1]
@@ -60,51 +54,23 @@ void SHA1Transform(unsigned int state[5], const unsigned char buffer[64]) {
 #define d qq[3]
 #define e qq[4]
 
-    /* Copy ctx->state[] to working vars */
-    /*
-  a = state[0];
-  b = state[1];
-  c = state[2];
-  d = state[3];
-  e = state[4];
-  */
-
     /* 4 rounds of 20 operations each. Loop unrolled. */
-    if (1 == *(unsigned char*)&one) {
-        Rl0(a, b, c, d, e, 0);
-        Rl0(e, a, b, c, d, 1);
-        Rl0(d, e, a, b, c, 2);
-        Rl0(c, d, e, a, b, 3);
-        Rl0(b, c, d, e, a, 4);
-        Rl0(a, b, c, d, e, 5);
-        Rl0(e, a, b, c, d, 6);
-        Rl0(d, e, a, b, c, 7);
-        Rl0(c, d, e, a, b, 8);
-        Rl0(b, c, d, e, a, 9);
-        Rl0(a, b, c, d, e, 10);
-        Rl0(e, a, b, c, d, 11);
-        Rl0(d, e, a, b, c, 12);
-        Rl0(c, d, e, a, b, 13);
-        Rl0(b, c, d, e, a, 14);
-        Rl0(a, b, c, d, e, 15);
-    } else {
-        Rb0(a, b, c, d, e, 0);
-        Rb0(e, a, b, c, d, 1);
-        Rb0(d, e, a, b, c, 2);
-        Rb0(c, d, e, a, b, 3);
-        Rb0(b, c, d, e, a, 4);
-        Rb0(a, b, c, d, e, 5);
-        Rb0(e, a, b, c, d, 6);
-        Rb0(d, e, a, b, c, 7);
-        Rb0(c, d, e, a, b, 8);
-        Rb0(b, c, d, e, a, 9);
-        Rb0(a, b, c, d, e, 10);
-        Rb0(e, a, b, c, d, 11);
-        Rb0(d, e, a, b, c, 12);
-        Rb0(c, d, e, a, b, 13);
-        Rb0(b, c, d, e, a, 14);
-        Rb0(a, b, c, d, e, 15);
-    }
+    R0(a, b, c, d, e, 0);
+    R0(e, a, b, c, d, 1);
+    R0(d, e, a, b, c, 2);
+    R0(c, d, e, a, b, 3);
+    R0(b, c, d, e, a, 4);
+    R0(a, b, c, d, e, 5);
+    R0(e, a, b, c, d, 6);
+    R0(d, e, a, b, c, 7);
+    R0(c, d, e, a, b, 8);
+    R0(b, c, d, e, a, 9);
+    R0(a, b, c, d, e, 10);
+    R0(e, a, b, c, d, 11);
+    R0(d, e, a, b, c, 12);
+    R0(c, d, e, a, b, 13);
+    R0(b, c, d, e, a, 14);
+    R0(a, b, c, d, e, 15);
     R1(e, a, b, c, d, 16);
     R1(d, e, a, b, c, 17);
     R1(c, d, e, a, b, 18);
@@ -185,57 +151,59 @@ void SHA1Transform(unsigned int state[5], const unsigned char buffer[64]) {
 }
 
 /* Initialize a SHA1 context */
-void* sha1_init() {
+void sha1_init(sha1_ctx* ctx) {
     /* SHA1 initialization constants */
-    SHA1Context* ctx;
-    ctx = malloc(sizeof(SHA1Context));
     ctx->state[0] = 0x67452301;
     ctx->state[1] = 0xEFCDAB89;
     ctx->state[2] = 0x98BADCFE;
     ctx->state[3] = 0x10325476;
     ctx->state[4] = 0xC3D2E1F0;
-    ctx->count[0] = ctx->count[1] = 0;
-    return ctx;
+    ctx->count = 0;
 }
 
 /* Add new content to the SHA1 hash */
-void sha1_update(SHA1Context* ctx, const unsigned char* data, size_t len) {
-    unsigned int i, j;
+void sha1_update(sha1_ctx* ctx, const uint8_t* data, size_t len) {
+    if (len == 0) {
+        return;
+    }
+    size_t used = (size_t)(ctx->count & 63);
+    ctx->count += len;
 
-    j = ctx->count[0];
-    if ((ctx->count[0] += len << 3) < j) {
-        ctx->count[1] += (len >> 29) + 1;
-    }
-    j = (j >> 3) & 63;
-    if ((j + len) > 63) {
-        (void)memcpy(&ctx->buffer[j], data, (i = 64 - j));
-        SHA1Transform(ctx->state, ctx->buffer);
-        for (; i + 63 < len; i += 64) {
-            SHA1Transform(ctx->state, &data[i]);
+    size_t i = 0;
+    if (used + len >= 64) {
+        i = 64 - used;
+        memcpy(&ctx->buffer[used], data, i);
+        sha1_transform(ctx->state, ctx->buffer);
+        for (; i + 64 <= len; i += 64) {
+            sha1_transform(ctx->state, &data[i]);
         }
-        j = 0;
-    } else {
-        i = 0;
+        used = 0;
     }
-    (void)memcpy(&ctx->buffer[j], &data[i], len - i);
+    memcpy(&ctx->buffer[used], &data[i], len - i);
 }
 
-int sha1_final(SHA1Context* ctx, unsigned char hash[]) {
-    unsigned int i;
-    unsigned char finalcount[8];
+/* Pad the message, append its length in bits, and write the digest */
+void sha1_final(sha1_ctx* ctx, uint8_t hash[SHA1_DIGEST_SIZE]) {
+    uint8_t finalcount[8];
+    uint64_t bitlen = ctx->count << 3;
+    for (size_t i = 0; i < 8; i++) {
+        finalcount[i] = (uint8_t)(bitlen >> (56 - 8 * i));
+    }
 
-    for (i = 0; i < 8; i++) {
-        finalcount[i] = (unsigned char)((ctx->count[(i >= 4 ? 0 : 1)] >> ((3 - (i & 3)) * 8)) &
-                                        255); /* Endian independent */
+    static const uint8_t pad[64] = {0x80};
+    size_t used = (size_t)(ctx->count & 63);
+    size_t pad_len = used < 56 ? 56 - used : 120 - used;
+    sha1_update(ctx, pad, pad_len);
+    sha1_update(ctx, finalcount, 8); /* Should cause a sha1_transform() */
+
+    for (size_t i = 0; i < SHA1_DIGEST_SIZE; i++) {
+        hash[i] = (uint8_t)(ctx->state[i >> 2] >> ((3 - (i & 3)) * 8));
     }
-    sha1_update(ctx, (const unsigned char*)"\200", 1);
-    while ((ctx->count[0] & 504) != 448) {
-        sha1_update(ctx, (const unsigned char*)"\0", 1);
-    }
-    sha1_update(ctx, finalcount, 8); /* Should cause a SHA1Transform() */
-    for (i = 0; i < 20; i++) {
-        hash[i] = (unsigned char)((ctx->state[i >> 2] >> ((3 - (i & 3)) * 8)) & 255);
-    }
-    free(ctx);
-    return SHA1_BLOCK_SIZE;
+}
+
+void sha1_hash(const uint8_t* data, size_t len, uint8_t hash[SHA1_DIGEST_SIZE]) {
+    sha1_ctx ctx;
+    sha1_init(&ctx);
+    sha1_update(&ctx, data, len);
+    sha1_final(&ctx, hash);
 }

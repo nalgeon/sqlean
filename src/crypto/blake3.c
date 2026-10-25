@@ -3,8 +3,6 @@
 // https://github.com/oconnor663/blake3_reference_impl_c
 
 #include <assert.h>
-#include <memory.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "crypto/blake3.h"
@@ -17,11 +15,11 @@
 #define DERIVE_KEY_CONTEXT 1 << 5
 #define DERIVE_KEY_MATERIAL 1 << 6
 
-static uint32_t IV[8] = {
+static const uint32_t IV[8] = {
     0x6A09E667, 0xBB67AE85, 0x3C6EF372, 0xA54FF53A, 0x510E527F, 0x9B05688C, 0x1F83D9AB, 0x5BE0CD19,
 };
 
-static size_t MSG_PERMUTATION[16] = {2, 6, 3, 10, 7, 0, 4, 13, 1, 11, 12, 5, 9, 14, 15, 8};
+static const size_t MSG_PERMUTATION[16] = {2, 6, 3, 10, 7, 0, 4, 13, 1, 11, 12, 5, 9, 14, 15, 8};
 
 inline static uint32_t rotate_right(uint32_t x, int n) {
     return (x >> n) | (x << (32 - n));
@@ -340,21 +338,21 @@ static void blake3_hasher_finalize(const blake3_hasher* self, void* out, size_t 
     output_root_bytes(&current_output, out, out_len);
 }
 
-void* blake3_init() {
-    blake3_hasher* context;
-    context = malloc(sizeof(blake3_hasher));
-    if (!context)
-        return NULL;
-    blake3_hasher_init(context);
-    return context;
+void blake3_init(blake3_hasher* ctx) {
+    blake3_hasher_init(ctx);
 }
 
-void blake3_update(blake3_hasher* ctx, const unsigned char* data, size_t len) {
+void blake3_update(blake3_hasher* ctx, const uint8_t* data, size_t len) {
     blake3_hasher_update(ctx, data, len);
 }
 
-int blake3_final(blake3_hasher* ctx, unsigned char hash[]) {
+void blake3_final(blake3_hasher* ctx, uint8_t hash[BLAKE3_OUT_LEN]) {
     blake3_hasher_finalize(ctx, hash, BLAKE3_OUT_LEN);
-    free(ctx);
-    return BLAKE3_OUT_LEN;
+}
+
+void blake3_hash(const uint8_t* data, size_t len, uint8_t hash[BLAKE3_OUT_LEN]) {
+    blake3_hasher ctx;
+    blake3_init(&ctx);
+    blake3_update(&ctx, data, len);
+    blake3_final(&ctx, hash);
 }

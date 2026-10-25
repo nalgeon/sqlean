@@ -2,13 +2,35 @@
 
 The `sqlean-crypto` extension provides hashing, encoding and decoding functions.
 
+[Concepts](#concepts) •
 [Hashing](#hashing-and-message-digest-functions) •
 [Encoding/decoding](#encoding-and-decoding-functions) •
 [Installation and usage](#installation-and-usage)
 
+## Concepts
+
+The hash and encode functions work on bytes. A BLOB argument is used as is. Any other value is converted to text first (UTF-8), so `crypto_md5(42)` is the same as `crypto_md5('42')`.
+
+Hash functions and `crypto_decode` return a BLOB. Use `hex()` or `crypto_encode()` to get a textual representation of it, or `cast(... as text)` if the bytes are a string. `crypto_encode` returns TEXT.
+
+### NULL and invalid input
+
+If any function argument is `NULL`, the result will be `NULL`, including a `NULL` encoding name: `crypto_encode('hello', NULL)` is `NULL`.
+
+Like SQLite's own functions, `crypto_decode` returns `NULL` for data it can't decode, instead of raising an error, so one bad row doesn't abort the whole query:
+
+```sql
+select crypto_decode('xyz', 'hex');
+-- NULL
+```
+
+Decoding an empty string gives an empty BLOB, not `NULL`.
+
+An unknown encoding name is an error (`unknown encoding: base63`), because it's a mistake in the query rather than in the data. Encoding names are case-sensitive and must be TEXT.
+
 ## Hashing and message digest functions
 
-Each hash function expects `data` to be TEXT or BLOB. Returns a BLOB hash. Use the `hex()` or `crypto_encode()` functions to encode it into a textual representation.
+Each hash function returns a BLOB hash of `data`. The xxHash functions use a seed of 0 and return the hash in big-endian byte order (the canonical xxHash representation).
 
 [blake3](#crypto_blake3) •
 [md5](#crypto_md5) •
@@ -115,13 +137,13 @@ select hex(crypto_xxh32('abc'));
 ### crypto_xxh64
 
 ```text
-crypto_xx64(data)
+crypto_xxh64(data)
 ```
 
 Returns a XXH64 hash of the data as a blob.
 
 ```sql
-select hex(crypto_xx64('abc'));
+select hex(crypto_xxh64('abc'));
 -- 44BC2CF5AD770999
 ```
 
@@ -154,18 +176,18 @@ select hex(crypto_xxh3_128('abc'));
 ## Encoding and decoding functions
 
 ```text
-crypto_encode(data, algo)
+crypto_encode(data, encoding)
 ```
 
-Encodes binary data into a textual representation using the specified algorithm.
+Encodes binary data into a textual representation using the specified encoding.
 
 ```text
-crypto_decode(text, algo)
+crypto_decode(text, encoding)
 ```
 
-Decodes binary data from a textual representation using the specified algorithm.
+Decodes binary data from a textual representation using the specified encoding. Returns `NULL` if the text is not valid for the encoding.
 
-Supported algorithms: [base32](#base32) •
+Supported encodings: [base32](#base32) •
 [base64](#base64) •
 [base85](#base85) •
 [hex](#hex) •
@@ -173,7 +195,9 @@ Supported algorithms: [base32](#base32) •
 
 ### base32
 
-[Base32](https://en.wikipedia.org/wiki/Base32) encoding.
+[Base32](https://en.wikipedia.org/wiki/Base32) encoding (RFC 4648 alphabet).
+
+Decoding expects uppercase letters `A-Z` and digits `2-7`. Trailing `=` padding is optional. Lowercase letters, whitespace and other characters are invalid.
 
 ```sql
 select crypto_encode('hello', 'base32');
@@ -184,7 +208,9 @@ select crypto_decode('NBSWY3DP', 'base32');
 
 ### base64
 
-[Base64](https://en.wikipedia.org/wiki/Base64) encoding.
+[Base64](https://en.wikipedia.org/wiki/Base64) encoding (RFC 4648 standard alphabet).
+
+Decoding expects the length to be a multiple of 4, with up to two `=` padding characters at the end. Whitespace, `=` elsewhere and characters outside the alphabet are invalid.
 
 ```sql
 select crypto_encode('hello', 'base64');
@@ -195,7 +221,9 @@ select crypto_decode('aGVsbG8=', 'base64');
 
 ### base85
 
-[Base85](https://en.wikipedia.org/wiki/Ascii85) (aka Ascii85) encoding.
+[Base85](https://en.wikipedia.org/wiki/Ascii85) (aka Ascii85) encoding, without the `<~` and `~>` delimiters.
+
+An all-zero group of 4 bytes is encoded as `z`.
 
 ```sql
 select crypto_encode('hello', 'base85');
@@ -208,6 +236,8 @@ select crypto_decode('BOu!rDZ', 'base85');
 
 [Hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal) encoding.
 
+Encoding gives lowercase digits. Decoding accepts both cases, and expects an even number of digits.
+
 ```sql
 select crypto_encode('hello', 'hex');
 -- 68656c6c6f
@@ -217,13 +247,17 @@ select crypto_decode('68656c6c6f', 'hex');
 
 ### url
 
-[URL encoding](https://en.wikipedia.org/wiki/URL_encoding)
+[URL encoding](https://en.wikipedia.org/wiki/URL_encoding) (percent-encoding).
+
+Encoding keeps the RFC 3986 unreserved characters (`A-Z`, `a-z`, `0-9`, `-`, `_`, `.`, `~`) as is, and escapes every other byte as `%XX`.
+
+Decoding expects `%` to be followed by two hex digits. A `+` decodes into a space, as in HTML form data. Other characters are kept as is.
 
 ```sql
 select crypto_encode('/hello?text=(ಠ_ಠ)', 'url');
--- %2Fhello%3Ft%3D%28%E0%B2%A0_%E0%B2%A0%29
-select crypto_decode('%2Fhello%3Ft%3D%28%E0%B2%A0_%E0%B2%A0%29', 'url');
--- /hello?t=(ಠ_ಠ)
+-- %2Fhello%3Ftext%3D%28%E0%B2%A0_%E0%B2%A0%29
+select crypto_decode('%2Fhello%3Ftext%3D%28%E0%B2%A0_%E0%B2%A0%29', 'url');
+-- /hello?text=(ಠ_ಠ)
 ```
 
 ## Installation and usage

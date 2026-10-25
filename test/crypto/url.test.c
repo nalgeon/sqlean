@@ -4,6 +4,7 @@
 // URL (percent) encoding tests.
 
 #include <assert.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -31,12 +32,13 @@ static CodecTest encode_tests[] = {
     {"/?#&=%", 6, "%2F%3F%23%26%3D%25", 18},
     {"\x01\x7f\x80\xff", 4, "%01%7F%80%FF", 12},
     {"\xc3\xa9", 2, "%C3%A9", 6},
-    // current behavior, to be fixed: the NUL byte is kept as is
-    {"\x00", 1, "\x00", 1},
-    {"a\x00" "b", 3, "a\x00" "b", 3},
+    // the NUL byte is escaped like any other
+    {"\x00", 1, "%00", 3},
+    {"a\x00" "b", 3, "a%00b", 5},
 };
 
 static CodecTest decode_tests[] = {
+    {"", 0, "", 0},
     {"abc", 3, "abc", 3},
     {"AZaz09-_.~", 10, "AZaz09-_.~", 10},
     {"a%20b", 5, "a b", 3},
@@ -69,17 +71,42 @@ static const char* invalid_tests[] = {
 };
 // clang-format on
 
+// encode calls url_encode with a buffer of exactly url_encoded_size bytes,
+// so that the sanitizers catch a write past it (and with no buffer at all
+// if the size is 0). Returns the result, which is never NULL; free it.
+static uint8_t* encode(const uint8_t* src, size_t len, size_t* out_len) {
+    size_t size = url_encoded_size(len);
+    uint8_t* buf = size > 0 ? malloc(size) : NULL;
+    assert(buf != NULL || size == 0);
+    *out_len = url_encode(src, len, buf);
+    assert(*out_len <= size);
+    return buf != NULL ? buf : malloc(1);
+}
+
+// decode calls url_decode with a buffer of exactly url_decoded_size bytes,
+// like encode does. Returns the result, or NULL if src is invalid.
+static uint8_t* decode(const uint8_t* src, size_t len, size_t* out_len) {
+    size_t size = url_decoded_size(src, len);
+    uint8_t* buf = size > 0 ? malloc(size) : NULL;
+    assert(buf != NULL || size == 0);
+    if (!url_decode(src, len, buf, out_len)) {
+        free(buf);
+        return NULL;
+    }
+    assert(*out_len <= size);
+    return buf != NULL ? buf : malloc(1);
+}
+
 static void test_encode(void) {
     printf("test_encode...");
     for (size_t i = 0; i < sizeof(encode_tests) / sizeof(encode_tests[0]); i++) {
         CodecTest test = encode_tests[i];
         size_t got_len = 0;
-        uint8_t* got = url_encode((const uint8_t*)test.src, test.src_len, &got_len);
+        uint8_t* got = encode((const uint8_t*)test.src, test.src_len, &got_len);
         assert(got != NULL);
         // printf("want %s, got %s\n", test.want, got);
         assert(got_len == test.want_len);
         assert(memcmp(got, test.want, got_len) == 0);
-        assert(got[got_len] == '\0');
         free(got);
     }
     printf("OK\n");
@@ -90,7 +117,7 @@ static void test_decode(void) {
     for (size_t i = 0; i < sizeof(decode_tests) / sizeof(decode_tests[0]); i++) {
         CodecTest test = decode_tests[i];
         size_t got_len = 0;
-        uint8_t* got = url_decode((const uint8_t*)test.src, test.src_len, &got_len);
+        uint8_t* got = decode((const uint8_t*)test.src, test.src_len, &got_len);
         // printf("%s: want %zu bytes, got %zu\n", test.src, test.want_len, got_len);
         assert(got != NULL);
         assert(got_len == test.want_len);
@@ -105,10 +132,9 @@ static void test_decode_invalid(void) {
     for (size_t i = 0; i < sizeof(invalid_tests) / sizeof(invalid_tests[0]); i++) {
         const char* src = invalid_tests[i];
         size_t got_len = 0;
-        uint8_t* got = url_decode((const uint8_t*)src, strlen(src), &got_len);
+        uint8_t* got = decode((const uint8_t*)src, strlen(src), &got_len);
         // printf("%s: want NULL, got %p\n", src, (void*)got);
         assert(got == NULL);
-        // got_len is not checked: on failure, the decoder leaves it unset or garbage
     }
     printf("OK\n");
 }
@@ -116,12 +142,11 @@ static void test_decode_invalid(void) {
 // Encodes src and decodes it back, expecting to get src.
 static void assert_roundtrip(const uint8_t* src, size_t len) {
     size_t enc_len = 0;
-    uint8_t* enc = url_encode(src, len, &enc_len);
+    uint8_t* enc = encode(src, len, &enc_len);
     assert(enc != NULL);
-    assert(enc[enc_len] == '\0');
 
     size_t dec_len = 0;
-    uint8_t* dec = url_decode(enc, enc_len, &dec_len);
+    uint8_t* dec = decode(enc, enc_len, &dec_len);
     // printf("len %zu: encoded as %s\n", len, enc);
     assert(dec != NULL);
     assert(dec_len == len);
@@ -135,16 +160,13 @@ static void test_roundtrip(void) {
     printf("test_roundtrip...");
     uint8_t buf[256];
 
-    // Lengths start at 1: the binding layer handles empty input itself,
-    // and some decoders do not support it (base64_decode reads src[-1]).
-
     // all-zero and all-0xff data of every length
     memset(buf, 0, sizeof(buf));
-    for (size_t len = 1; len <= 64; len++) {
+    for (size_t len = 0; len <= 64; len++) {
         assert_roundtrip(buf, len);
     }
     memset(buf, 0xff, sizeof(buf));
-    for (size_t len = 1; len <= 64; len++) {
+    for (size_t len = 0; len <= 64; len++) {
         assert_roundtrip(buf, len);
     }
 
@@ -154,7 +176,7 @@ static void test_roundtrip(void) {
         state = state * 1103515245 + 12345;
         buf[i] = (state >> 16) & 0xff;
     }
-    for (size_t len = 1; len <= 64; len++) {
+    for (size_t len = 0; len <= 64; len++) {
         assert_roundtrip(buf, len);
     }
 

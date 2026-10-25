@@ -6,77 +6,66 @@
 
 // URL-escape encoding/decoding
 
-#include <ctype.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
 
-const char* url_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~";
+#include "crypto/common.h"
+#include "crypto/url.h"
 
-uint8_t hex_to_ascii(char c) {
-    if (isdigit(c)) {
-        return c - '0';
-    } else {
-        return tolower(c) - 'a' + 10;
-    }
+static const char hex_chars[] = "0123456789ABCDEF";
+
+// is_unreserved reports whether c is an RFC 3986 unreserved character,
+// which is left as is by the encoder.
+static bool is_unreserved(uint8_t c) {
+    return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' ||
+           c == '_' || c == '.' || c == '~';
 }
 
-uint8_t* url_encode(const uint8_t* src, size_t len, size_t* out_len) {
-    size_t encoded_len = 0;
-    for (size_t i = 0; i < len; i++) {
-        if (strchr(url_chars, src[i]) == NULL) {
-            encoded_len += 3;
-        } else {
-            encoded_len += 1;
-        }
-    }
+size_t url_encoded_size(size_t len) {
+    // Each byte takes at most 3 characters (%XX).
+    return groups_size(len, 1, 3);
+}
 
-    uint8_t* encoded = malloc(encoded_len + 1);
-    if (encoded == NULL) {
-        *out_len = 0;
-        return NULL;
-    }
-
+size_t url_encode(const uint8_t* src, size_t len, uint8_t* dst) {
     size_t pos = 0;
     for (size_t i = 0; i < len; i++) {
-        if (strchr(url_chars, src[i]) == NULL) {
-            encoded[pos++] = '%';
-            encoded[pos++] = "0123456789ABCDEF"[src[i] >> 4];
-            encoded[pos++] = "0123456789ABCDEF"[src[i] & 0x0F];
+        if (is_unreserved(src[i])) {
+            dst[pos++] = src[i];
         } else {
-            encoded[pos++] = src[i];
+            dst[pos++] = '%';
+            dst[pos++] = hex_chars[src[i] >> 4];
+            dst[pos++] = hex_chars[src[i] & 0x0F];
         }
     }
-    encoded[pos] = '\0';
-
-    *out_len = pos;
-    return encoded;
+    return pos;
 }
 
-uint8_t* url_decode(const uint8_t* src, size_t len, size_t* out_len) {
-    uint8_t* decoded = malloc(len);
-    if (decoded == NULL) {
-        *out_len = 0;
-        return NULL;
-    }
+size_t url_decoded_size(const uint8_t* src, size_t len) {
+    (void)src;
+    // Each character decodes into at most one byte.
+    return len;
+}
 
+bool url_decode(const uint8_t* src, size_t len, uint8_t* dst, size_t* out_len) {
     size_t pos = 0;
     for (size_t i = 0; i < len; i++) {
         if (src[i] == '%') {
-            if (i + 2 >= len || !isxdigit(src[i + 1]) || !isxdigit(src[i + 2])) {
-                free(decoded);
-                return NULL;
+            // An escape must be followed by two hex digits.
+            uint8_t hi, lo;
+            if (len - i < 3 || !hex_value(src[i + 1], &hi) || !hex_value(src[i + 2], &lo)) {
+                return false;
             }
-            decoded[pos++] = (hex_to_ascii(src[i + 1]) << 4) | hex_to_ascii(src[i + 2]);
+            dst[pos++] = (uint8_t)(hi << 4 | lo);
             i += 2;
         } else if (src[i] == '+') {
-            decoded[pos++] = ' ';
+            // Form encoding (application/x-www-form-urlencoded) uses '+' for a space.
+            dst[pos++] = ' ';
         } else {
-            decoded[pos++] = src[i];
+            // Other characters are taken as is, even if they should have been escaped.
+            dst[pos++] = src[i];
         }
     }
-
     *out_len = pos;
-    return decoded;
+    return true;
 }

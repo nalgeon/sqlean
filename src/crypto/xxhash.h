@@ -1,28 +1,24 @@
 // Copyright (c) 2025 Anton Zhiyanov, MIT License
 // https://github.com/nalgeon/sqlean
 
+// xxHash family of non-cryptographic hash functions (seed 0).
+// Digests are written in canonical (big-endian) byte order.
+
 #ifndef __XXHASH_H__
 #define __XXHASH_H__
 
 #include <stddef.h>
 #include <stdint.h>
 
-#include "crypto/xxhash.impl.h"
+#define XXH32_DIGEST_SIZE 4
+#define XXH64_DIGEST_SIZE 8
+#define XXH3_64_DIGEST_SIZE 8
+#define XXH3_128_DIGEST_SIZE 16
 
-void* xxh32_init();
-void xxh32_update(XXH32_state_t* ctx, const void* data, size_t len);
-int xxh32_final(XXH32_state_t* ctx, uint8_t* hash);
-
-void* xxh64_init();
-void xxh64_update(XXH64_state_t* ctx, const void* data, size_t len);
-int xxh64_final(XXH64_state_t* ctx, uint8_t* hash);
-
-void* xxh3_64_init();
-void xxh3_64_update(XXH3_state_t* ctx, const void* data, size_t len);
-int xxh3_64_final(XXH3_state_t* ctx, uint8_t* hash);
-
-void* xxh3_128_init();
-void xxh3_128_update(XXH3_state_t* ctx, const void* data, size_t len);
-int xxh3_128_final(XXH3_state_t* ctx, uint8_t* hash);
+// One-shot hashing of len bytes. The data may be NULL if len is 0.
+void xxh32_hash(const uint8_t* data, size_t len, uint8_t hash[XXH32_DIGEST_SIZE]);
+void xxh64_hash(const uint8_t* data, size_t len, uint8_t hash[XXH64_DIGEST_SIZE]);
+void xxh3_64_hash(const uint8_t* data, size_t len, uint8_t hash[XXH3_64_DIGEST_SIZE]);
+void xxh3_128_hash(const uint8_t* data, size_t len, uint8_t hash[XXH3_128_DIGEST_SIZE]);
 
 #endif

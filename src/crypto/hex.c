@@ -3,70 +3,44 @@
 
 // Hex encoding/decoding
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
 
-uint8_t* hex_encode(const uint8_t* src, size_t len, size_t* out_len) {
-    *out_len = len * 2;
-    uint8_t* encoded = malloc(*out_len + 1);
-    if (encoded == NULL) {
-        *out_len = 0;
-        return NULL;
-    }
-    for (size_t i = 0; i < len; i++) {
-        snprintf((char*)encoded + (i * 2), 3, "%02x", src[i]);
-    }
-    encoded[*out_len] = '\0';
-    *out_len = len * 2;
-    return encoded;
+#include "crypto/common.h"
+#include "crypto/hex.h"
+
+static const char hex_chars[] = "0123456789abcdef";
+
+size_t hex_encoded_size(size_t len) {
+    // Each byte takes 2 characters.
+    return groups_size(len, 1, 2);
 }
 
-uint8_t* hex_decode(const uint8_t* src, size_t len, size_t* out_len) {
+size_t hex_encode(const uint8_t* src, size_t len, uint8_t* dst) {
+    for (size_t i = 0; i < len; i++) {
+        dst[i * 2] = hex_chars[src[i] >> 4];
+        dst[i * 2 + 1] = hex_chars[src[i] & 0x0F];
+    }
+    return len * 2;
+}
+
+size_t hex_decoded_size(const uint8_t* src, size_t len) {
+    (void)src;
+    return len / 2;
+}
+
+bool hex_decode(const uint8_t* src, size_t len, uint8_t* dst, size_t* out_len) {
     if (len % 2 != 0) {
-        // input length must be even
-        return NULL;
+        return false;
     }
-
-    size_t decoded_len = len / 2;
-    uint8_t* decoded = malloc(decoded_len);
-    if (decoded == NULL) {
-        *out_len = 0;
-        return NULL;
-    }
-
-    for (size_t i = 0; i < decoded_len; i++) {
-        uint8_t hi = src[i * 2];
-        uint8_t lo = src[i * 2 + 1];
-
-        if (hi >= '0' && hi <= '9') {
-            hi -= '0';
-        } else if (hi >= 'A' && hi <= 'F') {
-            hi -= 'A' - 10;
-        } else if (hi >= 'a' && hi <= 'f') {
-            hi -= 'a' - 10;
-        } else {
-            // invalid character
-            free(decoded);
-            return NULL;
+    for (size_t i = 0; i < len / 2; i++) {
+        uint8_t hi, lo;
+        if (!hex_value(src[i * 2], &hi) || !hex_value(src[i * 2 + 1], &lo)) {
+            return false;
         }
-
-        if (lo >= '0' && lo <= '9') {
-            lo -= '0';
-        } else if (lo >= 'A' && lo <= 'F') {
-            lo -= 'A' - 10;
-        } else if (lo >= 'a' && lo <= 'f') {
-            lo -= 'a' - 10;
-        } else {
-            // invalid character
-            free(decoded);
-            return NULL;
-        }
-
-        decoded[i] = (hi << 4) | lo;
+        dst[i] = (uint8_t)(hi << 4 | lo);
     }
-
-    *out_len = decoded_len;
-    return decoded;
+    *out_len = len / 2;
+    return true;
 }

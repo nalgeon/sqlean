@@ -23,6 +23,9 @@ SQLITE ?= sqlite3
 
 # address + undefined behavior sanitizers
 SANITIZE_FLAGS := -g -O1 -fno-omit-frame-pointer -fsanitize=address,undefined -fno-sanitize-recover=undefined
+# The vendored xxHash 0.8.3 does misaligned NEON loads on GCC/AArch64 (XXH_vld1q_u64),
+# which UBSan reports. Sanitized builds use the scalar code path instead.
+SANITIZE_FLAGS += -DXXH_VECTOR=0
 # Leak detection is Linux-only. Slow unwinding gives full stacks for
 # allocations made inside SQLite, which is built without frame pointers.
 ifeq ($(shell uname -s),Linux)

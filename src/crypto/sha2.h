@@ -36,7 +36,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define SHA224_DIGEST_SIZE (224 / 8)
 #define SHA256_DIGEST_SIZE (256 / 8)
 #define SHA384_DIGEST_SIZE (384 / 8)
 #define SHA512_DIGEST_SIZE (512 / 8)
@@ -44,46 +43,42 @@
 #define SHA256_BLOCK_SIZE (512 / 8)
 #define SHA512_BLOCK_SIZE (1024 / 8)
 #define SHA384_BLOCK_SIZE SHA512_BLOCK_SIZE
-#define SHA224_BLOCK_SIZE SHA256_BLOCK_SIZE
-
-#ifndef SHA2_TYPES
-#define SHA2_TYPES
-typedef unsigned char uint8;
-typedef unsigned int uint32;
-typedef unsigned long long uint64;
-#endif
 
 typedef struct {
-    uint64 tot_len;
-    uint64 len;
-    uint8 block[2 * SHA256_BLOCK_SIZE];
-    uint32 h[8];
+    uint64_t tot_len;
+    uint64_t len;
+    uint8_t block[2 * SHA256_BLOCK_SIZE];
+    uint32_t h[8];
 } sha256_ctx;
 
 typedef struct {
-    uint64 tot_len;
-    uint64 len;
-    uint8 block[2 * SHA512_BLOCK_SIZE];
-    uint64 h[8];
+    uint64_t tot_len;
+    uint64_t len;
+    uint8_t block[2 * SHA512_BLOCK_SIZE];
+    uint64_t h[8];
 } sha512_ctx;
 
 typedef sha512_ctx sha384_ctx;
-typedef sha256_ctx sha224_ctx;
 
-sha224_ctx* sha224_init(void);
-void sha224_update(sha224_ctx* ctx, const uint8* message, uint64 len);
-int sha224_final(sha224_ctx* ctx, uint8* digest);
+// Incremental hashing: init, then update any number of times, then final.
+// The context is owned by the caller. The message may be NULL if len is 0.
 
-sha256_ctx* sha256_init(void);
-void sha256_update(sha256_ctx* ctx, const uint8* message, uint64 len);
-int sha256_final(sha256_ctx* ctx, uint8* digest);
+void sha256_init(sha256_ctx* ctx);
+void sha256_update(sha256_ctx* ctx, const uint8_t* message, size_t len);
+void sha256_final(sha256_ctx* ctx, uint8_t digest[SHA256_DIGEST_SIZE]);
 
-sha384_ctx* sha384_init(void);
-void sha384_update(sha384_ctx* ctx, const uint8* message, uint64 len);
-int sha384_final(sha384_ctx* ctx, uint8* digest);
+void sha384_init(sha384_ctx* ctx);
+void sha384_update(sha384_ctx* ctx, const uint8_t* message, size_t len);
+void sha384_final(sha384_ctx* ctx, uint8_t digest[SHA384_DIGEST_SIZE]);
 
-sha512_ctx* sha512_init(void);
-void sha512_update(sha512_ctx* ctx, const uint8* message, uint64 len);
-int sha512_final(sha512_ctx* ctx, uint8* digest);
+void sha512_init(sha512_ctx* ctx);
+void sha512_update(sha512_ctx* ctx, const uint8_t* message, size_t len);
+void sha512_final(sha512_ctx* ctx, uint8_t digest[SHA512_DIGEST_SIZE]);
+
+// One-shot hashing of len bytes. The data may be NULL if len is 0.
+
+void sha256_hash(const uint8_t* data, size_t len, uint8_t digest[SHA256_DIGEST_SIZE]);
+void sha384_hash(const uint8_t* data, size_t len, uint8_t digest[SHA384_DIGEST_SIZE]);
+void sha512_hash(const uint8_t* data, size_t len, uint8_t digest[SHA512_DIGEST_SIZE]);
 
 #endif

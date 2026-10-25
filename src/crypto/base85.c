@@ -6,22 +6,22 @@
 
 // Base85 (Ascii85) encoding/decoding
 
+#include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+
+#include "crypto/base85.h"
+#include "crypto/common.h"
 
 // Maximum value of a tuple (85^5 - 1 does not fit into 32 bits).
 #define MAX_TUPLE UINT32_C(0xFFFFFFFF)
 
-uint8_t* base85_encode(const uint8_t* src, size_t len, size_t* out_len) {
-    // Each 4-byte group takes at most 5 characters, plus the null terminator.
-    uint8_t* encoded = malloc(len * 5 / 4 + 5);
-    if (encoded == NULL) {
-        *out_len = 0;
-        return NULL;
-    }
+size_t base85_encoded_size(size_t len) {
+    // Each group of 4 bytes takes at most 5 characters.
+    return groups_size(len, 4, 5);
+}
 
+size_t base85_encode(const uint8_t* src, size_t len, uint8_t* dst) {
     // Encode each group of 4 bytes
     uint32_t digits[5], tuple;
     size_t pos = 0;
@@ -41,7 +41,7 @@ uint8_t* base85_encode(const uint8_t* src, size_t len, size_t* out_len) {
             // An all-zero tuple is encoded as a single character.
             // Only full groups qualify: for a partial group the shorthand
             // would decode into more bytes than the source has.
-            encoded[pos++] = 'z';
+            dst[pos++] = 'z';
             continue;
         }
 
@@ -55,16 +55,14 @@ uint8_t* base85_encode(const uint8_t* src, size_t len, size_t* out_len) {
         // A group of n bytes is encoded as n+1 characters,
         // so omit the characters added due to zero padding
         for (size_t j = 0; j < group_len + 1; j++) {
-            encoded[pos++] = digits[j] + 33;
+            dst[pos++] = digits[j] + 33;
         }
     }
 
-    *out_len = pos;
-    encoded[pos] = '\0';
-    return encoded;
+    return pos;
 }
 
-uint8_t* base85_decode(const uint8_t* src, size_t len, size_t* out_len) {
+size_t base85_decoded_size(const uint8_t* src, size_t len) {
     // Every 'z' expands into 4 bytes, while the other characters decode
     // in groups of 5 to 4 bytes. Since 'z' is only valid at a group
     // boundary (it is rejected as a digit otherwise), the remaining
@@ -77,24 +75,28 @@ uint8_t* base85_decode(const uint8_t* src, size_t len, size_t* out_len) {
             n_shorthand++;
         }
     }
-    size_t decoded_len = (len - n_shorthand) * 4 / 5 + n_shorthand * 4;
-
-    uint8_t* decoded = malloc(decoded_len > 0 ? decoded_len : 1);
-    if (decoded == NULL) {
-        *out_len = 0;
-        return NULL;
+    // Saturate instead of overflowing (only possible for len > SIZE_MAX / 4).
+    if (n_shorthand > SIZE_MAX / 4) {
+        return SIZE_MAX;
     }
+    size_t rest = (len - n_shorthand) / 5 * 4 + (len - n_shorthand) % 5 * 4 / 5;
+    if (rest > SIZE_MAX - n_shorthand * 4) {
+        return SIZE_MAX;
+    }
+    return rest + n_shorthand * 4;
+}
 
+bool base85_decode(const uint8_t* src, size_t len, uint8_t* dst, size_t* out_len) {
     uint8_t digits[5], tuple_bytes[4];
     uint64_t tuple;
     size_t pos = 0;
     for (size_t i = 0; i < len;) {
         if (src[i] == 'z') {
             // A single character encodes an all-zero tuple
-            decoded[pos++] = 0;
-            decoded[pos++] = 0;
-            decoded[pos++] = 0;
-            decoded[pos++] = 0;
+            dst[pos++] = 0;
+            dst[pos++] = 0;
+            dst[pos++] = 0;
+            dst[pos++] = 0;
             i++;
             continue;
         }
@@ -103,9 +105,7 @@ uint8_t* base85_decode(const uint8_t* src, size_t len, size_t* out_len) {
         // encodes no bytes at all, so it is invalid
         size_t group_len = (len - i < 5) ? len - i : 5;
         if (group_len == 1) {
-            free(decoded);
-            *out_len = 0;
-            return NULL;
+            return false;
         }
 
         // Retrieve radix-85 digits of tuple,
@@ -117,9 +117,7 @@ uint8_t* base85_decode(const uint8_t* src, size_t len, size_t* out_len) {
             }
             uint8_t digit = src[i + k] - 33;
             if (digit > 84) {
-                free(decoded);
-                *out_len = 0;
-                return NULL;
+                return false;
             }
             digits[k] = digit;
         }
@@ -130,9 +128,7 @@ uint8_t* base85_decode(const uint8_t* src, size_t len, size_t* out_len) {
         tuple = (uint64_t)digits[0] * 52200625 + (uint64_t)digits[1] * 614125 +
                 (uint64_t)digits[2] * 7225 + (uint64_t)digits[3] * 85 + digits[4];
         if (tuple > MAX_TUPLE) {
-            free(decoded);
-            *out_len = 0;
-            return NULL;
+            return false;
         }
 
         // Get bytes from tuple
@@ -144,11 +140,11 @@ uint8_t* base85_decode(const uint8_t* src, size_t len, size_t* out_len) {
         // Append bytes to result, dropping the ones
         // that came from the padding digits
         for (size_t k = 0; k + 1 < group_len; k++) {
-            decoded[pos++] = tuple_bytes[k];
+            dst[pos++] = tuple_bytes[k];
         }
         i += 5;
     }
 
     *out_len = pos;
-    return decoded;
+    return true;
 }

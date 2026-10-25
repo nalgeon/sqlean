@@ -10,8 +10,7 @@
  *********************************************************************/
 
 /*************************** HEADER FILES ***************************/
-#include <memory.h>
-#include <stdlib.h>
+#include <string.h>
 
 #include "crypto/md5.h"
 /****************************** MACROS ******************************/
@@ -44,14 +43,15 @@
     }
 
 /*********************** FUNCTION DEFINITIONS ***********************/
-static void md5_transform(MD5_CTX* ctx, const BYTE data[]) {
-    WORD a, b, c, d, m[16], i, j;
+static void md5_transform(md5_ctx* ctx, const uint8_t* data) {
+    uint32_t a, b, c, d, m[16], i, j;
 
     // MD5 specifies big endian byte order, but this implementation assumes a little
     // endian byte order CPU. Reverse all the bytes upon input, and re-reverse them
     // on output (in md5_final()).
     for (i = 0, j = 0; i < 16; ++i, j += 4)
-        m[i] = (data[j]) + (data[j + 1] << 8) + (data[j + 2] << 16) + ((WORD)data[j + 3] << 24);
+        m[i] = (uint32_t)data[j] | ((uint32_t)data[j + 1] << 8) | ((uint32_t)data[j + 2] << 16) |
+               ((uint32_t)data[j + 3] << 24);
 
     a = ctx->state[0];
     b = ctx->state[1];
@@ -132,19 +132,16 @@ static void md5_transform(MD5_CTX* ctx, const BYTE data[]) {
     ctx->state[3] += d;
 }
 
-void* md5_init() {
-    MD5_CTX* ctx;
-    ctx = malloc(sizeof(MD5_CTX));
+void md5_init(md5_ctx* ctx) {
     ctx->datalen = 0;
     ctx->bitlen = 0;
     ctx->state[0] = 0x67452301;
     ctx->state[1] = 0xEFCDAB89;
     ctx->state[2] = 0x98BADCFE;
     ctx->state[3] = 0x10325476;
-    return ctx;
 }
 
-void md5_update(MD5_CTX* ctx, const BYTE data[], size_t len) {
+void md5_update(md5_ctx* ctx, const uint8_t* data, size_t len) {
     size_t i;
 
     for (i = 0; i < len; ++i) {
@@ -158,7 +155,7 @@ void md5_update(MD5_CTX* ctx, const BYTE data[], size_t len) {
     }
 }
 
-int md5_final(MD5_CTX* ctx, BYTE hash[]) {
+void md5_final(md5_ctx* ctx, uint8_t hash[MD5_DIGEST_SIZE]) {
     size_t i;
 
     i = ctx->datalen;
@@ -178,14 +175,14 @@ int md5_final(MD5_CTX* ctx, BYTE hash[]) {
 
     // Append to the padding the total message's length in bits and transform.
     ctx->bitlen += ctx->datalen * 8;
-    ctx->data[56] = ctx->bitlen;
-    ctx->data[57] = ctx->bitlen >> 8;
-    ctx->data[58] = ctx->bitlen >> 16;
-    ctx->data[59] = ctx->bitlen >> 24;
-    ctx->data[60] = ctx->bitlen >> 32;
-    ctx->data[61] = ctx->bitlen >> 40;
-    ctx->data[62] = ctx->bitlen >> 48;
-    ctx->data[63] = ctx->bitlen >> 56;
+    ctx->data[56] = (uint8_t)ctx->bitlen;
+    ctx->data[57] = (uint8_t)(ctx->bitlen >> 8);
+    ctx->data[58] = (uint8_t)(ctx->bitlen >> 16);
+    ctx->data[59] = (uint8_t)(ctx->bitlen >> 24);
+    ctx->data[60] = (uint8_t)(ctx->bitlen >> 32);
+    ctx->data[61] = (uint8_t)(ctx->bitlen >> 40);
+    ctx->data[62] = (uint8_t)(ctx->bitlen >> 48);
+    ctx->data[63] = (uint8_t)(ctx->bitlen >> 56);
     md5_transform(ctx, ctx->data);
 
     // Since this implementation uses little endian byte ordering and MD uses big endian,
@@ -196,6 +193,11 @@ int md5_final(MD5_CTX* ctx, BYTE hash[]) {
         hash[i + 8] = (ctx->state[2] >> (i * 8)) & 0x000000ff;
         hash[i + 12] = (ctx->state[3] >> (i * 8)) & 0x000000ff;
     }
-    free(ctx);
-    return MD5_BLOCK_SIZE;
+}
+
+void md5_hash(const uint8_t* data, size_t len, uint8_t hash[MD5_DIGEST_SIZE]) {
+    md5_ctx ctx;
+    md5_init(&ctx);
+    md5_update(&ctx, data, len);
+    md5_final(&ctx, hash);
 }

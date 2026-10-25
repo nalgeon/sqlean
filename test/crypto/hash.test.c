@@ -16,42 +16,39 @@
 #include "crypto/xxhash.h"
 
 // The largest digest (SHA-512).
-#define MAX_DIGEST_SIZE 64
+#define MAX_DIGEST_SIZE SHA512_DIGEST_SIZE
 
 // The longest test input.
 #define MAX_INPUT_SIZE 102400
 
-// hash_<algo> computes a digest by feeding data to the algorithm in pieces of
-// the given size. With empty_updates, each piece is preceded by an update of
-// zero bytes, which must not change the result.
-#define DEFINE_HASHER(name, ctx_type)                                                            \
-    static size_t hash_##name(const uint8_t* data, size_t len, size_t chunk, bool empty_updates, \
-                              uint8_t* out) {                                                    \
-        ctx_type* ctx = name##_init();                                                           \
-        assert(ctx != NULL);                                                                     \
-        for (size_t i = 0; i < len; i += chunk) {                                                \
-            size_t n = len - i < chunk ? len - i : chunk;                                        \
-            if (empty_updates) {                                                                 \
-                name##_update(ctx, data + i, 0);                                                 \
-            }                                                                                    \
-            name##_update(ctx, data + i, n);                                                     \
-        }                                                                                        \
-        return (size_t)name##_final(ctx, out);                                                   \
+// hash_<algo>_inc computes a digest by feeding data to the incremental API
+// in pieces of the given size. With empty_updates, each piece is preceded by
+// an update of zero bytes, which must not change the result.
+#define DEFINE_HASHER(name, ctx_type)                                            \
+    static void hash_##name##_inc(const uint8_t* data, size_t len, size_t chunk, \
+                                  bool empty_updates, uint8_t* out) {            \
+        ctx_type ctx;                                                            \
+        name##_init(&ctx);                                                       \
+        for (size_t i = 0; i < len; i += chunk) {                                \
+            size_t n = len - i < chunk ? len - i : chunk;                        \
+            if (empty_updates) {                                                 \
+                name##_update(&ctx, data + i, 0);                                \
+            }                                                                    \
+            name##_update(&ctx, data + i, n);                                    \
+        }                                                                        \
+        name##_final(&ctx, out);                                                 \
     }
 
-DEFINE_HASHER(md5, MD5_CTX)
-DEFINE_HASHER(sha1, SHA1Context)
+DEFINE_HASHER(md5, md5_ctx)
+DEFINE_HASHER(sha1, sha1_ctx)
 DEFINE_HASHER(sha256, sha256_ctx)
 DEFINE_HASHER(sha384, sha384_ctx)
 DEFINE_HASHER(sha512, sha512_ctx)
 DEFINE_HASHER(blake3, blake3_hasher)
-DEFINE_HASHER(xxh32, XXH32_state_t)
-DEFINE_HASHER(xxh64, XXH64_state_t)
-DEFINE_HASHER(xxh3_64, XXH3_state_t)
-DEFINE_HASHER(xxh3_128, XXH3_state_t)
 
-typedef size_t (
-    *Hasher)(const uint8_t* data, size_t len, size_t chunk, bool empty_updates, uint8_t* out);
+typedef void (*OneShot)(const uint8_t* data, size_t len, uint8_t* out);
+typedef void (
+    *Incremental)(const uint8_t* data, size_t len, size_t chunk, bool empty_updates, uint8_t* out);
 
 typedef struct {
     const char* algo;
@@ -373,25 +370,20 @@ static void to_hex(const uint8_t* src, size_t len, char* dst) {
     dst[len * 2] = '\0';
 }
 
-// Checks the digest of the first len pattern bytes, fed in pieces of chunk bytes.
-static void assert_digest(Hasher hash,
-                          size_t len,
-                          size_t chunk,
-                          bool empty_updates,
-                          const char* want) {
-    uint8_t digest[MAX_DIGEST_SIZE] = {0};
-    size_t n = hash(pattern, len, chunk, empty_updates, digest);
-    assert(n * 2 == strlen(want));
+// Checks a digest against its hex representation.
+static void assert_hex(const uint8_t* digest, size_t digest_size, const char* want) {
     char got[MAX_DIGEST_SIZE * 2 + 1];
-    to_hex(digest, n, got);
+    to_hex(digest, digest_size, got);
     assert(strcmp(got, want) == 0);
 }
 
-// Checks every golden digest of the algorithm, computed in a single update
-// and incrementally in pieces of different sizes.
-static void assert_algo(const char* algo, Hasher hash, size_t digest_size) {
+// Checks every golden digest of the algorithm, computed with the one-shot
+// function and, if there is one, with the incremental API: in a single
+// update and in pieces of different sizes.
+static void assert_algo(const char* algo, OneShot hash, Incremental inc, size_t digest_size) {
     // pieces smaller than, equal to, and larger than the block and chunk sizes
     static const size_t chunks[] = {1, 3, 63, 64, 65, 127, 128, 129, 1000, 1024, 4097};
+    uint8_t digest[MAX_DIGEST_SIZE];
     size_t n_tests = 0;
     for (size_t i = 0; i < sizeof(hash_tests) / sizeof(hash_tests[0]); i++) {
         const HashTest* test = &hash_tests[i];
@@ -400,77 +392,92 @@ static void assert_algo(const char* algo, Hasher hash, size_t digest_size) {
         }
         n_tests++;
         assert(strlen(test->want) == digest_size * 2);
+
+        hash(pattern, test->len, digest);
+        assert_hex(digest, digest_size, test->want);
+        if (test->len == 0) {
+            // empty input may come without a buffer
+            hash(NULL, 0, digest);
+            assert_hex(digest, digest_size, test->want);
+        }
+
+        if (inc == NULL) {
+            continue;
+        }
         size_t whole = test->len > 0 ? test->len : 1;
-        assert_digest(hash, test->len, whole, false, test->want);
+        inc(pattern, test->len, whole, false, digest);
+        assert_hex(digest, digest_size, test->want);
         if (test->len < 1024) {
             // pieces only matter for inputs that span several blocks
             continue;
         }
         for (size_t j = 0; j < sizeof(chunks) / sizeof(chunks[0]); j++) {
-            assert_digest(hash, test->len, chunks[j], false, test->want);
+            inc(pattern, test->len, chunks[j], false, digest);
+            assert_hex(digest, digest_size, test->want);
         }
-        assert_digest(hash, test->len, 100, true, test->want);
+        inc(pattern, test->len, 100, true, digest);
+        assert_hex(digest, digest_size, test->want);
     }
     assert(n_tests > 0);
 }
 
 static void test_md5(void) {
     printf("test_md5...");
-    assert_algo("md5", hash_md5, MD5_BLOCK_SIZE);
+    assert_algo("md5", md5_hash, hash_md5_inc, MD5_DIGEST_SIZE);
     printf("OK\n");
 }
 
 static void test_sha1(void) {
     printf("test_sha1...");
-    assert_algo("sha1", hash_sha1, SHA1_BLOCK_SIZE);
+    assert_algo("sha1", sha1_hash, hash_sha1_inc, SHA1_DIGEST_SIZE);
     printf("OK\n");
 }
 
 static void test_sha256(void) {
     printf("test_sha256...");
-    assert_algo("sha256", hash_sha256, SHA256_DIGEST_SIZE);
+    assert_algo("sha256", sha256_hash, hash_sha256_inc, SHA256_DIGEST_SIZE);
     printf("OK\n");
 }
 
 static void test_sha384(void) {
     printf("test_sha384...");
-    assert_algo("sha384", hash_sha384, SHA384_DIGEST_SIZE);
+    assert_algo("sha384", sha384_hash, hash_sha384_inc, SHA384_DIGEST_SIZE);
     printf("OK\n");
 }
 
 static void test_sha512(void) {
     printf("test_sha512...");
-    assert_algo("sha512", hash_sha512, SHA512_DIGEST_SIZE);
+    assert_algo("sha512", sha512_hash, hash_sha512_inc, SHA512_DIGEST_SIZE);
     printf("OK\n");
 }
 
 static void test_blake3(void) {
     printf("test_blake3...");
-    assert_algo("blake3", hash_blake3, BLAKE3_OUT_LEN);
+    assert_algo("blake3", blake3_hash, hash_blake3_inc, BLAKE3_OUT_LEN);
     printf("OK\n");
 }
 
 static void test_xxh32(void) {
     printf("test_xxh32...");
-    assert_algo("xxh32", hash_xxh32, 4);
+    assert_algo("xxh32", xxh32_hash, NULL, XXH32_DIGEST_SIZE);
     printf("OK\n");
 }
 
 static void test_xxh64(void) {
     printf("test_xxh64...");
-    assert_algo("xxh64", hash_xxh64, 8);
+    assert_algo("xxh64", xxh64_hash, NULL, XXH64_DIGEST_SIZE);
     printf("OK\n");
 }
 
 static void test_xxh3_64(void) {
     printf("test_xxh3_64...");
-    assert_algo("xxh3_64", hash_xxh3_64, 8);
+    assert_algo("xxh3_64", xxh3_64_hash, NULL, XXH3_64_DIGEST_SIZE);
     printf("OK\n");
 }
 
 static void test_xxh3_128(void) {
     printf("test_xxh3_128...");
-    assert_algo("xxh3_128", hash_xxh3_128, 16);
+    assert_algo("xxh3_128", xxh3_128_hash, NULL, XXH3_128_DIGEST_SIZE);
     printf("OK\n");
 }
 

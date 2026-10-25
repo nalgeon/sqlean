@@ -47,17 +47,42 @@ static EncodeTest encode_tests[] = {
 };
 // clang-format on
 
+// encode calls base85_encode with a buffer of exactly base85_encoded_size bytes,
+// so that the sanitizers catch a write past it (and with no buffer at all
+// if the size is 0). Returns the result, which is never NULL; free it.
+static uint8_t* encode(const uint8_t* src, size_t len, size_t* out_len) {
+    size_t size = base85_encoded_size(len);
+    uint8_t* buf = size > 0 ? malloc(size) : NULL;
+    assert(buf != NULL || size == 0);
+    *out_len = base85_encode(src, len, buf);
+    assert(*out_len <= size);
+    return buf != NULL ? buf : malloc(1);
+}
+
+// decode calls base85_decode with a buffer of exactly base85_decoded_size bytes,
+// like encode does. Returns the result, or NULL if src is invalid.
+static uint8_t* decode(const uint8_t* src, size_t len, size_t* out_len) {
+    size_t size = base85_decoded_size(src, len);
+    uint8_t* buf = size > 0 ? malloc(size) : NULL;
+    assert(buf != NULL || size == 0);
+    if (!base85_decode(src, len, buf, out_len)) {
+        free(buf);
+        return NULL;
+    }
+    assert(*out_len <= size);
+    return buf != NULL ? buf : malloc(1);
+}
+
 static void test_encode(void) {
     printf("test_encode...");
     for (size_t i = 0; i < sizeof(encode_tests) / sizeof(encode_tests[0]); i++) {
         EncodeTest test = encode_tests[i];
         size_t got_len = 0;
-        uint8_t* got = base85_encode((const uint8_t*)test.src, test.src_len, &got_len);
+        uint8_t* got = encode((const uint8_t*)test.src, test.src_len, &got_len);
         assert(got != NULL);
         // printf("want %s, got %s\n", test.want, got);
         assert(got_len == strlen(test.want));
         assert(memcmp(got, test.want, got_len) == 0);
-        assert(got[got_len] == '\0');
         free(got);
     }
     printf("OK\n");
@@ -101,7 +126,7 @@ static void test_decode(void) {
     for (size_t i = 0; i < sizeof(decode_tests) / sizeof(decode_tests[0]); i++) {
         DecodeTest test = decode_tests[i];
         size_t got_len = 0;
-        uint8_t* got = base85_decode((const uint8_t*)test.src, strlen(test.src), &got_len);
+        uint8_t* got = decode((const uint8_t*)test.src, strlen(test.src), &got_len);
         assert(got != NULL);
         // printf("%s: want %zu bytes, got %zu\n", test.src, test.want_len, got_len);
         assert(got_len == test.want_len);
@@ -128,12 +153,10 @@ static void test_decode_invalid(void) {
     printf("test_decode_invalid...");
     for (size_t i = 0; i < sizeof(invalid_tests) / sizeof(invalid_tests[0]); i++) {
         const char* src = invalid_tests[i];
-        size_t got_len = 42;
-        uint8_t* got = base85_decode((const uint8_t*)src, strlen(src), &got_len);
+        size_t got_len = 0;
+        uint8_t* got = decode((const uint8_t*)src, strlen(src), &got_len);
         // printf("%s: want NULL, got %p\n", src, (void*)got);
         assert(got == NULL);
-        assert(got_len == 0);
-        free(got);
     }
     printf("OK\n");
 }
@@ -141,12 +164,11 @@ static void test_decode_invalid(void) {
 // Encodes src and decodes it back, expecting to get src.
 static void assert_roundtrip(const uint8_t* src, size_t len) {
     size_t enc_len = 0;
-    uint8_t* enc = base85_encode(src, len, &enc_len);
+    uint8_t* enc = encode(src, len, &enc_len);
     assert(enc != NULL);
-    assert(enc[enc_len] == '\0');
 
     size_t dec_len = 0;
-    uint8_t* dec = base85_decode(enc, enc_len, &dec_len);
+    uint8_t* dec = decode(enc, enc_len, &dec_len);
     // printf("len %zu: encoded as %s\n", len, enc);
     assert(dec != NULL);
     assert(dec_len == len);
@@ -223,10 +245,9 @@ static void test_decode_exhaustive(void) {
                 rest /= n_chars;
             }
 
-            size_t got_len = 42;
-            uint8_t* got = base85_decode(src, len, &got_len);
+            size_t got_len = 0;
+            uint8_t* got = decode(src, len, &got_len);
             if (got == NULL) {
-                assert(got_len == 0);
                 continue;
             }
             assert(got_len == decoded_size(src, len));
