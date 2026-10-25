@@ -229,7 +229,7 @@ static void abs_date_full(uint64_t abs, int* year, enum Month* month, int* day, 
     *day = *day - begin + 1;
 }
 
-void abs_clock(uint64_t abs, int* hour, int* min, int* sec) {
+static void abs_clock(uint64_t abs, int* hour, int* min, int* sec) {
     *sec = abs % seconds_per_day;
     *hour = *sec / seconds_per_hour;
     *sec -= *hour * seconds_per_hour;
@@ -991,11 +991,10 @@ static const char* scan_clock(const char* p,
 // and clock is "15:04:05" with optional fraction and zone ("Z"/"z" or ±07:00).
 // Numeric date, clock, and offset fields have fixed widths but no range checks;
 // time_date normalizes them. Fractions beyond nine digits are truncated.
-// Returns zero time on invalid syntax or NULL; zero time is also a valid result.
-Time time_parse(const char* value) {
-    Time zero = {0, 0};
+// Returns false and leaves out unchanged on invalid syntax or NULL.
+bool time_parse(const char* value, Time* out) {
     if (value == NULL) {
-        return zero;
+        return false;
     }
 
     int year = 1, month = 1, day = 1;
@@ -1015,24 +1014,25 @@ Time time_parse(const char* value) {
         p = scan_clock(value, &hour, &min, &sec, &nsec, &offset_sec);
     }
     if (p == NULL || *p != '\0') {
-        return zero;
+        return false;
     }
 
-    return time_date(year, month, day, hour, min, sec, nsec, offset_sec);
+    *out = time_date(year, month, day, hour, min, sec, nsec, offset_sec);
+    return true;
 }
 
 #pragma endregion
 
 #pragma region Marshaling
 
-// time_blob returns the time instant represented by the binary data.
-// The blob must have been created by time_to_blob and be at least 13 bytes long.
-// Blobs with an out-of-range nanosecond field are invalid and decode
-// to the zero time (as Go's Time.UnmarshalBinary rejects them).
-Time time_blob(const uint8_t* buf) {
+// time_blob decodes the time instant represented by the binary data into out.
+// The blob must have been created by time_to_blob and be TIMEX_BLOB_SIZE bytes long.
+// Returns false and leaves out unchanged if the blob is invalid: an unknown version
+// or an out-of-range nanosecond field (as Go's Time.UnmarshalBinary rejects them).
+bool time_blob(const uint8_t* buf, Time* out) {
     const uint8_t version = buf[0];
     if (version != 1) {
-        return (Time){0, 0};
+        return false;
     }
 
     // Assemble in unsigned arithmetic: shifting e.g. 0xff by 56 places is not
@@ -1047,9 +1047,10 @@ Time time_blob(const uint8_t* buf) {
 
     if (nsec > 999999999) {
         // Invalid blob: the nanosecond field is outside [0, 999999999].
-        return (Time){0, 0};
+        return false;
     }
-    return (Time){uint64_to_int64(sec), (int32_t)nsec};
+    *out = (Time){uint64_to_int64(sec), (int32_t)nsec};
+    return true;
 }
 
 // time_to_blob returns the binary representation of the time instant t.

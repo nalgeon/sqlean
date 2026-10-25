@@ -45,6 +45,10 @@ select '8_01', text_substring('hello world', 7) = 'world';
 select '8_02', text_split('one|two|three', '|', 2) = 'two';
 select '8_03', text_translate('hello', 'l', '1')  = 'he11o';
 
+-- time
+select '13_01', time_fmt_iso(time_unix(1321631795)) = '2011-11-18T15:56:35Z';
+select '13_02', dur_h() = 3600000000000;
+
 -- unicode
 select '9_01', nupper('пРиВеТ') = 'ПРИВЕТ';
 select '9_02', unaccent('hôtel') = 'hotel';

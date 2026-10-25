@@ -32,6 +32,8 @@ Time is a pair (seconds, nanoseconds), where `seconds` is the 64-bit number of s
 
 For maximum flexibility, you can store time values in their internal representation (a 13-byte BLOB). This allows you to represent dates for billions of years in the past and future with nanosecond precision.
 
+Time BLOBs compare and sort correctly with plain SQL operators (`=`, `<`, `order by`, `min`, `max`) for times from 0001-01-01 onward. Times before year 1 sort after all later times in a plain comparison; use `time_compare`, `time_before` or `time_after` for those.
+
 Alternatively, you can store time values as a NUMBER (64-bit integer) of seconds (milli-, micro- or nanoseconds) since the Unix epoch (1970-01-01 00:00:00 UTC). In this case, the range of representable dates depends on the unit of time used:
 
 - Seconds: billions of years into the past or future with second precision.
@@ -53,11 +55,20 @@ Duration is a 64-bit number of nanoseconds, so it can represent values up to abo
 
 The calendrical calculations always assume a Gregorian calendar, with no leap seconds.
 
-### NULL handling
+### NULL and invalid input
 
-If any function argument is `NULL`, the result will be `NULL`. This is checked before argument types, so both `time_add(NULL, 'not a duration')` and `time_add('not a time', NULL)` return `NULL` instead of an invalid argument error. Functions that don't take any arguments, like `time_now`, never return `NULL`.
+If any function argument is `NULL`, the result will be `NULL`. This is checked before argument types, so both `time_add(NULL, 'not a duration')` and `time_add('not a time', NULL)` return `NULL`. Functions that don't take any arguments, like `time_now`, never return `NULL`.
 
 A `CHECK` constraint is satisfied if its expression is `NULL`, so `check (time_get_year(at) >= 2000)` won't reject a `NULL` value.
+
+Like SQLite's own date and math functions, the extension returns `NULL` for invalid data instead of raising an error, so one bad row doesn't abort the whole query:
+
+- A time argument that is not a valid time value (not a BLOB, a BLOB of the wrong size, or a corrupt one): `time_get_year('2011-11-18')` is `NULL`.
+- An integer argument that is not an integer: `time_add(t, 'x')` and `time_add(t, 1.5)` are `NULL`. Numeric text is converted, so `time_date('2011', '11', '18')` works.
+- An integer argument outside the 32-bit range where the function takes 32-bit values: the `time_date` parts, the `time_add_date` years, months, and days, and the `offset_sec` of the `time_fmt_*` functions.
+- A string that does not parse: `time_parse('garbage')` is `NULL`.
+
+An unknown field name in `time_get`, `time_trunc`, `date_part` or `date_trunc` is an error (`unknown field: fortnight`), because it's a mistake in the query rather than in the data.
 
 ## Creating time values
 
@@ -886,9 +897,8 @@ hold, as it always has. So `2011-02-30` is the same instant as `2011-03-02`,
 `+24:00` shifts by a day. A _malformed_ zone is still rejected — `+0500` and
 `+05:xx` are not offsets.
 
-SQL `NULL` propagates. Other values return the zero time (year 1) if they do not
-parse, including when anything remains after the timestamp. The zero time is
-also a legal value, so a caller cannot tell it from a parse failure.
+Returns `NULL` if the value does not parse, including when anything remains
+after the timestamp.
 
 ```sql
 select time_parse('2011-11-18T15:56:35.666777888Z')      = time_unix(1321631795, 666777888);

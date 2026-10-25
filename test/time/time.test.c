@@ -889,7 +889,6 @@ FormatTest parse_tests[] = {
     {2011, 11, 18, 15, 56, 35, 0, "2011-11-18 15:56:35", TIMEX_UTC},
     {2011, 11, 18, 0, 0, 0, 0, "2011-11-18", TIMEX_UTC},
     {1, 1, 1, 15, 56, 35, 0, "15:56:35", TIMEX_UTC},
-    {1, 1, 1, 0, 0, 0, 0, "2011-11-18 10:56", TIMEX_UTC},
 
     // Fractional seconds are scaled to nanoseconds.
     {2011, 11, 18, 15, 56, 35, 600000000, "2011-11-18T15:56:35.6Z", TIMEX_UTC},
@@ -951,33 +950,6 @@ FormatTest parse_tests[] = {
     {2011, 3, 1, 0, 0, 0, 0, "2011-02-29", TIMEX_UTC},
     {2012, 2, 29, 0, 0, 0, 0, "2012-02-29", TIMEX_UTC},
 
-    // Invalid forms.
-    // Trailing characters.
-    {1, 1, 1, 0, 0, 0, 0, "2011-11-18T15:56:35.666777888Y", TIMEX_UTC},
-    // Leading characters.
-    {1, 1, 1, 0, 0, 0, 0, " 2011-11-18T15:56:35Z", TIMEX_UTC},
-    {1, 1, 1, 0, 0, 0, 0, "+2011-11-18T15:56:35Z", TIMEX_UTC},
-    // Malformed offsets.
-    {1, 1, 1, 0, 0, 0, 0, "2011-11-18T15:56:35+0500", TIMEX_UTC},
-    {1, 1, 1, 0, 0, 0, 0, "2011-11-18T15:56:35+05", TIMEX_UTC},
-    {1, 1, 1, 0, 0, 0, 0, "2011-11-18T15:56:35+05:xx", TIMEX_UTC},
-    {1, 1, 1, 0, 0, 0, 0, "2011-11-18T15:56:35+05X00", TIMEX_UTC},
-    // Malformed fractions and offsets.
-    {1, 1, 1, 0, 0, 0, 0, "2011-11-18T15:56:35.Z", TIMEX_UTC},
-    {1, 1, 1, 0, 0, 0, 0, "2011-11-18T15:56:35.", TIMEX_UTC},
-    {1, 1, 1, 0, 0, 0, 0, "2011-11-18T15:56:35+05:xx", TIMEX_UTC},
-    {1, 1, 1, 0, 0, 0, 0, "2011-11-18T15:56:35+0500", TIMEX_UTC},
-    {1, 1, 1, 0, 0, 0, 0, "2011-11-18T15:56:35+05", TIMEX_UTC},
-    // Date separators.
-    {1, 1, 1, 0, 0, 0, 0, "2011X11-18T15:56:35Z", TIMEX_UTC},
-    {1, 1, 1, 0, 0, 0, 0, "2011-11X18T15:56:35Z", TIMEX_UTC},
-    {1, 1, 1, 0, 0, 0, 0, "20111118T15:56:35Z", TIMEX_UTC},
-    // Clock separators.
-    {1, 1, 1, 0, 0, 0, 0, "2011-11-18T15X56:35Z", TIMEX_UTC},
-    {1, 1, 1, 0, 0, 0, 0, "2011-11-18T15:56X35Z", TIMEX_UTC},
-    // Non-fixed-width fields and unrecognized separators.
-    {1, 1, 1, 0, 0, 0, 0, "2011-1-8T15:56:35Z", TIMEX_UTC},
-    {1, 1, 1, 0, 0, 0, 0, "2011-11-18X15:56:35Z", TIMEX_UTC},
     // RFC 3339 section 5.6 allows a lowercase "t" and "z"; both are accepted.
     {2011, 11, 18, 15, 56, 35, 0, "2011-11-18T15:56:35z", TIMEX_UTC},
     {2011, 11, 18, 15, 56, 35, 0, "2011-11-18t15:56:35Z", TIMEX_UTC},
@@ -991,18 +963,46 @@ FormatTest parse_tests[] = {
     {2011, 11, 18, 15, 56, 35, 0, "2011-11-18\r15:56:35", TIMEX_UTC},
     {2011, 11, 18, 15, 56, 35, 0, "2011-11-18\v15:56:35", TIMEX_UTC},
     {2011, 11, 18, 15, 56, 35, 0, "2011-11-18\f15:56:35", TIMEX_UTC},
+};
 
+// Strings that don't parse.
+static const char* parse_invalid_tests[] = {
+    // Missing seconds.
+    "2011-11-18 10:56",
+    // Trailing characters.
+    "2011-11-18T15:56:35.666777888Y",
+    // Leading characters.
+    " 2011-11-18T15:56:35Z",
+    "+2011-11-18T15:56:35Z",
+    // Malformed offsets.
+    "2011-11-18T15:56:35+0500",
+    "2011-11-18T15:56:35+05",
+    "2011-11-18T15:56:35+05:xx",
+    "2011-11-18T15:56:35+05X00",
+    // Malformed fractions.
+    "2011-11-18T15:56:35.Z",
+    "2011-11-18T15:56:35.",
+    // Date separators.
+    "2011X11-18T15:56:35Z",
+    "2011-11X18T15:56:35Z",
+    "20111118T15:56:35Z",
+    // Clock separators.
+    "2011-11-18T15X56:35Z",
+    "2011-11-18T15:56X35Z",
+    // Non-fixed-width fields and unrecognized separators.
+    "2011-1-8T15:56:35Z",
+    "2011-11-18X15:56:35Z",
     // Whitespace is valid only as the date-clock separator.
-    {1, 1, 1, 0, 0, 0, 0, "2011-11-18T20:56:35 +05:00", TIMEX_UTC},
-    {1, 1, 1, 0, 0, 0, 0, "2011-11-18T20:56:35\t+05:00", TIMEX_UTC},
-    {1, 1, 1, 0, 0, 0, 0, "2011-11-18T15:56:35Z ", TIMEX_UTC},
-    {1, 1, 1, 0, 0, 0, 0, "2011-11-18T15:56:35 ", TIMEX_UTC},
+    "2011-11-18T20:56:35 +05:00",
+    "2011-11-18T20:56:35\t+05:00",
+    "2011-11-18T15:56:35Z ",
+    "2011-11-18T15:56:35 ",
     // A fraction follows seconds, never HH:MM.
-    {1, 1, 1, 0, 0, 0, 0, "15:56.5Z", TIMEX_UTC},
-    {1, 1, 1, 0, 0, 0, 0, "2011-11-18T15:56.5Z", TIMEX_UTC},
+    "15:56.5Z",
+    "2011-11-18T15:56.5Z",
     // Not a date or a time at all.
-    {1, 1, 1, 0, 0, 0, 0, "garbage", TIMEX_UTC},
-    {1, 1, 1, 0, 0, 0, 0, "", TIMEX_UTC},
+    "garbage",
+    "",
 };
 
 static void test_parse(void) {
@@ -1011,15 +1011,21 @@ static void test_parse(void) {
         FormatTest test = parse_tests[i];
         Time want = time_date(test.year, test.month, test.day, test.hour, test.min, test.sec,
                               test.nsec, TIMEX_UTC);
-        Time got = time_parse(test.want);
-        // printf("want: {%lld %d}, got: {%lld %d}\n", time_to_unix(want), want.nsec,
-        //        time_to_unix(got), got.nsec);
+        Time got;
+        assert(time_parse(test.want, &got));
         assert(time_equal(got, want));
     }
-    // NULL returns the zero time.
+    // Invalid strings and NULL fail and leave the output unchanged.
+    Time sentinel = {42, 42};
+    for (size_t i = 0; i < sizeof(parse_invalid_tests) / sizeof(parse_invalid_tests[0]); i++) {
+        Time got = sentinel;
+        assert(!time_parse(parse_invalid_tests[i], &got));
+        assert(time_equal(got, sentinel));
+    }
     {
-        Time zero = time_date(1, 1, 1, 0, 0, 0, 0, TIMEX_UTC);
-        assert(time_equal(time_parse(NULL), zero));
+        Time got = sentinel;
+        assert(!time_parse(NULL, &got));
+        assert(time_equal(got, sentinel));
     }
     printf("OK\n");
 }
@@ -1039,7 +1045,8 @@ static void test_fmt_parse_roundtrip(void) {
     for (size_t i = 0; i < sizeof(times) / sizeof(times[0]); i++) {
         char buf[64];
         time_fmt_iso(buf, sizeof(buf), times[i], TIMEX_UTC);
-        Time got = time_parse(buf);
+        Time got;
+        assert(time_parse(buf, &got));
         assert(time_equal(got, times[i]));
     }
     // Years outside [0, 9999] print in full (like Go) and must not parse
@@ -1058,8 +1065,8 @@ static void test_fmt_parse_roundtrip(void) {
         size_t n = time_fmt_iso(buf, sizeof(buf), wide[i].t, TIMEX_UTC);
         assert(n < TIMEX_FMT_BUF_SIZE);  // fits into the SQL-layer buffer
         assert(strcmp(buf, wide[i].want) == 0);
-        Time got = time_parse(buf);
-        assert(!time_equal(got, wide[i].t));
+        Time got;
+        assert(!time_parse(buf, &got));
     }
     // Distinct years must remain distinguishable after formatting.
     char b1[64], b2[64];
@@ -1075,8 +1082,8 @@ static void test_fmt_parse_roundtrip(void) {
         char buf[64];
         size_t n = time_fmt_iso(buf, sizeof(buf), extreme[i], TIMEX_UTC);
         assert(n < TIMEX_FMT_BUF_SIZE);
-        Time got = time_parse(buf);
-        assert(!time_equal(got, extreme[i]));
+        Time got;
+        assert(!time_parse(buf, &got));
     }
     printf("OK\n");
 }
@@ -1189,8 +1196,8 @@ static void test_marshal_blob(void) {
         TimeTest test = unix_tests[i];
         Time want = time_unix(test.sec, test.nsec);
         time_to_blob(want, buf);
-        Time got = time_blob(buf);
-        // printf("want: {%lld %lld}, got: {%lld %lld}\n", want.sec, want.nsec, got.sec, got.nsec);
+        Time got;
+        assert(time_blob(buf, &got));
         assert(time_equal(got, want));
     }
 
@@ -1204,21 +1211,24 @@ static void test_marshal_blob(void) {
     };
     for (size_t i = 0; i < sizeof(ancient) / sizeof(ancient[0]); i++) {
         time_to_blob(ancient[i], buf);
-        Time got = time_blob(buf);
+        Time got;
+        assert(time_blob(buf, &got));
         assert(time_equal(got, ancient[i]));
     }
 
-    // Invalid blobs decode to the zero time: unknown version and
-    // out-of-range nanosecond field.
-    Time zero = {0, 0};
+    // Invalid blobs fail and leave the output unchanged: unknown version
+    // and out-of-range nanosecond field.
+    Time sentinel = {42, 42};
+    Time got = sentinel;
     memset(buf, 0, TIMEX_BLOB_SIZE);  // version 0
-    assert(time_equal(time_blob(buf), zero));
+    assert(!time_blob(buf, &got));
     memset(buf, 0xff, TIMEX_BLOB_SIZE);
     buf[0] = 1;  // version 1, nsec = -1
-    assert(time_equal(time_blob(buf), zero));
+    assert(!time_blob(buf, &got));
     time_to_blob(time_date(2024, 6, 15, 12, 0, 0, 0, TIMEX_UTC), buf);
     buf[9] = 0x40;  // nsec = 0x40000000 > 999999999
-    assert(time_equal(time_blob(buf), zero));
+    assert(!time_blob(buf, &got));
+    assert(time_equal(got, sentinel));
     printf("OK\n");
 }
 
