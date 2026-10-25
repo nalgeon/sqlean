@@ -32,11 +32,17 @@ typedef struct {
     uint64_t len;                  // total number of bytes hashed
 } xxh64_ctx;
 
-// Storage for xxHash's own XXH3 state, which is private (xxh3.c checks that
-// it fits). It must be 64-byte aligned: declared objects are, but memory
-// from malloc may not be.
+#define XXH3_STRIPE_SIZE 64
+#define XXH3_BLOCK_SIZE 1024
+
+// XXH3 mixes a block only when more input follows, and its final step needs
+// the last stripe of the input. So the buffer holds a block plus a stripe:
+// after a block is mixed, the stripe that follows it moves to the front.
 typedef struct {
-    _Alignas(64) uint64_t state[72];
+    uint64_t acc[8];                                // accumulators
+    uint8_t x[XXH3_BLOCK_SIZE + XXH3_STRIPE_SIZE];  // buffered input, not yet mixed
+    size_t nx;                                      // number of bytes in x
+    uint64_t blocks;                                // number of blocks mixed
 } xxh3_64_ctx;
 
 typedef xxh3_64_ctx xxh3_128_ctx;
