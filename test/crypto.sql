@@ -317,18 +317,24 @@ select '24_21', decode(null, 'base85') is null;
 select '24_22', decode(null, 'hex') is null;
 select '24_23', decode(null, 'url') is null;
 
--- current behavior, to be fixed: the format is matched as a prefix
--- of 'base32', so a prefix or an empty string select base32
--- (a NULL format is UB: strncmp gets a NULL pointer, so it's not tested)
-select '25_01', encode('hello', 'b') = 'NBSWY3DP';
-select '25_02', encode('hello', 'base') = 'NBSWY3DP';
-select '25_03', encode('hello', '') = 'NBSWY3DP';
-select '25_04', decode('NBSWY3DP', 'b') = cast('hello' as blob);
--- the format is read as text
-select '25_05', encode('hello', x'626173653634') = 'aGVsbG8=';
--- current behavior, to be fixed: url encoding stops at a NUL byte
-select '25_06', encode(x'00', 'url') = '';
-select '25_07', encode(x'610062', 'url') = 'a';
+-- the format is an exact name; an unknown one is an error (not tested here)
+select '25_01', encode('hello', 'base64') = 'aGVsbG8=';
+-- a NULL format gives NULL
+select '25_02', encode('hello', null) is null;
+select '25_03', decode('aGVsbG8=', null) is null;
+-- url encoding escapes the NUL byte
+select '25_04', encode(x'00', 'url') = '%00';
+select '25_05', encode(x'610062', 'url') = 'a%00b';
+-- invalid encoded data gives NULL
+select '25_06', decode('MY=MY===', 'base32') is null;
+select '25_07', decode('my======', 'base32') is null;
+select '25_08', decode('YQ=A', 'base64') is null;
+select '25_09', decode('Zg', 'base64') is null;
+select '25_10', decode('z!', 'base85') is null;
+select '25_11', decode('zz', 'hex') is null;
+select '25_12', decode('abc', 'hex') is null;
+select '25_13', decode('%4', 'url') is null;
+select '25_14', decode('=', 'base64') is null;
 
 -- round trips over every byte value
 select '26_01', decode(encode(x'000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff', 'base32'), 'base32') = x'000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff';
@@ -336,9 +342,9 @@ select '26_02', decode(encode(x'000102030405060708090a0b0c0d0e0f1011121314151617
 select '26_03', decode(encode(x'000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff', 'base85'), 'base85') = x'000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff';
 select '26_04', decode(encode(x'000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff', 'hex'), 'hex') = x'000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff';
 select '26_05', decode(encode(x'0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff', 'url'), 'url') = x'0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff';
--- round trips over a million bytes (spaces for url, since zeros hit the NUL bug)
+-- round trips over a million bytes
 select '26_06', decode(encode(zeroblob(1000000), 'base32'), 'base32') = zeroblob(1000000);
 select '26_07', decode(encode(zeroblob(1000000), 'base64'), 'base64') = zeroblob(1000000);
 select '26_08', decode(encode(zeroblob(1000000), 'base85'), 'base85') = zeroblob(1000000);
 select '26_09', decode(encode(zeroblob(1000000), 'hex'), 'hex') = zeroblob(1000000);
-select '26_10', decode(encode(printf('%.*c', 1000000, ' '), 'url'), 'url') = cast(printf('%.*c', 1000000, ' ') as blob);
+select '26_10', decode(encode(zeroblob(1000000), 'url'), 'url') = zeroblob(1000000);
