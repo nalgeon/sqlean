@@ -7,9 +7,9 @@ on:
     workflow_dispatch:
 
 env:
-    SQLITE_RELEASE_YEAR: "2021"
-    SQLITE_VERSION: "3360000"
-    SQLITE_BRANCH: "3.36"
+    SQLITE_RELEASE_YEAR: "2024"
+    SQLITE_VERSION: "3470200"
+    SQLITE_BRANCH: "3.47"
 
 jobs:
     publish:

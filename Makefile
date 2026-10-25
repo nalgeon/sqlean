@@ -3,9 +3,9 @@
 
 .PHONY: test gcc
 
-SQLITE_RELEASE_YEAR := 2021
-SQLITE_VERSION := 3360000
-SQLITE_BRANCH := 3.36
+SQLITE_RELEASE_YEAR := 2024
+SQLITE_VERSION := 3470200
+SQLITE_BRANCH := 3.47
 
 SQLEAN_VERSION := '"$(or $(shell git tag --points-at HEAD),main)"'
 
@@ -45,6 +45,9 @@ download-sqlite:
 	curl -L http://sqlite.org/$(SQLITE_RELEASE_YEAR)/sqlite-amalgamation-$(SQLITE_VERSION).zip --output src.zip
 	unzip src.zip
 	mv sqlite-amalgamation-$(SQLITE_VERSION)/* src
+	rm -rf src.zip sqlite-amalgamation-$(SQLITE_VERSION)
+# unzip keeps the archive timestamps, which can be older than the targets built from the previous version
+	touch src/sqlite3.c src/sqlite3.h src/sqlite3ext.h src/shell.c
 
 download-external:
 	curl -L --silent https://github.com/mackyle/sqlite/raw/branch-$(SQLITE_BRANCH)/src/test_windirent.h --output src/test_windirent.h
