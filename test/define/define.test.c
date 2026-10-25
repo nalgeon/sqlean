@@ -267,12 +267,33 @@ static void test_flags(void) {
     assert(strcmp(res.msg, "unsafe use of plus()") == 0);
 
     // a defined function wrapping eval makes eval usable in a view
-    // (current behavior, a security issue: functions are loaded from the database file)
+    // (documented in the Security section of docs/define.md)
     exec_ok(db, "pragma trusted_schema = 1");
     exec_ok(db, "select define('evalf', 'eval(?)')");
     exec_ok(db, "create view v_evalf as select evalf('insert into log values (42)')");
     exec_ok(db, "select * from v_evalf");
     assert(query_int(db, "select count(*) from log") == 1);
+
+    // so does a table function
+    exec_ok(db, "create virtual table evalt using define((select eval(:sql) as r))");
+    exec_ok(db, "create view v_evalt as select r from evalt('insert into log values (42)')");
+    exec_ok(db, "select * from v_evalt");
+    assert(query_int(db, "select count(*) from log") == 2);
+
+    // trusted_schema = 0 blocks both
+    exec_ok(db, "pragma trusted_schema = 0");
+    res = exec(db, "select * from v_evalf");
+    assert(res.rc == SQLITE_ERROR);
+    assert(strcmp(res.msg, "unsafe use of evalf()") == 0);
+    res = exec(db, "select * from v_evalt");
+    assert(res.rc == SQLITE_ERROR);
+    assert(strcmp(res.msg, "unsafe use of virtual table \"evalt\"") == 0);
+
+    // except in CHECK constraints, which SQLite checks only since 3.50.0
+    // (this fails after upgrading; update the Security section in docs/define.md)
+    exec_ok(db, "create table checked(x check (evalf('insert into log values (42)') is null))");
+    exec_ok(db, "insert into checked values (1)");
+    assert(query_int(db, "select count(*) from log") == 3);
 
     sqlite3_close_v2(db);
     printf("OK\n");
