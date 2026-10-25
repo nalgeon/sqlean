@@ -56,6 +56,10 @@ static inline uint32_t rotr32(uint32_t x, unsigned n) {
     return (x >> n) | (x << (32 - n));
 }
 
+static inline uint64_t rotl64(uint64_t x, unsigned n) {
+    return (x << n) | (x >> (64 - n));
+}
+
 static inline uint64_t rotr64(uint64_t x, unsigned n) {
     return (x >> n) | (x << (64 - n));
 }
@@ -66,6 +70,10 @@ static inline uint64_t rotr64(uint64_t x, unsigned n) {
 
 static inline uint32_t load_le32(const uint8_t* p) {
     return (uint32_t)p[0] | (uint32_t)p[1] << 8 | (uint32_t)p[2] << 16 | (uint32_t)p[3] << 24;
+}
+
+static inline uint64_t load_le64(const uint8_t* p) {
+    return (uint64_t)load_le32(p) | (uint64_t)load_le32(p + 4) << 32;
 }
 
 static inline void store_le32(uint8_t* p, uint32_t x) {
