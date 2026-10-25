@@ -26,8 +26,8 @@ typedef struct registry registry;
 
 typedef struct function {
     char* name;
-    char* sql;  // "select <body>"
-    int nparams;
+    char* sql;    // "select <body>"
+    int nparams;  // -1 if the body didn't compile when loaded, see load_function
     int version;  // changes with the body, see cache_get
     bool defined;
     registry* reg;
@@ -308,6 +308,12 @@ static void define_exec(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
         }
     }
 
+    if (fn->nparams < 0 && sqlite3_bind_parameter_count(stmt) != argc) {
+        // registered with any number of arguments, so check it here
+        result_name_error(ctx, "wrong number of arguments to function %s()", fn->name);
+        ret = SQLITE_MISUSE;
+        goto end;
+    }
     for (int i = 0; i < argc; i++) {
         if ((ret = sqlite3_bind_value(stmt, i + 1, argv[i])) != SQLITE_OK) {
             break;
@@ -324,8 +330,9 @@ static void define_exec(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
     } else {
         result_db_error(ctx, db, ret);
     }
-    sqlite3_reset(stmt);
 
+end:
+    sqlite3_reset(stmt);
     if (!cached) {
         cache_put(ctx, fn, version, stmt);
     }
@@ -370,14 +377,29 @@ static int register_function(sqlite3* db, registry* reg, const char* name, char*
     return ret;
 }
 
-// define_create creates a defined function from its body (used when loading
-// functions from the database), and returns SQLITE_OK or an error code.
-static int define_create(sqlite3* db, registry* reg, const char* name, const char* body) {
+// load_function registers a function saved in the database, and returns SQLITE_OK
+// or an error code. A body may fail to compile at this point, because it calls a function
+// that's loaded later (by define_load or by another extension), or uses a table that's
+// gone. Such a function is registered with any number of arguments, and its body is
+// compiled when it's called (and fails with the compile error if it still doesn't compile).
+static int load_function(sqlite3* db, registry* reg, const char* name, const char* body) {
     char* sql;
     int nparams;
     int ret = compile_body(db, body, &sql, &nparams);
-    if (ret != SQLITE_OK) {
+    if (ret == SQLITE_NOMEM) {
         return ret;
+    }
+    if (ret != SQLITE_OK) {
+        sql = sqlite3_mprintf("select %s", body);
+        if (sql == NULL) {
+            return SQLITE_NOMEM;
+        }
+        nparams = -1;
+    }
+    if (registry_find(reg, name, nparams) != NULL) {
+        // a duplicate in another case, SQLite can't replace it while define_load runs
+        sqlite3_free(sql);
+        return SQLITE_OK;
     }
     return register_function(db, reg, name, sql, nparams);
 }
@@ -649,17 +671,19 @@ static int define_load(sqlite3* db, registry* reg) {
         return ret;
     }
 
-    const char* name;
-    const char* body;
-    while (sqlite3_step(stmt) != SQLITE_DONE) {
-        name = (const char*)sqlite3_column_text(stmt, 0);
-        body = (const char*)sqlite3_column_text(stmt, 1);
-        ret = define_create(db, reg, name, body);
-        if (ret != SQLITE_OK) {
+    while ((ret = sqlite3_step(stmt)) == SQLITE_ROW) {
+        const char* name = (const char*)sqlite3_column_text(stmt, 0);
+        const char* body = (const char*)sqlite3_column_text(stmt, 1);
+        if (name == NULL || body == NULL) {
+            // not a function define() would save
+            continue;
+        }
+        if ((ret = load_function(db, reg, name, body)) != SQLITE_OK) {
             break;
         }
     }
-    return sqlite3_finalize(stmt);
+    sqlite3_finalize(stmt);
+    return ret == SQLITE_DONE ? SQLITE_OK : ret;
 }
 
 // define_manage_init registers define(), undefine() and define_free(), loads

@@ -160,6 +160,69 @@ static void test_init(void) {
     printf("OK\n");
 }
 
+// twice is a C function that stands for a function from another extension.
+static void twice(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
+    sqlite3_result_int64(ctx, sqlite3_value_int64(argv[0]) * 2);
+}
+
+static void test_load(void) {
+    printf("test_load...");
+    remove_db();
+    sqlite3* db = open_db(DB_PATH);
+    exec_ok(db,
+            "insert into sqlean_define(name, type, body) values "
+            "('broken', 'scalar', 'nosuch(?)'), "
+            "('syntax', 'scalar', 'from'), "
+            "('callsnext', 'scalar', 'nextone(?) + 1'), "
+            "('nextone', 'scalar', '? * 2'), "
+            "('external', 'scalar', 'twice(?) + 1'), "
+            "('later', 'scalar', '? * 10'), "
+            "(null, 'scalar', '1'), "
+            "('nobody', 'scalar', null)");
+    close_db(db);
+
+    // functions that don't compile don't stop loading the rest
+    db = open_db(DB_PATH);
+    assert(query_int(db, "select later(2)") == 20);
+    assert(query_int(db, "select nextone(5)") == 10);
+
+    // a function that calls one loaded after it works
+    assert(query_int(db, "select callsnext(5)") == 11);
+    // but accepts any number of arguments in SQL, and checks the number when called
+    Result res = exec(db, "select callsnext(1, 2)");
+    assert(res.rc == SQLITE_ERROR);
+    assert(strcmp(res.msg, "wrong number of arguments to function callsnext()") == 0);
+
+    // calling a function that doesn't compile reports why
+    res = exec(db, "select broken(1)");
+    assert(res.rc == SQLITE_ERROR);
+    assert(strcmp(res.msg, "no such function: nosuch") == 0);
+    res = exec(db, "select syntax()");
+    assert(res.rc == SQLITE_ERROR);
+    assert(strcmp(res.msg, "near \"from\": syntax error") == 0);
+    res = exec(db, "select nobody()");
+    assert(strcmp(res.msg, "no such function: nobody") == 0);
+
+    // a function from an extension loaded later works once it's there
+    res = exec(db, "select external(1)");
+    assert(strcmp(res.msg, "no such function: twice") == 0);
+    sqlite3_create_function(db, "twice", 1, SQLITE_UTF8, NULL, twice, NULL, NULL);
+    assert(query_int(db, "select external(1)") == 3);
+
+    // a broken function can be fixed and deleted as usual
+    exec_ok(db, "select define('broken', '? + 1')");
+    assert(query_int(db, "select broken(1)") == 2);
+    res = exec(db, "select broken()");
+    assert(strcmp(res.msg, "wrong number of arguments to function broken()") == 0);
+    exec_ok(db, "select undefine('syntax')");
+    res = exec(db, "select syntax()");
+    assert(strcmp(res.msg, "no such function: syntax") == 0);
+
+    close_db(db);
+    remove_db();
+    printf("OK\n");
+}
+
 #pragma endregion
 
 #pragma region Errors
@@ -472,6 +535,11 @@ static void test_redefine(void) {
     exec_ok(db, "select define('plus', '? + 20')");
     assert(query_int(db, "select plus(1)") == 21);
 
+    // plus is saved after plustwice now, and both still load
+    other = open_db(DB_PATH);
+    assert(query_int(other, "select plustwice(1)") == 41);
+    close_db(other);
+
     // a failed redefinition changes nothing
     res = exec(db, "select define('plus', 'nosuch(?)')");
     assert(res.rc == SQLITE_ERROR);
@@ -597,6 +665,7 @@ static void test_cache_connections(void) {
 int main(void) {
     // Init
     test_init();
+    test_load();
 
     // Errors
     test_define_errors();

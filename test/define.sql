@@ -267,12 +267,18 @@ create virtual table half using define((select :x / 2 as value));
 select '61_01', plus(1) = 2;
 select '61_02', value = 5 from half(10);
 select '61_03', count(*) = 2 from sqlean_define;
--- a function that fails to compile stops loading the rest (current behavior)
+-- a function that fails to compile doesn't stop loading the rest
 insert into sqlean_define(name, type, body) values
   ('broken', 'scalar', 'nosuch(?)'), ('later', 'scalar', '? * 10');
+-- a function can call one that's loaded after it
+insert into sqlean_define(name, type, body) values
+  ('callsnext', 'scalar', 'nextone(?) + 1'), ('nextone', 'scalar', '? * 2');
 
 .open define.db
 .load dist/define
 select '62_01', plus(1) = 2;
-select '62_02', count(*) = 0 from pragma_function_list where name in ('broken', 'later');
+select '62_02', later(2) = 20;
+select '62_03', count(*) = 2 from pragma_function_list where name in ('broken', 'later');
+select '62_04', callsnext(5) = 11;
+select '62_05', nextone(5) = 10;
 .shell rm -f define.db
