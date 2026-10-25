@@ -1,7 +1,7 @@
 # Copyright (c) 2021 Anton Zhiyanov, MIT License
 # https://github.com/nalgeon/sqlean
 
-.PHONY: test
+.PHONY: test gcc
 
 SQLITE_RELEASE_YEAR := 2021
 SQLITE_VERSION := 3360000
@@ -23,7 +23,18 @@ SQLITE ?= sqlite3
 
 # address + undefined behavior sanitizers
 SANITIZE_FLAGS := -g -O1 -fno-omit-frame-pointer -fsanitize=address,undefined -fno-sanitize-recover=undefined
+# Leak detection is Linux-only. Slow unwinding gives full stacks for
+# allocations made inside SQLite, which is built without frame pointers.
+ifeq ($(shell uname -s),Linux)
+SANITIZE_ENV := ASAN_OPTIONS=detect_leaks=1:fast_unwind_on_malloc=0 UBSAN_OPTIONS=print_stacktrace=1
+else
 SANITIZE_ENV := ASAN_OPTIONS=detect_leaks=0 UBSAN_OPTIONS=print_stacktrace=1
+endif
+
+# Runs make targets on Linux with GCC, in Docker: make gcc run="ctest-all-sanitize".
+# The container gets its own empty dist/, so the host's build artifacts stay as they are.
+GCC_IMAGE ?= gcc:16.2.0
+GCC_PLATFORM ?= linux/arm64
 SAN_FLAGS := $(CTEST_FLAGS) $(SANITIZE_FLAGS) -fPIC -shared
 
 prepare-dist:
@@ -229,6 +240,13 @@ test-all:
 # the shell, so the failing suite fails the target.
 test-all-sanitize:
 	$(SANITIZE_ENV) make test-all SQLITE=./dist/sqlite3-sanitize
+
+gcc:
+	docker run --rm --platform $(GCC_PLATFORM) -v "$(CURDIR)":/src -v /src/dist -w /src $(GCC_IMAGE) make CC=gcc $(run)
+
+# Runs both test layers with the sanitizers, on Linux with GCC.
+sanitize-gcc:
+	$(MAKE) gcc run="ctest-all-sanitize compile-sanitize test-all-sanitize"
 
 # fails if grep does find a failed test case
 # https://stackoverflow.com/questions/15367674/bash-one-liner-to-exit-with-the-opposite-status-of-a-grep-command/21788642

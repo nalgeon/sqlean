@@ -75,7 +75,7 @@ Crashes, garbage output, and undefined behavior are never acceptable, whatever t
 
 ### No undefined behavior
 
-Sqlean runs inside other people's processes, so UB counts as a security bug. The test suites run under ASan and UBSan (`make ctest-all-sanitize`, `make test-all-sanitize`), and they must pass. Patterns from `time`:
+Sqlean runs inside other people's processes, so UB counts as a security bug. The test suites run under ASan and UBSan, and they must pass. Use `make sanitize-gcc`, which runs them on Linux with GCC and leak detection (`make ctest-all-sanitize` and `make test-all-sanitize` run them on the host). Patterns from `time`:
 
 Wrapping arithmetic goes through unsigned types. Compute in `uint64_t`, then convert back with a fully defined helper (`uint64_to_int64` in `time/common.h`) instead of a cast.
 
@@ -325,5 +325,5 @@ When bringing an existing module up to these guidelines:
 2. Split the module into domain, binding, and entry point if it isn't already. Move logic out of `extension.c`.
 3. Go through the domain layer: make sure every input has defined behavior, check for UB, use fixed-width types, and make private symbols `static`.
 4. Go through the binding layer: check the argument order (NULL, type, shape), the split between data (NULL) and spec arguments (error), allocation checks, registration flags and return codes, and explicit arities.
-5. Run `make ctest-all-sanitize` and `make test-all-sanitize`, then `make compile-macos` to restore normal artifacts.
+5. Run `make sanitize-gcc`.
 6. Update `docs/<module>.md`, and call out every user-visible behavior change in the commit message (`<module>: <what changed>`).

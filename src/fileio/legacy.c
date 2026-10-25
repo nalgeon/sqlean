@@ -509,6 +509,12 @@ static void fileio_writefile(sqlite3_context* context, int argc, sqlite3_value**
 }
 
 // Appends string to a file specified by path.
+// close_file is an auxdata destructor: calling fclose through
+// void (*)(void*) would be an incompatible function pointer call.
+static void close_file(void* file) {
+    fclose((FILE*)file);
+}
+
 // fileio_append(path, str)
 static void fileio_append(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
     bool is_new_file = false;
@@ -543,7 +549,7 @@ static void fileio_append(sqlite3_context* ctx, int argc, sqlite3_value** argv) 
     sqlite3_result_int(ctx, n);
 
     if (is_new_file) {
-        sqlite3_set_auxdata(ctx, 0, file, (void (*)(void*))fclose);
+        sqlite3_set_auxdata(ctx, 0, file, close_file);
     }
 }
 
@@ -906,6 +912,7 @@ static int fsdirFilter(sqlite3_vtab_cursor* cur,
     }
     if (fileLinkStat(pCur->zPath, &pCur->sStat)) {
         // file does not exist, terminate via subsequent call to fsdirEof
+        sqlite3_free(pCur->zPath);
         pCur->zPath = 0;
     }
 

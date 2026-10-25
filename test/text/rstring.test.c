@@ -197,6 +197,7 @@ static void test_index(void) {
         int index = rstring_index(str, other);
         assert(index == 9);
         rstring_free(other);
+        rstring_free(str);
     }
 
     {
@@ -966,6 +967,8 @@ static void test_like(void) {
         RuneString str = rstring_from_cstring(t->str);
         // printf("pattern: %s, s: %s, match: %d\n", t->pattern, t->s, t->match);
         assert(rstring_like(pattern, str) == t->match);
+        rstring_free(pattern);
+        rstring_free(str);
     }
     printf("OK\n");
 }
