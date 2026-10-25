@@ -348,3 +348,52 @@ select '26_07', decode(encode(zeroblob(1000000), 'base64'), 'base64') = zeroblob
 select '26_08', decode(encode(zeroblob(1000000), 'base85'), 'base85') = zeroblob(1000000);
 select '26_09', decode(encode(zeroblob(1000000), 'hex'), 'hex') = zeroblob(1000000);
 select '26_10', decode(encode(zeroblob(1000000), 'url'), 'url') = zeroblob(1000000);
+
+-- aggregates hash the concatenation of the values, in the order received
+select '27_01', (select crypto_blake3_agg(x) from (select x from (select 1 as n, 'ab' as x union all select 2, 'cd' union all select 3, 'ef') order by n)) = crypto_blake3('abcdef');
+select '27_02', (select crypto_md5_agg(x) from (select x from (select 1 as n, 'ab' as x union all select 2, 'cd' union all select 3, 'ef') order by n)) = crypto_md5('abcdef');
+select '27_03', (select crypto_sha1_agg(x) from (select x from (select 1 as n, 'ab' as x union all select 2, 'cd' union all select 3, 'ef') order by n)) = crypto_sha1('abcdef');
+select '27_04', (select crypto_sha256_agg(x) from (select x from (select 1 as n, 'ab' as x union all select 2, 'cd' union all select 3, 'ef') order by n)) = crypto_sha256('abcdef');
+select '27_05', (select crypto_sha384_agg(x) from (select x from (select 1 as n, 'ab' as x union all select 2, 'cd' union all select 3, 'ef') order by n)) = crypto_sha384('abcdef');
+select '27_06', (select crypto_sha512_agg(x) from (select x from (select 1 as n, 'ab' as x union all select 2, 'cd' union all select 3, 'ef') order by n)) = crypto_sha512('abcdef');
+select '27_07', (select crypto_xxh32_agg(x) from (select x from (select 1 as n, 'ab' as x union all select 2, 'cd' union all select 3, 'ef') order by n)) = crypto_xxh32('abcdef');
+select '27_08', (select crypto_xxh64_agg(x) from (select x from (select 1 as n, 'ab' as x union all select 2, 'cd' union all select 3, 'ef') order by n)) = crypto_xxh64('abcdef');
+select '27_09', (select crypto_xxh3_64_agg(x) from (select x from (select 1 as n, 'ab' as x union all select 2, 'cd' union all select 3, 'ef') order by n)) = crypto_xxh3_64('abcdef');
+select '27_10', (select crypto_xxh3_128_agg(x) from (select x from (select 1 as n, 'ab' as x union all select 2, 'cd' union all select 3, 'ef') order by n)) = crypto_xxh3_128('abcdef');
+-- NULLs are skipped
+select '27_11', (select md5_agg(x) from (select 'ab' as x union all select null union all select 'c')) = md5('abc');
+-- no rows, or only NULLs, give NULL
+select '27_12', (select md5_agg(x) from (select 1 as x where 0)) is null;
+select '27_13', (select md5_agg(x) from (select null as x union all select null)) is null;
+select '27_14', (select xxh3_128_agg(x) from (select null as x)) is null;
+-- empty values still count
+select '27_15', md5_agg('') = md5('');
+select '27_16', (select sha256_agg(x) from (select '' as x union all select x'')) = sha256('');
+-- a blob is hashed as is, everything else as text
+select '27_17', (select md5_agg(x) from (select 1 as n, x'6162' as x union all select 2, 42 union all select 3, 1.5 order by n)) = md5('ab421.5');
+-- one hash per group
+select '27_18', (select group_concat(hex(h), ',') from (select g, sha1_agg(x) as h from (select 1 as g, 'a' as x union all select 2, 'b' union all select 1, 'c' order by g, x) group by g order by g)) = hex(sha1('ac')) || ',' || hex(sha1('b'));
+
+-- aggregate aliases
+select '28_01', (select blake3_agg(x) from (select 1 as n, 'ab' as x union all select 2, 'cd' union all select 3, 'ef')) = (select crypto_blake3_agg(x) from (select 1 as n, 'ab' as x union all select 2, 'cd' union all select 3, 'ef'));
+select '28_02', (select md5_agg(x) from (select 1 as n, 'ab' as x union all select 2, 'cd' union all select 3, 'ef')) = (select crypto_md5_agg(x) from (select 1 as n, 'ab' as x union all select 2, 'cd' union all select 3, 'ef'));
+select '28_03', (select sha1_agg(x) from (select 1 as n, 'ab' as x union all select 2, 'cd' union all select 3, 'ef')) = (select crypto_sha1_agg(x) from (select 1 as n, 'ab' as x union all select 2, 'cd' union all select 3, 'ef'));
+select '28_04', (select sha256_agg(x) from (select 1 as n, 'ab' as x union all select 2, 'cd' union all select 3, 'ef')) = (select crypto_sha256_agg(x) from (select 1 as n, 'ab' as x union all select 2, 'cd' union all select 3, 'ef'));
+select '28_05', (select sha384_agg(x) from (select 1 as n, 'ab' as x union all select 2, 'cd' union all select 3, 'ef')) = (select crypto_sha384_agg(x) from (select 1 as n, 'ab' as x union all select 2, 'cd' union all select 3, 'ef'));
+select '28_06', (select sha512_agg(x) from (select 1 as n, 'ab' as x union all select 2, 'cd' union all select 3, 'ef')) = (select crypto_sha512_agg(x) from (select 1 as n, 'ab' as x union all select 2, 'cd' union all select 3, 'ef'));
+select '28_07', (select xxh32_agg(x) from (select 1 as n, 'ab' as x union all select 2, 'cd' union all select 3, 'ef')) = (select crypto_xxh32_agg(x) from (select 1 as n, 'ab' as x union all select 2, 'cd' union all select 3, 'ef'));
+select '28_08', (select xxh64_agg(x) from (select 1 as n, 'ab' as x union all select 2, 'cd' union all select 3, 'ef')) = (select crypto_xxh64_agg(x) from (select 1 as n, 'ab' as x union all select 2, 'cd' union all select 3, 'ef'));
+select '28_09', (select xxh3_64_agg(x) from (select 1 as n, 'ab' as x union all select 2, 'cd' union all select 3, 'ef')) = (select crypto_xxh3_64_agg(x) from (select 1 as n, 'ab' as x union all select 2, 'cd' union all select 3, 'ef'));
+select '28_10', (select xxh3_128_agg(x) from (select 1 as n, 'ab' as x union all select 2, 'cd' union all select 3, 'ef')) = (select crypto_xxh3_128_agg(x) from (select 1 as n, 'ab' as x union all select 2, 'cd' union all select 3, 'ef'));
+
+-- many values, spanning many blocks and chunks
+select '29_01', (select blake3_agg(x) = blake3(group_concat(x, '')) from (with recursive s(n) as (select 1 union all select n + 1 from s where n < 3000) select n, printf('%d-', n) as x from s order by n));
+select '29_02', (select md5_agg(x) = md5(group_concat(x, '')) from (with recursive s(n) as (select 1 union all select n + 1 from s where n < 3000) select n, printf('%d-', n) as x from s order by n));
+select '29_03', (select sha1_agg(x) = sha1(group_concat(x, '')) from (with recursive s(n) as (select 1 union all select n + 1 from s where n < 3000) select n, printf('%d-', n) as x from s order by n));
+select '29_04', (select sha256_agg(x) = sha256(group_concat(x, '')) from (with recursive s(n) as (select 1 union all select n + 1 from s where n < 3000) select n, printf('%d-', n) as x from s order by n));
+select '29_05', (select sha384_agg(x) = sha384(group_concat(x, '')) from (with recursive s(n) as (select 1 union all select n + 1 from s where n < 3000) select n, printf('%d-', n) as x from s order by n));
+select '29_06', (select sha512_agg(x) = sha512(group_concat(x, '')) from (with recursive s(n) as (select 1 union all select n + 1 from s where n < 3000) select n, printf('%d-', n) as x from s order by n));
+select '29_07', (select xxh32_agg(x) = xxh32(group_concat(x, '')) from (with recursive s(n) as (select 1 union all select n + 1 from s where n < 3000) select n, printf('%d-', n) as x from s order by n));
+select '29_08', (select xxh64_agg(x) = xxh64(group_concat(x, '')) from (with recursive s(n) as (select 1 union all select n + 1 from s where n < 3000) select n, printf('%d-', n) as x from s order by n));
+select '29_09', (select xxh3_64_agg(x) = xxh3_64(group_concat(x, '')) from (with recursive s(n) as (select 1 union all select n + 1 from s where n < 3000) select n, printf('%d-', n) as x from s order by n));
+select '29_10', (select xxh3_128_agg(x) = xxh3_128(group_concat(x, '')) from (with recursive s(n) as (select 1 union all select n + 1 from s where n < 3000) select n, printf('%d-', n) as x from s order by n));

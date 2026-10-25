@@ -4,6 +4,7 @@ The `sqlean-crypto` extension provides hashing, encoding and decoding functions.
 
 [Concepts](#concepts) •
 [Hashing](#hashing-and-message-digest-functions) •
+[Hash aggregates](#hash-aggregates) •
 [Encoding/decoding](#encoding-and-decoding-functions) •
 [Installation and usage](#installation-and-usage)
 
@@ -172,6 +173,37 @@ Returns a XXH3_128 hash of the data as a blob.
 select hex(crypto_xxh3_128('abc'));
 -- 06B05AB6733A618578AF5F94892F3950
 ```
+
+## Hash aggregates
+
+```text
+crypto_blake3_agg(data)
+crypto_md5_agg(data)
+crypto_sha1_agg(data)
+crypto_sha256_agg(data)
+crypto_sha384_agg(data)
+crypto_sha512_agg(data)
+crypto_xxh32_agg(data)
+crypto_xxh64_agg(data)
+crypto_xxh3_64_agg(data)
+crypto_xxh3_128_agg(data)
+```
+
+Aggregate versions of the hash functions. Each one returns the hash of all the `data` values in the group, concatenated: `crypto_md5_agg` over `'a'`, `'b'` and `'c'` is the same as `crypto_md5('abc')`. The values are hashed as they come, without building the concatenation in memory, so the aggregates work for tables of any size.
+
+The hash depends on the order of the values, which SQL doesn't define. To get a stable result, order the values inside the call (SQLite 3.44+):
+
+```sql
+with t(id, data) as (values (1, 'a'), (2, 'b'), (3, 'c'))
+select hex(crypto_md5_agg(data order by id)) from t;
+-- 900150983CD24FB0D6963F7D28E17F72
+```
+
+The values are converted to bytes the same way as in the scalar functions. `NULL` values are skipped. With no rows, or only `NULL` values, the result is `NULL`.
+
+The values are concatenated without separators, so `'ab', 'c'` and `'a', 'bc'` give the same hash. If that matters, add a separator or the length to each value yourself, as in `crypto_sha256_agg(length(data) || ':' || data order by id)`.
+
+The aggregates can't be used as window functions: hashing has no way to remove a value from the hash when it leaves the window.
 
 ## Encoding and decoding functions
 

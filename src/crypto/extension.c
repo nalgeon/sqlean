@@ -59,28 +59,50 @@ static bool arg_data(sqlite3_context* context,
 
 #pragma region Hashing
 
-// Every hash algorithm is a one-shot function with this signature.
-typedef void (*hash_fn)(const uint8_t* data, size_t len, uint8_t* out);
-
-// Hash describes a hash algorithm.
+// Hash describes a hash algorithm: its one-shot function for the scalar
+// functions, and its incremental API for the aggregates.
 typedef struct {
     size_t size;  // digest size in bytes
-    hash_fn fn;
+    void (*hash)(const uint8_t* data, size_t len, uint8_t* out);
+    size_t ctx_size;  // context size in bytes
+    void (*init)(void* ctx);
+    void (*update)(void* ctx, const uint8_t* data, size_t len);
+    void (*final)(void* ctx, uint8_t* out);
 } Hash;
 
 // The largest digest size of all the algorithms.
 #define MAX_DIGEST_SIZE SHA512_DIGEST_SIZE
 
-static const Hash hash_blake3 = {BLAKE3_DIGEST_SIZE, blake3_hash};
-static const Hash hash_md5 = {MD5_DIGEST_SIZE, md5_hash};
-static const Hash hash_sha1 = {SHA1_DIGEST_SIZE, sha1_hash};
-static const Hash hash_sha256 = {SHA256_DIGEST_SIZE, sha256_hash};
-static const Hash hash_sha384 = {SHA384_DIGEST_SIZE, sha384_hash};
-static const Hash hash_sha512 = {SHA512_DIGEST_SIZE, sha512_hash};
-static const Hash hash_xxh32 = {XXH32_DIGEST_SIZE, xxh32_hash};
-static const Hash hash_xxh64 = {XXH64_DIGEST_SIZE, xxh64_hash};
-static const Hash hash_xxh3_64 = {XXH3_64_DIGEST_SIZE, xxh3_64_hash};
-static const Hash hash_xxh3_128 = {XXH3_128_DIGEST_SIZE, xxh3_128_hash};
+// The strictest alignment of all the contexts (xxh3_64_ctx).
+#define MAX_CTX_ALIGN 64
+
+// DEFINE_HASH defines hash_<name>, with adapters that give the incremental
+// functions of the algorithm a common signature.
+#define DEFINE_HASH(name, ctx_type, digest_size)                                           \
+    _Static_assert(digest_size <= MAX_DIGEST_SIZE, #name " digest too large");             \
+    _Static_assert(_Alignof(ctx_type) <= MAX_CTX_ALIGN, #name " context misaligned");      \
+    static void name##_init_any(void* ctx) {                                               \
+        name##_init(ctx);                                                                  \
+    }                                                                                      \
+    static void name##_update_any(void* ctx, const uint8_t* data, size_t len) {            \
+        name##_update(ctx, data, len);                                                     \
+    }                                                                                      \
+    static void name##_final_any(void* ctx, uint8_t* out) {                                \
+        name##_final(ctx, out);                                                            \
+    }                                                                                      \
+    static const Hash hash_##name = {digest_size,     name##_hash,       sizeof(ctx_type), \
+                                     name##_init_any, name##_update_any, name##_final_any}
+
+DEFINE_HASH(blake3, blake3_ctx, BLAKE3_DIGEST_SIZE);
+DEFINE_HASH(md5, md5_ctx, MD5_DIGEST_SIZE);
+DEFINE_HASH(sha1, sha1_ctx, SHA1_DIGEST_SIZE);
+DEFINE_HASH(sha256, sha256_ctx, SHA256_DIGEST_SIZE);
+DEFINE_HASH(sha384, sha384_ctx, SHA384_DIGEST_SIZE);
+DEFINE_HASH(sha512, sha512_ctx, SHA512_DIGEST_SIZE);
+DEFINE_HASH(xxh32, xxh32_ctx, XXH32_DIGEST_SIZE);
+DEFINE_HASH(xxh64, xxh64_ctx, XXH64_DIGEST_SIZE);
+DEFINE_HASH(xxh3_64, xxh3_64_ctx, XXH3_64_DIGEST_SIZE);
+DEFINE_HASH(xxh3_128, xxh3_128_ctx, XXH3_128_DIGEST_SIZE);
 
 // crypto_blake3(data)
 // crypto_md5(data)
@@ -106,9 +128,66 @@ static void fn_hash(sqlite3_context* context, int argc, sqlite3_value** argv) {
     }
 
     const Hash* hash = sqlite3_user_data(context);
-    assert(hash->size <= MAX_DIGEST_SIZE);
     uint8_t digest[MAX_DIGEST_SIZE];
-    hash->fn(data, len, digest);
+    hash->hash(data, len, digest);
+    sqlite3_result_blob(context, digest, (int)hash->size, SQLITE_TRANSIENT);
+}
+
+// The aggregate memory holds a flag byte telling whether the context is
+// initialized, followed by the context itself. SQLite only guarantees 8-byte
+// alignment for this memory, so the context starts at the first MAX_CTX_ALIGN
+// boundary after the flag.
+static void* agg_hash_ctx(uint8_t* mem) {
+    return mem + (MAX_CTX_ALIGN - (uintptr_t)mem % MAX_CTX_ALIGN);
+}
+
+// crypto_blake3_agg(data)
+// crypto_md5_agg(data)
+// crypto_sha1_agg(data)
+// crypto_sha256_agg(data)
+// crypto_sha384_agg(data)
+// crypto_sha512_agg(data)
+// crypto_xxh32_agg(data)
+// crypto_xxh64_agg(data)
+// crypto_xxh3_64_agg(data)
+// crypto_xxh3_128_agg(data)
+static void agg_hash_step(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    assert(argc == 1);
+    if (sqlite3_value_type(argv[0]) == SQLITE_NULL) {
+        return;
+    }
+
+    const uint8_t* data;
+    size_t len;
+    if (!arg_data(context, argv[0], &data, &len)) {
+        return;
+    }
+
+    const Hash* hash = sqlite3_user_data(context);
+    uint8_t* mem = sqlite3_aggregate_context(context, (int)(MAX_CTX_ALIGN + hash->ctx_size));
+    if (mem == NULL) {
+        sqlite3_result_error_nomem(context);
+        return;
+    }
+    void* ctx = agg_hash_ctx(mem);
+    if (mem[0] == 0) {
+        hash->init(ctx);
+        mem[0] = 1;
+    }
+    hash->update(ctx, data, len);
+}
+
+static void agg_hash_final(sqlite3_context* context) {
+    uint8_t* mem = sqlite3_aggregate_context(context, 0);
+    if (mem == NULL) {
+        // No rows, or only NULLs.
+        sqlite3_result_null(context);
+        return;
+    }
+
+    const Hash* hash = sqlite3_user_data(context);
+    uint8_t digest[MAX_DIGEST_SIZE];
+    hash->final(agg_hash_ctx(mem), digest);
     sqlite3_result_blob(context, digest, (int)hash->size, SQLITE_TRANSIENT);
 }
 
@@ -268,39 +347,64 @@ typedef struct {
     int nargs;
     int flags;
     const void* user_data;
+    // a scalar function has fn, an aggregate has step and final
     void (*fn)(sqlite3_context* context, int argc, sqlite3_value** argv);
+    void (*step)(sqlite3_context* context, int argc, sqlite3_value** argv);
+    void (*final)(sqlite3_context* context);
 } Function;
 
 static const Function functions[] = {
     // hashing
-    {"crypto_blake3", 1, FLAGS, &hash_blake3, fn_hash},
-    {"crypto_md5", 1, FLAGS, &hash_md5, fn_hash},
-    {"crypto_sha1", 1, FLAGS, &hash_sha1, fn_hash},
-    {"crypto_sha256", 1, FLAGS, &hash_sha256, fn_hash},
-    {"crypto_sha384", 1, FLAGS, &hash_sha384, fn_hash},
-    {"crypto_sha512", 1, FLAGS, &hash_sha512, fn_hash},
-    {"crypto_xxh32", 1, FLAGS, &hash_xxh32, fn_hash},
-    {"crypto_xxh64", 1, FLAGS, &hash_xxh64, fn_hash},
-    {"crypto_xxh3_64", 1, FLAGS, &hash_xxh3_64, fn_hash},
-    {"crypto_xxh3_128", 1, FLAGS, &hash_xxh3_128, fn_hash},
+    {"crypto_blake3", 1, FLAGS, &hash_blake3, fn_hash, 0, 0},
+    {"crypto_md5", 1, FLAGS, &hash_md5, fn_hash, 0, 0},
+    {"crypto_sha1", 1, FLAGS, &hash_sha1, fn_hash, 0, 0},
+    {"crypto_sha256", 1, FLAGS, &hash_sha256, fn_hash, 0, 0},
+    {"crypto_sha384", 1, FLAGS, &hash_sha384, fn_hash, 0, 0},
+    {"crypto_sha512", 1, FLAGS, &hash_sha512, fn_hash, 0, 0},
+    {"crypto_xxh32", 1, FLAGS, &hash_xxh32, fn_hash, 0, 0},
+    {"crypto_xxh64", 1, FLAGS, &hash_xxh64, fn_hash, 0, 0},
+    {"crypto_xxh3_64", 1, FLAGS, &hash_xxh3_64, fn_hash, 0, 0},
+    {"crypto_xxh3_128", 1, FLAGS, &hash_xxh3_128, fn_hash, 0, 0},
+
+    // hash aggregates
+    {"crypto_blake3_agg", 1, FLAGS, &hash_blake3, 0, agg_hash_step, agg_hash_final},
+    {"crypto_md5_agg", 1, FLAGS, &hash_md5, 0, agg_hash_step, agg_hash_final},
+    {"crypto_sha1_agg", 1, FLAGS, &hash_sha1, 0, agg_hash_step, agg_hash_final},
+    {"crypto_sha256_agg", 1, FLAGS, &hash_sha256, 0, agg_hash_step, agg_hash_final},
+    {"crypto_sha384_agg", 1, FLAGS, &hash_sha384, 0, agg_hash_step, agg_hash_final},
+    {"crypto_sha512_agg", 1, FLAGS, &hash_sha512, 0, agg_hash_step, agg_hash_final},
+    {"crypto_xxh32_agg", 1, FLAGS, &hash_xxh32, 0, agg_hash_step, agg_hash_final},
+    {"crypto_xxh64_agg", 1, FLAGS, &hash_xxh64, 0, agg_hash_step, agg_hash_final},
+    {"crypto_xxh3_64_agg", 1, FLAGS, &hash_xxh3_64, 0, agg_hash_step, agg_hash_final},
+    {"crypto_xxh3_128_agg", 1, FLAGS, &hash_xxh3_128, 0, agg_hash_step, agg_hash_final},
 
     // encoding
-    {"crypto_encode", 2, FLAGS, 0, fn_encode},
-    {"crypto_decode", 2, FLAGS, 0, fn_decode},
+    {"crypto_encode", 2, FLAGS, 0, fn_encode, 0, 0},
+    {"crypto_decode", 2, FLAGS, 0, fn_decode, 0, 0},
 
     // aliases
-    {"blake3", 1, FLAGS, &hash_blake3, fn_hash},
-    {"md5", 1, FLAGS, &hash_md5, fn_hash},
-    {"sha1", 1, FLAGS, &hash_sha1, fn_hash},
-    {"sha256", 1, FLAGS, &hash_sha256, fn_hash},
-    {"sha384", 1, FLAGS, &hash_sha384, fn_hash},
-    {"sha512", 1, FLAGS, &hash_sha512, fn_hash},
-    {"xxh32", 1, FLAGS, &hash_xxh32, fn_hash},
-    {"xxh64", 1, FLAGS, &hash_xxh64, fn_hash},
-    {"xxh3_64", 1, FLAGS, &hash_xxh3_64, fn_hash},
-    {"xxh3_128", 1, FLAGS, &hash_xxh3_128, fn_hash},
-    {"encode", 2, FLAGS, 0, fn_encode},
-    {"decode", 2, FLAGS, 0, fn_decode},
+    {"blake3", 1, FLAGS, &hash_blake3, fn_hash, 0, 0},
+    {"md5", 1, FLAGS, &hash_md5, fn_hash, 0, 0},
+    {"sha1", 1, FLAGS, &hash_sha1, fn_hash, 0, 0},
+    {"sha256", 1, FLAGS, &hash_sha256, fn_hash, 0, 0},
+    {"sha384", 1, FLAGS, &hash_sha384, fn_hash, 0, 0},
+    {"sha512", 1, FLAGS, &hash_sha512, fn_hash, 0, 0},
+    {"xxh32", 1, FLAGS, &hash_xxh32, fn_hash, 0, 0},
+    {"xxh64", 1, FLAGS, &hash_xxh64, fn_hash, 0, 0},
+    {"xxh3_64", 1, FLAGS, &hash_xxh3_64, fn_hash, 0, 0},
+    {"xxh3_128", 1, FLAGS, &hash_xxh3_128, fn_hash, 0, 0},
+    {"blake3_agg", 1, FLAGS, &hash_blake3, 0, agg_hash_step, agg_hash_final},
+    {"md5_agg", 1, FLAGS, &hash_md5, 0, agg_hash_step, agg_hash_final},
+    {"sha1_agg", 1, FLAGS, &hash_sha1, 0, agg_hash_step, agg_hash_final},
+    {"sha256_agg", 1, FLAGS, &hash_sha256, 0, agg_hash_step, agg_hash_final},
+    {"sha384_agg", 1, FLAGS, &hash_sha384, 0, agg_hash_step, agg_hash_final},
+    {"sha512_agg", 1, FLAGS, &hash_sha512, 0, agg_hash_step, agg_hash_final},
+    {"xxh32_agg", 1, FLAGS, &hash_xxh32, 0, agg_hash_step, agg_hash_final},
+    {"xxh64_agg", 1, FLAGS, &hash_xxh64, 0, agg_hash_step, agg_hash_final},
+    {"xxh3_64_agg", 1, FLAGS, &hash_xxh3_64, 0, agg_hash_step, agg_hash_final},
+    {"xxh3_128_agg", 1, FLAGS, &hash_xxh3_128, 0, agg_hash_step, agg_hash_final},
+    {"encode", 2, FLAGS, 0, fn_encode, 0, 0},
+    {"decode", 2, FLAGS, 0, fn_decode, 0, 0},
 };
 
 int crypto_init(sqlite3* db) {
@@ -308,7 +412,7 @@ int crypto_init(sqlite3* db) {
         const Function* f = &functions[i];
         // The user data is never written to, so casting away const is safe.
         int rc = sqlite3_create_function(db, f->name, f->nargs, f->flags, (void*)f->user_data,
-                                         f->fn, 0, 0);
+                                         f->fn, f->step, f->final);
         if (rc != SQLITE_OK) {
             return rc;
         }
