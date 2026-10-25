@@ -72,21 +72,10 @@ select name, body from sqlean_define where type = 'scalar';
 └───────┴───────────────────┘
 ```
 
-Scalar functions are compiled into prepared statements. SQLite requires these statements to be freed before the connection is closed. Unfortunately, there is no way to free them automatically. Therefore, always execute `define_free()` before disconnecting:
-
-```
-sqlite> .load dist/define
-sqlite> select define('subxy', '? - ?');
-...
-sqlite> select define_free();
-sqlite> .exit
-```
-
 To delete a scalar function, execute `undefine()`, then reconnect to the database:
 
 ```
 sqlite> select undefine('sumn');
-sqlite> select define_free();
 ... reconnect
 sqlite> select sumn(5);
 Parse error: no such function: sumn
@@ -237,7 +226,7 @@ SQLite versions before 3.50.0 don't apply this check to `CHECK` constraints, not
 
 ## Performance
 
-User-defined functions are compiled into prepared statements, so they are pretty fast even on large datasets.
+User-defined functions are compiled into prepared statements, so they are pretty fast even on large datasets. A scalar function compiles its body once per query, not once per call.
 
 Given 1M rows table with random data:
 
@@ -282,7 +271,7 @@ Defines a table-valued function and stores it in the `sqlean_define` table.
 
 `define_free()`
 
-Frees up occupied resources (compiled statements cache). Should always be called before disconnecting.
+Does nothing. Kept for compatibility: older versions required calling it before disconnecting.
 
 `eval(SQL[, SEPARATOR])`
 

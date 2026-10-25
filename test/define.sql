@@ -183,7 +183,9 @@ select '41_02', "f ""; drop table innocent; --"() = 1;
 select undefine('f "; drop table innocent; --');
 select '41_03', count(*) = 1 from sqlite_master where type = 'table' and name = 'innocent';
 
-select define_free();
+-- define_free does nothing, kept for compatibility
+select '42_01', define_free() is null;
+select '42_02', sumn(3) = 6;
 
 -- eval
 select '51_01', eval('select 42') = '42';
@@ -232,7 +234,6 @@ select '54_07', count(*) = 0 from sqlite_master where type = 'table' and name = 
 .load dist/define
 select define('plus', '? + 1');
 create virtual table half using define((select :x / 2 as value));
-select define_free();
 
 -- functions are loaded from sqlean_define on connect
 .open define.db
@@ -243,11 +244,9 @@ select '61_03', count(*) = 2 from sqlean_define;
 -- a function that fails to compile stops loading the rest (current behavior)
 insert into sqlean_define(name, type, body) values
   ('broken', 'scalar', 'nosuch(?)'), ('later', 'scalar', '? * 10');
-select define_free();
 
 .open define.db
 .load dist/define
 select '62_01', plus(1) = 2;
 select '62_02', count(*) = 0 from pragma_function_list where name in ('broken', 'later');
-select define_free();
 .shell rm -f define.db
