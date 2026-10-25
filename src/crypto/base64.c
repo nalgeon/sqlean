@@ -3,101 +3,104 @@
 
 // Base64 encoding/decoding (RFC 4648)
 
+#include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
-#include <stdlib.h>
-#include <string.h>
+
+#include "crypto/base64.h"
+#include "crypto/common.h"
 
 static const char base64_chars[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-uint8_t* base64_encode(const uint8_t* src, size_t len, size_t* out_len) {
-    uint8_t* encoded = NULL;
-    size_t i, j;
-    uint32_t octets;
+// Maps every byte to its base64 value plus one, so that the bytes
+// left out (the zeros) are the ones that are not base64 characters.
+static const uint8_t base64_table[256] = {
+    ['A'] = 1,  ['B'] = 2,  ['C'] = 3,  ['D'] = 4,  ['E'] = 5,  ['F'] = 6,  ['G'] = 7,  ['H'] = 8,
+    ['I'] = 9,  ['J'] = 10, ['K'] = 11, ['L'] = 12, ['M'] = 13, ['N'] = 14, ['O'] = 15, ['P'] = 16,
+    ['Q'] = 17, ['R'] = 18, ['S'] = 19, ['T'] = 20, ['U'] = 21, ['V'] = 22, ['W'] = 23, ['X'] = 24,
+    ['Y'] = 25, ['Z'] = 26, ['a'] = 27, ['b'] = 28, ['c'] = 29, ['d'] = 30, ['e'] = 31, ['f'] = 32,
+    ['g'] = 33, ['h'] = 34, ['i'] = 35, ['j'] = 36, ['k'] = 37, ['l'] = 38, ['m'] = 39, ['n'] = 40,
+    ['o'] = 41, ['p'] = 42, ['q'] = 43, ['r'] = 44, ['s'] = 45, ['t'] = 46, ['u'] = 47, ['v'] = 48,
+    ['w'] = 49, ['x'] = 50, ['y'] = 51, ['z'] = 52, ['0'] = 53, ['1'] = 54, ['2'] = 55, ['3'] = 56,
+    ['4'] = 57, ['5'] = 58, ['6'] = 59, ['7'] = 60, ['8'] = 61, ['9'] = 62, ['+'] = 63, ['/'] = 64,
+};
 
-    *out_len = ((len + 2) / 3) * 4;
-    encoded = malloc(*out_len + 1);
-    if (encoded == NULL) {
-        *out_len = 0;
-        return NULL;
-    }
+size_t base64_encoded_size(size_t len) {
+    // Each group of 3 bytes takes 4 characters, the last one padded with '='.
+    return groups_size(len, 3, 4);
+}
 
-    for (i = 0, j = 0; i < len; i += 3, j += 4) {
-        octets =
-            (src[i] << 16) | ((i + 1 < len ? src[i + 1] : 0) << 8) | (i + 2 < len ? src[i + 2] : 0);
-        encoded[j] = base64_chars[(octets >> 18) & 0x3f];
-        encoded[j + 1] = base64_chars[(octets >> 12) & 0x3f];
-        encoded[j + 2] = base64_chars[(octets >> 6) & 0x3f];
-        encoded[j + 3] = base64_chars[octets & 0x3f];
+size_t base64_encode(const uint8_t* src, size_t len, uint8_t* dst) {
+    size_t j = 0;
+    for (size_t i = 0; i < len; i += 3) {
+        uint32_t octets = ((uint32_t)src[i] << 16) |
+                          ((uint32_t)(i + 1 < len ? src[i + 1] : 0) << 8) |
+                          (uint32_t)(i + 2 < len ? src[i + 2] : 0);
+        dst[j++] = base64_chars[(octets >> 18) & 0x3f];
+        dst[j++] = base64_chars[(octets >> 12) & 0x3f];
+        dst[j++] = base64_chars[(octets >> 6) & 0x3f];
+        dst[j++] = base64_chars[octets & 0x3f];
     }
 
     if (len % 3 == 1) {
-        encoded[*out_len - 1] = '=';
-        encoded[*out_len - 2] = '=';
+        dst[j - 1] = '=';
+        dst[j - 2] = '=';
     } else if (len % 3 == 2) {
-        encoded[*out_len - 1] = '=';
+        dst[j - 1] = '=';
     }
-
-    encoded[*out_len] = '\0';
-    return encoded;
+    return j;
 }
 
-static const uint8_t base64_table[] = {
-    // Map base64 characters to their corresponding values
-    ['A'] = 0,  ['B'] = 1,  ['C'] = 2,  ['D'] = 3,  ['E'] = 4,  ['F'] = 5,  ['G'] = 6,  ['H'] = 7,
-    ['I'] = 8,  ['J'] = 9,  ['K'] = 10, ['L'] = 11, ['M'] = 12, ['N'] = 13, ['O'] = 14, ['P'] = 15,
-    ['Q'] = 16, ['R'] = 17, ['S'] = 18, ['T'] = 19, ['U'] = 20, ['V'] = 21, ['W'] = 22, ['X'] = 23,
-    ['Y'] = 24, ['Z'] = 25, ['a'] = 26, ['b'] = 27, ['c'] = 28, ['d'] = 29, ['e'] = 30, ['f'] = 31,
-    ['g'] = 32, ['h'] = 33, ['i'] = 34, ['j'] = 35, ['k'] = 36, ['l'] = 37, ['m'] = 38, ['n'] = 39,
-    ['o'] = 40, ['p'] = 41, ['q'] = 42, ['r'] = 43, ['s'] = 44, ['t'] = 45, ['u'] = 46, ['v'] = 47,
-    ['w'] = 48, ['x'] = 49, ['y'] = 50, ['z'] = 51, ['0'] = 52, ['1'] = 53, ['2'] = 54, ['3'] = 55,
-    ['4'] = 56, ['5'] = 57, ['6'] = 58, ['7'] = 59, ['8'] = 60, ['9'] = 61, ['+'] = 62, ['/'] = 63,
-};
+size_t base64_decoded_size(const uint8_t* src, size_t len) {
+    (void)src;
+    // Each group of 4 characters decodes into at most 3 bytes.
+    return len / 4 * 3;
+}
 
-uint8_t* base64_decode(const uint8_t* src, size_t len, size_t* out_len) {
+bool base64_decode(const uint8_t* src, size_t len, uint8_t* dst, size_t* out_len) {
+    // The input consists of full groups, with the last one padded with '='.
     if (len % 4 != 0) {
-        return NULL;
+        return false;
     }
-
     size_t padding = 0;
-    if (src[len - 1] == '=') {
+    if (len > 0 && src[len - 1] == '=') {
         padding++;
-    }
-    if (src[len - 2] == '=') {
-        padding++;
+        if (src[len - 2] == '=') {
+            padding++;
+        }
     }
 
-    *out_len = (len / 4) * 3 - padding;
-    uint8_t* decoded = malloc(*out_len);
-    if (decoded == NULL) {
-        *out_len = 0;
-        return NULL;
-    }
-
-    for (size_t i = 0, j = 0; i < len; i += 4, j += 3) {
+    // Every character but the padding must be a base64 one
+    // (so '=' anywhere else is invalid).
+    size_t data_len = len - padding;
+    size_t j = 0;
+    for (size_t i = 0; i < len; i += 4) {
         uint32_t block = 0;
         for (size_t k = 0; k < 4; k++) {
             block <<= 6;
-            if (src[i + k] == '=') {
-                padding--;
-            } else {
-                uint8_t index = base64_table[src[i + k]];
-                if (index == 0 && src[i + k] != 'A') {
-                    free(decoded);
-                    return NULL;
-                }
-                block |= index;
+            if (i + k >= data_len) {
+                continue;
             }
+            uint8_t value = base64_table[src[i + k]];
+            if (value == 0) {
+                return false;
+            }
+            block |= value - 1u;
         }
 
-        decoded[j] = (block >> 16) & 0xFF;
-        if (j + 1 < *out_len) {
-            decoded[j + 1] = (block >> 8) & 0xFF;
+        // A padded group holds fewer bytes. The padding bits
+        // of its last character are ignored.
+        size_t n_bytes = i + 4 <= data_len ? 3 : 3 - padding;
+        dst[j++] = (uint8_t)(block >> 16);
+        if (n_bytes > 1) {
+            dst[j++] = (uint8_t)(block >> 8);
         }
-        if (j + 2 < *out_len) {
-            decoded[j + 2] = block & 0xFF;
+        if (n_bytes > 2) {
+            dst[j++] = (uint8_t)block;
         }
     }
 
-    return decoded;
+    *out_len = j;
+    return true;
 }

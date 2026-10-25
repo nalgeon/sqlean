@@ -4,8 +4,9 @@
 // SQLite hash and encode/decode functions.
 
 #include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <string.h>
 
 #include "sqlite3ext.h"
@@ -22,237 +23,295 @@ SQLITE_EXTENSION_INIT3
 #include "crypto/url.h"
 #include "crypto/xxhash.h"
 
-// encoder/decoder function
-typedef uint8_t* (*encdec_fn)(const uint8_t* src, size_t len, size_t* out_len);
+#pragma region Helpers
 
-// Generic compute hash function. Algorithm is encoded in the user data field.
-static void crypto_hash(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    assert(argc == 1);
-
-    if (sqlite3_value_type(argv[0]) == SQLITE_NULL) {
-        return;
+// has_null reports whether any of the arguments is NULL.
+static bool has_null(int argc, sqlite3_value** argv) {
+    for (int i = 0; i < argc; i++) {
+        if (sqlite3_value_type(argv[i]) == SQLITE_NULL) {
+            return true;
+        }
     }
+    return false;
+}
 
-    void* (*init_func)() = NULL;
-    void (*update_func)(void*, void*, size_t) = NULL;
-    int (*final_func)(void*, void*) = NULL;
-    int algo = (intptr_t)sqlite3_user_data(context);
-
-    switch (algo) {
-        case 1: /* Hardened SHA1 */
-            init_func = (void*)sha1_init;
-            update_func = (void*)sha1_update;
-            final_func = (void*)sha1_final;
-            algo = 1;
-            break;
-        case 3: /* Blake3 */
-            init_func = (void*)blake3_init;
-            update_func = (void*)blake3_update;
-            final_func = (void*)blake3_final;
-            algo = 3;
-            break;
-        case 5: /* MD5 */
-            init_func = (void*)md5_init;
-            update_func = (void*)md5_update;
-            final_func = (void*)md5_final;
-            algo = 1;
-            break;
-        case 1032: /* XXH32 */
-            init_func = (void*)xxh32_init;
-            update_func = (void*)xxh32_update;
-            final_func = (void*)xxh32_final;
-            algo = 1;
-            break;
-        case 1064: /* XXH64 */
-            init_func = (void*)xxh64_init;
-            update_func = (void*)xxh64_update;
-            final_func = (void*)xxh64_final;
-            algo = 1;
-            break;
-        case 3064: /* XXH3 64-bit */
-            init_func = (void*)xxh3_64_init;
-            update_func = (void*)xxh3_64_update;
-            final_func = (void*)xxh3_64_final;
-            algo = 1;
-            break;
-        case 3128: /* XXH3 128-bit */
-            init_func = (void*)xxh3_128_init;
-            update_func = (void*)xxh3_128_update;
-            final_func = (void*)xxh3_128_final;
-            algo = 1;
-            break;
-        case 2256: /* SHA2-256 */
-            init_func = (void*)sha256_init;
-            update_func = (void*)sha256_update;
-            final_func = (void*)sha256_final;
-            algo = 1;
-            break;
-        case 2384: /* SHA2-384 */
-            init_func = (void*)sha384_init;
-            update_func = (void*)sha384_update;
-            final_func = (void*)sha384_final;
-            algo = 1;
-            break;
-        case 2512: /* SHA2-512 */
-            init_func = (void*)sha512_init;
-            update_func = (void*)sha512_update;
-            final_func = (void*)sha512_final;
-            algo = 1;
-            break;
-        default:
-            sqlite3_result_error(context, "unknown algorithm", -1);
-            return;
-    }
-
-    void* ctx = NULL;
-    if (algo) {
-        ctx = init_func();
-    }
-    if (!ctx) {
-        sqlite3_result_error(context, "could not allocate algorithm context", -1);
-        return;
-    }
-
-    void* data = NULL;
-    if (sqlite3_value_type(argv[0]) == SQLITE_BLOB) {
-        data = (void*)sqlite3_value_blob(argv[0]);
+// arg_data reads a data argument as bytes: a blob as is, and any other
+// value as its text representation. Sets a nomem error and returns false
+// if the conversion fails. The data may be NULL if len is 0.
+static bool arg_data(sqlite3_context* context,
+                     sqlite3_value* value,
+                     const uint8_t** data,
+                     size_t* len) {
+    if (sqlite3_value_type(value) == SQLITE_BLOB) {
+        *data = sqlite3_value_blob(value);
     } else {
-        data = (void*)sqlite3_value_text(argv[0]);
+        *data = sqlite3_value_text(value);
     }
-
-    size_t datalen = sqlite3_value_bytes(argv[0]);
-    if (datalen > 0) {
-        update_func(ctx, data, datalen);
+    *len = (size_t)sqlite3_value_bytes(value);
+    if (*data == NULL && *len > 0) {
+        sqlite3_result_error_nomem(context);
+        return false;
     }
-
-    unsigned char hash[128] = {0};
-    int hashlen = final_func(ctx, hash);
-    sqlite3_result_blob(context, hash, hashlen, SQLITE_TRANSIENT);
+    return true;
 }
 
-// Encodes binary data into a textual representation using the specified encoder.
-static void encode(sqlite3_context* context, int argc, sqlite3_value** argv, encdec_fn encode_fn) {
+#pragma endregion
+
+#pragma region Hashing
+
+// Every hash algorithm is a one-shot function with this signature.
+typedef void (*hash_fn)(const uint8_t* data, size_t len, uint8_t* out);
+
+// Hash describes a hash algorithm.
+typedef struct {
+    size_t size;  // digest size in bytes
+    hash_fn fn;
+} Hash;
+
+// The largest digest size of all the algorithms.
+#define MAX_DIGEST_SIZE SHA512_DIGEST_SIZE
+
+static const Hash hash_blake3 = {BLAKE3_OUT_LEN, blake3_hash};
+static const Hash hash_md5 = {MD5_DIGEST_SIZE, md5_hash};
+static const Hash hash_sha1 = {SHA1_DIGEST_SIZE, sha1_hash};
+static const Hash hash_sha256 = {SHA256_DIGEST_SIZE, sha256_hash};
+static const Hash hash_sha384 = {SHA384_DIGEST_SIZE, sha384_hash};
+static const Hash hash_sha512 = {SHA512_DIGEST_SIZE, sha512_hash};
+static const Hash hash_xxh32 = {XXH32_DIGEST_SIZE, xxh32_hash};
+static const Hash hash_xxh64 = {XXH64_DIGEST_SIZE, xxh64_hash};
+static const Hash hash_xxh3_64 = {XXH3_64_DIGEST_SIZE, xxh3_64_hash};
+static const Hash hash_xxh3_128 = {XXH3_128_DIGEST_SIZE, xxh3_128_hash};
+
+// crypto_blake3(data)
+// crypto_md5(data)
+// crypto_sha1(data)
+// crypto_sha256(data)
+// crypto_sha384(data)
+// crypto_sha512(data)
+// crypto_xxh32(data)
+// crypto_xxh64(data)
+// crypto_xxh3_64(data)
+// crypto_xxh3_128(data)
+static void fn_hash(sqlite3_context* context, int argc, sqlite3_value** argv) {
     assert(argc == 1);
-    if (sqlite3_value_type(argv[0]) == SQLITE_NULL) {
+    if (has_null(argc, argv)) {
         sqlite3_result_null(context);
         return;
     }
-    size_t source_len = sqlite3_value_bytes(argv[0]);
-    const uint8_t* source = (uint8_t*)sqlite3_value_blob(argv[0]);
-    size_t result_len = 0;
-    const char* result = (char*)encode_fn(source, source_len, &result_len);
-    sqlite3_result_text(context, result, -1, free);
+
+    const uint8_t* data;
+    size_t len;
+    if (!arg_data(context, argv[0], &data, &len)) {
+        return;
+    }
+
+    const Hash* hash = sqlite3_user_data(context);
+    assert(hash->size <= MAX_DIGEST_SIZE);
+    uint8_t digest[MAX_DIGEST_SIZE];
+    hash->fn(data, len, digest);
+    sqlite3_result_blob(context, digest, (int)hash->size, SQLITE_TRANSIENT);
 }
 
-// Encodes binary data into a textual representation using the specified algorithm.
-// encode('hello', 'base64') = 'aGVsbG8='
-static void crypto_encode(sqlite3_context* context, int argc, sqlite3_value** argv) {
+#pragma endregion
+
+#pragma region Encoding
+
+// Codec describes a binary-to-text encoding.
+typedef struct {
+    const char* name;
+    size_t (*encoded_size)(size_t len);
+    size_t (*encode)(const uint8_t* src, size_t len, uint8_t* dst);
+    size_t (*decoded_size)(const uint8_t* src, size_t len);
+    bool (*decode)(const uint8_t* src, size_t len, uint8_t* dst, size_t* out_len);
+} Codec;
+
+static const Codec codecs[] = {
+    {"base32", base32_encoded_size, base32_encode, base32_decoded_size, base32_decode},
+    {"base64", base64_encoded_size, base64_encode, base64_decoded_size, base64_decode},
+    {"base85", base85_encoded_size, base85_encode, base85_decoded_size, base85_decode},
+    {"hex", hex_encoded_size, hex_encode, hex_decoded_size, hex_decode},
+    {"url", url_encoded_size, url_encode, url_decoded_size, url_decode},
+};
+
+// arg_codec decodes an encoding name argument. Encoding names are spec
+// arguments, so an invalid one is an error, not NULL. Sets the error and
+// returns NULL if the value is not a known encoding name.
+static const Codec* arg_codec(sqlite3_context* context, sqlite3_value* value) {
+    if (sqlite3_value_type(value) == SQLITE_BLOB) {
+        sqlite3_result_error(context, "encoding name should be text", -1);
+        return NULL;
+    }
+    const char* name = (const char*)sqlite3_value_text(value);
+    if (name == NULL) {
+        sqlite3_result_error_nomem(context);
+        return NULL;
+    }
+
+    for (size_t i = 0; i < sizeof(codecs) / sizeof(codecs[0]); i++) {
+        if (strcmp(name, codecs[i].name) == 0) {
+            return &codecs[i];
+        }
+    }
+
+    char* msg = sqlite3_mprintf("unknown encoding: %s", name);
+    if (msg == NULL) {
+        sqlite3_result_error_nomem(context);
+        return NULL;
+    }
+    sqlite3_result_error(context, msg, -1);
+    sqlite3_free(msg);
+    return NULL;
+}
+
+// alloc_buf allocates a result buffer of the given size (non-zero).
+// Sets an error and returns NULL if the allocation fails.
+static uint8_t* alloc_buf(sqlite3_context* context, size_t size) {
+    assert(size > 0);
+    if (size == SIZE_MAX) {
+        // The size does not fit into size_t (see the *_size functions).
+        sqlite3_result_error_toobig(context);
+        return NULL;
+    }
+    uint8_t* buf = sqlite3_malloc64(size);
+    if (buf == NULL) {
+        sqlite3_result_error_nomem(context);
+        return NULL;
+    }
+    return buf;
+}
+
+// crypto_encode(data, encoding)
+static void fn_encode(sqlite3_context* context, int argc, sqlite3_value** argv) {
     assert(argc == 2);
-    size_t n = sqlite3_value_bytes(argv[1]);
-    const char* format = (char*)sqlite3_value_text(argv[1]);
-    if (strncmp(format, "base32", n) == 0) {
-        encode(context, 1, argv, base32_encode);
-        return;
-    }
-    if (strncmp(format, "base64", n) == 0) {
-        encode(context, 1, argv, base64_encode);
-        return;
-    }
-    if (strncmp(format, "base85", n) == 0) {
-        encode(context, 1, argv, base85_encode);
-        return;
-    }
-    if (strncmp(format, "hex", n) == 0) {
-        encode(context, 1, argv, hex_encode);
-        return;
-    }
-    if (strncmp(format, "url", n) == 0) {
-        encode(context, 1, argv, url_encode);
-        return;
-    }
-    sqlite3_result_error(context, "unknown encoding", -1);
-}
-
-// Decodes binary data from a textual representation using the specified decoder.
-static void decode(sqlite3_context* context, int argc, sqlite3_value** argv, encdec_fn decode_fn) {
-    assert(argc == 1);
-    if (sqlite3_value_type(argv[0]) == SQLITE_NULL) {
+    if (has_null(argc, argv)) {
         sqlite3_result_null(context);
         return;
     }
 
-    size_t source_len = sqlite3_value_bytes(argv[0]);
-    const uint8_t* source = (uint8_t*)sqlite3_value_text(argv[0]);
-    if (source_len == 0) {
+    const Codec* codec = arg_codec(context, argv[1]);
+    if (codec == NULL) {
+        return;
+    }
+    const uint8_t* data;
+    size_t len;
+    if (!arg_data(context, argv[0], &data, &len)) {
+        return;
+    }
+
+    size_t size = codec->encoded_size(len);
+    if (size == 0) {
+        sqlite3_result_text(context, "", 0, SQLITE_STATIC);
+        return;
+    }
+    uint8_t* buf = alloc_buf(context, size);
+    if (buf == NULL) {
+        return;
+    }
+    size_t n = codec->encode(data, len, buf);
+    assert(n <= size);
+    // The encodings are ASCII, so the result is valid UTF-8.
+    sqlite3_result_text64(context, (const char*)buf, n, sqlite3_free, SQLITE_UTF8);
+}
+
+// crypto_decode(text, encoding)
+static void fn_decode(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    assert(argc == 2);
+    if (has_null(argc, argv)) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    const Codec* codec = arg_codec(context, argv[1]);
+    if (codec == NULL) {
+        return;
+    }
+    const uint8_t* data;
+    size_t len;
+    if (!arg_data(context, argv[0], &data, &len)) {
+        return;
+    }
+
+    size_t size = codec->decoded_size(data, len);
+    if (size == 0) {
+        // Nothing to write, but the input may still be invalid (e.g. '=').
+        size_t n;
+        uint8_t dummy;
+        if (!codec->decode(data, len, &dummy, &n)) {
+            sqlite3_result_null(context);
+            return;
+        }
+        assert(n == 0);
         sqlite3_result_zeroblob(context, 0);
         return;
     }
-
-    size_t result_len = 0;
-    const uint8_t* result = decode_fn(source, source_len, &result_len);
-    if (result == NULL) {
-        sqlite3_result_error(context, "invalid input string", -1);
+    uint8_t* buf = alloc_buf(context, size);
+    if (buf == NULL) {
         return;
     }
-
-    sqlite3_result_blob(context, result, result_len, free);
+    size_t n;
+    if (!codec->decode(data, len, buf, &n)) {
+        sqlite3_free(buf);
+        sqlite3_result_null(context);
+        return;
+    }
+    assert(n <= size);
+    sqlite3_result_blob64(context, buf, n, sqlite3_free);
 }
 
-// Decodes binary data from a textual representation using the specified algorithm.
-// decode('aGVsbG8=', 'base64') = cast('hello' as blob)
-static void crypto_decode(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    assert(argc == 2);
-    size_t n = sqlite3_value_bytes(argv[1]);
-    const char* format = (char*)sqlite3_value_text(argv[1]);
-    if (strncmp(format, "base32", n) == 0) {
-        decode(context, 1, argv, base32_decode);
-        return;
-    }
-    if (strncmp(format, "base64", n) == 0) {
-        decode(context, 1, argv, base64_decode);
-        return;
-    }
-    if (strncmp(format, "base85", n) == 0) {
-        decode(context, 1, argv, base85_decode);
-        return;
-    }
-    if (strncmp(format, "hex", n) == 0) {
-        decode(context, 1, argv, hex_decode);
-        return;
-    }
-    if (strncmp(format, "url", n) == 0) {
-        decode(context, 1, argv, url_decode);
-        return;
-    }
-    sqlite3_result_error(context, "unknown encoding", -1);
-}
+#pragma endregion
+
+#define FLAGS (SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC)
+
+// Function describes an SQL function to register.
+typedef struct {
+    const char* name;
+    int nargs;
+    int flags;
+    const void* user_data;
+    void (*fn)(sqlite3_context* context, int argc, sqlite3_value** argv);
+} Function;
+
+static const Function functions[] = {
+    // hashing
+    {"crypto_blake3", 1, FLAGS, &hash_blake3, fn_hash},
+    {"crypto_md5", 1, FLAGS, &hash_md5, fn_hash},
+    {"crypto_sha1", 1, FLAGS, &hash_sha1, fn_hash},
+    {"crypto_sha256", 1, FLAGS, &hash_sha256, fn_hash},
+    {"crypto_sha384", 1, FLAGS, &hash_sha384, fn_hash},
+    {"crypto_sha512", 1, FLAGS, &hash_sha512, fn_hash},
+    {"crypto_xxh32", 1, FLAGS, &hash_xxh32, fn_hash},
+    {"crypto_xxh64", 1, FLAGS, &hash_xxh64, fn_hash},
+    {"crypto_xxh3_64", 1, FLAGS, &hash_xxh3_64, fn_hash},
+    {"crypto_xxh3_128", 1, FLAGS, &hash_xxh3_128, fn_hash},
+
+    // encoding
+    {"crypto_encode", 2, FLAGS, 0, fn_encode},
+    {"crypto_decode", 2, FLAGS, 0, fn_decode},
+
+    // aliases
+    {"blake3", 1, FLAGS, &hash_blake3, fn_hash},
+    {"md5", 1, FLAGS, &hash_md5, fn_hash},
+    {"sha1", 1, FLAGS, &hash_sha1, fn_hash},
+    {"sha256", 1, FLAGS, &hash_sha256, fn_hash},
+    {"sha384", 1, FLAGS, &hash_sha384, fn_hash},
+    {"sha512", 1, FLAGS, &hash_sha512, fn_hash},
+    {"xxh32", 1, FLAGS, &hash_xxh32, fn_hash},
+    {"xxh64", 1, FLAGS, &hash_xxh64, fn_hash},
+    {"xxh3_64", 1, FLAGS, &hash_xxh3_64, fn_hash},
+    {"xxh3_128", 1, FLAGS, &hash_xxh3_128, fn_hash},
+    {"encode", 2, FLAGS, 0, fn_encode},
+    {"decode", 2, FLAGS, 0, fn_decode},
+};
 
 int crypto_init(sqlite3* db) {
-    static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
-    sqlite3_create_function(db, "crypto_blake3", 1, flags, (void*)3, crypto_hash, 0, 0);
-    sqlite3_create_function(db, "blake3", 1, flags, (void*)3, crypto_hash, 0, 0);
-    sqlite3_create_function(db, "crypto_md5", 1, flags, (void*)5, crypto_hash, 0, 0);
-    sqlite3_create_function(db, "md5", 1, flags, (void*)5, crypto_hash, 0, 0);
-    sqlite3_create_function(db, "crypto_sha1", 1, flags, (void*)1, crypto_hash, 0, 0);
-    sqlite3_create_function(db, "sha1", 1, flags, (void*)1, crypto_hash, 0, 0);
-    sqlite3_create_function(db, "crypto_sha256", 1, flags, (void*)2256, crypto_hash, 0, 0);
-    sqlite3_create_function(db, "sha256", 1, flags, (void*)2256, crypto_hash, 0, 0);
-    sqlite3_create_function(db, "crypto_sha384", 1, flags, (void*)2384, crypto_hash, 0, 0);
-    sqlite3_create_function(db, "sha384", 1, flags, (void*)2384, crypto_hash, 0, 0);
-    sqlite3_create_function(db, "crypto_sha512", 1, flags, (void*)2512, crypto_hash, 0, 0);
-    sqlite3_create_function(db, "sha512", 1, flags, (void*)2512, crypto_hash, 0, 0);
-    sqlite3_create_function(db, "crypto_xxh32", 1, flags, (void*)1032, crypto_hash, 0, 0);
-    sqlite3_create_function(db, "xxh32", 1, flags, (void*)1032, crypto_hash, 0, 0);
-    sqlite3_create_function(db, "crypto_xxh64", 1, flags, (void*)1064, crypto_hash, 0, 0);
-    sqlite3_create_function(db, "xxh64", 1, flags, (void*)1064, crypto_hash, 0, 0);
-    sqlite3_create_function(db, "crypto_xxh3_64", 1, flags, (void*)3064, crypto_hash, 0, 0);
-    sqlite3_create_function(db, "xxh3_64", 1, flags, (void*)3064, crypto_hash, 0, 0);
-    sqlite3_create_function(db, "crypto_xxh3_128", 1, flags, (void*)3128, crypto_hash, 0, 0);
-    sqlite3_create_function(db, "xxh3_128", 1, flags, (void*)3128, crypto_hash, 0, 0);
-
-    sqlite3_create_function(db, "crypto_encode", 2, flags, 0, crypto_encode, 0, 0);
-    sqlite3_create_function(db, "encode", 2, flags, 0, crypto_encode, 0, 0);
-    sqlite3_create_function(db, "crypto_decode", 2, flags, 0, crypto_decode, 0, 0);
-    sqlite3_create_function(db, "decode", 2, flags, 0, crypto_decode, 0, 0);
+    for (size_t i = 0; i < sizeof(functions) / sizeof(functions[0]); i++) {
+        const Function* f = &functions[i];
+        // The user data is never written to, so casting away const is safe.
+        int rc = sqlite3_create_function(db, f->name, f->nargs, f->flags, (void*)f->user_data,
+                                         f->fn, 0, 0);
+        if (rc != SQLITE_OK) {
+            return rc;
+        }
+    }
     return SQLITE_OK;
 }
