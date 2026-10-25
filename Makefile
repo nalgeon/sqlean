@@ -256,8 +256,13 @@ test:
 
 # C tests as <package>/<module>, each compiling test/<package>/<module>.test.c
 # together with the sources listed in CTEST_SRC_<package>_<module>.
-CTESTS := crypto/base85 text/bstring text/rstring text/utf8 time/time time/duration
+CTESTS := crypto/base32 crypto/base64 crypto/base85 crypto/hash crypto/hex crypto/url text/bstring text/rstring text/utf8 time/time time/duration
+CTEST_SRC_crypto_base32 := src/crypto/base32.c
+CTEST_SRC_crypto_base64 := src/crypto/base64.c
 CTEST_SRC_crypto_base85 := src/crypto/base85.c
+CTEST_SRC_crypto_hash := src/crypto/md5.c src/crypto/sha1.c src/crypto/sha2.c src/crypto/blake3.c src/crypto/xxhash.c
+CTEST_SRC_crypto_hex := src/crypto/hex.c
+CTEST_SRC_crypto_url := src/crypto/url.c
 CTEST_SRC_text_bstring := src/text/*.c src/text/*/*.c
 CTEST_SRC_text_rstring := src/text/*.c src/text/*/*.c
 CTEST_SRC_text_utf8 := src/text/utf8/*.c
