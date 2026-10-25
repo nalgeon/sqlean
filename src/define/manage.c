@@ -261,6 +261,31 @@ int define_save_function(sqlite3* db, const char* name, const char* type, const 
     return SQLITE_OK;
 }
 
+// define_check_tail checks that the SQL text left after the first statement of a body
+// has no more statements (only whitespace, semicolons and comments), and returns
+// SQLITE_OK, SQLITE_ERROR with the message in errmsg (to free), or another error code.
+int define_check_tail(sqlite3* db, const char* tail, char** errmsg) {
+    *errmsg = NULL;
+    while (*tail != '\0') {
+        sqlite3_stmt* stmt;
+        const char* next;
+        int ret = sqlite3_prepare_v2(db, tail, -1, &stmt, &next);
+        if (ret == SQLITE_NOMEM) {
+            return ret;
+        }
+        sqlite3_finalize(stmt);
+        if (ret != SQLITE_OK || stmt != NULL) {
+            *errmsg = sqlite3_mprintf("function body must be a single statement");
+            return *errmsg == NULL ? SQLITE_NOMEM : SQLITE_ERROR;
+        }
+        if (next == tail) {
+            break;
+        }
+        tail = next;
+    }
+    return SQLITE_OK;
+}
+
 // result_db_error reports an error with the code and the connection's error message.
 static void result_db_error(sqlite3_context* ctx, sqlite3* db, int code) {
     sqlite3_result_error(ctx, sqlite3_errmsg(db), -1);
@@ -340,22 +365,33 @@ end:
 
 // compile_body compiles the function body to validate it and count its parameters,
 // and returns SQLITE_OK or an error code. On success, sets sql to the statement
-// to execute, which the caller must free.
-static int compile_body(sqlite3* db, const char* body, char** sql, int* nparams) {
+// to execute, which the caller must free. If errmsg is not NULL, the body must be
+// a single statement, otherwise the statements after the first one are ignored
+// (bodies saved by older versions may have them). On SQLITE_ERROR, errmsg is set
+// to the message (to free), or NULL if it's the connection's error message.
+static int compile_body(sqlite3* db, const char* body, char** sql, int* nparams, char** errmsg) {
+    if (errmsg != NULL) {
+        *errmsg = NULL;
+    }
     *sql = sqlite3_mprintf("select %s", body);
     if (*sql == NULL) {
         return SQLITE_NOMEM;
     }
     sqlite3_stmt* stmt;
-    int ret = sqlite3_prepare_v2(db, *sql, -1, &stmt, NULL);
+    const char* tail;
+    int ret = sqlite3_prepare_v2(db, *sql, -1, &stmt, &tail);
+    if (ret == SQLITE_OK) {
+        *nparams = sqlite3_bind_parameter_count(stmt);
+        sqlite3_finalize(stmt);
+        if (errmsg != NULL) {
+            ret = define_check_tail(db, tail, errmsg);
+        }
+    }
     if (ret != SQLITE_OK) {
         sqlite3_free(*sql);
         *sql = NULL;
-        return ret;
     }
-    *nparams = sqlite3_bind_parameter_count(stmt);
-    sqlite3_finalize(stmt);
-    return SQLITE_OK;
+    return ret;
 }
 
 // register_function registers a new defined function in the connection and the registry,
@@ -385,7 +421,7 @@ static int register_function(sqlite3* db, registry* reg, const char* name, char*
 static int load_function(sqlite3* db, registry* reg, const char* name, const char* body) {
     char* sql;
     int nparams;
-    int ret = compile_body(db, body, &sql, &nparams);
+    int ret = compile_body(db, body, &sql, &nparams, NULL);
     if (ret == SQLITE_NOMEM) {
         return ret;
     }
@@ -517,8 +553,14 @@ static void define_function(sqlite3_context* ctx, int argc, sqlite3_value** argv
 
     char* sql = NULL;
     char* type = NULL;
+    char* errmsg;
     int nparams;
-    int ret = compile_body(db, body, &sql, &nparams);
+    int ret = compile_body(db, body, &sql, &nparams, &errmsg);
+    if (errmsg != NULL) {
+        sqlite3_result_error(ctx, errmsg, -1);
+        sqlite3_free(errmsg);
+        return;
+    }
     if (ret != SQLITE_OK) {
         result_db_error(ctx, db, ret);
         return;

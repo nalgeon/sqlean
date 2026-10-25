@@ -223,6 +223,42 @@ static void test_load(void) {
     printf("OK\n");
 }
 
+static void test_load_tables(void) {
+    printf("test_load_tables...");
+    remove_db();
+    sqlite3* db = open_db(DB_PATH);
+    exec_ok(db, "create virtual table half using define((select :x / 2 as value))");
+    // a table function saved by an older version, with several statements
+    exec_ok(db, "pragma writable_schema = on");
+    exec_ok(db,
+            "insert into sqlite_master(type, name, tbl_name, rootpage, sql) values "
+            "('table', 'oldmulti', 'oldmulti', 0, "
+            "'CREATE VIRTUAL TABLE oldmulti USING define((select 1 as a; select 2 as b))')");
+    exec_ok(db,
+            "insert into sqlean_define(name, type, body) values "
+            "('oldmulti', 'table', '(select 1 as a; select 2 as b)')");
+    close_db(db);
+
+    // connects to it, ignoring the statements after the first one
+    db = open_db(DB_PATH);
+    assert(query_int(db, "select a from oldmulti") == 1);
+    assert(query_int(db, "select count(*) from pragma_table_info('oldmulti')") == 1);
+    close_db(db);
+
+    // table functions work in a read-only database
+    sqlite3_open_v2(DB_PATH, &db, SQLITE_OPEN_READONLY, NULL);
+    assert(define_init(db) == SQLITE_OK);
+    assert(query_int(db, "select value from half(10)") == 5);
+    assert(query_int(db, "select a from oldmulti") == 1);
+    // but can't be created
+    Result res = exec(db, "create virtual table third using define((select :x / 3 as value))");
+    assert(res.rc == SQLITE_READONLY);
+    close_db(db);
+
+    remove_db();
+    printf("OK\n");
+}
+
 #pragma endregion
 
 #pragma region Errors
@@ -233,6 +269,10 @@ static const ErrorTest define_errors[] = {
     {"select define('f', '')", SQLITE_ERROR, "incomplete input"},
     {"select define('f', 'from')", SQLITE_ERROR, "near \"from\": syntax error"},
     {"select define('f', 'nosuch(?)')", SQLITE_ERROR, "no such function: nosuch"},
+    {"select define('f', '1; select 2')", SQLITE_ERROR, "function body must be a single statement"},
+    {"select define('f', '1; delete from data')", SQLITE_ERROR,
+     "function body must be a single statement"},
+    {"select define('f', '1; garbage')", SQLITE_ERROR, "function body must be a single statement"},
     {"select define('abs', 'abs(?)')", SQLITE_ERROR, "function already exists: abs"},
     {"select define('ABS', '1')", SQLITE_ERROR, "function already exists: ABS"},
     {"select define('half', '1')", SQLITE_ERROR, "table function already exists: half"},
@@ -243,6 +283,7 @@ static const ErrorTest define_errors[] = {
 static void test_define_errors(void) {
     printf("test_define_errors...");
     sqlite3* db = open_db(":memory:");
+    exec_ok(db, "create table data(x)");
     exec_ok(db, "select define('answer', '42')");
     exec_ok(db, "select define('overflow', 'abs(-9223372036854775808)')");
     exec_ok(db, "create virtual table half using define((select :x / 2 as value))");
@@ -270,6 +311,8 @@ static const ErrorTest table_errors[] = {
      "Statement must be read only."},
     {"create virtual table t using define((select 1 as a, 2 as a))", SQLITE_ERROR,
      "duplicate column name: a"},
+    {"create virtual table t using define((select 1 as a; select 2 as b))", SQLITE_ERROR,
+     "function body must be a single statement"},
     // parameters accept only equality constraints
     {"select * from half where x > 1", SQLITE_ERROR, "no query solution"},
     // a runtime error in the body
@@ -666,6 +709,7 @@ int main(void) {
     // Init
     test_init();
     test_load();
+    test_load_tables();
 
     // Errors
     test_define_errors();

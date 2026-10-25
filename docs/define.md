@@ -46,6 +46,8 @@ select subxy4(5, 1);
 4
 ```
 
+The body is a single expression, optionally followed by other parts of a `select` (such as `from` or `where`). It must be a single statement: `define('f', '1; select 2')` fails with `function body must be a single statement`.
+
 When calling a function with anonymous or named parameters, one should pass the arguments in the order of appearance in the function definition. For example, if the function is defined as `:x - :y`, there is no way to pass `y` value first.
 
 Functions can use other scalar functions - both built-in and user-defined. For example, the function that returns a random integer `N` such that `a <= N <= b` can be defined as:
@@ -153,7 +155,9 @@ select id, left, right from data, strcut(data.value, ';');
 └────┴───────┴───────┘
 ```
 
-The function body can be any select statement [supported by SQLite](https://www.sqlite.org/lang_select.html).
+The function body can be any select statement [supported by SQLite](https://www.sqlite.org/lang_select.html), but only one.
+
+Table-valued functions work in read-only databases, but can't be created there.
 
 To list defined table-valued functions, select them from the `sqlean_define` table:
 

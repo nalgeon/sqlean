@@ -8,6 +8,7 @@
 
 #include <assert.h>
 #include <limits.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -99,15 +100,18 @@ static int define_vtab_destroy(sqlite3_vtab* pVTab) {
     return define_vtab_disconnect(pVTab);
 }
 
-// define_vtab_create creates the table function from the body in argv[3],
-// declares its table and saves it to sqlean_define. The body must be
-// a parenthesized read-only statement.
-static int define_vtab_create(sqlite3* db,
-                              void* pAux,
-                              int argc,
-                              const char* const* argv,
-                              sqlite3_vtab** ppVtab,
-                              char** pzErr) {
+// define_vtab_init declares the table of the table function from the body in argv[3].
+// The body must be a parenthesized read-only statement. When creating a new function,
+// the body must be a single statement, and the function is saved to sqlean_define.
+// When connecting to an existing one, the statements after the first one are ignored
+// (bodies saved by older versions may have them), and nothing is written, so that
+// the function works in a read-only database.
+static int define_vtab_init(sqlite3* db,
+                            int argc,
+                            const char* const* argv,
+                            sqlite3_vtab** ppVtab,
+                            char** pzErr,
+                            bool is_new) {
     size_t len;
     if (argc < 4 || (len = strlen(argv[3])) < 3) {
         if (!(*pzErr = sqlite3_mprintf("no statement provided")))
@@ -142,9 +146,13 @@ static int define_vtab_create(sqlite3* db,
         goto error;
     }
 
-    ret = sqlite3_prepare_v2(db, vtab->sql, vtab->sql_len, &stmt, NULL);
+    const char* tail;
+    ret = sqlite3_prepare_v2(db, vtab->sql, vtab->sql_len, &stmt, &tail);
     if (ret != SQLITE_OK) {
         goto sqlite_error;
+    }
+    if (is_new && (ret = define_check_tail(db, tail, pzErr)) != SQLITE_OK) {
+        goto error;
     }
 
     if (!sqlite3_stmt_readonly(stmt)) {
@@ -166,7 +174,7 @@ static int define_vtab_create(sqlite3* db,
         goto sqlite_error;
     }
 
-    if ((ret = define_save_function(db, argv[2], "table", argv[3])) != SQLITE_OK) {
+    if (is_new && (ret = define_save_function(db, argv[2], "table", argv[3])) != SQLITE_OK) {
         goto sqlite_error;
     }
 
@@ -185,16 +193,26 @@ error:
     return ret;
 }
 
-// define_vtab_connect connects to an existing table function, same as define_vtab_create.
-// It's a separate function, because if both pointed to the same one, SQLite would make
-// define_vtab eponymous, which we don't want.
+// define_vtab_create creates a new table function (see define_vtab_init).
+static int define_vtab_create(sqlite3* db,
+                              void* pAux,
+                              int argc,
+                              const char* const* argv,
+                              sqlite3_vtab** ppVtab,
+                              char** pzErr) {
+    return define_vtab_init(db, argc, argv, ppVtab, pzErr, true);
+}
+
+// define_vtab_connect connects to an existing table function (see define_vtab_init).
+// It's a separate function, because if xCreate and xConnect pointed to the same one,
+// SQLite would make define_vtab eponymous, which we don't want.
 static int define_vtab_connect(sqlite3* db,
                                void* pAux,
                                int argc,
                                const char* const* argv,
                                sqlite3_vtab** ppVtab,
                                char** pzErr) {
-    return define_vtab_create(db, pAux, argc, argv, ppVtab, pzErr);
+    return define_vtab_init(db, argc, argv, ppVtab, pzErr, false);
 }
 
 // define_vtab_open opens a cursor and compiles the body for it.
