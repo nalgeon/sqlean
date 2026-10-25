@@ -255,13 +255,15 @@ test:
 
 # C tests as <package>/<module>, each compiling test/<package>/<module>.test.c
 # together with the sources listed in CTEST_SRC_<package>_<module>.
-CTESTS := crypto/base32 crypto/base64 crypto/base85 crypto/hash crypto/hex crypto/url text/bstring text/rstring text/utf8 time/time time/duration
+CTESTS := crypto/base32 crypto/base64 crypto/base85 crypto/hash crypto/hex crypto/url define/define text/bstring text/rstring text/utf8 time/time time/duration
 CTEST_SRC_crypto_base32 := src/crypto/base32.c
 CTEST_SRC_crypto_base64 := src/crypto/base64.c
 CTEST_SRC_crypto_base85 := src/crypto/base85.c
 CTEST_SRC_crypto_hash := src/crypto/md5.c src/crypto/sha1.c src/crypto/sha2.c src/crypto/blake3.c src/crypto/xxhash.c src/crypto/xxh3.c
 CTEST_SRC_crypto_hex := src/crypto/hex.c
 CTEST_SRC_crypto_url := src/crypto/url.c
+CTEST_SRC_define_define := src/define/*.c dist/ctest-sqlite3.o
+CTEST_FLAGS_define_define := -DSQLITE_CORE
 CTEST_SRC_text_bstring := src/text/*.c src/text/*/*.c
 CTEST_SRC_text_rstring := src/text/*.c src/text/*/*.c
 CTEST_SRC_text_utf8 := src/text/utf8/*.c
@@ -277,10 +279,18 @@ ctest-all-sanitize:
 
 # Compiles and runs a single C test, then deletes the binary:
 # make ctest package=time module=duration
-ctest:
+# Object files in CTEST_SRC_<package>_<module> are built as prerequisites.
+ctest: $(filter %.o,$(CTEST_SRC_$(package)_$(module)))
 	$(if $(CTEST_SRC_$(package)_$(module)),,$(error unknown C test: $(package)/$(module), see CTESTS))
-	$(CC) $(CTEST_FLAGS) test/$(package)/$(module).test.c $(CTEST_SRC_$(package)_$(module)) -o $(package).$(module) -lm
+	$(CC) $(CTEST_FLAGS) $(CTEST_FLAGS_$(package)_$(module)) test/$(package)/$(module).test.c $(CTEST_SRC_$(package)_$(module)) -o $(package).$(module) -lm
 	@./$(package).$(module); status=$$?; rm -rf $(package).$(module) $(package).$(module).dSYM; exit $$status
+
+# SQLite for the C tests that need a real connection (define). Built without
+# warnings and sanitizers, since it's third-party code, and without threads
+# and extension loading, so it links without -lpthread and -ldl.
+dist/ctest-sqlite3.o: src/sqlite3.c
+	@mkdir -p dist
+	$(CC) -g -O1 -w -DSQLITE_THREADSAFE=0 -DSQLITE_OMIT_LOAD_EXTENSION -c src/sqlite3.c -o $@
 
 # Runs a single C test with the sanitizers enabled.
 ctest-sanitize:
