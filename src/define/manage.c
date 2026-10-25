@@ -12,10 +12,11 @@ SQLITE_EXTENSION_INIT3
 #pragma region registry
 
 // The registry holds the scalar functions defined in a connection, so that
-// undefine() can find them by name. SQLite can't delete a function while any
-// statement is running, and undefine() itself runs in a statement. So instead
-// of deleting the function, undefine() marks it as undefined, and the function
-// fails when called.
+// define() and undefine() can find them by name. SQLite can't replace or delete
+// a function while any statement is running, and define() and undefine() run
+// in a statement themselves. So instead of replacing the function, define()
+// changes its body, and instead of deleting the function, undefine() marks it
+// as undefined, and the function fails when called.
 //
 // The registry is shared by the management functions and by each defined
 // function, and is freed when the last of them is destroyed (usually when the
@@ -26,6 +27,8 @@ typedef struct registry registry;
 typedef struct function {
     char* name;
     char* sql;  // "select <body>"
+    int nparams;
+    int version;  // changes with the body, see cache_get
     bool defined;
     registry* reg;
     struct function* next;
@@ -67,7 +70,7 @@ static void registry_release(void* ptr) {
 
 // registry_add adds a function to the registry and takes ownership of sql.
 // Returns NULL (and frees sql) if out of memory.
-static function* registry_add(registry* reg, const char* name, char* sql) {
+static function* registry_add(registry* reg, const char* name, char* sql, int nparams) {
     function* fn = sqlite3_malloc(sizeof(function));
     char* fn_name = sqlite3_mprintf("%s", name);
     if (fn == NULL || fn_name == NULL) {
@@ -78,6 +81,8 @@ static function* registry_add(registry* reg, const char* name, char* sql) {
     }
     fn->name = fn_name;
     fn->sql = sql;
+    fn->nparams = nparams;
+    fn->version = 0;
     fn->defined = true;
     fn->reg = reg;
     fn->next = reg->head;
@@ -98,12 +103,37 @@ static void registry_remove(registry* reg, function* fn) {
     }
 }
 
-// registry_undefine marks the functions with the given name as undefined.
 // Function names are case-insensitive, and there may be several functions
-// with the same name and a different number of parameters.
-static void registry_undefine(registry* reg, const char* name) {
+// with the same name and a different number of parameters (but only one
+// of them is defined at a time).
+
+// registry_find returns the function with the given name and number
+// of parameters, defined or not, or NULL if there is none.
+static function* registry_find(registry* reg, const char* name, int nparams) {
     for (function* fn = reg->head; fn != NULL; fn = fn->next) {
-        if (sqlite3_stricmp(fn->name, name) == 0) {
+        if (sqlite3_stricmp(fn->name, name) == 0 && fn->nparams == nparams) {
+            return fn;
+        }
+    }
+    return NULL;
+}
+
+// registry_find_name returns a function with the given name (only a defined
+// one if defined_only is true), or NULL if there is none.
+static function* registry_find_name(registry* reg, const char* name, bool defined_only) {
+    for (function* fn = reg->head; fn != NULL; fn = fn->next) {
+        if (sqlite3_stricmp(fn->name, name) == 0 && (fn->defined || !defined_only)) {
+            return fn;
+        }
+    }
+    return NULL;
+}
+
+// registry_undefine marks the functions with the given name as undefined,
+// except the given one.
+static void registry_undefine(registry* reg, const char* name, const function* except) {
+    for (function* fn = reg->head; fn != NULL; fn = fn->next) {
+        if (fn != except && sqlite3_stricmp(fn->name, name) == 0) {
             fn->defined = false;
         }
     }
@@ -138,6 +168,7 @@ static void function_release(void* ptr) {
 
 typedef struct cache_node {
     const function* fn;
+    int version;  // of the function when the statement was prepared
     sqlite3_stmt* stmt;
     struct cache_node* next;
 } cache_node;
@@ -153,26 +184,46 @@ static void cache_free(void* head) {
     }
 }
 
-// cache_get returns the statement cached for the function by the calling
-// statement, or NULL if there is none.
-static sqlite3_stmt* cache_get(sqlite3_context* ctx, const function* fn) {
+// cache_find returns the cache node of the function, or NULL if there is none.
+static cache_node* cache_find(sqlite3_context* ctx, const function* fn) {
     for (cache_node* node = sqlite3_get_auxdata(ctx, CACHE_SLOT); node != NULL; node = node->next) {
         if (node->fn == fn) {
-            return node->stmt;
+            return node;
         }
     }
     return NULL;
 }
 
-// cache_put caches the statement for the function and takes ownership of it.
-// If the statement can't be cached, it's finalized.
-static void cache_put(sqlite3_context* ctx, const function* fn, sqlite3_stmt* stmt) {
-    cache_node* node = sqlite3_malloc(sizeof(cache_node));
+// cache_get returns the statement cached for the function by the calling
+// statement, or NULL if there is none, or if the function was redefined
+// since (which may happen while the calling statement is running).
+static sqlite3_stmt* cache_get(sqlite3_context* ctx, const function* fn) {
+    cache_node* node = cache_find(ctx, fn);
+    if (node == NULL || node->version != fn->version) {
+        return NULL;
+    }
+    return node->stmt;
+}
+
+// cache_put caches the statement compiled from the given version of the
+// function and takes ownership of it. If the statement can't be cached,
+// it's finalized.
+static void cache_put(sqlite3_context* ctx, const function* fn, int version, sqlite3_stmt* stmt) {
+    cache_node* node = cache_find(ctx, fn);
+    if (node != NULL) {
+        // replace the statement compiled from an old body
+        sqlite3_finalize(node->stmt);
+        node->version = version;
+        node->stmt = stmt;
+        return;
+    }
+    node = sqlite3_malloc(sizeof(cache_node));
     if (node == NULL) {
         sqlite3_finalize(stmt);
         return;
     }
     node->fn = fn;
+    node->version = version;
     node->stmt = stmt;
     node->next = NULL;
     cache_node* head = sqlite3_get_auxdata(ctx, CACHE_SLOT);
@@ -187,9 +238,9 @@ static void cache_put(sqlite3_context* ctx, const function* fn, sqlite3_stmt* st
 
 #pragma endregion
 
-/*
- * Saves user-defined function into the database.
- */
+// define_save_function saves the function into the sqlean_define table
+// and returns SQLITE_OK or an error code. Does nothing if a function with
+// the same name is already saved.
 int define_save_function(sqlite3* db, const char* name, const char* type, const char* body) {
     char* sql =
         "insert into sqlean_define(name, type, body) values (?, ?, ?) "
@@ -210,30 +261,49 @@ int define_save_function(sqlite3* db, const char* name, const char* type, const 
     return SQLITE_OK;
 }
 
-/*
- * Executes the function body, compiled once per run of the calling statement.
- */
+// result_db_error reports an error with the code and the connection's error message.
+static void result_db_error(sqlite3_context* ctx, sqlite3* db, int code) {
+    sqlite3_result_error(ctx, sqlite3_errmsg(db), -1);
+    sqlite3_result_error_code(ctx, code);
+}
+
+// result_name_error reports an error with a message made from a format and a name.
+static void result_name_error(sqlite3_context* ctx, const char* format, const char* name) {
+    char* msg = sqlite3_mprintf(format, name);
+    if (msg == NULL) {
+        sqlite3_result_error_nomem(ctx);
+        return;
+    }
+    sqlite3_result_error(ctx, msg, -1);
+    sqlite3_free(msg);
+}
+
+// define_exec executes the body of a defined function and returns its first value,
+// or NULL if the body returns no rows. The body is compiled once per run of the
+// calling statement (see the statement cache).
 static void define_exec(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
     const function* fn = sqlite3_user_data(ctx);
     if (!fn->defined) {
-        // same message as SQLite gives for an unknown function
-        char* msg = sqlite3_mprintf("no such function: %s", fn->name);
-        if (msg == NULL) {
-            sqlite3_result_error_nomem(ctx);
-            return;
+        // same messages as SQLite gives
+        if (registry_find_name(fn->reg, fn->name, true) != NULL) {
+            result_name_error(ctx, "wrong number of arguments to function %s()", fn->name);
+        } else {
+            result_name_error(ctx, "no such function: %s", fn->name);
         }
-        sqlite3_result_error(ctx, msg, -1);
-        sqlite3_free(msg);
         return;
     }
 
+    sqlite3* db = sqlite3_context_db_handle(ctx);
     sqlite3_stmt* stmt = cache_get(ctx, fn);
     bool cached = stmt != NULL;
+    // the body itself may redefine the function
+    int version = fn->version;
     int ret;
     if (!cached) {
-        ret = sqlite3_prepare_v2(sqlite3_context_db_handle(ctx), fn->sql, -1, &stmt, NULL);
+        // the body may no longer compile, e.g. if a table it uses was dropped
+        ret = sqlite3_prepare_v2(db, fn->sql, -1, &stmt, NULL);
         if (ret != SQLITE_OK) {
-            sqlite3_result_error_code(ctx, ret);
+            result_db_error(ctx, db, ret);
             return;
         }
     }
@@ -248,36 +318,43 @@ static void define_exec(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
     }
     if (ret == SQLITE_ROW) {
         sqlite3_result_value(ctx, sqlite3_column_value(stmt, 0));
+    } else if (ret == SQLITE_DONE) {
+        // no rows, like a scalar subquery
+        sqlite3_result_null(ctx);
     } else {
-        sqlite3_result_error_code(ctx, ret == SQLITE_DONE ? SQLITE_MISUSE : ret);
+        result_db_error(ctx, db, ret);
     }
     sqlite3_reset(stmt);
 
     if (!cached) {
-        cache_put(ctx, fn, stmt);
+        cache_put(ctx, fn, version, stmt);
     }
 }
 
-/*
- * Creates user-defined function.
- */
-static int define_create(sqlite3* db, registry* reg, const char* name, const char* body) {
-    char* sql = sqlite3_mprintf("select %s", body);
-    if (!sql) {
+// compile_body compiles the function body to validate it and count its parameters,
+// and returns SQLITE_OK or an error code. On success, sets sql to the statement
+// to execute, which the caller must free.
+static int compile_body(sqlite3* db, const char* body, char** sql, int* nparams) {
+    *sql = sqlite3_mprintf("select %s", body);
+    if (*sql == NULL) {
         return SQLITE_NOMEM;
     }
-
-    // compile the body to validate it and count the parameters
     sqlite3_stmt* stmt;
-    int ret = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    int ret = sqlite3_prepare_v2(db, *sql, -1, &stmt, NULL);
     if (ret != SQLITE_OK) {
-        sqlite3_free(sql);
+        sqlite3_free(*sql);
+        *sql = NULL;
         return ret;
     }
-    int nparams = sqlite3_bind_parameter_count(stmt);
+    *nparams = sqlite3_bind_parameter_count(stmt);
     sqlite3_finalize(stmt);
+    return SQLITE_OK;
+}
 
-    function* fn = registry_add(reg, name, sql);
+// register_function registers a new defined function in the connection and the registry,
+// takes ownership of sql, and returns SQLITE_OK or an error code.
+static int register_function(sqlite3* db, registry* reg, const char* name, char* sql, int nparams) {
+    function* fn = registry_add(reg, name, sql, nparams);
     if (fn == NULL) {
         return SQLITE_NOMEM;
     }
@@ -285,42 +362,28 @@ static int define_create(sqlite3* db, registry* reg, const char* name, const cha
     // (cache_get uses its address to tell functions apart). SQLite calls the
     // destructor even if registering fails.
     reg->refs++;
-    ret = sqlite3_create_function_v2(db, name, nparams, SQLITE_UTF8, fn, define_exec, NULL, NULL,
-                                     function_release);
+    int ret = sqlite3_create_function_v2(db, name, nparams, SQLITE_UTF8, fn, define_exec, NULL,
+                                         NULL, function_release);
     if (ret != SQLITE_OK) {
         registry_remove(reg, fn);
     }
     return ret;
 }
 
-/*
- * Creates user-defined function and saves it to the database.
- */
-static void define_function(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
-    sqlite3* db = sqlite3_context_db_handle(ctx);
-    registry* reg = sqlite3_user_data(ctx);
-    const char* name = (const char*)sqlite3_value_text(argv[0]);
-    const char* body = (const char*)sqlite3_value_text(argv[1]);
-    int ret;
-    if ((ret = define_create(db, reg, name, body)) != SQLITE_OK) {
-        sqlite3_result_error_code(ctx, ret);
-        return;
+// define_create creates a defined function from its body (used when loading
+// functions from the database), and returns SQLITE_OK or an error code.
+static int define_create(sqlite3* db, registry* reg, const char* name, const char* body) {
+    char* sql;
+    int nparams;
+    int ret = compile_body(db, body, &sql, &nparams);
+    if (ret != SQLITE_OK) {
+        return ret;
     }
-    if ((ret = define_save_function(db, name, "scalar", body)) != SQLITE_OK) {
-        sqlite3_result_error_code(ctx, ret);
-        return;
-    }
+    return register_function(db, reg, name, sql, nparams);
 }
 
-/*
- * Does nothing. Prepared statements used to require freeing before closing
- * the connection, now they are freed automatically.
- */
-static void define_free(sqlite3_context* ctx, int argc, sqlite3_value** argv) {}
-
-/*
- * Executes a statement with a single text parameter, ignoring its results.
- */
+// exec_with_name executes a statement with the name as its only parameter,
+// ignoring its results, and returns SQLITE_OK or an error code.
 static int exec_with_name(sqlite3* db, const char* sql, const char* name) {
     sqlite3_stmt* stmt;
     int ret = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
@@ -334,10 +397,9 @@ static int exec_with_name(sqlite3* db, const char* sql, const char* name) {
     return ret == SQLITE_DONE ? SQLITE_OK : ret;
 }
 
-/*
- * Returns the type of the user-defined function ("scalar" or "table")
- * or NULL if there is no such function. The caller must free the result.
- */
+// find_function looks the function up in sqlean_define and returns SQLITE_OK
+// or an error code. Sets type to "scalar", "table", or NULL if there is no such
+// function. The caller must free the type.
 static int find_function(sqlite3* db, const char* name, char** type) {
     *type = NULL;
     sqlite3_stmt* stmt;
@@ -357,10 +419,148 @@ static int find_function(sqlite3* db, const char* name, char** type) {
     return ret == SQLITE_DONE ? SQLITE_OK : ret;
 }
 
-/*
- * Checks if the table function exists, i.e. there is a virtual table
- * with the name, created with the body.
- */
+// function_exists checks if a function with the given name (any number of parameters)
+// is registered in the connection, and returns SQLITE_OK or an error code.
+static int function_exists(sqlite3* db, const char* name, bool* exists) {
+    *exists = false;
+    sqlite3_stmt* stmt;
+    const char* sql = "select 1 from pragma_function_list where name = ? collate nocase";
+    int ret = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (ret != SQLITE_OK) {
+        // SQLite is compiled without pragma_function_list,
+        // so let sqlite3_create_function decide
+        return SQLITE_OK;
+    }
+    sqlite3_bind_text(stmt, 1, name, -1, SQLITE_STATIC);
+    ret = sqlite3_step(stmt);
+    if (ret == SQLITE_ROW) {
+        *exists = true;
+        ret = SQLITE_DONE;
+    }
+    sqlite3_finalize(stmt);
+    return ret == SQLITE_DONE ? SQLITE_OK : ret;
+}
+
+// exec_with_name_body executes a statement with the name and the body as its parameters,
+// and returns SQLITE_OK or an error code.
+static int exec_with_name_body(sqlite3* db, const char* sql, const char* name, const char* body) {
+    sqlite3_stmt* stmt;
+    int ret = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
+    if (ret != SQLITE_OK) {
+        return ret;
+    }
+    sqlite3_bind_text(stmt, 1, name, -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 2, body, -1, SQLITE_STATIC);
+    ret = sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
+    return ret == SQLITE_DONE ? SQLITE_OK : ret;
+}
+
+// save_scalar saves the scalar function into sqlean_define, replacing a saved
+// function with the same name (in any case), and returns SQLITE_OK or an error code.
+static int save_scalar(sqlite3* db, const char* name, const char* body) {
+    // update in place, so that the functions load in the same order
+    int ret = exec_with_name_body(
+        db, "update sqlean_define set name = ?1, body = ?2 where name = ?1 collate nocase", name,
+        body);
+    if (ret != SQLITE_OK || sqlite3_changes(db) > 0) {
+        return ret;
+    }
+    return exec_with_name_body(
+        db, "insert into sqlean_define(name, type, body) values (?1, 'scalar', ?2)", name, body);
+}
+
+// define_function implements define(name, body): creates a scalar function, or changes
+// the one this connection created with the same name, and saves it to the database.
+// Returns NULL. Errors if the body doesn't compile, or if a function with this name
+// exists but wasn't created by define().
+static void define_function(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
+    sqlite3* db = sqlite3_context_db_handle(ctx);
+    registry* reg = sqlite3_user_data(ctx);
+    const char* name = (const char*)sqlite3_value_text(argv[0]);
+    const char* body = (const char*)sqlite3_value_text(argv[1]);
+    if (name == NULL) {
+        sqlite3_result_error(ctx, "function name is NULL", -1);
+        return;
+    }
+    if (body == NULL) {
+        sqlite3_result_error(ctx, "function body is NULL", -1);
+        return;
+    }
+    if (sqlite3_value_bytes(argv[0]) > 255) {
+        // SQLite's limit
+        sqlite3_result_error(ctx, "function name is too long", -1);
+        return;
+    }
+
+    char* sql = NULL;
+    char* type = NULL;
+    int nparams;
+    int ret = compile_body(db, body, &sql, &nparams);
+    if (ret != SQLITE_OK) {
+        result_db_error(ctx, db, ret);
+        return;
+    }
+
+    // a function defined in this connection is redefined,
+    // any other function (such as a built-in one) is left alone
+    function* fn = registry_find(reg, name, nparams);
+    if (registry_find_name(reg, name, false) == NULL) {
+        bool exists;
+        if ((ret = function_exists(db, name, &exists)) != SQLITE_OK) {
+            goto db_error;
+        }
+        if (exists) {
+            result_name_error(ctx, "function already exists: %s", name);
+            goto end;
+        }
+    }
+    if ((ret = find_function(db, name, &type)) != SQLITE_OK) {
+        goto db_error;
+    }
+    if (type != NULL && sqlite3_stricmp(type, "scalar") != 0) {
+        result_name_error(ctx, "table function already exists: %s", name);
+        goto end;
+    }
+
+    // save first, so that nothing changes if the database is read-only
+    if ((ret = save_scalar(db, name, body)) != SQLITE_OK) {
+        goto db_error;
+    }
+
+    if (fn != NULL) {
+        // same number of parameters: change the body
+        sqlite3_free(fn->sql);
+        fn->sql = sql;
+        fn->version++;
+        fn->defined = true;
+        sql = NULL;
+    } else {
+        // new function or a different number of parameters
+        ret = register_function(db, reg, name, sql, nparams);
+        sql = NULL;
+        if (ret != SQLITE_OK) {
+            goto db_error;
+        }
+        fn = registry_find(reg, name, nparams);
+    }
+    registry_undefine(reg, name, fn);
+    goto end;
+
+db_error:
+    result_db_error(ctx, db, ret);
+end:
+    sqlite3_free(sql);
+    sqlite3_free(type);
+}
+
+// define_free implements define_free(), which does nothing. Prepared statements
+// used to require freeing before closing the connection, now they are freed
+// automatically.
+static void define_free(sqlite3_context* ctx, int argc, sqlite3_value** argv) {}
+
+// table_exists checks if the table function has its table, i.e. there is a virtual
+// table with the name, created with the saved body, and returns SQLITE_OK or an error code.
 static int table_exists(sqlite3* db, const char* name, bool* exists) {
     *exists = false;
     const char* sql =
@@ -384,10 +584,9 @@ static int table_exists(sqlite3* db, const char* name, bool* exists) {
     return ret == SQLITE_DONE ? SQLITE_OK : ret;
 }
 
-/*
- * Deletes user-defined function (scalar or table-valued). Deletes only
- * the functions listed in sqlean_define, and does nothing for other names.
- */
+// define_undefine implements undefine(name): deletes a scalar or table-valued
+// function and returns NULL. Deletes only the functions listed in sqlean_define,
+// and does nothing for other names.
 static void define_undefine(sqlite3_context* ctx, int argc, sqlite3_value** argv) {
     sqlite3* db = sqlite3_context_db_handle(ctx);
     registry* reg = sqlite3_user_data(ctx);
@@ -423,7 +622,7 @@ static void define_undefine(sqlite3_context* ctx, int argc, sqlite3_value** argv
     // a scalar function, or a table function whose table is gone
     ret = exec_with_name(db, "delete from sqlean_define where name = ? collate nocase", name);
     if (ret == SQLITE_OK && sqlite3_stricmp(type, "scalar") == 0) {
-        registry_undefine(reg, name);
+        registry_undefine(reg, name, NULL);
     }
 
 end:
@@ -433,9 +632,8 @@ end:
     }
 }
 
-/*
- * Loads user-defined functions from the database.
- */
+// define_load creates the sqlean_define table if it doesn't exist, registers
+// the scalar functions saved there, and returns SQLITE_OK or an error code.
 static int define_load(sqlite3* db, registry* reg) {
     char* sql =
         "create table if not exists sqlean_define"
@@ -464,6 +662,8 @@ static int define_load(sqlite3* db, registry* reg) {
     return sqlite3_finalize(stmt);
 }
 
+// define_manage_init registers define(), undefine() and define_free(), loads
+// the saved scalar functions, and returns SQLITE_OK or an error code.
 int define_manage_init(sqlite3* db) {
     registry* reg = registry_new();
     if (reg == NULL) {

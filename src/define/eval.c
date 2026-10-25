@@ -99,6 +99,7 @@ static void define_eval(sqlite3_context* context, int argc, sqlite3_value** argv
     }
 }
 
+// define_eval_init registers eval() and returns SQLITE_OK.
 int define_eval_init(sqlite3* db) {
     const int flags = SQLITE_UTF8 | SQLITE_DIRECTONLY;
     sqlite3_create_function(db, "eval", 1, flags, NULL, define_eval, NULL, NULL);

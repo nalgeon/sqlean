@@ -36,6 +36,9 @@ struct define_cursor {
     sqlite3_value** param_argv;
 };
 
+// build_create_statement returns the CREATE TABLE statement that declares
+// the table function: a column for each result column of the body, and a hidden
+// column for each parameter. Returns NULL if out of memory.
 static char* build_create_statement(sqlite3_stmt* stmt) {
     sqlite3_str* sql = sqlite3_str_new(NULL);
     sqlite3_str_appendall(sql, "CREATE TABLE x( ");
@@ -60,6 +63,15 @@ static char* build_create_statement(sqlite3_stmt* stmt) {
     return sqlite3_str_finish(sql);
 }
 
+// vtab_error sets the table's error message to the connection's one,
+// and returns the code.
+static int vtab_error(sqlite3_vtab* vtab, int code) {
+    sqlite3_free(vtab->zErrMsg);
+    vtab->zErrMsg = sqlite3_mprintf("%s", sqlite3_errmsg(((struct define_vtab*)vtab)->db));
+    return code;
+}
+
+// define_vtab_disconnect frees the table.
 static int define_vtab_disconnect(sqlite3_vtab* pVTab) {
     struct define_vtab* vtab = (struct define_vtab*)pVTab;
     sqlite3_free(vtab->name);
@@ -68,8 +80,8 @@ static int define_vtab_disconnect(sqlite3_vtab* pVTab) {
     return SQLITE_OK;
 }
 
-// define_vtab_destroy deletes the function from sqlean_define when its table
-// is dropped, whether by undefine() or by drop table.
+// define_vtab_destroy deletes the function from sqlean_define and frees the table.
+// SQLite calls it when the table is dropped, whether by undefine() or by drop table.
 static int define_vtab_destroy(sqlite3_vtab* pVTab) {
     struct define_vtab* vtab = (struct define_vtab*)pVTab;
     sqlite3_stmt* stmt;
@@ -87,6 +99,9 @@ static int define_vtab_destroy(sqlite3_vtab* pVTab) {
     return define_vtab_disconnect(pVTab);
 }
 
+// define_vtab_create creates the table function from the body in argv[3],
+// declares its table and saves it to sqlean_define. The body must be
+// a parenthesized read-only statement.
 static int define_vtab_create(sqlite3* db,
                               void* pAux,
                               int argc,
@@ -152,7 +167,7 @@ static int define_vtab_create(sqlite3* db,
     }
 
     if ((ret = define_save_function(db, argv[2], "table", argv[3])) != SQLITE_OK) {
-        goto error;
+        goto sqlite_error;
     }
 
     sqlite3_free(create);
@@ -170,8 +185,9 @@ error:
     return ret;
 }
 
-// if these point to the literal same function sqlite makes define_vtab eponymous, which we don't
-// want
+// define_vtab_connect connects to an existing table function, same as define_vtab_create.
+// It's a separate function, because if both pointed to the same one, SQLite would make
+// define_vtab eponymous, which we don't want.
 static int define_vtab_connect(sqlite3* db,
                                void* pAux,
                                int argc,
@@ -181,6 +197,7 @@ static int define_vtab_connect(sqlite3* db,
     return define_vtab_create(db, pAux, argc, argv, ppVtab, pzErr);
 }
 
+// define_vtab_open opens a cursor and compiles the body for it.
 static int define_vtab_open(sqlite3_vtab* pVTab, sqlite3_vtab_cursor** ppCursor) {
     struct define_vtab* vtab = (struct define_vtab*)pVTab;
     struct define_cursor* cur = sqlite3_malloc64(sizeof(*cur));
@@ -189,9 +206,12 @@ static int define_vtab_open(sqlite3_vtab* pVTab, sqlite3_vtab_cursor** ppCursor)
 
     *ppCursor = &cur->base;
     cur->param_argv = sqlite3_malloc(sizeof(*cur->param_argv) * vtab->num_inputs);
-    return sqlite3_prepare_v2(vtab->db, vtab->sql, vtab->sql_len, &cur->stmt, NULL);
+    // the body may no longer compile, e.g. if a table it uses was dropped
+    int ret = sqlite3_prepare_v2(vtab->db, vtab->sql, vtab->sql_len, &cur->stmt, NULL);
+    return ret == SQLITE_OK ? ret : vtab_error(pVTab, ret);
 }
 
+// define_vtab_close finalizes the cursor's statement and frees the cursor.
 static int define_vtab_close(sqlite3_vtab_cursor* cur) {
     struct define_cursor* stmtcur = (struct define_cursor*)cur;
     sqlite3_finalize(stmtcur->stmt);
@@ -200,6 +220,7 @@ static int define_vtab_close(sqlite3_vtab_cursor* cur) {
     return SQLITE_OK;
 }
 
+// define_vtab_next advances the cursor to the next row of the body.
 static int define_vtab_next(sqlite3_vtab_cursor* cur) {
     struct define_cursor* stmtcur = (struct define_cursor*)cur;
     int ret = sqlite3_step(stmtcur->stmt);
@@ -207,18 +228,22 @@ static int define_vtab_next(sqlite3_vtab_cursor* cur) {
         stmtcur->rowid++;
         return SQLITE_OK;
     }
-    return ret == SQLITE_DONE ? SQLITE_OK : ret;
+    return ret == SQLITE_DONE ? SQLITE_OK : vtab_error(cur->pVtab, ret);
 }
 
+// define_vtab_rowid returns the number of the current row, starting from 1.
 static int define_vtab_rowid(sqlite3_vtab_cursor* cur, sqlite_int64* pRowid) {
     *pRowid = ((struct define_cursor*)cur)->rowid;
     return SQLITE_OK;
 }
 
+// define_vtab_eof returns true if the cursor has no more rows.
 static int define_vtab_eof(sqlite3_vtab_cursor* cur) {
     return !sqlite3_stmt_busy(((struct define_cursor*)cur)->stmt);
 }
 
+// define_vtab_column returns a result column of the body, or the value
+// of a parameter for a hidden column.
 static int define_vtab_column(sqlite3_vtab_cursor* cur, sqlite3_context* ctx, int i) {
     struct define_cursor* stmtcur = (struct define_cursor*)cur;
     int num_outputs = ((struct define_vtab*)cur->pVtab)->num_outputs;
@@ -237,12 +262,14 @@ static int define_vtab_column(sqlite3_vtab_cursor* cur, sqlite3_context* ctx, in
 // to changes to this limit
 static const size_t param_idx_size = (sizeof(int) * CHAR_BIT + 5) / 6;
 
+// encode_param_idx writes the parameter index as the i-th entry of param_map.
 static inline void encode_param_idx(int i, char* restrict param_map, int param_idx) {
     assert(param_idx >= 0);
     for (size_t j = 0; j < param_idx_size; j++)
         param_map[i * param_idx_size + j] = ((param_idx >> 6 * j) & 63) + 33;
 }
 
+// decode_param_idx returns the parameter index from the i-th entry of param_map.
 static inline int decode_param_idx(int i, const char* param_map) {
     int param_idx = 0;
     for (size_t j = 0; j < param_idx_size; j++)
@@ -250,6 +277,7 @@ static inline int decode_param_idx(int i, const char* param_map) {
     return param_idx;
 }
 
+// define_vtab_filter binds the arguments to the body's parameters and runs it.
 // xBestIndex needs to communicate which columns are constrained by the where clause to xFilter;
 // in terms of a statement table this translates to which parameters will be available to bind.
 static int define_vtab_filter(sqlite3_vtab_cursor* cur,
@@ -267,11 +295,11 @@ static int define_vtab_filter(sqlite3_vtab_cursor* cur,
     for (int i = 0; i < argc; i++) {
         int param_idx = idxStr ? decode_param_idx(i, idxStr) : i + 1;
         if ((ret = sqlite3_bind_value(stmt, param_idx, argv[i])) != SQLITE_OK)
-            return ret;
+            return vtab_error(cur->pVtab, ret);
     }
     ret = sqlite3_step(stmt);
     if (!(ret == SQLITE_ROW || ret == SQLITE_DONE))
-        return ret;
+        return vtab_error(cur->pVtab, ret);
 
     assert(((struct define_vtab*)cur->pVtab)->num_inputs >= argc);
     if ((stmtcur->param_argc = argc))  // shallow copy args as these are explicitly retained in
@@ -281,6 +309,8 @@ static int define_vtab_filter(sqlite3_vtab_cursor* cur,
     return SQLITE_OK;
 }
 
+// define_vtab_best_index plans a query: the function's parameters (hidden columns)
+// accept only equality constraints, and are passed to define_vtab_filter in order.
 static int define_vtab_best_index(sqlite3_vtab* pVTab, sqlite3_index_info* index_info) {
     int num_outputs = ((struct define_vtab*)pVTab)->num_outputs;
     int out_constraints = 0;
@@ -366,6 +396,8 @@ static sqlite3_module define_module = {
     .xRowid = define_vtab_rowid,
 };
 
+// define_module_init registers the "define" module for table functions,
+// and returns SQLITE_OK.
 int define_module_init(sqlite3* db) {
     sqlite3_create_module(db, "define", &define_module, NULL);
     return SQLITE_OK;
