@@ -15,17 +15,26 @@
 #define XXH3_64_DIGEST_SIZE 8
 #define XXH3_128_DIGEST_SIZE 16
 
-// Incremental hashing contexts. Each one is storage for xxHash's own state,
-// which is private (xxhash.c checks that it fits). The XXH3 context must be
-// 64-byte aligned: declared objects are, but memory from malloc may not be.
+#define XXH32_STRIPE_SIZE 16
+#define XXH64_STRIPE_SIZE 32
+
 typedef struct {
-    uint32_t state[12];
+    uint32_t v[4];                 // accumulators
+    uint8_t x[XXH32_STRIPE_SIZE];  // buffered input, not yet mixed
+    size_t nx;                     // number of bytes in x
+    uint64_t len;                  // total number of bytes hashed
 } xxh32_ctx;
 
 typedef struct {
-    uint64_t state[11];
+    uint64_t v[4];                 // accumulators
+    uint8_t x[XXH64_STRIPE_SIZE];  // buffered input, not yet mixed
+    size_t nx;                     // number of bytes in x
+    uint64_t len;                  // total number of bytes hashed
 } xxh64_ctx;
 
+// Storage for xxHash's own XXH3 state, which is private (xxh3.c checks that
+// it fits). It must be 64-byte aligned: declared objects are, but memory
+// from malloc may not be.
 typedef struct {
     _Alignas(64) uint64_t state[72];
 } xxh3_64_ctx;
