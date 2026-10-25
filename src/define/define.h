@@ -12,6 +12,11 @@
 // and returns SQLITE_OK or an error code.
 int define_save_function(sqlite3* db, const char* name, const char* type, const char* body);
 
+// define_check_tail checks that the SQL text left after the first statement of a body
+// has no more statements (only whitespace, semicolons and comments), and returns
+// SQLITE_OK, SQLITE_ERROR with the message in errmsg (to free), or another error code.
+int define_check_tail(sqlite3* db, const char* tail, char** errmsg);
+
 // define_eval_init registers eval() and returns SQLITE_OK.
 int define_eval_init(sqlite3* db);
 

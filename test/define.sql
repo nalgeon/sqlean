@@ -46,9 +46,12 @@ select '03_01', firstrow() = 1;
 -- only the first column of the body is used
 select define('firstcol', '1, 2');
 select '03_02', firstcol() = 1;
--- only the first statement of the body is compiled, the rest is ignored
-select define('firststmt', '1; select 2');
-select '03_03', firststmt() = 1;
+-- trailing semicolons and comments are allowed
+select define('semicolon', '1;');
+select '03_03', semicolon() = 1;
+select define('comment', '2; ; -- two
+  /* also two */ ;');
+select '03_04', comment() = 2;
 
 -- define: non-deterministic
 -- defined functions are not deterministic, so they are evaluated for each row
@@ -126,10 +129,10 @@ select '14_01', group_concat(value) = '1,2,3' from series(1, 3);
 select '14_02', count(*) = 0 from series(3, 1) where value > 3;
 select '14_03', group_concat(rowid) = '1,2,3' from series(1, 3);
 select '14_04', group_concat(value) = '4,5' from series(1, 5) where value > 3;
--- only the first statement of the body is compiled, the rest is ignored
-create virtual table firststmt_t using define((select 1 as a; select 2 as b));
-select '14_05', group_concat(name) = 'a' from pragma_table_info('firststmt_t');
-select '14_06', a = 1 from firststmt_t;
+-- trailing semicolons and comments are allowed
+create virtual table semicolon_t using define((select 1 as a; /* comment */ ;));
+select '14_05', group_concat(name) = 'a' from pragma_table_info('semicolon_t');
+select '14_06', a = 1 from semicolon_t;
 
 -- missing arguments are NULL
 -- (the recursive body yields a single NULL row when :lo is NULL)
@@ -161,7 +164,7 @@ select '17_03', group_concat(value) = '1,2,3' from series(sumn(1), sumn(2));
 select '21_01', (type, body) = ('scalar', ':n - :m') from sqlean_define where name = 'subnm';
 -- table functions are stored with the parentheses
 select '21_02', (type, body) = ('table', '(select 1 as value)') from sqlean_define where name = 'one';
-select '21_03', count(*) = 16 from sqlean_define where type = 'scalar';
+select '21_03', count(*) = 17 from sqlean_define where type = 'scalar';
 select '21_04', count(*) = 7 from sqlean_define where type = 'table';
 select '21_05', count(*) = 1 from sqlite_master where type = 'table' and name = 'strcut';
 -- dropping a table function directly deletes it from sqlean_define
@@ -171,16 +174,16 @@ select '21_06', count(*) = 0 from sqlean_define where name = 'one';
 -- undefine
 select '31_01', undefine('subnm') is null;
 select '31_02', count(*) = 0 from sqlean_define where name = 'subnm';
-select '31_03', count(*) = 21 from sqlean_define;
+select '31_03', count(*) = 22 from sqlean_define;
 -- calling an undefined function fails with "no such function" (see test_undefine)
 select '31_04', count(*) = 1 from pragma_function_list where name = 'subnm';
 select undefine('strcut');
 select '31_05', count(*) = 0 from sqlean_define where name = 'strcut';
 select '31_06', count(*) = 0 from sqlite_master where type = 'table' and name = 'strcut';
-select '31_07', count(*) = 20 from sqlean_define;
+select '31_07', count(*) = 21 from sqlean_define;
 select '31_08', undefine('nosuch') is null;
 select '31_09', undefine(null) is null;
-select '31_10', count(*) = 20 from sqlean_define;
+select '31_10', count(*) = 21 from sqlean_define;
 -- undefine doesn't touch tables it didn't create
 create table regular(x);
 select undefine('regular');
@@ -281,4 +284,11 @@ select '62_02', later(2) = 20;
 select '62_03', count(*) = 2 from pragma_function_list where name in ('broken', 'later');
 select '62_04', callsnext(5) = 11;
 select '62_05', nextone(5) = 10;
+-- bodies saved by older versions may have several statements,
+-- only the first one is compiled
+insert into sqlean_define(name, type, body) values ('oldmulti', 'scalar', '1; select 2');
+
+.open define.db
+.load dist/define
+select '63_01', oldmulti() = 1;
 .shell rm -f define.db
