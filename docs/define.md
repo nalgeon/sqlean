@@ -60,6 +60,8 @@ select randint(10, 99);
 76
 ```
 
+Defined functions are saved in the database and loaded when the extension is loaded. If a function's body doesn't compile at this point (say, it calls a function from another extension that's loaded later), the body is compiled when the function is called. So such a function works as soon as the extension it needs is loaded. Until then, calling it fails with the compile error (such as `no such function: text_upper`).
+
 To change a function, define it again:
 
 ```sql
