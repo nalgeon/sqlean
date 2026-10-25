@@ -374,7 +374,10 @@ RuneString rstring_pad_left(RuneString str, size_t length, RuneString fill) {
     }
 
     // Copy the original string to the end of the new string
-    memcpy(&new_runes[pad_langth], str.runes, str.size);
+    // (an empty string has no runes, and memcpy from NULL is UB even for zero bytes)
+    if (str.size > 0) {
+        memcpy(&new_runes[pad_langth], str.runes, str.size);
+    }
 
     // Return the new string
     RuneString new_str = rstring_from_runes(new_runes, length, true);
@@ -405,7 +408,10 @@ RuneString rstring_pad_right(RuneString str, size_t length, RuneString fill) {
     }
 
     // Copy the original string to the beginning of the new string
-    memcpy(new_runes, str.runes, str.size);
+    // (an empty string has no runes, and memcpy from NULL is UB even for zero bytes)
+    if (str.size > 0) {
+        memcpy(new_runes, str.runes, str.size);
+    }
 
     // Copy the fill characters to the end of the new string
     for (size_t i = str.length; i < length; i++) {

@@ -209,7 +209,7 @@ static int define_vtab_column(sqlite3_vtab_cursor* cur, sqlite3_context* ctx, in
 // encoded indexes are fixed to the length necessary to encode an int. this is overkill on most
 // systems due to sqlite's current hard limit on number of columns but makes define_vtab agnostic
 // to changes to this limit
-const static size_t param_idx_size = (sizeof(int) * CHAR_BIT + 5) / 6;
+static const size_t param_idx_size = (sizeof(int) * CHAR_BIT + 5) / 6;
 
 static inline void encode_param_idx(int i, char* restrict param_map, int param_idx) {
     assert(param_idx >= 0);
