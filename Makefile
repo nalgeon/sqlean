@@ -236,25 +236,30 @@ test:
 	@$(SQLITE) < test/$(suite).sql > test.log
 	@cat test.log | (! grep -Ex "[0-9_]+.[^1]")
 
+# C tests as <package>/<module>, each compiling test/<package>/<module>.test.c
+# together with the sources listed in CTEST_SRC_<package>_<module>.
+CTESTS := crypto/base85 text/bstring text/rstring text/utf8 time/time time/duration
+CTEST_SRC_crypto_base85 := src/crypto/base85.c
+CTEST_SRC_text_bstring := src/text/*.c src/text/*/*.c
+CTEST_SRC_text_rstring := src/text/*.c src/text/*/*.c
+CTEST_SRC_text_utf8 := src/text/utf8/*.c
+CTEST_SRC_time_time := src/time/*.c
+CTEST_SRC_time_duration := src/time/*.c
+
 ctest-all:
-	$(CC) $(CTEST_FLAGS) test/crypto/base85.test.c src/crypto/base85.c -o crypto.base85
-	make ctest package=crypto module=base85
-	$(CC) $(CTEST_FLAGS) test/text/bstring.test.c src/text/*.c src/text/*/*.c -o text.bstring
-	make ctest package=text module=bstring
-	$(CC) $(CTEST_FLAGS) test/text/rstring.test.c src/text/*.c src/text/*/*.c -o text.rstring
-	make ctest package=text module=rstring
-	$(CC) $(CTEST_FLAGS) test/text/utf8.test.c src/text/utf8/*.c -o text.utf8
-	make ctest package=text module=utf8
-	$(CC) $(CTEST_FLAGS) test/time/time.test.c src/time/*.c -o time.time
-	make ctest package=time module=time
-	$(CC) $(CTEST_FLAGS) test/time/duration.test.c src/time/*.c -o time.duration -lm
-	make ctest package=time module=duration
+	@for t in $(CTESTS); do $(MAKE) ctest package=$${t%/*} module=$${t#*/} || exit 1; done
 
 # Runs the C tests with the sanitizers enabled.
 ctest-all-sanitize:
-	$(SANITIZE_ENV) make ctest-all CFLAGS="$(SANITIZE_FLAGS)"
+	$(SANITIZE_ENV) $(MAKE) ctest-all CFLAGS="$(SANITIZE_FLAGS)"
 
+# Compiles and runs a single C test, then deletes the binary:
+# make ctest package=time module=duration
 ctest:
-	@chmod +x $(package).$(module)
-	@./$(package).$(module)
-	@rm -rf $(package).$(module) $(package).$(module).dSYM
+	$(if $(CTEST_SRC_$(package)_$(module)),,$(error unknown C test: $(package)/$(module), see CTESTS))
+	$(CC) $(CTEST_FLAGS) test/$(package)/$(module).test.c $(CTEST_SRC_$(package)_$(module)) -o $(package).$(module) -lm
+	@./$(package).$(module); status=$$?; rm -rf $(package).$(module) $(package).$(module).dSYM; exit $$status
+
+# Runs a single C test with the sanitizers enabled.
+ctest-sanitize:
+	$(SANITIZE_ENV) $(MAKE) ctest package=$(package) module=$(module) CFLAGS="$(SANITIZE_FLAGS)"
