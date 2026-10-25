@@ -20,5 +20,6 @@ SQLean relies heavily on third-party SQLite extensions and open source libraries
 | [stc](https://github.com/stclib/stc)                                                           | Tyge Løvset     | MIT License          |
 | [uuid.c](https://sqlite.org/src/file/ext/misc/uuid.c)                                          | D. Richard Hipp | Public Domain        |
 | [vsv.c](https://github.com/ncruces/kmedcalf-sqlite/blob/main/vsv.c)                            | Keith Medcalf   | Public Domain        |
+| [xxh3 (Go)](https://github.com/zeebo/xxh3)                                                     | Jeff Wendling   | BSD 2-Clause License |
 | [xxhash (Go)](https://github.com/cespare/xxhash)                                               | Caleb Spare     | MIT License          |
 | [xxhash](https://github.com/cyan4973/xxhash)                                                   | Yann Collet     | BSD 2-Clause License |

@@ -73,7 +73,10 @@ static inline uint32_t load_le32(const uint8_t* p) {
 }
 
 static inline uint64_t load_le64(const uint8_t* p) {
-    return (uint64_t)load_le32(p) | (uint64_t)load_le32(p + 4) << 32;
+    // Spelled out byte by byte: clang does not combine two 32-bit loads into one.
+    return (uint64_t)p[0] | (uint64_t)p[1] << 8 | (uint64_t)p[2] << 16 | (uint64_t)p[3] << 24 |
+           (uint64_t)p[4] << 32 | (uint64_t)p[5] << 40 | (uint64_t)p[6] << 48 |
+           (uint64_t)p[7] << 56;
 }
 
 static inline void store_le32(uint8_t* p, uint32_t x) {
@@ -106,6 +109,18 @@ static inline void store_be32(uint8_t* p, uint32_t x) {
 static inline void store_be64(uint8_t* p, uint64_t x) {
     store_be32(p, (uint32_t)(x >> 32));
     store_be32(p + 4, (uint32_t)x);
+}
+
+static inline uint32_t bswap32(uint32_t x) {
+    uint8_t b[4];
+    store_le32(b, x);
+    return load_be32(b);
+}
+
+static inline uint64_t bswap64(uint64_t x) {
+    uint8_t b[8];
+    store_le64(b, x);
+    return load_be64(b);
 }
 
 #pragma endregion

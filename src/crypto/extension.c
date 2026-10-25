@@ -73,14 +73,11 @@ typedef struct {
 // The largest digest size of all the algorithms.
 #define MAX_DIGEST_SIZE SHA512_DIGEST_SIZE
 
-// The strictest alignment of all the contexts (xxh3_64_ctx).
-#define MAX_CTX_ALIGN 64
-
 // DEFINE_HASH defines hash_<name>, with adapters that give the incremental
 // functions of the algorithm a common signature.
 #define DEFINE_HASH(name, ctx_type, digest_size)                                           \
     _Static_assert(digest_size <= MAX_DIGEST_SIZE, #name " digest too large");             \
-    _Static_assert(_Alignof(ctx_type) <= MAX_CTX_ALIGN, #name " context misaligned");      \
+    _Static_assert(_Alignof(ctx_type) <= 8, #name " context misaligned");                  \
     static void name##_init_any(void* ctx) {                                               \
         name##_init(ctx);                                                                  \
     }                                                                                      \
@@ -133,13 +130,13 @@ static void fn_hash(sqlite3_context* context, int argc, sqlite3_value** argv) {
     sqlite3_result_blob(context, digest, (int)hash->size, SQLITE_TRANSIENT);
 }
 
-// The aggregate memory holds a flag byte telling whether the context is
-// initialized, followed by the context itself. SQLite only guarantees 8-byte
-// alignment for this memory, so the context starts at the first MAX_CTX_ALIGN
-// boundary after the flag.
-static void* agg_hash_ctx(uint8_t* mem) {
-    return mem + (MAX_CTX_ALIGN - (uintptr_t)mem % MAX_CTX_ALIGN);
-}
+// The aggregate memory holds a flag telling whether the hash context is
+// initialized, followed by the context itself. SQLite gives zeroed, 8-byte
+// aligned memory, and the flag is 8 bytes, so the context is aligned too.
+typedef struct {
+    uint64_t initialized;
+    uint8_t ctx[];
+} AggHash;
 
 // crypto_blake3_agg(data)
 // crypto_md5_agg(data)
@@ -164,22 +161,21 @@ static void agg_hash_step(sqlite3_context* context, int argc, sqlite3_value** ar
     }
 
     const Hash* hash = sqlite3_user_data(context);
-    uint8_t* mem = sqlite3_aggregate_context(context, (int)(MAX_CTX_ALIGN + hash->ctx_size));
-    if (mem == NULL) {
+    AggHash* agg = sqlite3_aggregate_context(context, (int)(sizeof(AggHash) + hash->ctx_size));
+    if (agg == NULL) {
         sqlite3_result_error_nomem(context);
         return;
     }
-    void* ctx = agg_hash_ctx(mem);
-    if (mem[0] == 0) {
-        hash->init(ctx);
-        mem[0] = 1;
+    if (!agg->initialized) {
+        hash->init(agg->ctx);
+        agg->initialized = 1;
     }
-    hash->update(ctx, data, len);
+    hash->update(agg->ctx, data, len);
 }
 
 static void agg_hash_final(sqlite3_context* context) {
-    uint8_t* mem = sqlite3_aggregate_context(context, 0);
-    if (mem == NULL) {
+    AggHash* agg = sqlite3_aggregate_context(context, 0);
+    if (agg == NULL) {
         // No rows, or only NULLs.
         sqlite3_result_null(context);
         return;
@@ -187,7 +183,7 @@ static void agg_hash_final(sqlite3_context* context) {
 
     const Hash* hash = sqlite3_user_data(context);
     uint8_t digest[MAX_DIGEST_SIZE];
-    hash->final(agg_hash_ctx(mem), digest);
+    hash->final(agg->ctx, digest);
     sqlite3_result_blob(context, digest, (int)hash->size, SQLITE_TRANSIENT);
 }
 
