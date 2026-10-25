@@ -45,6 +45,10 @@ DEFINE_HASHER(sha256, sha256_ctx)
 DEFINE_HASHER(sha384, sha384_ctx)
 DEFINE_HASHER(sha512, sha512_ctx)
 DEFINE_HASHER(blake3, blake3_ctx)
+DEFINE_HASHER(xxh32, xxh32_ctx)
+DEFINE_HASHER(xxh64, xxh64_ctx)
+DEFINE_HASHER(xxh3_64, xxh3_64_ctx)
+DEFINE_HASHER(xxh3_128, xxh3_128_ctx)
 
 typedef void (*OneShot)(const uint8_t* data, size_t len, uint8_t* out);
 typedef void (
@@ -378,8 +382,8 @@ static void assert_hex(const uint8_t* digest, size_t digest_size, const char* wa
 }
 
 // Checks every golden digest of the algorithm, computed with the one-shot
-// function and, if there is one, with the incremental API: in a single
-// update and in pieces of different sizes.
+// function and with the incremental API: in a single update and in pieces
+// of different sizes.
 static void assert_algo(const char* algo, OneShot hash, Incremental inc, size_t digest_size) {
     // pieces smaller than, equal to, and larger than the block and chunk sizes
     static const size_t chunks[] = {1, 3, 63, 64, 65, 127, 128, 129, 1000, 1024, 4097};
@@ -401,9 +405,6 @@ static void assert_algo(const char* algo, OneShot hash, Incremental inc, size_t 
             assert_hex(digest, digest_size, test->want);
         }
 
-        if (inc == NULL) {
-            continue;
-        }
         size_t whole = test->len > 0 ? test->len : 1;
         inc(pattern, test->len, whole, false, digest);
         assert_hex(digest, digest_size, test->want);
@@ -459,25 +460,25 @@ static void test_blake3(void) {
 
 static void test_xxh32(void) {
     printf("test_xxh32...");
-    assert_algo("xxh32", xxh32_hash, NULL, XXH32_DIGEST_SIZE);
+    assert_algo("xxh32", xxh32_hash, hash_xxh32_inc, XXH32_DIGEST_SIZE);
     printf("OK\n");
 }
 
 static void test_xxh64(void) {
     printf("test_xxh64...");
-    assert_algo("xxh64", xxh64_hash, NULL, XXH64_DIGEST_SIZE);
+    assert_algo("xxh64", xxh64_hash, hash_xxh64_inc, XXH64_DIGEST_SIZE);
     printf("OK\n");
 }
 
 static void test_xxh3_64(void) {
     printf("test_xxh3_64...");
-    assert_algo("xxh3_64", xxh3_64_hash, NULL, XXH3_64_DIGEST_SIZE);
+    assert_algo("xxh3_64", xxh3_64_hash, hash_xxh3_64_inc, XXH3_64_DIGEST_SIZE);
     printf("OK\n");
 }
 
 static void test_xxh3_128(void) {
     printf("test_xxh3_128...");
-    assert_algo("xxh3_128", xxh3_128_hash, NULL, XXH3_128_DIGEST_SIZE);
+    assert_algo("xxh3_128", xxh3_128_hash, hash_xxh3_128_inc, XXH3_128_DIGEST_SIZE);
     printf("OK\n");
 }
 
