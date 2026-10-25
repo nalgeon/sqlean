@@ -13,20 +13,17 @@
 #include "sqlite3ext.h"
 SQLITE_EXTENSION_INIT3
 
-/*
- * Structure used to accumulate the output
- */
+// EvalResult accumulates the output of eval().
 struct EvalResult {
-    char* z;              /* Accumulated output */
-    const char* zSep;     /* Separator */
-    int szSep;            /* Size of the separator string */
-    sqlite3_int64 nAlloc; /* Number of bytes allocated for z[] */
-    sqlite3_int64 nUsed;  /* Number of bytes of z[] actually used */
+    char* z;               // accumulated output
+    const char* zSep;      // separator, NULL when out of memory
+    int szSep;             // size of the separator
+    sqlite3_int64 nAlloc;  // number of bytes allocated for z[]
+    sqlite3_int64 nUsed;   // number of bytes of z[] actually used
 };
 
-/*
- * Callback from sqlite_exec() for the eval() function.
- */
+// eval_callback appends a row of the result to EvalResult.
+// When out of memory, it frees the output, clears EvalResult and returns SQLITE_NOMEM.
 static int eval_callback(void* pCtx, int argc, char** argv, char** colnames) {
     struct EvalResult* p = (struct EvalResult*)pCtx;
     int i;
@@ -39,9 +36,6 @@ static int eval_callback(void* pCtx, int argc, char** argv, char** colnames) {
         if ((sqlite3_int64)sz + p->nUsed + p->szSep + 1 > p->nAlloc) {
             char* zNew;
             p->nAlloc = p->nAlloc * 2 + sz + p->szSep + 1;
-            /* Using sqlite3_realloc64() would be better, but it is a recent
-            ** addition and will cause a segfault if loaded by an older version
-            ** of SQLite.  */
             zNew = p->nAlloc <= 0x7fffffff ? sqlite3_realloc64(p->z, p->nAlloc) : 0;
             if (zNew == 0) {
                 sqlite3_free(p->z);
@@ -60,12 +54,8 @@ static int eval_callback(void* pCtx, int argc, char** argv, char** colnames) {
     return SQLITE_OK;
 }
 
-/*
- * Implementation of the eval(X) and eval(X,Y) SQL functions.
- *
- * Evaluate the SQL text in X. Return the results, using string
- * Y as the separator. If Y is omitted, use a single space character.
- */
+// define_eval implements eval(sql[, sep]). It executes the SQL text and returns
+// all values of all rows, separated by sep (a single space by default).
 static void define_eval(sqlite3_context* context, int argc, sqlite3_value** argv) {
     const char* zSql;
     sqlite3* db;
@@ -88,15 +78,18 @@ static void define_eval(sqlite3_context* context, int argc, sqlite3_value** argv
     x.szSep = (int)strlen(x.zSep);
     db = sqlite3_context_db_handle(context);
     rc = sqlite3_exec(db, zSql, eval_callback, &x, &zErr);
-    if (rc != SQLITE_OK) {
-        sqlite3_result_error(context, zErr, -1);
-        sqlite3_free(zErr);
-    } else if (x.zSep == 0) {
+    if (x.zSep == 0 || rc == SQLITE_NOMEM) {
+        // eval_callback clears zSep when out of memory (then exec reports SQLITE_ABORT)
         sqlite3_result_error_nomem(context);
+        sqlite3_free(x.z);
+    } else if (rc != SQLITE_OK) {
+        sqlite3_result_error(context, zErr ? zErr : sqlite3_errmsg(db), -1);
+        sqlite3_result_error_code(context, rc);
         sqlite3_free(x.z);
     } else {
         sqlite3_result_text(context, x.z, (int)x.nUsed, sqlite3_free);
     }
+    sqlite3_free(zErr);
 }
 
 // define_eval_init registers eval() and returns SQLITE_OK.

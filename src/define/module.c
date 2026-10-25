@@ -216,17 +216,32 @@ static int define_vtab_connect(sqlite3* db,
 }
 
 // define_vtab_open opens a cursor and compiles the body for it.
+// SQLite doesn't call xClose if xOpen fails, so it frees the cursor on failure.
 static int define_vtab_open(sqlite3_vtab* pVTab, sqlite3_vtab_cursor** ppCursor) {
     struct define_vtab* vtab = (struct define_vtab*)pVTab;
     struct define_cursor* cur = sqlite3_malloc64(sizeof(*cur));
     if (!cur)
         return SQLITE_NOMEM;
+    memset(cur, 0, sizeof(*cur));
 
-    *ppCursor = &cur->base;
-    cur->param_argv = sqlite3_malloc(sizeof(*cur->param_argv) * vtab->num_inputs);
+    if (vtab->num_inputs > 0) {
+        cur->param_argv = sqlite3_malloc64(sizeof(*cur->param_argv) * vtab->num_inputs);
+        if (!cur->param_argv) {
+            sqlite3_free(cur);
+            return SQLITE_NOMEM;
+        }
+    }
+
     // the body may no longer compile, e.g. if a table it uses was dropped
     int ret = sqlite3_prepare_v2(vtab->db, vtab->sql, vtab->sql_len, &cur->stmt, NULL);
-    return ret == SQLITE_OK ? ret : vtab_error(pVTab, ret);
+    if (ret != SQLITE_OK) {
+        sqlite3_free(cur->param_argv);
+        sqlite3_free(cur);
+        return vtab_error(pVTab, ret);
+    }
+
+    *ppCursor = &cur->base;
+    return SQLITE_OK;
 }
 
 // define_vtab_close finalizes the cursor's statement and frees the cursor.
