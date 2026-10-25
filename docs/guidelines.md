@@ -297,7 +297,7 @@ Required cases beyond the happy path:
 - Roundtrips: format ↔ parse, encode ↔ decode;
 - Corrupt input: invalid serialized data or unparseable text is reported as a failure.
 
-Add each test binary to the `ctest-all` target in the `Makefile`. It must pass under `make ctest-all-sanitize`.
+Register each test in the `Makefile`: add `<package>/<module>` to `CTESTS` and list the sources it compiles with in `CTEST_SRC_<package>_<module>`. Run it with `make ctest package=<package> module=<module>`. It must pass under `make ctest-sanitize` with the same arguments.
 
 ### Bundle test (`test/sqlean.sql`)
 
