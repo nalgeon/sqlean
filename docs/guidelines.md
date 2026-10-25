@@ -111,7 +111,19 @@ Helpers shared between domain files go in an internal header as `static inline` 
 
 Put platform differences in one place behind `#if` and keep them out of the logic (`timespec_now` in `time.c`). Prefer the C11 standard API, and fall back to POSIX, then Windows.
 
-Code ported from another project follows that project's semantics exactly. Comment deliberate parity ("as Go does") and every intentional deviation. List the source in `docs/third-party.md` and credit it in the module docs.
+### Ported code
+
+When writing a new module, or replacing old code that is hard to follow, first look for a proven implementation in Go: the standard library, or a well-known third-party package. Go code is easy to port to C, and it's usually more readable and better tested than C code found in the wild. The `crypto` hashes are ported this way: MD5 and SHA from the Go standard library, XXH64 from `cespare/xxhash`, and XXH3 from `zeebo/xxh3`.
+
+When porting:
+
+- Check the license. BSD and MIT are fine; copyleft is not. Keep the original copyright in the file header and add the source to `docs/third-party.md`.
+- Port the portable Go code (the `*_generic.go` files in the standard library), not the assembly versions.
+- Go checks bounds and panics on bad indexes, C doesn't. Every rule from [No undefined behavior](#no-undefined-behavior) and [Memory and buffers](#memory-and-buffers) still applies to the ported code.
+- Verify the port against a trusted reference implementation over many input sizes and split points, not just a few test vectors, and run it under the sanitizers.
+- Accept that a portable port may be slower than hand-optimized (e.g. SIMD) C. Simple, correct code is worth more here, unless there's a real performance need.
+
+Ported code follows the original's semantics exactly. Comment deliberate parity ("as Go does") and every intentional deviation, and credit the source in the module docs.
 
 ## Binding layer
 
@@ -323,7 +335,7 @@ When bringing an existing module up to these guidelines:
 
 1. Write the missing tests against the current behavior first, especially NULL propagation and extreme values. Then refactor, and any behavior change will show up in the diff.
 2. Split the module into domain, binding, and entry point if it isn't already. Move logic out of `extension.c`.
-3. Go through the domain layer: make sure every input has defined behavior, check for UB, use fixed-width types, and make private symbols `static`.
+3. Go through the domain layer. If the code is hard to follow, consider replacing it with a port (see [Ported code](#ported-code)). Make sure every input has defined behavior, check for UB, use fixed-width types, and make private symbols `static`.
 4. Go through the binding layer: check the argument order (NULL, type, shape), the split between data (NULL) and spec arguments (error), allocation checks, registration flags and return codes, and explicit arities.
 5. Run `make sanitize-gcc`.
 6. Update `docs/<module>.md`, and call out every user-visible behavior change in the commit message (`<module>: <what changed>`).
