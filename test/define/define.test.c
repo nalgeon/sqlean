@@ -13,6 +13,7 @@
 // (such as a cached statement) keeps the connection open.
 
 #include <assert.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -317,6 +318,9 @@ static const ErrorTest table_errors[] = {
     {"select * from half where x > 1", SQLITE_ERROR, "no query solution"},
     // a runtime error in the body
     {"select * from overflow", SQLITE_ERROR, "integer overflow"},
+    // a table the body uses is gone
+    {"select * from fromsrc", SQLITE_ERROR, "no such table: src"},
+    {"select * from fromsrc(1)", SQLITE_ERROR, "no such table: src"},
 };
 
 static void test_table_errors(void) {
@@ -326,9 +330,12 @@ static void test_table_errors(void) {
     exec_ok(db, "create virtual table half using define((select :x / 2 as value))");
     exec_ok(db,
             "create virtual table overflow using define((select abs(-9223372036854775808) as v))");
+    exec_ok(db, "create table src(x)");
+    exec_ok(db, "create virtual table fromsrc using define((select x + ? as y from src))");
+    exec_ok(db, "drop table src");
     check_errors(db, table_errors, sizeof(table_errors) / sizeof(table_errors[0]));
     // failed definitions are not saved
-    assert(query_int(db, "select count(*) from sqlean_define") == 2);
+    assert(query_int(db, "select count(*) from sqlean_define") == 3);
     assert(query_int(db, "select count(*) from sqlite_master where name = 't'") == 0);
     close_db(db);
     printf("OK\n");
@@ -705,6 +712,101 @@ static void test_cache_connections(void) {
 
 #pragma endregion
 
+#pragma region Out of memory
+
+// The allocator fails every allocation after the first fail_after ones
+// (if fail_after is not negative).
+static sqlite3_mem_methods default_mem;
+static int fail_after = -1;
+
+static bool should_fail(void) {
+    if (fail_after < 0) {
+        return false;
+    }
+    if (fail_after == 0) {
+        return true;
+    }
+    fail_after--;
+    return false;
+}
+
+static void* failing_malloc(int n) {
+    return should_fail() ? NULL : default_mem.xMalloc(n);
+}
+
+static void* failing_realloc(void* p, int n) {
+    return should_fail() ? NULL : default_mem.xRealloc(p, n);
+}
+
+// Each case runs after the setup statements, in a new connection.
+static const char* nomem_setup[] = {
+    "create table data(x)",
+    "insert into data values (1), (2), (3)",
+    "select define('plus', '? + 1')",
+    "create virtual table half using define((select :x / 2 as value))",
+};
+
+static const char* nomem_cases[] = {
+    "select define('minus', '? - 1')",
+    "select define('plus', '? + 2')",
+    "select define('plus', '? + ?')",
+    "select define('abs', '1')",
+    "select define('f', '1; select 2')",
+    "select sum(plus(x)) from data",
+    "select undefine('plus')",
+    "select undefine('half')",
+    "create virtual table third using define((select :x / 3 as value))",
+    "select sum(value) from data, half(data.x)",
+    "select eval('select 1, 2; select 3')",
+};
+
+static void test_nomem(void) {
+    printf("test_nomem...");
+    sqlite3_shutdown();
+    sqlite3_config(SQLITE_CONFIG_GETMALLOC, &default_mem);
+    sqlite3_mem_methods mem = default_mem;
+    mem.xMalloc = failing_malloc;
+    mem.xRealloc = failing_realloc;
+    sqlite3_config(SQLITE_CONFIG_MALLOC, &mem);
+    sqlite3_initialize();
+
+    for (size_t i = 0; i < sizeof(nomem_cases) / sizeof(nomem_cases[0]); i++) {
+        // fail the n-th allocation of the case, until it runs without failing
+        int want = SQLITE_OK;
+        for (int n = -1;; n++) {
+            sqlite3* db = open_db(":memory:");
+            for (size_t j = 0; j < sizeof(nomem_setup) / sizeof(nomem_setup[0]); j++) {
+                exec_ok(db, nomem_setup[j]);
+            }
+            fail_after = n;
+            Result res = exec(db, nomem_cases[i]);
+            bool failed = fail_after == 0;
+            fail_after = -1;
+            close_db(db);
+            if (n < 0) {
+                // without failures
+                want = res.rc;
+                continue;
+            }
+            // if an allocation failed, the statement reports it or recovers
+            if (res.rc != want && res.rc != SQLITE_NOMEM) {
+                printf("%s, allocation %d: %d %s\n", nomem_cases[i], n, res.rc, res.msg);
+            }
+            assert(res.rc == want || res.rc == SQLITE_NOMEM);
+            if (!failed) {
+                break;
+            }
+        }
+    }
+
+    sqlite3_shutdown();
+    sqlite3_config(SQLITE_CONFIG_MALLOC, &default_mem);
+    sqlite3_initialize();
+    printf("OK\n");
+}
+
+#pragma endregion
+
 int main(void) {
     // Init
     test_init();
@@ -727,4 +829,7 @@ int main(void) {
     // Cache
     test_cache();
     test_cache_connections();
+
+    // Out of memory
+    test_nomem();
 }
