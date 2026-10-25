@@ -86,8 +86,12 @@ static void exec_ok(sqlite3* db, const char* sql) {
 static int64_t query_int(sqlite3* db, const char* sql) {
     sqlite3_stmt* stmt;
     int rc = sqlite3_prepare_v2(db, sql, -1, &stmt, NULL);
-    assert(rc == SQLITE_OK);
-    rc = sqlite3_step(stmt);
+    if (rc == SQLITE_OK) {
+        rc = sqlite3_step(stmt);
+    }
+    if (rc != SQLITE_ROW) {
+        printf("%s: %s\n", sql, sqlite3_errmsg(db));
+    }
     assert(rc == SQLITE_ROW);
     int64_t val = sqlite3_column_int64(stmt, 0);
     sqlite3_finalize(stmt);
@@ -160,18 +164,16 @@ static void test_init(void) {
 
 #pragma region Errors
 
-// Most errors lose the original message and report a bare result code
-// (current behavior).
 static const ErrorTest define_errors[] = {
-    {"select define(null, '1')", SQLITE_MISUSE, "bad parameter or other API misuse"},
-    {"select define('f', null)", SQLITE_ERROR, "SQL logic error"},  // compiles 'select '
-    {"select define('f', '')", SQLITE_ERROR, "SQL logic error"},
-    {"select define('f', 'from')", SQLITE_ERROR, "SQL logic error"},  // syntax error
-    {"select define('f', 'nosuch(?)')", SQLITE_ERROR, "SQL logic error"},
-    {"select define('answer', '24')", SQLITE_BUSY, "database is locked"},   // redefine
-    {"select define('abs', 'abs(?)')", SQLITE_BUSY, "database is locked"},  // override built-in
-    {"select zero()", SQLITE_MISUSE, "bad parameter or other API misuse"},  // no rows
-    {"select overflow()", SQLITE_ERROR, "SQL logic error"},  // runtime error in the body
+    {"select define(null, '1')", SQLITE_ERROR, "function name is NULL"},
+    {"select define('f', null)", SQLITE_ERROR, "function body is NULL"},
+    {"select define('f', '')", SQLITE_ERROR, "incomplete input"},
+    {"select define('f', 'from')", SQLITE_ERROR, "near \"from\": syntax error"},
+    {"select define('f', 'nosuch(?)')", SQLITE_ERROR, "no such function: nosuch"},
+    {"select define('abs', 'abs(?)')", SQLITE_ERROR, "function already exists: abs"},
+    {"select define('ABS', '1')", SQLITE_ERROR, "function already exists: ABS"},
+    {"select define('half', '1')", SQLITE_ERROR, "table function already exists: half"},
+    {"select overflow()", SQLITE_ERROR, "integer overflow"},  // runtime error in the body
     {"select answer(1)", SQLITE_ERROR, "wrong number of arguments to function answer()"},
 };
 
@@ -179,12 +181,16 @@ static void test_define_errors(void) {
     printf("test_define_errors...");
     sqlite3* db = open_db(":memory:");
     exec_ok(db, "select define('answer', '42')");
-    exec_ok(db, "select define('zero', '1 where 0')");
     exec_ok(db, "select define('overflow', 'abs(-9223372036854775808)')");
+    exec_ok(db, "create virtual table half using define((select :x / 2 as value))");
     check_errors(db, define_errors, sizeof(define_errors) / sizeof(define_errors[0]));
     // failed definitions are not saved
     assert(query_int(db, "select count(*) from sqlean_define") == 3);
     assert(query_int(db, "select answer()") == 42);
+    assert(query_int(db, "select abs(-1)") == 1);
+    // a body that returns no rows gives NULL, like a scalar subquery
+    exec_ok(db, "select define('zero', '1 where 0')");
+    assert(query_int(db, "select zero() is null") == 1);
     close_db(db);
     printf("OK\n");
 }
@@ -203,8 +209,8 @@ static const ErrorTest table_errors[] = {
      "duplicate column name: a"},
     // parameters accept only equality constraints
     {"select * from half where x > 1", SQLITE_ERROR, "no query solution"},
-    // a runtime error in the body loses its message (current behavior)
-    {"select * from overflow", SQLITE_ERROR, "SQL logic error"},
+    // a runtime error in the body
+    {"select * from overflow", SQLITE_ERROR, "integer overflow"},
 };
 
 static void test_table_errors(void) {
@@ -396,11 +402,7 @@ static void test_undefine(void) {
     // so do functions calling an undefined function
     Result res = exec(db, "select plustwice(1)");
     assert(res.rc == SQLITE_ERROR);
-    assert(strcmp(res.msg, "SQL logic error") == 0);  // the message is lost (current behavior)
-
-    // the name can't be defined again in the same connection (current behavior)
-    res = exec(db, "select define('plus', '? + 2')");
-    assert(res.rc == SQLITE_BUSY);
+    assert(strcmp(res.msg, "no such function: plus") == 0);
 
     // undefine doesn't touch functions it didn't define
     res = exec(db, "select undefine('abs')");
@@ -408,6 +410,75 @@ static void test_undefine(void) {
     assert(query_int(db, "select abs(-1)") == 1);
 
     close_db(db);
+    printf("OK\n");
+}
+
+static void test_redefine(void) {
+    printf("test_redefine...");
+    remove_db();
+    sqlite3* db = open_db(DB_PATH);
+    exec_ok(db, "create table data(x)");
+    exec_ok(db, "insert into data values (1), (2), (3)");
+    exec_ok(db, "select define('plus', '? + 1')");
+    exec_ok(db, "select define('plustwice', 'plus(plus(?))')");
+    sqlite3* other = open_db(DB_PATH);
+
+    // same number of parameters: the body changes,
+    // including in statements prepared before
+    sqlite3_stmt* stmt;
+    assert(sqlite3_prepare_v2(db, "select sum(plus(x)) from data", -1, &stmt, NULL) == SQLITE_OK);
+    exec_ok(db, "select define('Plus', '? + 2')");
+    assert(sqlite3_step(stmt) == SQLITE_ROW);
+    assert(sqlite3_column_int(stmt, 0) == 12);
+    sqlite3_finalize(stmt);
+    assert(query_int(db, "select plustwice(1)") == 5);
+    assert(query_int(db, "select count(*) from sqlean_define where name like 'plus'") == 1);
+    assert(query_int(db, "select count(*) from sqlean_define where body = '? + 2'") == 1);
+
+    // in the middle of a query (the first row is computed with the old body)
+    assert(query_int(db,
+                     "select sum(plus(x) + iif(x = 1, coalesce(define('plus', '? + 3'), 0), 0)) "
+                     "from data") == 3 + 5 + 6);
+    assert(query_int(db, "select plus(1)") == 4);
+
+    // by its own body
+    exec_ok(db, "select define('selfdef', 'coalesce(define(''selfdef'', ''2''), 1)')");
+    assert(query_int(db, "select selfdef() + selfdef()") == 3);
+    assert(query_int(db, "select selfdef()") == 2);
+
+    // a different number of parameters: the old function stops working
+    exec_ok(db, "select define('plus', '? + ?')");
+    assert(query_int(db, "select plus(1, 2)") == 3);
+    Result res = exec(db, "select plus(1)");
+    assert(res.rc == SQLITE_ERROR);
+    assert(strcmp(res.msg, "wrong number of arguments to function plus()") == 0);
+
+    // and back
+    exec_ok(db, "select define('plus', '? + 10')");
+    assert(query_int(db, "select plus(1)") == 11);
+    res = exec(db, "select plus(1, 2)");
+    assert(strcmp(res.msg, "wrong number of arguments to function plus()") == 0);
+
+    // other connections keep the old body until reconnect
+    assert(query_int(other, "select plus(1)") == 2);
+    close_db(other);
+    other = open_db(DB_PATH);
+    assert(query_int(other, "select plus(1)") == 11);
+    assert(query_int(other, "select plustwice(1)") == 21);
+    close_db(other);
+
+    // after undefine
+    exec_ok(db, "select undefine('plus')");
+    exec_ok(db, "select define('plus', '? + 20')");
+    assert(query_int(db, "select plus(1)") == 21);
+
+    // a failed redefinition changes nothing
+    res = exec(db, "select define('plus', 'nosuch(?)')");
+    assert(res.rc == SQLITE_ERROR);
+    assert(query_int(db, "select plus(1)") == 21);
+
+    close_db(db);
+    remove_db();
     printf("OK\n");
 }
 
@@ -486,7 +557,7 @@ static void test_cache(void) {
     exec_ok(db, "insert into data values (-9223372036854775807 - 1)");
     Result res = exec(db, "select sum(absf(x)) from data");
     assert(res.rc == SQLITE_ERROR);
-    assert(strcmp(res.msg, "SQL logic error") == 0);
+    assert(strcmp(res.msg, "integer overflow") == 0);
     assert(query_int(db, "select absf(-42)") == 42);
 
     // define_free does nothing, and functions keep working after it
@@ -538,6 +609,7 @@ int main(void) {
     // Connections
     test_connections();
     test_undefine();
+    test_redefine();
 
     // Cache
     test_cache();

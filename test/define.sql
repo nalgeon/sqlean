@@ -73,8 +73,21 @@ select '06_01', define('noop', '1') is null;
 -- the name is converted to text
 select define(1, '11');
 select '06_02', "1"() = 11;
--- redefining an existing function fails with "database is locked" (not testable here)
 select '06_03', body = '42' from sqlean_define where name = 'answer';
+-- redefining replaces the body
+select define('redef', '? + 1');
+select define('ReDef', '? + 2');
+select '06_04', redef(1) = 3;
+select '06_05', count(*) = 1 from sqlean_define where name = 'ReDef' and body = '? + 2';
+-- with a different number of parameters
+select define('redef', '? + ?');
+select '06_06', redef(1, 2) = 3;
+select '06_07', count(*) = 1 from sqlean_define where name like 'redef' and body = '? + ?';
+select undefine('redef');
+-- a body that returns no rows gives NULL
+select define('norows', '1 where 0');
+select '06_08', norows() is null;
+select undefine('norows');
 
 -- table-valued functions
 create virtual table strcut using define((

@@ -60,6 +60,26 @@ select randint(10, 99);
 76
 ```
 
+To change a function, define it again:
+
+```sql
+sqlite> select define('sumn', '(:n * :n + :n) / 2');
+sqlite> select sumn(5);
+15
+```
+
+The new body takes effect in the current connection right away, even for queries that are already prepared or running. Other open connections keep the old body until they reconnect. If the new definition has a different number of parameters, the old one stops working (`wrong number of arguments to function sumn()`).
+
+You can't define a function with the name of an existing function that wasn't created with `define()`, such as a built-in one (`function already exists: abs`), or with the name of a table-valued function.
+
+If the body returns no rows, the function returns NULL, just like a scalar subquery:
+
+```sql
+sqlite> select define('find_user', 'name from users where id = ?');
+sqlite> select find_user(42) is null;
+1
+```
+
 To list defined scalar functions, select them from the `sqlean_define` table:
 
 ```sql
@@ -80,7 +100,7 @@ sqlite> select sumn(5);
 Runtime error: no such function: sumn
 ```
 
-The function is deleted from `sqlean_define`, and stops working in the current connection right away. Other open connections keep the function until they reconnect. SQLite doesn't allow deleting a function while a query is running, so you can't define a function with the same name again in the same connection. Reconnect first.
+The function is deleted from `sqlean_define`, and stops working in the current connection right away. Other open connections keep the function until they reconnect.
 
 ## Table-valued functions
 
@@ -266,7 +286,7 @@ Run Time: real 0.336 user 0.330145 sys 0.005352
 
 `define(NAME, BODY)`
 
-Defines a scalar function and stores it in the `sqlean_define` table.
+Defines a scalar function and stores it in the `sqlean_define` table. Defining an existing function again replaces its body. Errors if the body doesn't compile, or if a function with this name exists but wasn't created with `define()`.
 
 `create virtual table NAME using define((BODY))`
 
