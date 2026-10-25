@@ -151,27 +151,40 @@ select '21_02', (type, body) = ('table', '(select 1 as value)') from sqlean_defi
 select '21_03', count(*) = 16 from sqlean_define where type = 'scalar';
 select '21_04', count(*) = 7 from sqlean_define where type = 'table';
 select '21_05', count(*) = 1 from sqlite_master where type = 'table' and name = 'strcut';
--- dropping a table function directly leaves it in sqlean_define (current behavior)
+-- dropping a table function directly deletes it from sqlean_define
 drop table one;
-select '21_06', count(*) = 1 from sqlean_define where name = 'one';
+select '21_06', count(*) = 0 from sqlean_define where name = 'one';
 
 -- undefine
 select '31_01', undefine('subnm') is null;
 select '31_02', count(*) = 0 from sqlean_define where name = 'subnm';
-select '31_03', count(*) = 22 from sqlean_define;
--- the function stays registered until reconnect
-select '31_04', subnm(5, 1) = 4;
+select '31_03', count(*) = 21 from sqlean_define;
+-- calling an undefined function fails with "no such function" (see test_undefine)
+select '31_04', count(*) = 1 from pragma_function_list where name = 'subnm';
 select undefine('strcut');
 select '31_05', count(*) = 0 from sqlean_define where name = 'strcut';
 select '31_06', count(*) = 0 from sqlite_master where type = 'table' and name = 'strcut';
-select '31_07', count(*) = 21 from sqlean_define;
+select '31_07', count(*) = 20 from sqlean_define;
 select '31_08', undefine('nosuch') is null;
 select '31_09', undefine(null) is null;
-select '31_10', count(*) = 21 from sqlean_define;
--- undefine drops any table with the given name, even a regular one (current behavior)
+select '31_10', count(*) = 20 from sqlean_define;
+-- undefine doesn't touch tables it didn't create
 create table regular(x);
 select undefine('regular');
-select '31_11', count(*) = 0 from sqlite_master where name = 'regular';
+select '31_11', count(*) = 1 from sqlite_master where name = 'regular';
+-- a table function row whose table is gone (or replaced) is just deleted
+insert into sqlean_define(name, type, body) values ('regular', 'table', '(select 1 as a)');
+select undefine('regular');
+select '31_12', count(*) = 0 from sqlean_define where name = 'regular';
+select '31_13', count(*) = 1 from sqlite_master where name = 'regular';
+-- names are case-insensitive
+create virtual table CamelCase using define((select 1 as value));
+select undefine('camelcase');
+select '31_14', count(*) = 0 from sqlite_master where name = 'CamelCase';
+select '31_15', count(*) = 0 from sqlean_define where name = 'CamelCase';
+select define('CamelCase', '1');
+select undefine('CAMELCASE');
+select '31_16', count(*) = 0 from sqlean_define where name = 'CamelCase';
 
 -- names are quoted properly
 create table innocent (i);
