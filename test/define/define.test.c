@@ -9,12 +9,8 @@
 // tests can't: error codes and messages, function flags, and the behavior
 // across several connections.
 //
-// Defined scalar functions keep their prepared statements in a process-wide
-// cache, and a connection with cached statements can't be closed until
-// define_free() is called. Tests close such connections with sqlite3_close_v2,
-// which defers the actual close until test_define_free frees the cache.
-// test_define_free must run last: after define_free(), define() and defined
-// functions fail in every connection of the process.
+// Every test closes its connections with close_db, which fails if anything
+// (such as a cached statement) keeps the connection open.
 
 #include <assert.h>
 #include <stdint.h>
@@ -39,6 +35,15 @@ static sqlite3* open_db(const char* path) {
     rc = define_init(db);
     assert(rc == SQLITE_OK);
     return db;
+}
+
+// close_db closes a database connection, which must succeed.
+static void close_db(sqlite3* db) {
+    int rc = sqlite3_close(db);
+    if (rc != SQLITE_OK) {
+        printf("sqlite3_close: %s\n", sqlite3_errmsg(db));
+    }
+    assert(rc == SQLITE_OK);
 }
 
 // remove_db deletes the test database file.
@@ -89,6 +94,16 @@ static int64_t query_int(sqlite3* db, const char* sql) {
     return val;
 }
 
+// count_stmts returns the number of prepared statements in the connection.
+static int count_stmts(sqlite3* db) {
+    int n = 0;
+    for (sqlite3_stmt* stmt = sqlite3_next_stmt(db, NULL); stmt != NULL;
+         stmt = sqlite3_next_stmt(db, stmt)) {
+        n++;
+    }
+    return n;
+}
+
 typedef struct {
     const char* sql;
     int rc;
@@ -116,26 +131,26 @@ static void test_init(void) {
     sqlite3* db = open_db(DB_PATH);
     assert(query_int(db, "select count(*) from sqlite_master where name = 'sqlean_define'") == 1);
     exec_ok(db, "create table data(x)");
-    sqlite3_close(db);
+    close_db(db);
 
     // fails on a read-only database without sqlean_define
     remove_db();
     db = open_db(DB_PATH);
     exec_ok(db, "drop table sqlean_define");
-    sqlite3_close(db);
+    close_db(db);
     sqlite3_open_v2(DB_PATH, &db, SQLITE_OPEN_READONLY, NULL);
     assert(define_init(db) == SQLITE_READONLY);
-    sqlite3_close(db);
+    close_db(db);
 
     // works on a read-only database with sqlean_define
     remove_db();
     db = open_db(DB_PATH);
     exec_ok(db, "insert into sqlean_define values ('plus', 'scalar', '? + 1')");
-    sqlite3_close(db);
+    close_db(db);
     sqlite3_open_v2(DB_PATH, &db, SQLITE_OPEN_READONLY, NULL);
     assert(define_init(db) == SQLITE_OK);
     assert(query_int(db, "select plus(1)") == 2);
-    sqlite3_close_v2(db);
+    close_db(db);
 
     remove_db();
     printf("OK\n");
@@ -170,7 +185,7 @@ static void test_define_errors(void) {
     // failed definitions are not saved
     assert(query_int(db, "select count(*) from sqlean_define") == 3);
     assert(query_int(db, "select answer()") == 42);
-    sqlite3_close_v2(db);
+    close_db(db);
     printf("OK\n");
 }
 
@@ -203,7 +218,7 @@ static void test_table_errors(void) {
     // failed definitions are not saved
     assert(query_int(db, "select count(*) from sqlean_define") == 2);
     assert(query_int(db, "select count(*) from sqlite_master where name = 't'") == 0);
-    sqlite3_close(db);
+    close_db(db);
     printf("OK\n");
 }
 
@@ -222,7 +237,7 @@ static void test_eval_errors(void) {
     exec_ok(db, "create table data(x)");
     check_errors(db, eval_errors, sizeof(eval_errors) / sizeof(eval_errors[0]));
     assert(query_int(db, "select count(*) from data") == 1);
-    sqlite3_close(db);
+    close_db(db);
     printf("OK\n");
 }
 
@@ -295,7 +310,7 @@ static void test_flags(void) {
     exec_ok(db, "insert into checked values (1)");
     assert(query_int(db, "select count(*) from log") == 3);
 
-    sqlite3_close_v2(db);
+    close_db(db);
     printf("OK\n");
 }
 
@@ -339,51 +354,121 @@ static void test_connections(void) {
     assert(query_int(db4, "select plus(1)") == 3);
     assert(query_int(db1, "select plus(1)") == 2);
 
-    sqlite3_close_v2(db1);
-    sqlite3_close_v2(db2);
-    sqlite3_close_v2(db3);
-    sqlite3_close_v2(db4);
+    close_db(db1);
+    close_db(db2);
+    close_db(db3);
+    close_db(db4);
     remove_db();
     printf("OK\n");
 }
 
 #pragma endregion
 
-#pragma region define_free
+#pragma region Cache
 
-// test_define_free must run last, see the comment at the top.
-static void test_define_free(void) {
-    printf("test_define_free...");
+static void test_cache(void) {
+    printf("test_cache...");
+    sqlite3* db = open_db(":memory:");
+    exec_ok(db, "create table data(x)");
+    exec_ok(db,
+            "insert into data with recursive c(i) as (select 1 union all select i + 1 from c "
+            "where i < 1000) select i from c");
+    exec_ok(db, "select define('plus', '? + 1')");
+    exec_ok(db, "select define('times2', '? * 2')");
+    exec_ok(db, "select define('plustimes2', 'times2(plus(?))')");
+    exec_ok(db, "select define('evalf', 'eval(?)')");
+    exec_ok(db, "select define('absf', 'abs(?)')");
+
+    // the body is compiled once per run of the calling statement,
+    // and each function gets its own body
+    assert(query_int(db, "select sum(plus(x)) from data") == 501500);
+    assert(query_int(db, "select sum(plus(x) + times2(x) + plus(x)) from data") == 2004000);
+    assert(query_int(db, "select sum(times2(plus(x))) from data") == 1003000);
+    assert(query_int(db, "select sum(plustimes2(x)) from data") == 1003000);
+    assert(query_int(db, "select sum(plus(x)) from data where times2(x) > 1000") == 375750);
+    assert(
+        query_int(
+            db, "select plus(times2(x)) from data where x = (select max(plus(x)) - 1 from data)") ==
+        2001);
+
+    // a calling statement can be run again
+    sqlite3_stmt* stmt;
+    assert(sqlite3_prepare_v2(db, "select plus(?)", -1, &stmt, NULL) == SQLITE_OK);
+    for (int i = 0; i < 3; i++) {
+        sqlite3_bind_int(stmt, 1, i);
+        assert(sqlite3_step(stmt) == SQLITE_ROW);
+        assert(sqlite3_column_int(stmt, 0) == i + 1);
+        sqlite3_reset(stmt);
+    }
+    sqlite3_finalize(stmt);
+
+    // the compiled bodies are statements of the connection, alive while
+    // the calling statement runs
+    assert(sqlite3_prepare_v2(db, "select plus(x), times2(x), plus(x) from data", -1, &stmt,
+                              NULL) == SQLITE_OK);
+    assert(count_stmts(db) == 1);
+    assert(sqlite3_step(stmt) == SQLITE_ROW);
+    assert(sqlite3_column_int(stmt, 0) == 2);
+    assert(count_stmts(db) == 3);
+    assert(sqlite3_step(stmt) == SQLITE_ROW);
+    assert(count_stmts(db) == 3);
+    sqlite3_reset(stmt);
+    assert(count_stmts(db) == 1);
+
+    // and freed when it's finalized without finishing
+    assert(sqlite3_step(stmt) == SQLITE_ROW);
+    assert(count_stmts(db) == 3);
+    sqlite3_finalize(stmt);
+    assert(count_stmts(db) == 0);
+
+    // nested calls of the same function
+    assert(query_int(db, "select evalf('select evalf(''select 42'')')") == 42);
+    assert(query_int(db, "select sum(evalf('select ' || plus(x))) from data") == 501500);
+
+    // in triggers
+    exec_ok(db, "create table log(x)");
+    exec_ok(db,
+            "create trigger t_log after insert on log begin "
+            "update log set x = plus(new.x) where rowid = new.rowid; end");
+    exec_ok(db, "insert into log select x from data");
+    assert(query_int(db, "select sum(x) from log") == 501500);
+
+    // a runtime error stops the calling statement, but the function keeps working
+    exec_ok(db, "insert into data values (-9223372036854775807 - 1)");
+    Result res = exec(db, "select sum(absf(x)) from data");
+    assert(res.rc == SQLITE_ERROR);
+    assert(strcmp(res.msg, "SQL logic error") == 0);
+    assert(query_int(db, "select absf(-42)") == 42);
+
+    // define_free does nothing, and functions keep working after it
+    exec_ok(db, "select define_free()");
+    assert(query_int(db, "select plus(1)") == 2);
+    exec_ok(db, "select define('minus', '? - 1')");
+    assert(query_int(db, "select minus(1)") == 0);
+
+    // the connection closes without define_free
+    close_db(db);
+    printf("OK\n");
+}
+
+static void test_cache_connections(void) {
+    printf("test_cache_connections...");
     sqlite3* db1 = open_db(":memory:");
     sqlite3* db2 = open_db(":memory:");
-    exec_ok(db1, "select define('plus', '? + 1')");
-    exec_ok(db2, "select define('minus', '? - 1')");
+    exec_ok(db1, "select define('f', '? + 1')");
+    exec_ok(db2, "select define('f', '? + 2')");
 
-    // a connection with defined functions can't be closed before define_free
-    assert(sqlite3_close(db1) == SQLITE_BUSY);
-    // a connection without defined functions can
-    sqlite3* db3 = open_db(":memory:");
-    assert(sqlite3_close(db3) == SQLITE_OK);
+    // functions with the same name in different connections are independent
+    assert(query_int(db1, "select f(1)") == 2);
+    assert(query_int(db2, "select f(1)") == 3);
 
-    // define_free in one connection frees the statements of all connections,
-    // including the ones closed with sqlite3_close_v2 by the previous tests
+    // define_free and close in one connection don't affect the others
     exec_ok(db1, "select define_free()");
-    assert(sqlite3_close(db1) == SQLITE_OK);
-
-    // after that, defined functions and define() fail in every connection
-    // (current behavior)
-    Result res = exec(db2, "select minus(1)");
-    assert(res.rc == SQLITE_MISUSE);
-    res = exec(db2, "select define('times2', '? * 2')");
-    assert(res.rc == SQLITE_MISUSE);
-    sqlite3* db4 = open_db(":memory:");
-    res = exec(db4, "select define('times2', '? * 2')");
-    assert(res.rc == SQLITE_MISUSE);
-    assert(sqlite3_close(db4) == SQLITE_OK);
-
-    // eval keeps working
-    assert(query_int(db2, "select eval('select 42')") == 42);
-    assert(sqlite3_close(db2) == SQLITE_OK);
+    close_db(db1);
+    assert(query_int(db2, "select f(1)") == 3);
+    exec_ok(db2, "select define('g', '? * 2')");
+    assert(query_int(db2, "select g(f(1))") == 6);
+    close_db(db2);
     printf("OK\n");
 }
 
@@ -404,6 +489,7 @@ int main(void) {
     // Connections
     test_connections();
 
-    // define_free
-    test_define_free();
+    // Cache
+    test_cache();
+    test_cache_connections();
 }
