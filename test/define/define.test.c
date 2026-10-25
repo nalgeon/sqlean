@@ -339,26 +339,75 @@ static void test_connections(void) {
     assert(query_int(db3, "select plus(1)") == 2);
     assert(query_int(db3, "select value from half(10)") == 5);
 
-    // undefine doesn't unregister the function in any open connection,
-    // but new connections don't load it
+    // undefine removes the function from its own connection at once,
+    // other open connections keep it until they reconnect,
+    // and new connections don't load it
     exec_ok(db1, "select undefine('plus')");
-    assert(query_int(db1, "select plus(1)") == 2);
+    res = exec(db1, "select plus(1)");
+    assert(res.rc == SQLITE_ERROR);
+    assert(strcmp(res.msg, "no such function: plus") == 0);
     assert(query_int(db3, "select plus(1)") == 2);
     sqlite3* db4 = open_db(DB_PATH);
     res = exec(db4, "select plus(1)");
     assert(res.rc == SQLITE_ERROR);
     assert(strcmp(res.msg, "no such function: plus") == 0);
 
+    // table functions are removed from all connections at once
+    exec_ok(db1, "select undefine('half')");
+    res = exec(db3, "select value from half(10)");
+    assert(res.rc == SQLITE_ERROR);
+    assert(strcmp(res.msg, "no such table: half") == 0);
+
     // the same name can be defined again in a connection that doesn't have it
     exec_ok(db4, "select define('plus', '? + 2')");
     assert(query_int(db4, "select plus(1)") == 3);
-    assert(query_int(db1, "select plus(1)") == 2);
+    assert(query_int(db3, "select plus(1)") == 2);
 
     close_db(db1);
     close_db(db2);
     close_db(db3);
     close_db(db4);
     remove_db();
+    printf("OK\n");
+}
+
+static void test_undefine(void) {
+    printf("test_undefine...");
+    sqlite3* db = open_db(":memory:");
+    exec_ok(db, "create table data(x)");
+    exec_ok(db, "insert into data values (1), (2), (3)");
+    exec_ok(db, "select define('plus', '? + 1')");
+    exec_ok(db, "select define('plustwice', 'plus(plus(?))')");
+
+    // a statement prepared before undefine fails when run after it
+    sqlite3_stmt* stmt;
+    assert(sqlite3_prepare_v2(db, "select sum(plus(x)) from data", -1, &stmt, NULL) == SQLITE_OK);
+    assert(sqlite3_step(stmt) == SQLITE_ROW);
+    assert(sqlite3_column_int(stmt, 0) == 9);
+    sqlite3_reset(stmt);
+
+    // names are case-insensitive
+    exec_ok(db, "select undefine('PLUS')");
+    assert(query_int(db, "select count(*) from sqlean_define where name = 'plus'") == 0);
+    assert(sqlite3_step(stmt) == SQLITE_ERROR);
+    assert(strcmp(sqlite3_errmsg(db), "no such function: plus") == 0);
+    sqlite3_finalize(stmt);
+
+    // so do functions calling an undefined function
+    Result res = exec(db, "select plustwice(1)");
+    assert(res.rc == SQLITE_ERROR);
+    assert(strcmp(res.msg, "SQL logic error") == 0);  // the message is lost (current behavior)
+
+    // the name can't be defined again in the same connection (current behavior)
+    res = exec(db, "select define('plus', '? + 2')");
+    assert(res.rc == SQLITE_BUSY);
+
+    // undefine doesn't touch functions it didn't define
+    res = exec(db, "select undefine('abs')");
+    assert(res.rc == SQLITE_OK);
+    assert(query_int(db, "select abs(-1)") == 1);
+
+    close_db(db);
     printf("OK\n");
 }
 
@@ -488,6 +537,7 @@ int main(void) {
 
     // Connections
     test_connections();
+    test_undefine();
 
     // Cache
     test_cache();

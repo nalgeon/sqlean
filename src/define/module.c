@@ -21,6 +21,7 @@ SQLITE_EXTENSION_INIT3
 struct define_vtab {
     sqlite3_vtab base;
     sqlite3* db;
+    char* name;
     char* sql;
     size_t sql_len;
     int num_inputs;
@@ -59,10 +60,31 @@ static char* build_create_statement(sqlite3_stmt* stmt) {
     return sqlite3_str_finish(sql);
 }
 
-static int define_vtab_destroy(sqlite3_vtab* pVTab) {
-    sqlite3_free(((struct define_vtab*)pVTab)->sql);
-    sqlite3_free(pVTab);
+static int define_vtab_disconnect(sqlite3_vtab* pVTab) {
+    struct define_vtab* vtab = (struct define_vtab*)pVTab;
+    sqlite3_free(vtab->name);
+    sqlite3_free(vtab->sql);
+    sqlite3_free(vtab);
     return SQLITE_OK;
+}
+
+// define_vtab_destroy deletes the function from sqlean_define when its table
+// is dropped, whether by undefine() or by drop table.
+static int define_vtab_destroy(sqlite3_vtab* pVTab) {
+    struct define_vtab* vtab = (struct define_vtab*)pVTab;
+    sqlite3_stmt* stmt;
+    int ret = sqlite3_prepare_v2(
+        vtab->db, "delete from sqlean_define where name = ? collate nocase", -1, &stmt, NULL);
+    if (ret != SQLITE_OK) {
+        return ret;
+    }
+    sqlite3_bind_text(stmt, 1, vtab->name, -1, SQLITE_STATIC);
+    ret = sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
+    if (ret != SQLITE_DONE) {
+        return ret;
+    }
+    return define_vtab_disconnect(pVTab);
 }
 
 static int define_vtab_create(sqlite3* db,
@@ -95,6 +117,10 @@ static int define_vtab_create(sqlite3* db,
     *ppVtab = &vtab->base;
 
     vtab->db = db;
+    if (!(vtab->name = sqlite3_mprintf("%s", argv[2]))) {
+        ret = SQLITE_NOMEM;
+        goto error;
+    }
     vtab->sql_len = len - 2;
     if (!(vtab->sql = sqlite3_mprintf("%.*s", vtab->sql_len, argv[3] + 1))) {
         ret = SQLITE_NOMEM;
@@ -139,7 +165,7 @@ sqlite_error:
 error:
     sqlite3_free(create);
     sqlite3_finalize(stmt);
-    define_vtab_destroy(*ppVtab);
+    define_vtab_disconnect(*ppVtab);
     *ppVtab = NULL;
     return ret;
 }
@@ -329,7 +355,7 @@ static sqlite3_module define_module = {
     .xCreate = define_vtab_create,
     .xConnect = define_vtab_connect,
     .xBestIndex = define_vtab_best_index,
-    .xDisconnect = define_vtab_destroy,
+    .xDisconnect = define_vtab_disconnect,
     .xDestroy = define_vtab_destroy,
     .xOpen = define_vtab_open,
     .xClose = define_vtab_close,

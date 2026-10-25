@@ -72,14 +72,15 @@ select name, body from sqlean_define where type = 'scalar';
 └───────┴───────────────────┘
 ```
 
-To delete a scalar function, execute `undefine()`, then reconnect to the database:
+To delete a scalar function, execute `undefine()`:
 
 ```
 sqlite> select undefine('sumn');
-... reconnect
 sqlite> select sumn(5);
-Parse error: no such function: sumn
+Runtime error: no such function: sumn
 ```
+
+The function is deleted from `sqlean_define`, and stops working in the current connection right away. Other open connections keep the function until they reconnect. SQLite doesn't allow deleting a function while a query is running, so you can't define a function with the same name again in the same connection. Reconnect first.
 
 ## Table-valued functions
 
@@ -143,13 +144,15 @@ sqlite> select name, body from sqlean_define where type = 'table';
 └────────┴────────┘
 ```
 
-To delete a table-valued function, execute `undefine()`:
+To delete a table-valued function, execute `undefine()` or drop its table:
 
 ```
 sqlite> select undefine('strcut');
 sqlite> select * from strcut('one;two', ';');
 Parse error: no such table: strcut
 ```
+
+Either way, the function is deleted from `sqlean_define` and from all connections.
 
 ## Arbitrary SQL statements
 
@@ -279,7 +282,7 @@ Executes arbitrary SQL and returns the result as string (if any).
 
 `undefine(NAME)`
 
-Deletes a previously defined function (scalar or table-valued).
+Deletes a previously defined function (scalar or table-valued). Does nothing if there is no such function in `sqlean_define`, so it never drops a table it didn't create. Names are case-insensitive.
 
 ## Acknowledgements
 
