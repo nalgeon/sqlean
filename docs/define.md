@@ -5,6 +5,7 @@ The `sqlean-define` extension allows writing arbitrary functions in SQL (as oppo
 [Scalar Functions](#scalar-functions) •
 [Table-valued functions](#table-valued-functions) •
 [Arbitrary SQL statements](#arbitrary-sql-statements) •
+[Security](#security) •
 [Performance](#performance) •
 [Reference](#reference) •
 [Acknowledgements](#acknowledgements) •
@@ -207,6 +208,32 @@ select eval('select value from tmp');
 1 2 3
 select eval('drop table tmp');
 ```
+
+## Security
+
+Defined functions run their body with the full rights of the connection, and they are part of the database: scalar functions are loaded from the `sqlean_define` table when the extension is loaded, and table-valued functions are virtual tables in the schema. So anyone who can modify the database file can change what they do.
+
+SQLite protects against malicious schemas by not allowing dangerous functions, such as `eval`, `define`, or `undefine`, in views and triggers (they are [direct-only](https://sqlite.org/c3ref/c_deterministic.html#sqlitedirectonly)). But a defined function that calls such a function is not blocked, so it can be used to bypass this protection:
+
+```sql
+select define('evalf', 'eval(?)');
+create view v as select evalf('delete from data');
+
+-- runs the delete
+select * from v;
+```
+
+The same goes for table-valued functions, and for direct-only functions and virtual tables from other extensions, such as `fileio_write` or `vsv`.
+
+SQLite blocks defined functions in views, triggers, `CHECK` constraints, and `DEFAULT` clauses when the [trusted_schema](https://sqlite.org/pragma.html#pragma_trusted_schema) setting is off. It's on by default, so when opening or attaching a database you don't trust, turn it off before querying it:
+
+```sql
+pragma trusted_schema = 0;
+```
+
+With `trusted_schema` off, defined functions still work in regular queries, but not in schema objects. Generated columns and indexes don't accept defined functions in any case, because they are not deterministic.
+
+SQLite versions before 3.50.0 don't apply this check to `CHECK` constraints, not even for direct-only functions like `eval`. With these versions, `trusted_schema` doesn't fully protect you, so don't load the extension into a connection that opens untrusted databases.
 
 ## Performance
 
