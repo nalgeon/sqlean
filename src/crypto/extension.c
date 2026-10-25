@@ -71,7 +71,7 @@ typedef struct {
 // The largest digest size of all the algorithms.
 #define MAX_DIGEST_SIZE SHA512_DIGEST_SIZE
 
-static const Hash hash_blake3 = {BLAKE3_OUT_LEN, blake3_hash};
+static const Hash hash_blake3 = {BLAKE3_DIGEST_SIZE, blake3_hash};
 static const Hash hash_md5 = {MD5_DIGEST_SIZE, md5_hash};
 static const Hash hash_sha1 = {SHA1_DIGEST_SIZE, sha1_hash};
 static const Hash hash_sha256 = {SHA256_DIGEST_SIZE, sha256_hash};

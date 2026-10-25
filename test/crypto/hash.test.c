@@ -44,7 +44,7 @@ DEFINE_HASHER(sha1, sha1_ctx)
 DEFINE_HASHER(sha256, sha256_ctx)
 DEFINE_HASHER(sha384, sha384_ctx)
 DEFINE_HASHER(sha512, sha512_ctx)
-DEFINE_HASHER(blake3, blake3_hasher)
+DEFINE_HASHER(blake3, blake3_ctx)
 
 typedef void (*OneShot)(const uint8_t* data, size_t len, uint8_t* out);
 typedef void (
@@ -453,7 +453,7 @@ static void test_sha512(void) {
 
 static void test_blake3(void) {
     printf("test_blake3...");
-    assert_algo("blake3", blake3_hash, hash_blake3_inc, BLAKE3_OUT_LEN);
+    assert_algo("blake3", blake3_hash, hash_blake3_inc, BLAKE3_DIGEST_SIZE);
     printf("OK\n");
 }
 
