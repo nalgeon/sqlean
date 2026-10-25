@@ -1,24 +1,25 @@
-/*********************************************************************
- * Filename:   md5.h
- * Author:     Brad Conte (brad AT bradconte.com)
- * Source:     https://github.com/B-Con/crypto-algorithms
- * License:    Public Domain
- * Details:    Defines the API for the corresponding MD5 implementation.
- *********************************************************************/
+// Copyright 2009 The Go Authors, BSD 3-Clause License
+// https://github.com/golang/go/blob/master/LICENSE
 
-#ifndef MD5_H
-#define MD5_H
+// Ported to C by Anton Zhiyanov, MIT License
+// https://github.com/nalgeon/sqlean
+
+// MD5 hash algorithm (RFC 1321).
+
+#ifndef CRYPTO_MD5_H
+#define CRYPTO_MD5_H
 
 #include <stddef.h>
 #include <stdint.h>
 
 #define MD5_DIGEST_SIZE 16
+#define MD5_BLOCK_SIZE 64
 
 typedef struct {
-    uint8_t data[64];
-    uint32_t datalen;
-    uint64_t bitlen;
-    uint32_t state[4];
+    uint32_t h[4];              // state
+    uint8_t x[MD5_BLOCK_SIZE];  // buffered input, not yet hashed
+    size_t nx;                  // number of bytes in x
+    uint64_t len;               // total number of bytes hashed
 } md5_ctx;
 
 // Incremental hashing: init, then update any number of times, then final.
@@ -30,4 +31,4 @@ void md5_final(md5_ctx* ctx, uint8_t hash[MD5_DIGEST_SIZE]);
 // One-shot hashing of len bytes. The data may be NULL if len is 0.
 void md5_hash(const uint8_t* data, size_t len, uint8_t hash[MD5_DIGEST_SIZE]);
 
-#endif  // MD5_H
+#endif  // CRYPTO_MD5_H
