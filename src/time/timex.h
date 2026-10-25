@@ -220,14 +220,15 @@ size_t time_fmt_date(char* buf, size_t size, Time t, int offset_sec);
 // time_fmt_time returns a time string for the given time value.
 size_t time_fmt_time(char* buf, size_t size, Time t, int offset_sec);
 
-// time_parse parses a formatted string and returns the time value it represents.
-// Returns zero time for NULL or invalid syntax; zero time is also a valid result.
-Time time_parse(const char* value);
+// time_parse parses a formatted string into the time value it represents.
+// Returns false for NULL or invalid syntax.
+bool time_parse(const char* value, Time* out);
 
 // Marshaling.
 
-// time_blob returns the time instant represented by the binary data.
-Time time_blob(const uint8_t* buf);
+// time_blob decodes the time instant represented by the binary data.
+// Returns false if the data is not a valid time blob.
+bool time_blob(const uint8_t* buf, Time* out);
 
 // time_to_blob returns the binary representation of the time instant t.
 void time_to_blob(Time t, uint8_t* buf);

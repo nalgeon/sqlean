@@ -294,14 +294,14 @@ select '67_06', time_parse('15:56:35.666Z') = time_date(1, 1, 1, 15, 56, 35, 666
 select '67_07', time_parse('15:56:35+03:30') = time_date(1, 1, 1, 12, 26, 35);
 select '67_08', time_parse('15:56:35-03:30') = time_date(1, 1, 1, 19, 26, 35);
 
--- time_parse: unparseable values return the zero time
-select '68_01', time_parse('2011-11-18T15:56:35.666777888Y') = time_date(1, 1, 1);
-select '68_03', time_parse(' 2011-11-18T15:56:35Z') = time_date(1, 1, 1);
-select '68_11', time_parse('2011-11-18T15:56:35.Z') = time_date(1, 1, 1);
-select '68_12', time_parse('2011-11-18T15:56:35+0500') = time_date(1, 1, 1);
-select '68_13', time_parse('2011-1-8T15:56:35Z') = time_date(1, 1, 1);
-select '68_14', time_parse('2011-11-18X15:56:35Z') = time_date(1, 1, 1);
-select '68_15', time_parse('garbage') = time_date(1, 1, 1);
+-- time_parse: unparseable values return null
+select '68_01', time_parse('2011-11-18T15:56:35.666777888Y') is null;
+select '68_03', time_parse(' 2011-11-18T15:56:35Z') is null;
+select '68_11', time_parse('2011-11-18T15:56:35.Z') is null;
+select '68_12', time_parse('2011-11-18T15:56:35+0500') is null;
+select '68_13', time_parse('2011-1-8T15:56:35Z') is null;
+select '68_14', time_parse('2011-11-18X15:56:35Z') is null;
+select '68_15', time_parse('garbage') is null;
 -- RFC 3339 section 5.6 allows a lowercase 't' and 'z'; both are accepted
 select '68_16', time_parse('2011-11-18t15:56:35Z') = time_unix(1321631795, 0);
 select '68_17', time_parse('2011-11-18T15:56:35z') = time_unix(1321631795, 0);
@@ -312,7 +312,7 @@ select '68_21', time_parse('0000-01-01T00:00:00Z') = time_date(0, 1, 1);
 select '68_22', time_parse('2011-11-18T16:56:35+23:59') = time_date(2011, 11, 17, 16, 57, 35);
 select '68_23', time_parse('2011-11-18T16:56:35-23:59') = time_date(2011, 11, 19, 16, 55, 35);
 -- text with an embedded NUL is unparseable
-select '68_24', time_parse(cast('2011-11-18' || char(0) || 'junk' as text)) = time_date(1, 1, 1);
+select '68_24', time_parse(cast('2011-11-18' || char(0) || 'junk' as text)) is null;
 
 -- ASCII whitespace separators
 select '68_25', time_parse('2011-11-18  15:56:35') = time_unix(1321631795, 0);
@@ -322,21 +322,21 @@ select '68_27', time_parse(char(50,48,49,49,45,49,49,45,49,56,9,49,53,58,53,54,5
 select '72_01', time_parse(char(50,48,49,49,45,49,49,45,49,56,11,49,53,58,53,54,58,51,53)) = time_unix(1321631795, 0);
 select '72_02', time_parse(char(50,48,49,49,45,49,49,45,49,56,12,49,53,58,53,54,58,51,53)) = time_unix(1321631795, 0);
 -- whitespace separates the date from the time and nothing else
-select '72_03', time_parse('2011-11-18T20:56:35' || char(9) || '+05:00') = time_date(1, 1, 1);
-select '72_04', time_parse('2011-11-18T15:56:35 ') = time_date(1, 1, 1);
+select '72_03', time_parse('2011-11-18T20:56:35' || char(9) || '+05:00') is null;
+select '72_04', time_parse('2011-11-18T15:56:35 ') is null;
 -- a fraction follows seconds, never HH:MM
-select '72_05', time_parse('15:56.5Z') = time_date(1, 1, 1);
-select '72_06', time_parse('2011-11-18T15:56.5Z') = time_date(1, 1, 1);
+select '72_05', time_parse('15:56.5Z') is null;
+select '72_06', time_parse('2011-11-18T15:56.5Z') is null;
 -- the separators inside the date and the time are required
-select '72_07', time_parse('2011-11X18T15:56:35Z') = time_date(1, 1, 1);
-select '72_08', time_parse('2011-11-18T15:56X35Z') = time_date(1, 1, 1);
+select '72_07', time_parse('2011-11X18T15:56:35Z') is null;
+select '72_08', time_parse('2011-11-18T15:56X35Z') is null;
 
 -- out-of-range timezone offsets normalize; malformed offsets are rejected
 select '73_01', time_parse('2011-11-18T15:56:35+24:00') = time_date(2011, 11, 17, 15, 56, 35);
 select '73_02', time_parse('2011-11-18T15:56:35+05:60') = time_date(2011, 11, 18, 9, 56, 35);
-select '73_03', time_parse('2011-11-18T15:56:35+0500') = time_date(1, 1, 1);
-select '73_04', time_parse('2011-11-18T15:56:35+05:xx') = time_date(1, 1, 1);
-select '73_05', time_parse('2011-11-18T15:56:35+05X00') = time_date(1, 1, 1);
+select '73_03', time_parse('2011-11-18T15:56:35+0500') is null;
+select '73_04', time_parse('2011-11-18T15:56:35+05:xx') is null;
+select '73_05', time_parse('2011-11-18T15:56:35+05X00') is null;
 
 -- time_parse: out-of-range date and clock fields are normalized, not rejected
 select '70_01', time_parse('2011-13-18T15:56:35Z') = time_date(2012, 1, 18, 15, 56, 35);
@@ -508,3 +508,67 @@ select '96_01', count(*) = 2 from t96_opt;
 create table t96_req(at blob not null check (time_get_year(at) >= 2000));
 insert or ignore into t96_req values (null), (time_date(2024, 1, 15));
 select '96_02', count(*) = 1 from t96_req;
+
+-- bad data is null: wrong types, wrong-size and corrupt blobs
+-- 13 bytes of version 0, and a version 1 blob with nsec > 999999999
+select '97_01', time_get_year('2011-11-18') is null;
+select '97_02', time_get_year(1321631795) is null;
+select '97_03', time_get_year(x'0100') is null;
+select '97_04', time_get_year(zeroblob(13)) is null;
+select '97_05', time_get_year(x'01000000000000000040000000') is null;
+select '97_06', time_get_isoweek('not a time') is null;
+select '97_07', time_get('not a time', 'year') is null;
+select '97_08', date_part('year', 'not a time') is null;
+select '97_09', time_to_unix(x'00') is null;
+select '97_10', time_after('not a time', time_now()) is null;
+select '97_11', time_after(time_now(), 'not a time') is null;
+select '97_12', time_add('not a time', dur_h()) is null;
+select '97_13', time_add(time_now(), 'not a duration') is null;
+select '97_14', time_add(time_now(), 1.5) is null;
+select '97_15', time_sub('not a time', time_now()) is null;
+select '97_16', time_since('not a time') is null;
+select '97_17', time_until('not a time') is null;
+select '97_18', time_add_date('not a time', 1) is null;
+select '97_19', time_add_date(time_now(), 'x') is null;
+select '97_20', time_add_date(time_now(), 1, 'x') is null;
+select '97_21', time_add_date(time_now(), 1, 1, 'x') is null;
+select '97_22', time_trunc('not a time', 'day') is null;
+select '97_23', time_trunc(time_now(), 1.5) is null;
+select '97_24', time_trunc(time_now(), x'01') is null;
+select '97_25', date_trunc('day', 'not a time') is null;
+select '97_26', time_round('not a time', dur_h()) is null;
+select '97_27', time_round(time_now(), 'x') is null;
+select '97_28', time_fmt_iso('not a time') is null;
+select '97_29', time_fmt_iso(time_now(), 'x') is null;
+select '97_30', time_fmt_date(x'01') is null;
+select '97_31', time_date('x', 11, 18) is null;
+select '97_32', time_date(2011, 11, 18, 15, 56, 'x') is null;
+select '97_33', time_date(2011, 11, 18, 15, 56, 35, 0, 'x') is null;
+select '97_34', time_unix('x') is null;
+select '97_35', time_unix(1321631795, 'x') is null;
+select '97_36', time_milli('x') is null;
+select '97_37', time_nano(1.5) is null;
+select '97_38', time_parse(x'323031312d31312d3138') is null;
+select '97_39', time_parse(20111118) is null;
+select '97_40', make_date('x', 11, 18) is null;
+select '97_41', to_timestamp('x') is null;
+select '97_42', age('not a time', time_now()) is null;
+
+-- integer arguments accept numeric text, as SQLite's own functions do
+select '98_01', time_date('2011', '11', '18') = time_date(2011, 11, 18);
+select '98_02', time_unix('1321631795') = time_unix(1321631795);
+select '98_03', time_add(time_unix(0), '1000000000') = time_unix(1);
+select '98_04', time_add_date(time_date(2011, 11, 18), '1') = time_date(2012, 11, 18);
+select '98_05', time_fmt_iso(time_unix(0), '3600') = '1970-01-01T01:00:00+01:00';
+select '98_06', time_trunc(time_unix(1321631795), '3600000000000') = time_trunc(time_unix(1321631795), dur_h());
+
+-- integer arguments that don't fit in 32 bits are null, not truncated
+-- 4294969307 = 2^32 + 2011
+select '99_01', time_date(4294969307, 11, 18) is null;
+select '99_02', time_date(2011, 11, 18, 15, 56, -2147483649) is null;
+select '99_03', time_add_date(time_date(2011, 11, 18), 4294967297) is null;
+select '99_04', time_add_date(time_date(2011, 11, 18), 0, 0, 4294967297) is null;
+select '99_05', time_fmt_iso(time_unix(0), 4294967296) is null;
+-- the 32-bit boundaries themselves are accepted
+select '99_06', time_date(2011, 11, 18, 15, 56, 2147483647) is not null;
+select '99_07', time_fmt_iso(time_unix(0), -2147483648) is not null;

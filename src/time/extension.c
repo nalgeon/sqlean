@@ -4,6 +4,7 @@
 // SQLite extension for working with time.
 
 #include <assert.h>
+#include <limits.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -15,11 +16,24 @@ SQLITE_EXTENSION_INIT3
 
 #include "time/timex.h"
 
+#pragma region Helpers
+
 // result_blob converts a Time value to a blob and sets it as the result.
 static void result_blob(sqlite3_context* context, Time t) {
     uint8_t buf[TIMEX_BLOB_SIZE];
     time_to_blob(t, buf);
     sqlite3_result_blob(context, buf, sizeof(buf), SQLITE_TRANSIENT);
+}
+
+// result_unknown_field sets an "unknown field" error naming the field.
+static void result_unknown_field(sqlite3_context* context, const char* field) {
+    char* msg = sqlite3_mprintf("unknown field: %s", field);
+    if (msg == NULL) {
+        sqlite3_result_error_nomem(context);
+        return;
+    }
+    sqlite3_result_error(context, msg, -1);
+    sqlite3_free(msg);
 }
 
 // has_null reports whether any of the arguments is NULL.
@@ -31,6 +45,60 @@ static bool has_null(int argc, sqlite3_value** argv) {
     }
     return false;
 }
+
+// arg_time decodes a time blob argument into out.
+// Returns false if the value is not a valid time blob.
+static bool arg_time(sqlite3_value* value, Time* out) {
+    if (sqlite3_value_type(value) != SQLITE_BLOB) {
+        return false;
+    }
+    const uint8_t* buf = sqlite3_value_blob(value);
+    if (sqlite3_value_bytes(value) != TIMEX_BLOB_SIZE) {
+        return false;
+    }
+    return time_blob(buf, out);
+}
+
+// arg_int64 decodes an integer argument into out, converting numeric text.
+// Returns false if the value is not an integer.
+static bool arg_int64(sqlite3_value* value, int64_t* out) {
+    if (sqlite3_value_numeric_type(value) != SQLITE_INTEGER) {
+        return false;
+    }
+    *out = sqlite3_value_int64(value);
+    return true;
+}
+
+// arg_int decodes an integer argument into out, converting numeric text.
+// Returns false if the value is not an integer or does not fit in an int.
+static bool arg_int(sqlite3_value* value, int* out) {
+    int64_t n;
+    if (!arg_int64(value, &n) || n < INT_MIN || n > INT_MAX) {
+        return false;
+    }
+    *out = (int)n;
+    return true;
+}
+
+// arg_field decodes a field name argument. Field names are spec arguments,
+// so an invalid one is an error, not NULL. Sets the error and returns NULL
+// if the value is not a field name.
+static const char* arg_field(sqlite3_context* context, sqlite3_value* value) {
+    if (sqlite3_value_type(value) == SQLITE_BLOB) {
+        sqlite3_result_error(context, "field name should be text", -1);
+        return NULL;
+    }
+    const char* field = (const char*)sqlite3_value_text(value);
+    if (field == NULL) {
+        sqlite3_result_error_nomem(context);
+        return NULL;
+    }
+    return field;
+}
+
+#pragma endregion
+
+#pragma region Constructors
 
 // time_now()
 static void fn_now(sqlite3_context* context, int argc, sqlite3_value** argv) {
@@ -46,37 +114,47 @@ static void fn_date(sqlite3_context* context, int argc, sqlite3_value** argv) {
         sqlite3_result_null(context);
         return;
     }
+
+    // year, month, day, hour, min, sec, nsec, offset_sec;
+    // the optional ones default to 0.
+    int parts[8] = {0};
     for (int i = 0; i < argc; i++) {
-        if (sqlite3_value_type(argv[i]) != SQLITE_INTEGER) {
-            sqlite3_result_error(context, "all parameters should be integers", -1);
+        if (!arg_int(argv[i], &parts[i])) {
+            sqlite3_result_null(context);
             return;
         }
     }
-    int year = sqlite3_value_int(argv[0]);
-    int month = sqlite3_value_int(argv[1]);
-    int day = sqlite3_value_int(argv[2]);
 
-    int hour = 0;
-    int min = 0;
-    int sec = 0;
-    if (argc >= 6) {
-        hour = sqlite3_value_int(argv[3]);
-        min = sqlite3_value_int(argv[4]);
-        sec = sqlite3_value_int(argv[5]);
-    }
-
-    int nsec = 0;
-    if (argc >= 7) {
-        nsec = sqlite3_value_int(argv[6]);
-    }
-
-    int offset_sec = 0;
-    if (argc == 8) {
-        offset_sec = sqlite3_value_int(argv[7]);
-    }
-
-    Time t = time_date(year, month, day, hour, min, sec, nsec, offset_sec);
+    Time t =
+        time_date(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], parts[7]);
     result_blob(context, t);
+}
+
+#pragma endregion
+
+#pragma region Time parts
+
+// Adapters with the exact signature fn_extract calls the time part functions
+// through: calling a function through an incompatible pointer type is UB.
+
+static int get_month(Time t) {
+    return time_get_month(t);
+}
+
+static int get_weekday(Time t) {
+    return time_get_weekday(t);
+}
+
+static int get_isoyear(Time t) {
+    int year, week;
+    time_get_isoweek(t, &year, &week);
+    return year;
+}
+
+static int get_isoweek(Time t) {
+    int year, week;
+    time_get_isoweek(t, &year, &week);
+    return week;
 }
 
 // time_get_year(t)
@@ -88,65 +166,21 @@ static void fn_date(sqlite3_context* context, int argc, sqlite3_value** argv) {
 // time_get_nano(t)
 // time_get_weekday(t)
 // time_get_yearday(t)
+// time_get_isoyear(t)
+// time_get_isoweek(t)
 static void fn_extract(sqlite3_context* context, int argc, sqlite3_value** argv) {
     assert(argc == 1);
     if (has_null(argc, argv)) {
         sqlite3_result_null(context);
         return;
     }
-    if (sqlite3_value_type(argv[0]) != SQLITE_BLOB) {
-        sqlite3_result_error(context, "parameter should be a time blob", -1);
-        return;
-    }
-    if (sqlite3_value_bytes(argv[0]) != TIMEX_BLOB_SIZE) {
-        sqlite3_result_error(context, "invalid time blob size", -1);
+    Time t;
+    if (!arg_time(argv[0], &t)) {
+        sqlite3_result_null(context);
         return;
     }
     int (*extract)(Time t) = (int (*)(Time t))sqlite3_user_data(context);
-    Time t = time_blob(sqlite3_value_blob(argv[0]));
     sqlite3_result_int(context, extract(t));
-}
-
-// time_get_isoyear(t)
-static void fn_get_isoyear(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    assert(argc == 1);
-    if (has_null(argc, argv)) {
-        sqlite3_result_null(context);
-        return;
-    }
-    if (sqlite3_value_type(argv[0]) != SQLITE_BLOB) {
-        sqlite3_result_error(context, "parameter should be a time blob", -1);
-        return;
-    }
-    if (sqlite3_value_bytes(argv[0]) != TIMEX_BLOB_SIZE) {
-        sqlite3_result_error(context, "invalid time blob size", -1);
-        return;
-    }
-    Time t = time_blob(sqlite3_value_blob(argv[0]));
-    int year, week;
-    time_get_isoweek(t, &year, &week);
-    sqlite3_result_int(context, year);
-}
-
-// time_get_isoweek(t)
-static void fn_get_isoweek(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    assert(argc == 1);
-    if (has_null(argc, argv)) {
-        sqlite3_result_null(context);
-        return;
-    }
-    if (sqlite3_value_type(argv[0]) != SQLITE_BLOB) {
-        sqlite3_result_error(context, "parameter should be a time blob", -1);
-        return;
-    }
-    if (sqlite3_value_bytes(argv[0]) != TIMEX_BLOB_SIZE) {
-        sqlite3_result_error(context, "invalid time blob size", -1);
-        return;
-    }
-    Time t = time_blob(sqlite3_value_blob(argv[0]));
-    int year, week;
-    time_get_isoweek(t, &year, &week);
-    sqlite3_result_int(context, week);
 }
 
 // get_field returns a part of the t according to a given field
@@ -221,15 +255,11 @@ static void get_field(sqlite3_context* context, Time t, const char* field) {
 
     // isoyear, isoweek, isodow, yearday, weekday
     if (strcmp(field, "isoyear") == 0) {
-        int year, week;
-        time_get_isoweek(t, &year, &week);
-        sqlite3_result_int(context, year);
+        sqlite3_result_int(context, get_isoyear(t));
         return;
     }
     if (strcmp(field, "isoweek") == 0 || strcmp(field, "week") == 0) {
-        int year, week;
-        time_get_isoweek(t, &year, &week);
-        sqlite3_result_int(context, week);
+        sqlite3_result_int(context, get_isoweek(t));
         return;
     }
     if (strcmp(field, "isodow") == 0) {
@@ -256,7 +286,21 @@ static void get_field(sqlite3_context* context, Time t, const char* field) {
         return;
     }
 
-    sqlite3_result_error(context, "unknown field", -1);
+    result_unknown_field(context, field);
+}
+
+// get decodes the time and field arguments and returns the field value.
+static void get(sqlite3_context* context, sqlite3_value* time_arg, sqlite3_value* field_arg) {
+    const char* field = arg_field(context, field_arg);
+    if (field == NULL) {
+        return;
+    }
+    Time t;
+    if (!arg_time(time_arg, &t)) {
+        sqlite3_result_null(context);
+        return;
+    }
+    get_field(context, t, field);
 }
 
 // time_get(t, field)
@@ -266,53 +310,23 @@ static void fn_get(sqlite3_context* context, int argc, sqlite3_value** argv) {
         sqlite3_result_null(context);
         return;
     }
-
-    if (sqlite3_value_type(argv[0]) != SQLITE_BLOB) {
-        sqlite3_result_error(context, "1st parameter: should be a time blob", -1);
-        return;
-    }
-    if (sqlite3_value_bytes(argv[0]) != TIMEX_BLOB_SIZE) {
-        sqlite3_result_error(context, "1st parameter: invalid time blob size", -1);
-        return;
-    }
-    Time t = time_blob(sqlite3_value_blob(argv[0]));
-
-    if (sqlite3_value_type(argv[1]) != SQLITE_TEXT) {
-        sqlite3_result_error(context, "2nd parameter: should be a field name", -1);
-        return;
-    }
-    const char* field = (const char*)sqlite3_value_text(argv[1]);
-
-    get_field(context, t, field);
+    get(context, argv[0], argv[1]);
 }
 
 // date_part(field, t)
 // Postgres-compatible.
-static void date_part(sqlite3_context* context, int argc, sqlite3_value** argv) {
+static void fn_date_part(sqlite3_context* context, int argc, sqlite3_value** argv) {
     assert(argc == 2);
     if (has_null(argc, argv)) {
         sqlite3_result_null(context);
         return;
     }
-
-    if (sqlite3_value_type(argv[0]) != SQLITE_TEXT) {
-        sqlite3_result_error(context, "1st parameter: should be a field name", -1);
-        return;
-    }
-    const char* field = (const char*)sqlite3_value_text(argv[0]);
-
-    if (sqlite3_value_type(argv[1]) != SQLITE_BLOB) {
-        sqlite3_result_error(context, "2nd parameter: should be a time blob", -1);
-        return;
-    }
-    if (sqlite3_value_bytes(argv[1]) != TIMEX_BLOB_SIZE) {
-        sqlite3_result_error(context, "2nd parameter: invalid time blob size", -1);
-        return;
-    }
-    Time t = time_blob(sqlite3_value_blob(argv[1]));
-
-    get_field(context, t, field);
+    get(context, argv[1], argv[0]);
 }
+
+#pragma endregion
+
+#pragma region Unix time
 
 // time_unix(sec[, nsec])
 static void fn_unix(sqlite3_context* context, int argc, sqlite3_value** argv) {
@@ -321,19 +335,16 @@ static void fn_unix(sqlite3_context* context, int argc, sqlite3_value** argv) {
         sqlite3_result_null(context);
         return;
     }
-    for (int i = 0; i < argc; i++) {
-        if (sqlite3_value_type(argv[i]) != SQLITE_INTEGER) {
-            sqlite3_result_error(context, "all parameters should be integers", -1);
-            return;
-        }
+    int64_t sec;
+    if (!arg_int64(argv[0], &sec)) {
+        sqlite3_result_null(context);
+        return;
     }
-
-    int64_t sec = sqlite3_value_int64(argv[0]);
     int64_t nsec = 0;
-    if (argc == 2) {
-        nsec = sqlite3_value_int64(argv[1]);
+    if (argc == 2 && !arg_int64(argv[1], &nsec)) {
+        sqlite3_result_null(context);
+        return;
     }
-
     Time t = time_unix(sec, nsec);
     result_blob(context, t);
 }
@@ -347,11 +358,11 @@ static void fn_unix_n(sqlite3_context* context, int argc, sqlite3_value** argv) 
         sqlite3_result_null(context);
         return;
     }
-    if (sqlite3_value_type(argv[0]) != SQLITE_INTEGER) {
-        sqlite3_result_error(context, "parameter should be an integer", -1);
+    int64_t n;
+    if (!arg_int64(argv[0], &n)) {
+        sqlite3_result_null(context);
         return;
     }
-    int64_t n = sqlite3_value_int64(argv[0]);
     Time (*convert)(int64_t n) = (Time(*)(int64_t))sqlite3_user_data(context);
     Time t = convert(n);
     result_blob(context, t);
@@ -367,17 +378,32 @@ static void fn_convert(sqlite3_context* context, int argc, sqlite3_value** argv)
         sqlite3_result_null(context);
         return;
     }
-    if (sqlite3_value_type(argv[0]) != SQLITE_BLOB) {
-        sqlite3_result_error(context, "parameter should be a time blob", -1);
+    Time t;
+    if (!arg_time(argv[0], &t)) {
+        sqlite3_result_null(context);
         return;
     }
-    if (sqlite3_value_bytes(argv[0]) != TIMEX_BLOB_SIZE) {
-        sqlite3_result_error(context, "invalid time blob size", -1);
-        return;
-    }
-    int64_t (*convert)(Time t) = (int64_t(*)(Time t))sqlite3_user_data(context);
-    Time t = time_blob(sqlite3_value_blob(argv[0]));
+    int64_t (*convert)(Time t) = (int64_t (*)(Time t))sqlite3_user_data(context);
     sqlite3_result_int64(context, convert(t));
+}
+
+#pragma endregion
+
+#pragma region Comparison
+
+// Adapters with the exact signature fn_compare calls the comparison functions
+// through: calling a function through an incompatible pointer type is UB.
+
+static int after(Time t, Time u) {
+    return time_after(t, u);
+}
+
+static int before(Time t, Time u) {
+    return time_before(t, u);
+}
+
+static int equal(Time t, Time u) {
+    return time_equal(t, u);
 }
 
 // time_after(t, u)
@@ -390,29 +416,18 @@ static void fn_compare(sqlite3_context* context, int argc, sqlite3_value** argv)
         sqlite3_result_null(context);
         return;
     }
-    if (sqlite3_value_type(argv[0]) != SQLITE_BLOB) {
-        sqlite3_result_error(context, "1st parameter: should be a time blob", -1);
+    Time t, u;
+    if (!arg_time(argv[0], &t) || !arg_time(argv[1], &u)) {
+        sqlite3_result_null(context);
         return;
     }
-    if (sqlite3_value_bytes(argv[0]) != TIMEX_BLOB_SIZE) {
-        sqlite3_result_error(context, "1st parameter: invalid time blob size", -1);
-        return;
-    }
-    Time t = time_blob(sqlite3_value_blob(argv[0]));
-
-    if (sqlite3_value_type(argv[1]) != SQLITE_BLOB) {
-        sqlite3_result_error(context, "2nd parameter: should be a time blob", -1);
-        return;
-    }
-    if (sqlite3_value_bytes(argv[1]) != TIMEX_BLOB_SIZE) {
-        sqlite3_result_error(context, "2nd parameter: invalid time blob size", -1);
-        return;
-    }
-    Time u = time_blob(sqlite3_value_blob(argv[1]));
-
     int (*compare)(Time t, Time u) = (int (*)(Time, Time))sqlite3_user_data(context);
     sqlite3_result_int(context, compare(t, u));
 }
+
+#pragma endregion
+
+#pragma region Arithmetic
 
 // time_add(t, d)
 static void fn_add(sqlite3_context* context, int argc, sqlite3_value** argv) {
@@ -421,22 +436,12 @@ static void fn_add(sqlite3_context* context, int argc, sqlite3_value** argv) {
         sqlite3_result_null(context);
         return;
     }
-    if (sqlite3_value_type(argv[0]) != SQLITE_BLOB) {
-        sqlite3_result_error(context, "1st parameter: should be a time blob", -1);
+    Time t;
+    Duration d;
+    if (!arg_time(argv[0], &t) || !arg_int64(argv[1], &d)) {
+        sqlite3_result_null(context);
         return;
     }
-    if (sqlite3_value_bytes(argv[0]) != TIMEX_BLOB_SIZE) {
-        sqlite3_result_error(context, "1st parameter: invalid time blob size", -1);
-        return;
-    }
-    Time t = time_blob(sqlite3_value_blob(argv[0]));
-
-    if (sqlite3_value_type(argv[1]) != SQLITE_INTEGER) {
-        sqlite3_result_error(context, "2nd parameter: should be an integer", -1);
-        return;
-    }
-    Duration d = sqlite3_value_int64(argv[1]);
-
     Time r = time_add(t, d);
     result_blob(context, r);
 }
@@ -448,70 +453,30 @@ static void fn_sub(sqlite3_context* context, int argc, sqlite3_value** argv) {
         sqlite3_result_null(context);
         return;
     }
-    if (sqlite3_value_type(argv[0]) != SQLITE_BLOB) {
-        sqlite3_result_error(context, "1st parameter: should be a time blob", -1);
+    Time t, u;
+    if (!arg_time(argv[0], &t) || !arg_time(argv[1], &u)) {
+        sqlite3_result_null(context);
         return;
     }
-    if (sqlite3_value_bytes(argv[0]) != TIMEX_BLOB_SIZE) {
-        sqlite3_result_error(context, "1st parameter: invalid time blob size", -1);
-        return;
-    }
-    Time t = time_blob(sqlite3_value_blob(argv[0]));
-
-    if (sqlite3_value_type(argv[1]) != SQLITE_BLOB) {
-        sqlite3_result_error(context, "2nd parameter: should be a time blob", -1);
-        return;
-    }
-    if (sqlite3_value_bytes(argv[1]) != TIMEX_BLOB_SIZE) {
-        sqlite3_result_error(context, "2nd parameter: invalid time blob size", -1);
-        return;
-    }
-    Time u = time_blob(sqlite3_value_blob(argv[1]));
-
     Duration d = time_sub(t, u);
     sqlite3_result_int64(context, d);
 }
 
 // time_since(t)
-static void fn_since(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    assert(argc == 1);
-    if (has_null(argc, argv)) {
-        sqlite3_result_null(context);
-        return;
-    }
-    if (sqlite3_value_type(argv[0]) != SQLITE_BLOB) {
-        sqlite3_result_error(context, "parameter should be a time blob", -1);
-        return;
-    }
-    if (sqlite3_value_bytes(argv[0]) != TIMEX_BLOB_SIZE) {
-        sqlite3_result_error(context, "invalid time blob size", -1);
-        return;
-    }
-    Time t = time_blob(sqlite3_value_blob(argv[0]));
-
-    Duration d = time_since(t);
-    sqlite3_result_int64(context, d);
-}
-
 // time_until(t)
-static void fn_until(sqlite3_context* context, int argc, sqlite3_value** argv) {
+static void fn_elapsed(sqlite3_context* context, int argc, sqlite3_value** argv) {
     assert(argc == 1);
     if (has_null(argc, argv)) {
         sqlite3_result_null(context);
         return;
     }
-    if (sqlite3_value_type(argv[0]) != SQLITE_BLOB) {
-        sqlite3_result_error(context, "parameter should be a time blob", -1);
+    Time t;
+    if (!arg_time(argv[0], &t)) {
+        sqlite3_result_null(context);
         return;
     }
-    if (sqlite3_value_bytes(argv[0]) != TIMEX_BLOB_SIZE) {
-        sqlite3_result_error(context, "invalid time blob size", -1);
-        return;
-    }
-    Time t = time_blob(sqlite3_value_blob(argv[0]));
-
-    Duration d = time_until(t);
-    sqlite3_result_int64(context, d);
+    Duration (*elapsed)(Time t) = (Duration(*)(Time))sqlite3_user_data(context);
+    sqlite3_result_int64(context, elapsed(t));
 }
 
 // time_add_date(t, years[, months[, days]])
@@ -521,43 +486,28 @@ static void fn_add_date(sqlite3_context* context, int argc, sqlite3_value** argv
         sqlite3_result_null(context);
         return;
     }
-    if (sqlite3_value_type(argv[0]) != SQLITE_BLOB) {
-        sqlite3_result_error(context, "1st parameter: should be a time blob", -1);
+    Time t;
+    if (!arg_time(argv[0], &t)) {
+        sqlite3_result_null(context);
         return;
     }
-    if (sqlite3_value_bytes(argv[0]) != TIMEX_BLOB_SIZE) {
-        sqlite3_result_error(context, "1st parameter: invalid time blob size", -1);
-        return;
-    }
-    Time t = time_blob(sqlite3_value_blob(argv[0]));
 
-    if (sqlite3_value_type(argv[1]) != SQLITE_INTEGER) {
-        sqlite3_result_error(context, "2nd parameter: should be an integer", -1);
-        return;
-    }
-    int years = sqlite3_value_int(argv[1]);
-
-    int months = 0;
-    if (argc >= 3) {
-        if (sqlite3_value_type(argv[2]) != SQLITE_INTEGER) {
-            sqlite3_result_error(context, "3rd parameter: should be an integer", -1);
+    // years, months, days; the optional ones default to 0.
+    int parts[3] = {0};
+    for (int i = 1; i < argc; i++) {
+        if (!arg_int(argv[i], &parts[i - 1])) {
+            sqlite3_result_null(context);
             return;
         }
-        months = sqlite3_value_int(argv[2]);
     }
 
-    int days = 0;
-    if (argc == 4) {
-        if (sqlite3_value_type(argv[3]) != SQLITE_INTEGER) {
-            sqlite3_result_error(context, "4th parameter: should be an integer", -1);
-            return;
-        }
-        days = sqlite3_value_int(argv[3]);
-    }
-
-    Time r = time_add_date(t, years, months, days);
+    Time r = time_add_date(t, parts[0], parts[1], parts[2]);
     result_blob(context, r);
 }
+
+#pragma endregion
+
+#pragma region Rounding
 
 // trunc_field truncates t according to a given field
 static void trunc_field(sqlite3_context* context, Time t, const char* field) {
@@ -650,7 +600,7 @@ static void trunc_field(sqlite3_context* context, Time t, const char* field) {
         return;
     }
 
-    sqlite3_result_error(context, "unknown field", -1);
+    result_unknown_field(context, field);
 }
 
 // time_trunc(t, field)
@@ -662,64 +612,54 @@ static void fn_trunc(sqlite3_context* context, int argc, sqlite3_value** argv) {
         return;
     }
 
-    // first parameter is a time blob
-    if (sqlite3_value_type(argv[0]) != SQLITE_BLOB) {
-        sqlite3_result_error(context, "1st parameter: should be a time blob", -1);
+    // The second argument is either a duration or a field name.
+    // Check for an integer first, so that numeric text is a duration.
+    Duration d;
+    bool is_dur = arg_int64(argv[1], &d);
+    const char* field = NULL;
+    if (!is_dur && sqlite3_value_type(argv[1]) == SQLITE_TEXT) {
+        field = arg_field(context, argv[1]);
+        if (field == NULL) {
+            return;
+        }
+    }
+    if (!is_dur && field == NULL) {
+        // Neither: a real or a blob is a bad duration value.
+        sqlite3_result_null(context);
         return;
     }
-    if (sqlite3_value_bytes(argv[0]) != TIMEX_BLOB_SIZE) {
-        sqlite3_result_error(context, "1st parameter: invalid time blob size", -1);
-        return;
-    }
-    Time t = time_blob(sqlite3_value_blob(argv[0]));
 
-    // second parameter can be a custom duration
-    if (sqlite3_value_type(argv[1]) == SQLITE_INTEGER) {
-        // truncate to custom duration
-        Duration d = sqlite3_value_int64(argv[1]);
+    Time t;
+    if (!arg_time(argv[0], &t)) {
+        sqlite3_result_null(context);
+        return;
+    }
+
+    if (is_dur) {
         Time r = time_truncate(t, d);
         result_blob(context, r);
-        return;
+    } else {
+        trunc_field(context, t, field);
     }
-
-    // or a field name
-    if (sqlite3_value_type(argv[1]) != SQLITE_TEXT) {
-        sqlite3_result_error(context, "2nd parameter: should be a field name", -1);
-        return;
-    }
-    const char* field = (const char*)sqlite3_value_text(argv[1]);
-
-    // truncate to field
-    trunc_field(context, t, field);
 }
 
 // date_trunc(field, t)
 // Postgres-compatible.
-static void date_trunc(sqlite3_context* context, int argc, sqlite3_value** argv) {
+static void fn_date_trunc(sqlite3_context* context, int argc, sqlite3_value** argv) {
     assert(argc == 2);
     if (has_null(argc, argv)) {
         sqlite3_result_null(context);
         return;
     }
-
-    // first parameter is a field name
-    if (sqlite3_value_type(argv[0]) != SQLITE_TEXT) {
-        sqlite3_result_error(context, "1st parameter: should be a field name", -1);
+    const char* field = arg_field(context, argv[0]);
+    if (field == NULL) {
         return;
     }
-    const char* field = (const char*)sqlite3_value_text(argv[0]);
-
-    // second parameter is a time blob
-    if (sqlite3_value_type(argv[1]) != SQLITE_BLOB) {
-        sqlite3_result_error(context, "2nd parameter: should be a time blob", -1);
+    Time t;
+    if (!arg_time(argv[1], &t)) {
+        sqlite3_result_null(context);
         return;
     }
-    if (sqlite3_value_bytes(argv[1]) != TIMEX_BLOB_SIZE) {
-        sqlite3_result_error(context, "2nd parameter: invalid time blob size", -1);
-        return;
-    }
-    Time t = time_blob(sqlite3_value_blob(argv[1]));
-
     trunc_field(context, t, field);
 }
 
@@ -730,26 +670,19 @@ static void fn_round(sqlite3_context* context, int argc, sqlite3_value** argv) {
         sqlite3_result_null(context);
         return;
     }
-
-    if (sqlite3_value_type(argv[0]) != SQLITE_BLOB) {
-        sqlite3_result_error(context, "1st parameter: should be a time blob", -1);
+    Time t;
+    Duration d;
+    if (!arg_time(argv[0], &t) || !arg_int64(argv[1], &d)) {
+        sqlite3_result_null(context);
         return;
     }
-    if (sqlite3_value_bytes(argv[0]) != TIMEX_BLOB_SIZE) {
-        sqlite3_result_error(context, "1st parameter: invalid time blob size", -1);
-        return;
-    }
-    Time t = time_blob(sqlite3_value_blob(argv[0]));
-
-    if (sqlite3_value_type(argv[1]) != SQLITE_INTEGER) {
-        sqlite3_result_error(context, "2nd parameter: should be an integer", -1);
-        return;
-    }
-    Duration d = sqlite3_value_int64(argv[1]);
-
     Time r = time_round(t, d);
     result_blob(context, r);
 }
+
+#pragma endregion
+
+#pragma region Formatting
 
 // time_fmt_iso(t[, offset_sec])
 // time_fmt_datetime(t[, offset_sec])
@@ -761,139 +694,171 @@ static void fn_format(sqlite3_context* context, int argc, sqlite3_value** argv) 
         sqlite3_result_null(context);
         return;
     }
-    if (sqlite3_value_type(argv[0]) != SQLITE_BLOB) {
-        sqlite3_result_error(context, "1st parameter: should be a time blob", -1);
+    Time t;
+    if (!arg_time(argv[0], &t)) {
+        sqlite3_result_null(context);
         return;
     }
-    if (sqlite3_value_bytes(argv[0]) != TIMEX_BLOB_SIZE) {
-        sqlite3_result_error(context, "1st parameter: invalid time blob size", -1);
+    int offset_sec = TIMEX_UTC;
+    if (argc == 2 && !arg_int(argv[1], &offset_sec)) {
+        sqlite3_result_null(context);
         return;
-    }
-    Time t = time_blob(sqlite3_value_blob(argv[0]));
-
-    int offset_sec = 0;
-    if (argc == 2) {
-        if (sqlite3_value_type(argv[1]) != SQLITE_INTEGER) {
-            sqlite3_result_error(context, "2nd parameter: should be an integer", -1);
-            return;
-        }
-        offset_sec = sqlite3_value_int(argv[1]);
     }
 
     char buf[TIMEX_FMT_BUF_SIZE];
     size_t (*format)(char* buf, size_t size, Time t, int offset_sec) =
-        (size_t(*)(char*, size_t, Time, int))sqlite3_user_data(context);
+        (size_t (*)(char*, size_t, Time, int))sqlite3_user_data(context);
     format(buf, sizeof(buf), t, offset_sec);
     sqlite3_result_text(context, buf, -1, SQLITE_TRANSIENT);
 }
 
-// time_parse(v)
+// time_parse(s)
 static void fn_parse(sqlite3_context* context, int argc, sqlite3_value** argv) {
     assert(argc == 1);
     if (has_null(argc, argv)) {
         sqlite3_result_null(context);
         return;
     }
-    const char* val = (const char*)sqlite3_value_text(argv[0]);
-    int nbytes = sqlite3_value_bytes(argv[0]);
-    if (val == NULL || strlen(val) != (size_t)nbytes) {
-        // time_parse accepts NUL-terminated strings, so embedded NUL bytes are invalid.
-        result_blob(context, (Time){0, 0});
+    if (sqlite3_value_type(argv[0]) == SQLITE_BLOB) {
+        sqlite3_result_null(context);
         return;
     }
-    result_blob(context, time_parse(val));
+    const char* val = (const char*)sqlite3_value_text(argv[0]);
+    if (val == NULL) {
+        sqlite3_result_error_nomem(context);
+        return;
+    }
+    int nbytes = sqlite3_value_bytes(argv[0]);
+    if (strlen(val) != (size_t)nbytes) {
+        // time_parse accepts NUL-terminated strings, so embedded NUL bytes are invalid.
+        sqlite3_result_null(context);
+        return;
+    }
+    Time t;
+    if (!time_parse(val, &t)) {
+        sqlite3_result_null(context);
+        return;
+    }
+    result_blob(context, t);
 }
+
+#pragma endregion
+
+#pragma region Duration constants
 
 // dur_h(), dur_m(), dur_s(), dur_ms(), dur_us(), dur_ns()
 static void fn_dur_const(sqlite3_context* context, int argc, sqlite3_value** argv) {
     assert(argc == 0);
-    int64_t d = (intptr_t)sqlite3_user_data(context);
-    sqlite3_result_int64(context, d);
+    // The user data points to the constant: an int64_t does not fit into
+    // a pointer on 32-bit platforms.
+    const Duration* d = sqlite3_user_data(context);
+    sqlite3_result_int64(context, *d);
 }
 
-int time_init(sqlite3* db) {
-    static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
-    static const int flags_nd = SQLITE_UTF8 | SQLITE_INNOCUOUS;
+#pragma endregion
 
+#define FLAGS (SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC)
+#define FLAGS_ND (SQLITE_UTF8 | SQLITE_INNOCUOUS)
+
+// Function describes an SQL function to register.
+typedef struct {
+    const char* name;
+    int nargs;
+    int flags;
+    void* user_data;
+    void (*fn)(sqlite3_context* context, int argc, sqlite3_value** argv);
+} Function;
+
+static const Function functions[] = {
     // constructors
-    sqlite3_create_function(db, "time_now", 0, flags_nd, 0, fn_now, 0, 0);
-    sqlite3_create_function(db, "time_date", 3, flags, 0, fn_date, 0, 0);
-    sqlite3_create_function(db, "time_date", 6, flags, 0, fn_date, 0, 0);
-    sqlite3_create_function(db, "time_date", 7, flags, 0, fn_date, 0, 0);
-    sqlite3_create_function(db, "time_date", 8, flags, 0, fn_date, 0, 0);
+    {"time_now", 0, FLAGS_ND, 0, fn_now},
+    {"time_date", 3, FLAGS, 0, fn_date},
+    {"time_date", 6, FLAGS, 0, fn_date},
+    {"time_date", 7, FLAGS, 0, fn_date},
+    {"time_date", 8, FLAGS, 0, fn_date},
 
     // time parts
-    sqlite3_create_function(db, "time_get_year", 1, flags, time_get_year, fn_extract, 0, 0);
-    sqlite3_create_function(db, "time_get_month", 1, flags, time_get_month, fn_extract, 0, 0);
-    sqlite3_create_function(db, "time_get_day", 1, flags, time_get_day, fn_extract, 0, 0);
-    sqlite3_create_function(db, "time_get_hour", 1, flags, time_get_hour, fn_extract, 0, 0);
-    sqlite3_create_function(db, "time_get_minute", 1, flags, time_get_minute, fn_extract, 0, 0);
-    sqlite3_create_function(db, "time_get_second", 1, flags, time_get_second, fn_extract, 0, 0);
-    sqlite3_create_function(db, "time_get_nano", 1, flags, time_get_nano, fn_extract, 0, 0);
-    sqlite3_create_function(db, "time_get_weekday", 1, flags, time_get_weekday, fn_extract, 0, 0);
-    sqlite3_create_function(db, "time_get_yearday", 1, flags, time_get_yearday, fn_extract, 0, 0);
-    sqlite3_create_function(db, "time_get_isoyear", 1, flags, 0, fn_get_isoyear, 0, 0);
-    sqlite3_create_function(db, "time_get_isoweek", 1, flags, 0, fn_get_isoweek, 0, 0);
-    sqlite3_create_function(db, "time_get", 2, flags, 0, fn_get, 0, 0);
+    {"time_get_year", 1, FLAGS, time_get_year, fn_extract},
+    {"time_get_month", 1, FLAGS, get_month, fn_extract},
+    {"time_get_day", 1, FLAGS, time_get_day, fn_extract},
+    {"time_get_hour", 1, FLAGS, time_get_hour, fn_extract},
+    {"time_get_minute", 1, FLAGS, time_get_minute, fn_extract},
+    {"time_get_second", 1, FLAGS, time_get_second, fn_extract},
+    {"time_get_nano", 1, FLAGS, time_get_nano, fn_extract},
+    {"time_get_weekday", 1, FLAGS, get_weekday, fn_extract},
+    {"time_get_yearday", 1, FLAGS, time_get_yearday, fn_extract},
+    {"time_get_isoyear", 1, FLAGS, get_isoyear, fn_extract},
+    {"time_get_isoweek", 1, FLAGS, get_isoweek, fn_extract},
+    {"time_get", 2, FLAGS, 0, fn_get},
 
     // unix time
-    sqlite3_create_function(db, "time_unix", 1, flags, 0, fn_unix, 0, 0);
-    sqlite3_create_function(db, "time_unix", 2, flags, 0, fn_unix, 0, 0);
-    sqlite3_create_function(db, "time_milli", 1, flags, time_milli, fn_unix_n, 0, 0);
-    sqlite3_create_function(db, "time_micro", 1, flags, time_micro, fn_unix_n, 0, 0);
-    sqlite3_create_function(db, "time_nano", 1, flags, time_nano, fn_unix_n, 0, 0);
-    sqlite3_create_function(db, "time_to_unix", 1, flags, time_to_unix, fn_convert, 0, 0);
-    sqlite3_create_function(db, "time_to_milli", 1, flags, time_to_milli, fn_convert, 0, 0);
-    sqlite3_create_function(db, "time_to_micro", 1, flags, time_to_micro, fn_convert, 0, 0);
-    sqlite3_create_function(db, "time_to_nano", 1, flags, time_to_nano, fn_convert, 0, 0);
+    {"time_unix", 1, FLAGS, 0, fn_unix},
+    {"time_unix", 2, FLAGS, 0, fn_unix},
+    {"time_milli", 1, FLAGS, time_milli, fn_unix_n},
+    {"time_micro", 1, FLAGS, time_micro, fn_unix_n},
+    {"time_nano", 1, FLAGS, time_nano, fn_unix_n},
+    {"time_to_unix", 1, FLAGS, time_to_unix, fn_convert},
+    {"time_to_milli", 1, FLAGS, time_to_milli, fn_convert},
+    {"time_to_micro", 1, FLAGS, time_to_micro, fn_convert},
+    {"time_to_nano", 1, FLAGS, time_to_nano, fn_convert},
 
     // comparison
-    sqlite3_create_function(db, "time_after", 2, flags, time_after, fn_compare, 0, 0);
-    sqlite3_create_function(db, "time_before", 2, flags, time_before, fn_compare, 0, 0);
-    sqlite3_create_function(db, "time_compare", 2, flags, time_compare, fn_compare, 0, 0);
-    sqlite3_create_function(db, "time_equal", 2, flags, time_equal, fn_compare, 0, 0);
+    {"time_after", 2, FLAGS, after, fn_compare},
+    {"time_before", 2, FLAGS, before, fn_compare},
+    {"time_compare", 2, FLAGS, time_compare, fn_compare},
+    {"time_equal", 2, FLAGS, equal, fn_compare},
 
     // arithmetic
-    sqlite3_create_function(db, "time_add", 2, flags, 0, fn_add, 0, 0);
-    sqlite3_create_function(db, "time_sub", 2, flags, 0, fn_sub, 0, 0);
-    sqlite3_create_function(db, "time_since", 1, flags_nd, 0, fn_since, 0, 0);
-    sqlite3_create_function(db, "time_until", 1, flags_nd, 0, fn_until, 0, 0);
-    sqlite3_create_function(db, "time_add_date", 2, flags, 0, fn_add_date, 0, 0);
-    sqlite3_create_function(db, "time_add_date", 3, flags, 0, fn_add_date, 0, 0);
-    sqlite3_create_function(db, "time_add_date", 4, flags, 0, fn_add_date, 0, 0);
+    {"time_add", 2, FLAGS, 0, fn_add},
+    {"time_sub", 2, FLAGS, 0, fn_sub},
+    {"time_since", 1, FLAGS_ND, time_since, fn_elapsed},
+    {"time_until", 1, FLAGS_ND, time_until, fn_elapsed},
+    {"time_add_date", 2, FLAGS, 0, fn_add_date},
+    {"time_add_date", 3, FLAGS, 0, fn_add_date},
+    {"time_add_date", 4, FLAGS, 0, fn_add_date},
 
     // rounding
-    sqlite3_create_function(db, "time_trunc", 2, flags, 0, fn_trunc, 0, 0);
-    sqlite3_create_function(db, "time_round", 2, flags, 0, fn_round, 0, 0);
+    {"time_trunc", 2, FLAGS, 0, fn_trunc},
+    {"time_round", 2, FLAGS, 0, fn_round},
 
     // formatting
-    sqlite3_create_function(db, "time_fmt_iso", 1, flags, time_fmt_iso, fn_format, 0, 0);
-    sqlite3_create_function(db, "time_fmt_iso", 2, flags, time_fmt_iso, fn_format, 0, 0);
-    sqlite3_create_function(db, "time_fmt_datetime", 1, flags, time_fmt_datetime, fn_format, 0, 0);
-    sqlite3_create_function(db, "time_fmt_datetime", 2, flags, time_fmt_datetime, fn_format, 0, 0);
-    sqlite3_create_function(db, "time_fmt_date", 1, flags, time_fmt_date, fn_format, 0, 0);
-    sqlite3_create_function(db, "time_fmt_date", 2, flags, time_fmt_date, fn_format, 0, 0);
-    sqlite3_create_function(db, "time_fmt_time", 1, flags, time_fmt_time, fn_format, 0, 0);
-    sqlite3_create_function(db, "time_fmt_time", 2, flags, time_fmt_time, fn_format, 0, 0);
-    sqlite3_create_function(db, "time_parse", 1, flags, 0, fn_parse, 0, 0);
+    {"time_fmt_iso", 1, FLAGS, time_fmt_iso, fn_format},
+    {"time_fmt_iso", 2, FLAGS, time_fmt_iso, fn_format},
+    {"time_fmt_datetime", 1, FLAGS, time_fmt_datetime, fn_format},
+    {"time_fmt_datetime", 2, FLAGS, time_fmt_datetime, fn_format},
+    {"time_fmt_date", 1, FLAGS, time_fmt_date, fn_format},
+    {"time_fmt_date", 2, FLAGS, time_fmt_date, fn_format},
+    {"time_fmt_time", 1, FLAGS, time_fmt_time, fn_format},
+    {"time_fmt_time", 2, FLAGS, time_fmt_time, fn_format},
+    {"time_parse", 1, FLAGS, 0, fn_parse},
 
     // duration constants
-    sqlite3_create_function(db, "dur_h", 0, flags, (void*)Hour, fn_dur_const, 0, 0);
-    sqlite3_create_function(db, "dur_m", 0, flags, (void*)Minute, fn_dur_const, 0, 0);
-    sqlite3_create_function(db, "dur_s", 0, flags, (void*)Second, fn_dur_const, 0, 0);
-    sqlite3_create_function(db, "dur_ms", 0, flags, (void*)Millisecond, fn_dur_const, 0, 0);
-    sqlite3_create_function(db, "dur_us", 0, flags, (void*)Microsecond, fn_dur_const, 0, 0);
-    sqlite3_create_function(db, "dur_ns", 0, flags, (void*)Nanosecond, fn_dur_const, 0, 0);
+    {"dur_h", 0, FLAGS, (void*)&Hour, fn_dur_const},
+    {"dur_m", 0, FLAGS, (void*)&Minute, fn_dur_const},
+    {"dur_s", 0, FLAGS, (void*)&Second, fn_dur_const},
+    {"dur_ms", 0, FLAGS, (void*)&Millisecond, fn_dur_const},
+    {"dur_us", 0, FLAGS, (void*)&Microsecond, fn_dur_const},
+    {"dur_ns", 0, FLAGS, (void*)&Nanosecond, fn_dur_const},
 
     // postgres compatibility layer
-    sqlite3_create_function(db, "age", 2, flags, 0, fn_sub, 0, 0);
-    sqlite3_create_function(db, "date_add", 2, flags, 0, fn_add, 0, 0);
-    sqlite3_create_function(db, "date_part", 2, flags, 0, date_part, 0, 0);
-    sqlite3_create_function(db, "date_trunc", 2, flags, 0, date_trunc, 0, 0);
-    sqlite3_create_function(db, "make_date", 3, flags, 0, fn_date, 0, 0);
-    sqlite3_create_function(db, "make_timestamp", 6, flags, 0, fn_date, 0, 0);
-    sqlite3_create_function(db, "now", 0, flags_nd, 0, fn_now, 0, 0);
-    sqlite3_create_function(db, "to_timestamp", 1, flags, 0, fn_unix, 0, 0);
+    {"age", 2, FLAGS, 0, fn_sub},
+    {"date_add", 2, FLAGS, 0, fn_add},
+    {"date_part", 2, FLAGS, 0, fn_date_part},
+    {"date_trunc", 2, FLAGS, 0, fn_date_trunc},
+    {"make_date", 3, FLAGS, 0, fn_date},
+    {"make_timestamp", 6, FLAGS, 0, fn_date},
+    {"now", 0, FLAGS_ND, 0, fn_now},
+    {"to_timestamp", 1, FLAGS, 0, fn_unix},
+};
 
+int time_init(sqlite3* db) {
+    for (size_t i = 0; i < sizeof(functions) / sizeof(functions[0]); i++) {
+        const Function* f = &functions[i];
+        int rc =
+            sqlite3_create_function(db, f->name, f->nargs, f->flags, f->user_data, f->fn, 0, 0);
+        if (rc != SQLITE_OK) {
+            return rc;
+        }
+    }
     return SQLITE_OK;
 }

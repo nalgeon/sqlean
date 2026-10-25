@@ -2,7 +2,7 @@
 
 What a well-built Sqlean extension looks like. Use this as the target when writing a new extension or refactoring an existing one.
 
-The reference implementation is `time` (`src/time/`, `test/time.sql`, `test/time/`, `docs/time.md`). When this guide doesn't cover something, do what `time` does. `time` isn't perfect, though: the places where it falls short of these rules are listed in [Known gaps in `time`](#known-gaps-in-time). Don't copy those patterns.
+The reference implementation is `time` (`src/time/`, `test/time.sql`, `test/time/`, `docs/time.md`). When this guide doesn't cover something, do what `time` does.
 
 [Layout](#layout) •
 [Domain layer](#domain-layer) •
@@ -69,7 +69,7 @@ Saturate on overflow: `time_add` clamps to the min/max `Time`, and `dur_round` c
 
 Leave the input unchanged for meaningless parameters: `dur_truncate(d, m)` with `m <= 0` returns `d`.
 
-Report failure explicitly when there is no sensible result, such as unparseable or corrupt input: return `bool` and pass the result through an out-parameter (`bool time_parse(const char* s, Time* out)`). The binding layer turns a failure into SQL NULL. Don't use an in-band sentinel that is also a valid result: `time_parse` returning the zero time for garbage can't be told apart from parsing `0001-01-01`.
+Report failure explicitly when there is no sensible result, such as unparseable or corrupt input: return `bool` and pass the result through an out-parameter (`bool time_parse(const char* s, Time* out)`). The binding layer turns a failure into SQL NULL. Don't use an in-band sentinel that is also a valid result: if `time_parse` returned the zero time for garbage, that couldn't be told apart from parsing `0001-01-01`.
 
 Crashes, garbage output, and undefined behavior are never acceptable, whatever the input.
 
@@ -139,9 +139,11 @@ Name wrappers `fn_<name>` and mark them `static`. The comment above each one lis
 
 Default values for optional args are assigned explicitly, next to their `argc` check.
 
-Function families with identical signatures share one wrapper. Pass the domain function through `sqlite3_user_data` (`fn_extract`, `fn_convert`, `fn_format`). The pointer's type must exactly match the function's real signature (see the gaps below).
+Function families with identical signatures share one wrapper. Pass the domain function through `sqlite3_user_data` (`fn_extract`, `fn_convert`, `fn_format`). The pointer's type must exactly match the function's real signature: calling a function through an incompatible pointer type is UB, even if the return types are all integers (`enum Month`, `bool` and `int` are different types). When they don't match, add small `static` adapters with the shared signature (`get_month`, `after` in `time/extension.c`).
 
-Put repeated result encoding in a helper (`result_blob`). Put repeated argument decoding in a helper as well (see the gaps below).
+Pass constants by pointer to a `static const` value, never by casting the value to `void*`: an `int64_t` doesn't fit into a pointer on 32-bit platforms (`fn_dur_const`).
+
+Put repeated result encoding in a helper (`result_blob`), and repeated argument decoding as well. The decoding helpers return `bool` and pass the value through an out-parameter, so a wrapper reads `if (!arg_time(argv[0], &t)) { NULL }` (`arg_time`, `arg_int64`, `arg_int`). Spec-argument helpers set the error themselves (`arg_field`).
 
 ### Argument handling
 
@@ -188,13 +190,25 @@ When a spec argument is expensive to prepare, such as compiling a regex pattern,
 
 ### Registration
 
+Describe the functions in a `static const` table, and register them in a loop that checks each return code:
+
 ```c
-int time_init(sqlite3* db) {
-    static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
-    static const int flags_nd = SQLITE_UTF8 | SQLITE_INNOCUOUS;
+static const Function functions[] = {
     // constructors
-    sqlite3_create_function(db, "time_now", 0, flags_nd, 0, fn_now, 0, 0);
+    {"time_now", 0, FLAGS_ND, 0, fn_now},
+    {"time_date", 3, FLAGS, 0, fn_date},
     ...
+};
+
+int time_init(sqlite3* db) {
+    for (size_t i = 0; i < sizeof(functions) / sizeof(functions[0]); i++) {
+        const Function* f = &functions[i];
+        int rc = sqlite3_create_function(db, f->name, f->nargs, f->flags, f->user_data, f->fn, 0, 0);
+        if (rc != SQLITE_OK) {
+            return rc;
+        }
+    }
+    return SQLITE_OK;
 }
 ```
 
@@ -207,8 +221,6 @@ Drop `SQLITE_INNOCUOUS` when the function has side effects or reads outside stat
 Register each supported arity explicitly instead of `-1`. SQLite then rejects wrong arities with a clear error, and the `assert` in the wrapper documents them.
 
 Group registrations by section, in the same order as the header and the docs. Compatibility aliases (such as Postgres names) come last, under their own comment, and reuse the regular wrappers.
-
-Check every `sqlite3_create_function` return code, and return the first failure from `<module>_init`.
 
 Function names must be unique across all modules, because the bundle registers them all in one connection.
 
@@ -236,7 +248,7 @@ Prefix every function name with the module or type: `time_*`, `dur_*`. Unprefixe
 
 Use consistent verbs: `<p>_get_<field>` for accessors, `<p>_to_<repr>` for conversions out, `<p>_<repr>` for conversions in (`time_unix`), `<p>_fmt_<style>` for formatting, `<p>_parse` for parsing.
 
-Choose a storage format users can index and compare with plain SQL (`=`, `<`, `order by`, `min`/`max`). Time BLOBs are big-endian for that reason, but see the gaps below.
+Choose a storage format users can index and compare with plain SQL (`=`, `<`, `order by`, `min`/`max`).
 
 ## Tests
 
@@ -304,28 +316,6 @@ Each module has a smoke test or two in the bundle test. They catch registration 
 7. Installation and usage: the standard footer.
 
 Whenever observable behavior changes, update the docs in the same commit.
-
-## Known gaps in `time`
-
-These things in `time` don't meet the guidelines above. Don't replicate them. Fix them when `time` itself gets its refactoring pass, then delete this section.
-
-**Duplicated argument decoding.** The "is a blob, has `TIMEX_BLOB_SIZE` bytes, decode" sequence is repeated about 20 times in `extension.c`. A helper such as `static bool arg_time(sqlite3_value* v, Time* out)` would return false so the wrapper returns NULL.
-
-**Errors for bad data.** Wrappers raise `sqlite3_result_error` for a wrong type or wrong blob size (`"1st parameter: should be a time blob"`). These should return NULL. Integer arguments are also checked with `sqlite3_value_type`, so `'42'` is rejected instead of being converted. **This is a user-visible change**, so call it out in the release notes. (Raising an error for an unknown field name in `time_get`/`time_trunc` is correct, because the field name is a spec argument. The message should name the field, though.)
-
-**In-band sentinel.** `time_parse` and `time_blob` return the zero time on failure, and `time_parse('garbage')` returns a valid-looking time. Both should report failure explicitly, and the SQL functions should return NULL. This is also user-visible: tests `68_xx` and `72_xx` assert the current behavior.
-
-**Mismatched function-pointer types.** `time_get_month` (returns `enum Month`) is called through `int (*)(Time)`, and `time_after` (returns `bool`) through `int (*)(Time, Time)`. Calling a function through an incompatible pointer type is UB. Either give these functions the exact shared signature, or use small adapter functions.
-
-**Integers smuggled through `void*`.** `(void*)Hour` doesn't fit a 32-bit pointer, which is why the bundle skips `time_init` on 32-bit Windows. Pass a pointer to a `static const` value instead.
-
-**Silent 32-bit truncation.** `fn_date`, `fn_add_date`, and `fn_format` read `int64` SQL values with `sqlite3_value_int`.
-
-**Non-static internal symbol.** `abs_clock` in `time.c`.
-
-**Blob ordering breaks before year 1.** Seconds are stored as big-endian two's complement, so negative values (times before 0001-01-01) sort _after_ positive ones in a byte-wise comparison. Changing this means changing the format, which needs a new version byte.
-
-**Ignored registration errors.** `time_init` ignores the return codes of `sqlite3_create_function` and always returns `SQLITE_OK`.
 
 ## Refactoring checklist
 
