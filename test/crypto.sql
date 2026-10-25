@@ -30,7 +30,7 @@ select '6_04', crypto_encode(sha256('hello'), 'base64') = 'LPJNul+wow4m6Dsqxbnin
 select '6_05', crypto_encode('a', 'base64') = 'YQ==';
 select '6_06', crypto_encode('ab', 'base64') = 'YWI=';
 select '6_07', crypto_encode('abc', 'base64') = 'YWJj';
-select '6_07', crypto_encode('abcd', 'base64') = 'YWJjZA==';
+select '6_08', crypto_encode('abcd', 'base64') = 'YWJjZA==';
 select '6_09', crypto_encode('abcde', 'base64') = 'YWJjZGU=';
 select '6_10', crypto_encode('abcdef', 'base64') = 'YWJjZGVm';
 select '6_11', crypto_encode('эй, мир!', 'base64') = '0Y3QuSwg0LzQuNGAIQ==';
@@ -200,3 +200,145 @@ select '20_01', crypto_xxh3_128(null) is NULL;
 select '20_02', hex(crypto_xxh3_128('')) = '99AA06D3014798D86001C324468D497F';
 select '20_03', hex(crypto_xxh3_128('abc')) = '06B05AB6733A618578AF5F94892F3950';
 select '20_04', hex(crypto_xxh3_128('The quick brown 🦊 jumps over 13 lazy 🐶.')) = 'E688EC7B9C40A08C87C989C0484E449E';
+
+-- aliases
+select '21_01', md5('abc') = crypto_md5('abc');
+select '21_02', sha1('abc') = crypto_sha1('abc');
+select '21_03', sha256('abc') = crypto_sha256('abc');
+select '21_04', sha384('abc') = crypto_sha384('abc');
+select '21_05', sha512('abc') = crypto_sha512('abc');
+select '21_06', blake3('abc') = crypto_blake3('abc');
+select '21_07', xxh32('abc') = crypto_xxh32('abc');
+select '21_08', xxh64('abc') = crypto_xxh64('abc');
+select '21_09', xxh3_64('abc') = crypto_xxh3_64('abc');
+select '21_10', xxh3_128('abc') = crypto_xxh3_128('abc');
+select '21_11', encode('hello', 'base64') = crypto_encode('hello', 'base64');
+select '21_12', decode('aGVsbG8=', 'base64') = crypto_decode('aGVsbG8=', 'base64');
+
+-- hash inputs: a blob is hashed as is, everything else as text
+select '22_01', md5(x'616263') = md5('abc');
+select '22_02', sha1(x'616263') = sha1('abc');
+select '22_03', sha256(x'616263') = sha256('abc');
+select '22_04', sha384(x'616263') = sha384('abc');
+select '22_05', sha512(x'616263') = sha512('abc');
+select '22_06', blake3(x'616263') = blake3('abc');
+select '22_07', xxh32(x'616263') = xxh32('abc');
+select '22_08', xxh64(x'616263') = xxh64('abc');
+select '22_09', xxh3_64(x'616263') = xxh3_64('abc');
+select '22_10', xxh3_128(x'616263') = xxh3_128('abc');
+select '22_11', md5(zeroblob(0)) = md5('');
+select '22_12', sha1(zeroblob(0)) = sha1('');
+select '22_13', sha256(zeroblob(0)) = sha256('');
+select '22_14', sha384(zeroblob(0)) = sha384('');
+select '22_15', sha512(zeroblob(0)) = sha512('');
+select '22_16', blake3(zeroblob(0)) = blake3('');
+select '22_17', xxh32(zeroblob(0)) = xxh32('');
+select '22_18', xxh64(zeroblob(0)) = xxh64('');
+select '22_19', xxh3_64(zeroblob(0)) = xxh3_64('');
+select '22_20', xxh3_128(zeroblob(0)) = xxh3_128('');
+select '22_21', md5(42) = md5('42');
+select '22_22', md5(-42) = md5('-42');
+select '22_23', md5(4.5) = md5('4.5');
+select '22_24', sha256(42) = sha256('42');
+select '22_25', typeof(md5('abc')) = 'blob';
+select '22_26', length(md5('abc')) = 16;
+select '22_27', length(sha1('abc')) = 20;
+select '22_28', length(sha256('abc')) = 32;
+select '22_29', length(sha384('abc')) = 48;
+select '22_30', length(sha512('abc')) = 64;
+select '22_31', length(blake3('abc')) = 32;
+select '22_32', length(xxh32('abc')) = 4;
+select '22_33', length(xxh64('abc')) = 8;
+select '22_34', length(xxh3_64('abc')) = 8;
+select '22_35', length(xxh3_128('abc')) = 16;
+-- multi-block inputs (NIST vectors and more)
+select '22_36', hex(md5('abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq')) = '8215EF0796A20BCAAAE116D3876C664A';
+select '22_37', hex(sha1('abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq')) = '84983E441C3BD26EBAAE4AA1F95129E5E54670F1';
+select '22_38', hex(sha256('abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq')) = '248D6A61D20638B8E5C026930C3E6039A33CE45964FF2167F6ECEDD419DB06C1';
+select '22_39', hex(sha384('abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq')) = '3391FDDDFC8DC7393707A65B1B4709397CF8B1D162AF05ABFE8F450DE5F36BC6B0455A8520BC4E6F5FE95B1FE3C8452B';
+select '22_40', hex(sha512('abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq')) = '204A8FC6DDA82F0A0CED7BEB8E08A41657C16EF468B228A8279BE331A703C33596FD15C13B1B07F9AA1D3BEA57789CA031AD85C7A71DD70354EC631238CA3445';
+select '22_41', hex(blake3('abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq')) = 'C19012CC2AAF0DC3D8E5C45A1B79114D2DF42ABB2A410BF54BE09E891AF06FF8';
+select '22_42', hex(xxh32('abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq')) = '89EA60C3';
+select '22_43', hex(xxh64('abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq')) = 'F06103773E8585DF';
+select '22_44', hex(xxh3_64('abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq')) = '5BBCBBABCDCC3D3F';
+select '22_45', hex(xxh3_128('abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq')) = '3D62D22A5169B016C0D894FD4828A1A7';
+select '22_46', hex(md5('abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu')) = '03DD8807A93175FB062DFB55DC7D359C';
+select '22_47', hex(sha1('abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu')) = 'A49B2446A02C645BF419F995B67091253A04A259';
+select '22_48', hex(sha256('abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu')) = 'CF5B16A778AF8380036CE59E7B0492370B249B11E8F07A51AFAC45037AFEE9D1';
+select '22_49', hex(sha384('abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu')) = '09330C33F71147E83D192FC782CD1B4753111B173B3B05D22FA08086E3B0F712FCC7C71A557E2DB966C3E9FA91746039';
+select '22_50', hex(sha512('abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu')) = '8E959B75DAE313DA8CF4F72814FC143F8F7779C6EB9F7FA17299AEADB6889018501D289E4900F7E4331B99DEC4B5433AC7D329EEB6DD26545E96E55B874BE909';
+select '22_51', hex(blake3('abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu')) = '553E1AA2A477CB3166E6AB38C12D59F6C5017F0885AAF079F217DA00CFCA363F';
+select '22_52', hex(xxh32('abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu')) = '590B4165';
+select '22_53', hex(xxh64('abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu')) = 'BAFC02122DED1D21';
+select '22_54', hex(xxh3_64('abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu')) = '458619CD5260AA9A';
+select '22_55', hex(xxh3_128('abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu')) = '97D535CB0C62BF199C12D0B7E499EDB8';
+select '22_56', hex(md5('The quick brown 🦊 jumps over 13 lazy 🐶.')) = '0A8A1860C93EA376F9980B500298F75D';
+select '22_57', hex(sha1('The quick brown 🦊 jumps over 13 lazy 🐶.')) = 'D490327FE0C8318CE43421E2DB908B3AF9E65942';
+select '22_58', hex(sha256('The quick brown 🦊 jumps over 13 lazy 🐶.')) = 'FD3B8EE333CD9DB16B75FBAA4ADFB04A823509F0F1F873A491A03ADB09EB3289';
+select '22_59', hex(sha384('The quick brown 🦊 jumps over 13 lazy 🐶.')) = '1E7D4E2AD0182755DF93F7F247F5B52D47D8037191E5BA82EF4F9A5DDFDEE9BC65E83D43A6EC01469D8DEBDB546AD007';
+select '22_60', hex(sha512('The quick brown 🦊 jumps over 13 lazy 🐶.')) = 'B1FBF8090360224A28105AD736031287CF562ACF485CD1397DED308821862BC017B074D9B5A7E09CCC8DD5B940DA8C0EB1E86057D9AC6D2187F0423F4A68945C';
+select '22_61', hex(blake3('The quick brown 🦊 jumps over 13 lazy 🐶.')) = '9B0F4109AB1DAD89430F71196F5A176367C5CC9D6EDBC34C23D06E8D6184A1C2';
+
+-- a million zero bytes
+select '23_01', hex(md5(zeroblob(1000000))) = '879F4BBA57ED37C9EC5E5AEDF9864698';
+select '23_02', hex(sha1(zeroblob(1000000))) = 'BEF3595266A65A2FF36B700A75E8ED95C68210B6';
+select '23_03', hex(sha256(zeroblob(1000000))) = 'D29751F2649B32FF572B5E0A9F541EA660A50F94FF0BEEDFB0B692B924CC8025';
+select '23_04', hex(sha384(zeroblob(1000000))) = '8A1979F9049B3FFF15EA3A43A4CF84C634FD14ACAD1C333FECB72C588B68868B66A994386DC0CD1687B9EE2E34983B81';
+select '23_05', hex(sha512(zeroblob(1000000))) = 'CE044BC9FD43269D5BBC946CBEBC3BB711341115CC4ABDF2EDBC3FF2C57AD4B15DEB699BDA257FEA5AEF9C6E55FCF4CF9DC25A8C3CE25F2EFE90908379BFF7ED';
+select '23_06', hex(blake3(zeroblob(1000000))) = 'C211BB2E5AFBD0EFA21659D5578EA30217D5382734BE1B494FAF705D9AA202A1';
+select '23_07', hex(xxh32(zeroblob(1000000))) = '5FFF0BCB';
+select '23_08', hex(xxh64(zeroblob(1000000))) = '8A76D36D39CAAECC';
+select '23_09', hex(xxh3_64(zeroblob(1000000))) = '9D648391F361D99A';
+select '23_10', hex(xxh3_128(zeroblob(1000000))) = 'EF233FC372A159319D648391F361D99A';
+
+-- encode: a blob is encoded as is, everything else as text
+select '24_01', encode(42, 'hex') = '3432';
+select '24_02', encode(-42, 'hex') = '2d3432';
+select '24_03', encode(4.5, 'hex') = '342e35';
+select '24_04', encode(x'610062', 'hex') = '610062';
+select '24_05', encode(zeroblob(3), 'base64') = 'AAAA';
+select '24_06', typeof(encode('', 'hex')) = 'text';
+select '24_07', typeof(encode(x'', 'hex')) = 'text';
+select '24_08', typeof(encode('hello', 'base64')) = 'text';
+select '24_09', encode(null, 'base32') is null;
+select '24_10', encode(null, 'base64') is null;
+select '24_11', encode(null, 'base85') is null;
+select '24_12', encode(null, 'hex') is null;
+select '24_13', encode(null, 'url') is null;
+-- decode: the input is read as text
+select '24_14', decode(6869, 'hex') = x'6869';
+select '24_15', decode(cast('6869' as blob), 'hex') = x'6869';
+select '24_16', decode(cast('aGVsbG8=' as blob), 'base64') = cast('hello' as blob);
+select '24_17', typeof(decode('', 'hex')) = 'blob';
+select '24_18', typeof(decode('6869', 'hex')) = 'blob';
+select '24_19', decode(null, 'base32') is null;
+select '24_20', decode(null, 'base64') is null;
+select '24_21', decode(null, 'base85') is null;
+select '24_22', decode(null, 'hex') is null;
+select '24_23', decode(null, 'url') is null;
+
+-- current behavior, to be fixed: the format is matched as a prefix
+-- of 'base32', so a prefix or an empty string select base32
+-- (a NULL format is UB: strncmp gets a NULL pointer, so it's not tested)
+select '25_01', encode('hello', 'b') = 'NBSWY3DP';
+select '25_02', encode('hello', 'base') = 'NBSWY3DP';
+select '25_03', encode('hello', '') = 'NBSWY3DP';
+select '25_04', decode('NBSWY3DP', 'b') = cast('hello' as blob);
+-- the format is read as text
+select '25_05', encode('hello', x'626173653634') = 'aGVsbG8=';
+-- current behavior, to be fixed: url encoding stops at a NUL byte
+select '25_06', encode(x'00', 'url') = '';
+select '25_07', encode(x'610062', 'url') = 'a';
+
+-- round trips over every byte value
+select '26_01', decode(encode(x'000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff', 'base32'), 'base32') = x'000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff';
+select '26_02', decode(encode(x'000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff', 'base64'), 'base64') = x'000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff';
+select '26_03', decode(encode(x'000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff', 'base85'), 'base85') = x'000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff';
+select '26_04', decode(encode(x'000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff', 'hex'), 'hex') = x'000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff';
+select '26_05', decode(encode(x'0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff', 'url'), 'url') = x'0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff';
+-- round trips over a million bytes (spaces for url, since zeros hit the NUL bug)
+select '26_06', decode(encode(zeroblob(1000000), 'base32'), 'base32') = zeroblob(1000000);
+select '26_07', decode(encode(zeroblob(1000000), 'base64'), 'base64') = zeroblob(1000000);
+select '26_08', decode(encode(zeroblob(1000000), 'base85'), 'base85') = zeroblob(1000000);
+select '26_09', decode(encode(zeroblob(1000000), 'hex'), 'hex') = zeroblob(1000000);
+select '26_10', decode(encode(printf('%.*c', 1000000, ' '), 'url'), 'url') = cast(printf('%.*c', 1000000, ' ') as blob);
