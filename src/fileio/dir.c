@@ -317,14 +317,22 @@ static size_t append(char* buf, size_t size, size_t pos, const char* src, size_t
 }
 
 // fs_join writes the path of the entry name in the directory dir into buf, as
-// "dir/name", without doubling a trailing separator in dir. Has snprintf
-// semantics: writes at most size bytes including the terminating NUL, and
-// returns the full length of the path.
+// "dir/name", without doubling a trailing separator in dir. On Windows, the
+// separator is the last one used in dir, so "a\b" and "x" give "a\b\x".
+// Has snprintf semantics: writes at most size bytes including the terminating
+// NUL, and returns the full length of the path.
 size_t fs_join(char* buf, size_t size, const char* dir, const char* name) {
     size_t dir_len = strlen(dir);
     size_t pos = append(buf, size, 0, dir, dir_len);
     if (dir_len == 0 || !is_sep(dir[dir_len - 1])) {
-        pos = append(buf, size, pos, "/", 1);
+        char sep = '/';
+        for (size_t i = dir_len; i > 0; i--) {
+            if (is_sep(dir[i - 1])) {
+                sep = dir[i - 1];
+                break;
+            }
+        }
+        pos = append(buf, size, pos, &sep, 1);
     }
     pos = append(buf, size, pos, name, strlen(name));
     if (size > 0) {

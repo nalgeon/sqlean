@@ -99,8 +99,8 @@ select '11_07', count(*) = 0 from fileio_scan('fileio.tmp/dir');
 select '11_08', fileio_write('fileio.tmp/long.txt', printf('%.*c', 1000, 'x') || char(10) || 'y') = 1002;
 select '11_09', group_concat(length(value), '|') = '1000|1' from fileio_scan('fileio.tmp/long.txt');
 -- an embedded NUL is kept
-.shell printf 'a\\000b\\nc\\n' > fileio.tmp/nul.txt
-select '11_10', group_concat(hex(value), '|') = '610062|63' from fileio_scan('fileio.tmp/nul.txt');
+.shell printf 'a\\000b\\nc\\n' > fileio.tmp/nulbyte.txt
+select '11_10', group_concat(hex(value), '|') = '610062|63' from fileio_scan('fileio.tmp/nulbyte.txt');
 -- the path can come from another table
 select '11_11', count(*) = 5
   from (select 'fileio.tmp/hello.txt' as path union all select 'fileio.tmp/lines.txt') as files,

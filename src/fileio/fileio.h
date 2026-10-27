@@ -110,9 +110,10 @@ int fs_dir_next(FsDir* dir, const char** name);
 void fs_dir_close(FsDir* dir);
 
 // fs_join writes the path of the entry name in the directory dir into buf, as
-// "dir/name", without doubling a trailing separator in dir. Has snprintf
-// semantics: writes at most size bytes including the terminating NUL, and
-// returns the full length of the path.
+// "dir/name", without doubling a trailing separator in dir. On Windows, the
+// separator is the last one used in dir (/ if there is none).
+// Has snprintf semantics: writes at most size bytes including the terminating
+// NUL, and returns the full length of the path.
 size_t fs_join(char* buf, size_t size, const char* dir, const char* name);
 
 #endif /* FILEIO_FILEIO_H */
