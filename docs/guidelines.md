@@ -19,6 +19,8 @@ The reference implementation is `time` (`src/time/`, `test/time.sql`, `test/time
 src/sqlite3-<module>.c        loadable-extension entry point (boilerplate only)
 src/<module>/extension.h      declares <module>_init(db), nothing else
 src/<module>/extension.c      SQLite bindings: argument decoding, result encoding, registration
+src/<module>/<function>.c     optional: a table-valued function's bindings (fileio: ls.c, scan.c)
+src/<module>/binding.h        optional: internal helpers shared by binding files (static inline)
 src/<module>/<name>.h         public domain API, fully documented (time: timex.h)
 src/<module>/<concept>.c      domain logic, one file per concept (time: time.c, duration.c)
 src/<module>/common.h         optional: internal helpers shared by domain files (static inline)
@@ -71,6 +73,8 @@ Leave the input unchanged for meaningless parameters: `dur_truncate(d, m)` with 
 
 Report failure explicitly when there is no sensible result, such as unparseable or corrupt input: return `bool` and pass the result through an out-parameter (`bool time_parse(const char* s, Time* out)`). The binding layer turns a failure into SQL NULL. Don't use an in-band sentinel that is also a valid result: if `time_parse` returned the zero time for garbage, that couldn't be told apart from parsing `0001-01-01`.
 
+Functions that call the operating system (files, directories) return `0` or an `errno` value, with results passed through out-parameters: `int fs_open(const char* path, FILE** out)`. The error code tells the binding layer what happened (`ENOMEM` is out of memory, `ENOENT` is a missing file) without making the domain layer decide what's NULL and what's an error. Document which codes a function returns beyond what the OS gives (`fs_open` returns `EISDIR` for a directory).
+
 Crashes, garbage output, and undefined behavior are never acceptable, whatever the input.
 
 ### No undefined behavior
@@ -109,7 +113,7 @@ Code compiles cleanly with `-Wall -Wextra -Werror` (the `CTEST_FLAGS` in the `Ma
 
 Helpers shared between domain files go in an internal header as `static inline` (`time/common.h`).
 
-Put platform differences in one place behind `#if` and keep them out of the logic (`timespec_now` in `time.c`). Prefer the C11 standard API, and fall back to POSIX, then Windows.
+Put platform differences in one place behind `#if` and keep them out of the logic (`timespec_now` in `time.c`). Prefer the C11 standard API, and fall back to POSIX, then Windows. On Windows, paths and other strings go through the wide-character API (`_wfopen`, `FindFirstFileW`), converted from UTF-8, because the narrow API uses the system code page (`win_path` in `fileio/common.h`). Don't vendor POSIX emulation layers for Windows.
 
 ### Ported code
 
@@ -172,7 +176,8 @@ Follow what SQLite's own built-in functions do. Bad _data_ gives NULL, never an 
 
 SQLite raises errors only in a few cases, and Sqlean does the same:
 
-- Malformed spec arguments: a spec argument says _how_ to process the data (a pattern, a path, a field or unit name, a format, an option). It's almost always a literal in the query, so an invalid one is a bug in the query. `'a' regexp '('` raises "unmatched '('", `json_extract(j, 'bad')` raises "bad JSON path", and `like ... escape 'xy'` raises an error. Messages name the argument and the problem: `"unknown field: fortnight"`. (SQLite's date modifiers are the one exception: `date(d, 'bogus')` is NULL.)
+- Malformed spec arguments: a spec argument says _how_ to process the data (a pattern, a path, a field or unit name, a format, an option). It's almost always a literal in the query, so an invalid one is a bug in the query. `'a' regexp '('` raises "unmatched '('", `json_extract(j, 'bad')` raises "bad JSON path", and `like ... escape 'xy'` raises an error. Messages name the argument and the problem: `"unknown field: fortnight"`. (SQLite's date modifiers are the one exception: `date(d, 'bogus')` is NULL.) A file system path is _data_, not a spec argument: it often comes from a table (`fileio_read(name) from files`), so a path that isn't text or a file that doesn't exist gives NULL.
+- A side effect that failed: a function whose purpose is to change something outside the database (write a file, create a directory) raises an error if it couldn't, and the message names the target: `"failed to write file: data/out.txt"`. A NULL is too easy to miss when nothing was written. Reading functions return NULL instead, as for any bad data.
 - Resource failures: out of memory (`sqlite3_result_error_nomem`), or a result too big (`sqlite3_result_error_toobig`).
 - A result that can't be represented: `abs(-9223372036854775808)` raises "integer overflow". Use this only when the domain doesn't define saturation (as `time_add` does) or normalization.
 - Malformed input to a structure-validating function, when a NULL-returning validator exists alongside it: `json('{')` raises an error, but `json_valid('{')` returns `0`.
@@ -228,7 +233,7 @@ Every function gets `SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC` by d
 
 Drop `SQLITE_DETERMINISTIC` when the result depends on anything other than the arguments, such as the clock or randomness (`time_now`, `time_since`, `time_until`).
 
-Drop `SQLITE_INNOCUOUS` when the function has side effects or reads outside state, such as the filesystem or the environment. Use `SQLITE_DIRECTONLY` when it can do harm if called from a trigger or view.
+Drop `SQLITE_INNOCUOUS` when the function has side effects or reads outside state, such as the filesystem or the environment. Use `SQLITE_DIRECTONLY` when it can do harm if called from a trigger or view: functions that touch the file system are `SQLITE_UTF8 | SQLITE_DIRECTONLY`, so a malicious database file can't make them run. A helper in the same module that doesn't touch outside state keeps the default flags (`fileio_mode`).
 
 Register each supported arity explicitly instead of `-1`. SQLite then rejects wrong arities with a clear error, and the `assert` in the wrapper documents them.
 
@@ -248,7 +253,25 @@ Keep the state in `sqlite3_aggregate_context`. Request it with size `0` in the f
 
 Register `xInverse` and `xValue` (making it usable as a window function) whenever the aggregate allows it.
 
-Virtual tables (`vsv`, `fileio_ls`, `define`) aren't covered yet. Add their conventions here when the first of them is refactored.
+### Table-valued functions
+
+A table-valued function (`fileio_ls`, `fileio_scan`) is an eponymous virtual table whose arguments are hidden columns. It follows the same argument rules as a scalar function, with rows in place of a result. The reference is `src/fileio/scan.c`.
+
+Put each one in its own file with a `static` `sqlite3_module` and an init function (`fileio_scan_init`) that `<module>_init` calls, checking the return code. Register aliases after the main name.
+
+In `xConnect`, declare the hidden columns after the regular ones, call `sqlite3_vtab_config(db, SQLITE_VTAB_DIRECTONLY)` if the function touches outside state, and keep `argv[0]` (the name it was called by, which may be an alias) for error messages.
+
+`xBestIndex` consumes only the `SQLITE_INDEX_CONSTRAINT_EQ` constraints on the hidden columns (`argvIndex`, `omit = 1`) and leaves every other constraint, `LIMIT` and `ORDER BY` to SQLite, so `where value = 'x'` and `limit 10` just work. Return `SQLITE_CONSTRAINT` when an argument constraint exists but isn't usable, so SQLite picks another plan. When a required argument is missing, choose a plan that `xFilter` turns into an error, `"table function <name> requires an argument"`, using the name it was called by.
+
+In `xFilter`:
+
+1. Free the previous scan's state: `xFilter` can be called many times on the same cursor.
+2. If any argument is NULL, or a data argument is invalid, return `SQLITE_OK` with the cursor at EOF: no rows, no error. A bad spec argument sets `pVtab->zErrMsg` and returns `SQLITE_ERROR`.
+3. Copy the arguments with `sqlite3_value_dup` if `xColumn` returns them as the hidden columns. Don't keep pointers from `sqlite3_value_text`: they're only valid during the call.
+
+Return `SQLITE_NOMEM`, `SQLITE_TOOBIG` or `SQLITE_IOERR` from `xFilter` and `xNext` for resource failures, and allocate cursor buffers with `sqlite3_malloc64`/`sqlite3_realloc64`, capped at `SQLITE_LIMIT_LENGTH`. A row that can't be produced (a directory entry that disappeared while listing) is skipped, not an error.
+
+Virtual tables with a schema of their own (`vsv`, `define`) aren't covered yet. Add their conventions here when the first of them is refactored.
 
 ## Entry point
 
@@ -308,6 +331,8 @@ Required cases beyond the happy path:
 - Extreme values: `INT64_MIN`/`INT64_MAX`/`INT_MIN` for every parameter type, checked to not crash and to stay inside documented buffer bounds;
 - Roundtrips: format ↔ parse, encode ↔ decode;
 - Corrupt input: invalid serialized data or unparseable text is reported as a failure.
+
+When the binding layer has behavior the SQL runner can't assert (error messages, function flags, limits, out-of-memory handling), the C test can also run the extension in a real connection: link `dist/ctest-sqlite3.o`, define `SQLITE_CORE`, and call `<module>_init` on an in-memory database (`test/define/define.test.c`, `test/fileio/fileio.test.c`). Inject allocation failures with `sqlite3_config(SQLITE_CONFIG_MALLOC, ...)` to check that every allocation is checked.
 
 Register each test in the `Makefile`: add `<package>/<module>` to `CTESTS` and list the sources it compiles with in `CTEST_SRC_<package>_<module>`. Run it with `make ctest package=<package> module=<module>`. It must pass under `make ctest-sanitize` with the same arguments.
 

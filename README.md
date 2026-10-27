@@ -71,7 +71,6 @@ Download the dependencies:
 ```
 make prepare-dist
 make download-sqlite
-make download-external
 ```
 
 Then build for your OS (choose one of the following):
