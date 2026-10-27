@@ -52,33 +52,36 @@ select '02_07', cast(fileio_read('fileio.tmp/hello.txt', 6, 1) as text) = 'w';
 select '02_08', cast(fileio_read('fileio.tmp/hello.txt', 6, 10) as text) = 'world';
 -- limit 0 means no limit
 select '02_09', cast(fileio_read('fileio.tmp/hello.txt', 6, 0) as text) = 'world';
--- numeric text is converted, reals are truncated
+-- numeric text is converted
 select '02_10', cast(fileio_read('fileio.tmp/hello.txt', '6') as text) = 'world';
-select '02_11', cast(fileio_read('fileio.tmp/hello.txt', 6.9) as text) = 'world';
-select '02_12', cast(fileio_read('fileio.tmp/hello.txt', 0, '5') as text) = 'hello';
--- offset and limit are truncated to 32 bits (current behavior)
-select '02_13', cast(fileio_read('fileio.tmp/hello.txt', 4294967296 + 6) as text) = 'world';
-select '02_14', cast(fileio_read('fileio.tmp/hello.txt', 0, 4294967296 + 1) as text) = 'h';
+select '02_11', cast(fileio_read('fileio.tmp/hello.txt', 0, '5') as text) = 'hello';
+-- offset and limit are 64-bit
+select '02_12', fileio_read('fileio.tmp/hello.txt', 4294967296 + 6) = x'';
+select '02_13', cast(fileio_read('fileio.tmp/hello.txt', 0, 4294967296 + 1) as text) = 'hello world';
+select '02_14', fileio_read('fileio.tmp/hello.txt', 9223372036854775807) = x'';
+select '02_15', cast(fileio_read('fileio.tmp/hello.txt', 6, 9223372036854775807) as text) = 'world';
 
 -- fileio_read: NULL
 select '03_01', fileio_read(null) is null;
 select '03_02', fileio_read(null, 0) is null;
-select '03_03', fileio_read(null, 0, 5) is null;
--- a NULL offset or limit is the default (current behavior)
-select '03_04', cast(fileio_read('fileio.tmp/hello.txt', null) as text) = 'hello world';
-select '03_05', cast(fileio_read('fileio.tmp/hello.txt', 0, null) as text) = 'hello world';
+select '03_04', fileio_read('fileio.tmp/hello.txt', null) is null;
+select '03_05', fileio_read('fileio.tmp/hello.txt', 0, null) is null;
 
 -- fileio_read: bad data
--- an unconvertible offset or limit is 0 (current behavior)
-select '04_01', cast(fileio_read('fileio.tmp/hello.txt', 'abc') as text) = 'hello world';
-select '04_02', cast(fileio_read('fileio.tmp/hello.txt', x'36') as text) = 'world';
-select '04_03', cast(fileio_read('fileio.tmp/hello.txt', 0, 'abc') as text) = 'hello world';
--- a blob path is converted to text (current behavior)
-select '04_04', cast(fileio_read(cast('fileio.tmp/hello.txt' as blob)) as text) = 'hello world';
--- the path is cut at an embedded NUL (current behavior)
-select '04_05', cast(fileio_read('fileio.tmp/hello.txt' || char(0) || 'x') as text) = 'hello world';
--- extra arguments are ignored, and so is the limit then (current behavior)
-select '04_06', cast(fileio_read('fileio.tmp/hello.txt', 0, 5, 1) as text) = 'hello world';
+-- a directory is NULL
+select '04_01', fileio_read('fileio.tmp/dir') is null;
+-- an offset or limit that is not a non-negative integer is NULL
+select '04_02', fileio_read('fileio.tmp/hello.txt', 'abc') is null;
+select '04_03', fileio_read('fileio.tmp/hello.txt', x'36') is null;
+select '04_04', fileio_read('fileio.tmp/hello.txt', 6.9) is null;
+select '04_05', fileio_read('fileio.tmp/hello.txt', -1) is null;
+select '04_06', fileio_read('fileio.tmp/hello.txt', 0, 'abc') is null;
+select '04_07', fileio_read('fileio.tmp/hello.txt', 0, -1) is null;
+-- a path that is not text is NULL
+select '04_08', fileio_read(cast('fileio.tmp/hello.txt' as blob)) is null;
+select '04_09', fileio_read(42) is null;
+-- a path with an embedded NUL is NULL
+select '04_10', fileio_read('fileio.tmp/hello.txt' || char(0) || 'x') is null;
 
 -- fileio_scan
 select '11_01', count(*) = 4 from fileio_scan('fileio.tmp/lines.txt');
@@ -95,19 +98,32 @@ select '11_07', count(*) = 0 from fileio_scan('fileio.tmp/dir');
 -- lines longer than the initial buffer
 select '11_08', fileio_write('fileio.tmp/long.txt', printf('%.*c', 1000, 'x') || char(10) || 'y') = 1002;
 select '11_09', group_concat(length(value), '|') = '1000|1' from fileio_scan('fileio.tmp/long.txt');
--- a line is cut at an embedded NUL (current behavior)
+-- an embedded NUL is kept
 .shell printf 'a\\000b\\nc\\n' > fileio.tmp/nul.txt
-select '11_10', group_concat(value, '|') = 'a|c' from fileio_scan('fileio.tmp/nul.txt');
+select '11_10', group_concat(hex(value), '|') = '610062|63' from fileio_scan('fileio.tmp/nul.txt');
 -- the path can come from another table
 select '11_11', count(*) = 5
   from (select 'fileio.tmp/hello.txt' as path union all select 'fileio.tmp/lines.txt') as files,
   fileio_scan(files.path);
 -- name = path is the same as the argument
 select '11_12', count(*) = 4 from fileio_scan where name = 'fileio.tmp/lines.txt';
+-- only one \n, \r\n or \r is removed at the end of the line
+.shell printf 'a\\r\\r\\nb\\rc\\nd\\r' > fileio.tmp/cr.txt
+select '11_13', group_concat(hex(value), '|') = '610D|620D63|64' from fileio_scan('fileio.tmp/cr.txt');
+-- other constraints are left to SQLite
+select '11_14', group_concat(value, '|') = 'one|two'
+  from (select value from fileio_scan('fileio.tmp/lines.txt') limit 2);
+select '11_15', group_concat(value, '|') = 'two|last'
+  from fileio_scan('fileio.tmp/lines.txt') where value in ('two', 'last');
+select '11_16', value = 'two' from fileio_scan('fileio.tmp/lines.txt') where rowid = 2;
 
--- fileio_scan: bad data
--- a blob path is converted to text (current behavior)
-select '12_01', count(*) = 1 from fileio_scan(cast('fileio.tmp/hello.txt' as blob));
+-- fileio_scan: NULL and bad data
+select '12_01', count(*) = 0 from fileio_scan(null);
+-- a path that is not text gives no rows
+select '12_02', count(*) = 0 from fileio_scan(cast('fileio.tmp/hello.txt' as blob));
+select '12_03', count(*) = 0 from fileio_scan('fileio.tmp/hello.txt' || char(0) || 'x');
+-- a missing file gives no rows
+select '12_04', count(*) = 0 from fileio_scan('fileio.tmp/nosuch.txt');
 
 -- fileio_write
 select '21_01', fileio_write('fileio.tmp/w1.txt', 'hello world') = 11;
@@ -142,16 +158,16 @@ select '22_05', mode = 33152 from fileio_ls('fileio.tmp/p2.txt');
 -- an existing file gets the new permissions
 select '22_06', fileio_write('fileio.tmp/p2.txt', 'x', 420) = 1;
 select '22_07', mode = 33188 from fileio_ls('fileio.tmp/p2.txt');
--- perm 0 leaves the permissions to the umask (current behavior)
+-- perm 0 is no permissions
 select '22_08', fileio_write('fileio.tmp/p3.txt', 'x', 0) = 1;
-select '22_09', mode = 33188 from fileio_ls('fileio.tmp/p3.txt');
+select '22_09', mode = 32768 from fileio_ls('fileio.tmp/p3.txt');
 select '22_10', fileio_write('fileio.tmp/m1.txt', 'x', 420, 1000000000) = 1;
 select '22_11', mtime = 1000000000 from fileio_ls('fileio.tmp/m1.txt');
 select '22_12', fileio_write('fileio.tmp/m2.txt', 'x', 420, 0) = 1;
 select '22_13', mtime = 0 from fileio_ls('fileio.tmp/m2.txt');
--- a negative mtime is ignored
+-- a negative mtime is before the epoch
 select '22_14', fileio_write('fileio.tmp/m3.txt', 'x', 420, -1) = 1;
-select '22_15', mtime > 1000000000 from fileio_ls('fileio.tmp/m3.txt');
+select '22_15', mtime = -1 from fileio_ls('fileio.tmp/m3.txt');
 -- numeric text is converted
 select '22_16', fileio_write('fileio.tmp/m4.txt', 'x', '420', '1000000000') = 1;
 select '22_17', (mode, mtime) = (33188, 1000000000) from fileio_ls('fileio.tmp/m4.txt');
@@ -160,32 +176,29 @@ select '22_17', (mode, mtime) = (33188, 1000000000) from fileio_ls('fileio.tmp/m
 select '23_01', fileio_write(null, 'x') is null;
 select '23_02', fileio_write(null, 'x', 420) is null;
 select '23_03', fileio_write(null, 'x', 420, 0) is null;
--- NULL data creates an empty file (current behavior)
-select '23_04', fileio_write('fileio.tmp/n1.txt', null) = 0;
-select '23_05', size = 0 from fileio_ls('fileio.tmp/n1.txt');
--- NULL perm is 0, so it leaves the permissions to the umask (current behavior)
-select '23_06', fileio_write('fileio.tmp/n2.txt', 'x', null) = 1;
-select '23_07', mode = 33188 from fileio_ls('fileio.tmp/n2.txt');
--- NULL mtime is 0, so it sets the time to the epoch (current behavior)
-select '23_08', fileio_write('fileio.tmp/n3.txt', 'x', 420, null) = 1;
-select '23_09', mtime = 0 from fileio_ls('fileio.tmp/n3.txt');
+-- NULL data, perm or mtime is NULL, and writes nothing
+select '23_04', fileio_write('fileio.tmp/n1.txt', null) is null;
+select '23_05', fileio_write('fileio.tmp/n1.txt', 'x', null) is null;
+select '23_06', fileio_write('fileio.tmp/n1.txt', 'x', 420, null) is null;
+select '23_07', count(*) = 0 from fileio_ls('fileio.tmp/n1.txt');
 
 -- fileio_write: bad data
--- an unconvertible perm or mtime is 0 (current behavior)
-select '24_01', fileio_write('fileio.tmp/b1.txt', 'x', 'abc') = 1;
-select '24_02', mode = 33188 from fileio_ls('fileio.tmp/b1.txt');
-select '24_03', fileio_write('fileio.tmp/b2.txt', 'x', 420, 'abc') = 1;
-select '24_04', mtime = 0 from fileio_ls('fileio.tmp/b2.txt');
--- perm is truncated to 32 bits (current behavior)
-select '24_05', fileio_write('fileio.tmp/b3.txt', 'x', 4294967296 + 384) = 1;
-select '24_06', mode = 33152 from fileio_ls('fileio.tmp/b3.txt');
--- a failure is NULL with two arguments, and an error with more (current behavior)
-select '24_07', fileio_write('fileio.tmp/dir', 'x') is null;
-select '24_08', fileio_write('fileio.tmp/hello.txt/x.txt', 'x') is null;
-select '24_09', fileio_write('', 'x') is null;
--- a blob path is converted to text (current behavior)
-select '24_10', fileio_write(cast('fileio.tmp/b4.txt' as blob), 'x') = 1;
-select '24_11', cast(fileio_read('fileio.tmp/b4.txt') as text) = 'x';
+-- a perm that is not an integer in the 0..4095 (07777) range is NULL
+select '24_01', fileio_write('fileio.tmp/b1.txt', 'x', 'abc') is null;
+select '24_02', fileio_write('fileio.tmp/b1.txt', 'x', 420.5) is null;
+select '24_03', fileio_write('fileio.tmp/b1.txt', 'x', -1) is null;
+select '24_04', fileio_write('fileio.tmp/b1.txt', 'x', 4096) is null;
+-- an mtime that is not an integer is NULL
+select '24_05', fileio_write('fileio.tmp/b1.txt', 'x', 420, 'abc') is null;
+select '24_06', fileio_write('fileio.tmp/b1.txt', 'x', 420, 1.5) is null;
+-- a path that is not text is NULL
+select '24_07', fileio_write(cast('fileio.tmp/b1.txt' as blob), 'x') is null;
+select '24_08', fileio_write('fileio.tmp/b1.txt' || char(0) || 'x', 'x') is null;
+-- none of the above writes anything
+select '24_09', count(*) = 0 from fileio_ls('fileio.tmp/b1.txt');
+-- the setuid bit is kept (2541 = 04755)
+select '24_10', fileio_write('fileio.tmp/b2.txt', 'x', 2541) = 1;
+select '24_11', mode = 35309 from fileio_ls('fileio.tmp/b2.txt');
 
 -- fileio_append
 select '31_01', fileio_append('fileio.tmp/ap1.txt', 'one') = 3;
@@ -214,9 +227,15 @@ select '31_13', cast(fileio_read('fileio.tmp/ap6.txt') as text) = 'мир';
 -- creates missing parent directories
 select '31_14', fileio_append('fileio.tmp/c/d/ap.txt', 'x') = 1;
 select '31_15', cast(fileio_read('fileio.tmp/c/d/ap.txt') as text) = 'x';
--- a blob is cut at the first NUL (current behavior)
-select '31_16', fileio_append('fileio.tmp/ap7.txt', x'610062') = 1;
-select '31_17', fileio_read('fileio.tmp/ap7.txt') = x'61';
+-- blobs are appended as is
+select '31_16', fileio_append('fileio.tmp/ap7.txt', x'610062') = 3;
+select '31_17', fileio_read('fileio.tmp/ap7.txt') = x'610062';
+
+-- fileio_append: NULL and bad data
+select '32_01', fileio_append(null, 'x') is null;
+select '32_02', fileio_append('fileio.tmp/ap8.txt', null) is null;
+select '32_03', fileio_append(cast('fileio.tmp/ap8.txt' as blob), 'x') is null;
+select '32_04', count(*) = 0 from fileio_ls('fileio.tmp/ap8.txt');
 
 -- fileio_mkdir
 select '41_01', fileio_mkdir('fileio.tmp/d1') is null;
@@ -235,15 +254,25 @@ select '41_09', mode = 16832 from fileio_ls('fileio.tmp/d3');
 -- fileio_mkdir: NULL
 select '42_01', fileio_mkdir(null) is null;
 select '42_02', fileio_mkdir(null, 493) is null;
--- NULL perm is 0 (current behavior)
--- (listed from the parent: a d--------- directory can't be read)
+-- NULL perm is NULL, and creates nothing
 select '42_03', fileio_mkdir('fileio.tmp/d4', null) is null;
-select '42_04', mode = 16384 from fileio_ls('fileio.tmp') where name = 'fileio.tmp/d4';
+select '42_04', count(*) = 0 from fileio_ls('fileio.tmp/d4');
 
 -- fileio_mkdir: bad data
--- an unconvertible perm is 0 (current behavior)
+-- a perm that is not an integer in the 0..4095 (07777) range is NULL
 select '43_01', fileio_mkdir('fileio.tmp/d5', 'abc') is null;
-select '43_02', mode = 16384 from fileio_ls('fileio.tmp') where name = 'fileio.tmp/d5';
+select '43_02', fileio_mkdir('fileio.tmp/d5', 448.5) is null;
+select '43_03', fileio_mkdir('fileio.tmp/d5', -1) is null;
+select '43_04', fileio_mkdir('fileio.tmp/d5', 4096) is null;
+-- a path that is not text is NULL
+select '43_05', fileio_mkdir(cast('fileio.tmp/d5' as blob)) is null;
+select '43_06', fileio_mkdir('fileio.tmp/d5' || char(0) || 'x') is null;
+-- none of the above creates anything
+select '43_07', count(*) = 0 from fileio_ls('fileio.tmp/d5');
+-- perm 0 is no permissions
+-- (listed from the parent: a d--------- directory can't be read)
+select '43_08', fileio_mkdir('fileio.tmp/d6', 0) is null;
+select '43_09', mode = 16384 from fileio_ls('fileio.tmp') where name = 'fileio.tmp/d6';
 
 -- fileio_symlink
 -- the target is relative to the link
@@ -260,11 +289,14 @@ select '51_06', fileio_read('fileio.tmp/link2') is null;
 select '52_01', fileio_symlink(null, 'fileio.tmp/link3') is null;
 select '52_02', count(*) = 0 from fileio_ls('fileio.tmp/link3');
 
+select '52_03', fileio_symlink('hello.txt', null) is null;
+
 -- fileio_symlink: bad data
--- failures are ignored (current behavior)
-select '53_01', fileio_symlink('lines.txt', 'fileio.tmp/link1') is null;
-select '53_02', cast(fileio_read('fileio.tmp/link1') as text) = 'hello world';
-select '53_03', fileio_symlink('hello.txt', 'fileio.tmp/nosuch/link') is null;
+-- a target or path that is not text is NULL, and creates nothing
+select '53_01', fileio_symlink(cast('hello.txt' as blob), 'fileio.tmp/link4') is null;
+select '53_02', fileio_symlink('hello.txt', cast('fileio.tmp/link4' as blob)) is null;
+select '53_03', fileio_symlink('hello.txt' || char(0) || 'x', 'fileio.tmp/link4') is null;
+select '53_04', count(*) = 0 from fileio_ls('fileio.tmp/link4');
 
 -- fileio_ls
 select '61_01', (name, mode, size) = ('fileio.tmp/hello.txt', 33188, 11)
@@ -286,10 +318,12 @@ select '61_08', group_concat(name, '|') =
   from (select name from fileio_ls('fileio.tmp/dir', true) order by name);
 -- rowids are sequential
 select '61_09', group_concat(rowid, '|') = '1|2|3|4' from fileio_ls('fileio.tmp/dir');
--- hidden columns are NULL
-select '61_10', path is null and dir is null from fileio_ls('fileio.tmp/hello.txt');
--- a trailing slash is kept in the names (current behavior)
-select '61_11', count(*) = 1 from fileio_ls('fileio.tmp/dir/') where name = 'fileio.tmp/dir//a.txt';
+-- hidden columns are the arguments
+select '61_10', path = 'fileio.tmp/hello.txt' and dir is null from fileio_ls('fileio.tmp/hello.txt');
+select '61_11', (path, dir) = ('fileio.tmp/dir', 1) from fileio_ls('fileio.tmp/dir', 1) limit 1;
+-- a trailing slash is not doubled in the names
+select '61_15', group_concat(name, '|') = 'fileio.tmp/dir/|fileio.tmp/dir/a.txt'
+  from fileio_ls('fileio.tmp/dir/') where name in ('fileio.tmp/dir/', 'fileio.tmp/dir/a.txt');
 -- the path can come from another table
 select '61_12', count(*) = 5
   from (select 'fileio.tmp/dir' as path union all select 'fileio.tmp/hello.txt') as files,
@@ -298,14 +332,18 @@ select '61_12', count(*) = 5
 select '61_13', count(*) = 4 from fileio_ls where path = 'fileio.tmp/dir';
 select '61_14', count(*) = 5 from fileio_ls where path = 'fileio.tmp/dir' and dir = true;
 
--- fileio_ls: bad data
--- the recursive flag is converted to an integer, NULL is false (current behavior)
-select '62_01', count(*) = 4 from fileio_ls('fileio.tmp/dir', null);
-select '62_02', count(*) = 4 from fileio_ls('fileio.tmp/dir', 'abc');
-select '62_03', count(*) = 5 from fileio_ls('fileio.tmp/dir', '1');
-select '62_04', count(*) = 5 from fileio_ls('fileio.tmp/dir', 2);
--- a blob path is converted to text (current behavior)
-select '62_05', count(*) = 1 from fileio_ls(cast('fileio.tmp/hello.txt' as blob));
+-- fileio_ls: NULL and bad data
+select '62_01', count(*) = 0 from fileio_ls(null);
+select '62_02', count(*) = 0 from fileio_ls('fileio.tmp/dir', null);
+-- a recursive flag that is not an integer gives no rows
+select '62_03', count(*) = 0 from fileio_ls('fileio.tmp/dir', 'abc');
+select '62_04', count(*) = 0 from fileio_ls('fileio.tmp/dir', 1.5);
+-- numeric text is converted, any non-zero integer is true
+select '62_05', count(*) = 5 from fileio_ls('fileio.tmp/dir', '1');
+select '62_06', count(*) = 5 from fileio_ls('fileio.tmp/dir', 2);
+-- a path that is not text gives no rows
+select '62_07', count(*) = 0 from fileio_ls(cast('fileio.tmp/hello.txt' as blob));
+select '62_08', count(*) = 0 from fileio_ls('fileio.tmp/hello.txt' || char(0) || 'x');
 
 -- fileio_mode
 select '71_01', fileio_mode(16877) = 'drwxr-xr-x';
@@ -320,22 +358,27 @@ select '71_08', fileio_mode(438) = '?rw-rw-rw-';
 select '71_09', fileio_mode(493) = '?rwxr-xr-x';
 select '71_10', fileio_mode(511) = '?rwxrwxrwx';
 select '71_11', fileio_mode(0) = '?---------';
--- other file types are unknown (4516 = 010644, a FIFO)
-select '71_12', fileio_mode(4516) = '?rw-r--r--';
+-- other file types (010644 FIFO, 020644 char device, 060644 block device, 0140644 socket)
+select '71_12', fileio_mode(4516) = 'prw-r--r--';
+select '71_16', fileio_mode(8612) = 'crw-r--r--';
+select '71_17', fileio_mode(24996) = 'brw-r--r--';
+select '71_18', fileio_mode(49572) = 'srw-r--r--';
 -- setuid, setgid and sticky bits are ignored (35309 = 0104755)
 select '71_13', fileio_mode(35309) = '-rwxr-xr-x';
--- numeric text is converted, reals are truncated
+-- numeric text is converted
 select '71_14', fileio_mode('420') = '?rw-r--r--';
-select '71_15', fileio_mode(420.9) = '?rw-r--r--';
+-- the maximum mode (0177777)
+select '71_15', fileio_mode(65535) = '?rwxrwxrwx';
 
 -- fileio_mode: NULL and bad data
--- NULL and unconvertible values are 0 (current behavior)
-select '72_01', fileio_mode(null) = '?---------';
-select '72_02', fileio_mode('abc') = '?---------';
-select '72_03', fileio_mode(x'01') = '?---------';
--- out-of-range values are truncated to 32 bits (current behavior)
-select '72_04', fileio_mode(-1) = '?rwxrwxrwx';
-select '72_05', fileio_mode(4294967296 + 420) = '?rw-r--r--';
+select '72_01', fileio_mode(null) is null;
+-- a mode that is not an integer in the 0..65535 (0177777) range is NULL
+select '72_02', fileio_mode('abc') is null;
+select '72_03', fileio_mode(x'01') is null;
+select '72_04', fileio_mode(420.9) is null;
+select '72_05', fileio_mode(-1) is null;
+select '72_06', fileio_mode(65536) is null;
+select '72_07', fileio_mode(4294967296 + 420) is null;
 
 -- aliases
 select '81_01', cast(readfile('fileio.tmp/hello.txt') as text) = 'hello world';
