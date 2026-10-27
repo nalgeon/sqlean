@@ -327,6 +327,8 @@ Each module has a smoke test or two in the bundle test. They catch registration 
 6. Acknowledgements for ported code.
 7. Installation and usage: the standard footer.
 
+`docs/release-notes.md` highlights major improvements, bug fixes, and breaking changes. Keep it short and easy to read — avoid long lists of minor details.
+
 Whenever observable behavior changes, update the docs in the same commit.
 
 ## Refactoring checklist
