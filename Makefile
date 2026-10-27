@@ -14,6 +14,9 @@ COMMON_CFLAGS := -Isrc -DSQLEAN_VERSION=$(SQLEAN_VERSION)
 
 LINIX_FLAGS := $(CFLAGS) -z now -z relro -Wall -Wsign-compare -Wno-unknown-pragmas -fPIC -shared $(COMMON_CFLAGS)
 WINDO_FLAGS := $(CFLAGS) -shared $(COMMON_CFLAGS)
+# compile-windows: the compiler and the output directory
+WINDO_CC ?= gcc
+WINDO_DIST ?= dist
 MACOS_FLAGS := $(CFLAGS) -Wall -Wsign-compare -fPIC -dynamiclib $(COMMON_CFLAGS)
 CTEST_FLAGS := $(CFLAGS) -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unknown-pragmas -Isrc
 
@@ -146,20 +149,20 @@ pack-linux:
 	zip -j dist/sqlean-linux-arm64.zip dist/arm64/*.so
 
 compile-windows:
-	gcc -O3 $(WINDO_FLAGS) src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.dll
-	gcc -O3 $(WINDO_FLAGS) src/sqlite3-define.c src/define/*.c -o dist/define.dll
-	gcc -O3 $(WINDO_FLAGS) src/sqlite3-fileio.c src/fileio/*.c -o dist/fileio.dll
-	gcc -O3 $(WINDO_FLAGS) src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/fuzzy.dll
-	gcc -O3 $(WINDO_FLAGS) src/sqlite3-ipaddr.c src/ipaddr/*.c -o dist/ipaddr.dll -lws2_32
-	gcc -O3 $(WINDO_FLAGS) src/sqlite3-math.c src/math/*.c -o dist/math.dll -lm
-	gcc -O3 $(WINDO_FLAGS) src/sqlite3-regexp.c -include src/regexp/constants.h src/regexp/*.c src/regexp/pcre2/*.c -o dist/regexp.dll
-	gcc -O3 $(WINDO_FLAGS) src/sqlite3-stats.c src/stats/*.c -o dist/stats.dll -lm
-	gcc -O3 $(WINDO_FLAGS) src/sqlite3-text.c src/text/*.c src/text/*/*.c -o dist/text.dll
-	gcc -O3 $(WINDO_FLAGS) src/sqlite3-time.c src/time/*.c -o dist/time.dll
-	gcc -O3 $(WINDO_FLAGS) src/sqlite3-unicode.c src/unicode/*.c -o dist/unicode.dll
-	gcc -O3 $(WINDO_FLAGS) src/sqlite3-uuid.c src/uuid/*.c -o dist/uuid.dll
-	gcc -O3 $(WINDO_FLAGS) src/sqlite3-vsv.c src/vsv/*.c -o dist/vsv.dll -lm
-	gcc -O3 $(WINDO_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/text/*/*.c src/time/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/sqlean.dll -lm
+	$(WINDO_CC) -O3 $(WINDO_FLAGS) src/sqlite3-crypto.c src/crypto/*.c -o $(WINDO_DIST)/crypto.dll
+	$(WINDO_CC) -O3 $(WINDO_FLAGS) src/sqlite3-define.c src/define/*.c -o $(WINDO_DIST)/define.dll
+	$(WINDO_CC) -O3 $(WINDO_FLAGS) src/sqlite3-fileio.c src/fileio/*.c -o $(WINDO_DIST)/fileio.dll
+	$(WINDO_CC) -O3 $(WINDO_FLAGS) src/sqlite3-fuzzy.c src/fuzzy/*.c -o $(WINDO_DIST)/fuzzy.dll
+	$(WINDO_CC) -O3 $(WINDO_FLAGS) src/sqlite3-ipaddr.c src/ipaddr/*.c -o $(WINDO_DIST)/ipaddr.dll -lws2_32
+	$(WINDO_CC) -O3 $(WINDO_FLAGS) src/sqlite3-math.c src/math/*.c -o $(WINDO_DIST)/math.dll -lm
+	$(WINDO_CC) -O3 $(WINDO_FLAGS) src/sqlite3-regexp.c -include src/regexp/constants.h src/regexp/*.c src/regexp/pcre2/*.c -o $(WINDO_DIST)/regexp.dll
+	$(WINDO_CC) -O3 $(WINDO_FLAGS) src/sqlite3-stats.c src/stats/*.c -o $(WINDO_DIST)/stats.dll -lm
+	$(WINDO_CC) -O3 $(WINDO_FLAGS) src/sqlite3-text.c src/text/*.c src/text/*/*.c -o $(WINDO_DIST)/text.dll
+	$(WINDO_CC) -O3 $(WINDO_FLAGS) src/sqlite3-time.c src/time/*.c -o $(WINDO_DIST)/time.dll
+	$(WINDO_CC) -O3 $(WINDO_FLAGS) src/sqlite3-unicode.c src/unicode/*.c -o $(WINDO_DIST)/unicode.dll
+	$(WINDO_CC) -O3 $(WINDO_FLAGS) src/sqlite3-uuid.c src/uuid/*.c -o $(WINDO_DIST)/uuid.dll
+	$(WINDO_CC) -O3 $(WINDO_FLAGS) src/sqlite3-vsv.c src/vsv/*.c -o $(WINDO_DIST)/vsv.dll -lm
+	$(WINDO_CC) -O3 $(WINDO_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/text/*/*.c src/time/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o $(WINDO_DIST)/sqlean.dll -lm
 
 pack-windows:
 	7z a -tzip dist/sqlean-win-x64.zip ./dist/*.dll
@@ -251,6 +254,34 @@ sanitize-gcc:
 test:
 	@$(SQLITE) < test/$(suite).sql > test.log
 	@cat test.log | (! grep -Ex "[0-9_]+.[^1]")
+
+# The Windows build and its SQL tests under wine, cross-compiled with zig:
+# make compile-wine, then make test-wine suite=fileio or make test-all-wine.
+# The build goes into dist/wine, so the host's artifacts stay as they are.
+WINE_CC ?= zig cc -target x86_64-windows-gnu
+WINE_DIST := dist/wine
+SUITES := crypto define fileio fuzzy ipaddr math regexp stats text time unicode uuid vsv sqlean
+
+compile-wine: $(WINE_DIST)/sqlite3.exe
+	$(MAKE) compile-windows WINDO_CC="$(WINE_CC)" WINDO_DIST=$(WINE_DIST)
+
+$(WINE_DIST)/sqlite3.exe: src/sqlite3.c src/shell.c
+	mkdir -p $(WINE_DIST)
+	$(WINE_CC) -O1 -w src/shell.c src/sqlite3.c -o $@
+
+# Like test, but wine prints \r\n line endings, which would hide the failures.
+test-wine:
+	@sh test/wine.sh $(suite) $(WINE_DIST)/sqlite3.exe $(WINE_DIST) > test.log; \
+		rc=$$?; tr -d '\r' < test.log > test.log.tmp; mv test.log.tmp test.log; exit $$rc
+	@cat test.log | (! grep -Ex "[0-9_]+.[^1]")
+
+# Runs every suite, even after a failure, and lists the failed ones.
+test-all-wine:
+	@failed=""; for s in $(SUITES); do \
+		echo "make test-wine suite=$$s"; \
+		$(MAKE) --no-print-directory test-wine suite=$$s || failed="$$failed $$s"; \
+	done; \
+	if [ -n "$$failed" ]; then echo "failed:$$failed"; exit 1; fi
 
 # C tests as <package>/<module>, each compiling test/<package>/<module>.test.c
 # together with the sources listed in CTEST_SRC_<package>_<module>.
