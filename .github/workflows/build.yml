@@ -39,15 +39,13 @@ jobs:
             - name: Build for Linux
               if: matrix.os == 'ubuntu-latest'
               run: |
-                  make compile-linux
-                  make ctest-all
-                  make test-all
+                  make check
 
             - name: Build for Windows
               if: matrix.os == 'windows-latest'
               shell: bash
-              run: make compile-windows
+              run: make build
 
             - name: Build for macOS
               if: matrix.os == 'macos-latest'
-              run: make compile-macos
+              run: make build
