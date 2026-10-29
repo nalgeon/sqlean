@@ -1,43 +1,250 @@
 # Copyright (c) 2021 Anton Zhiyanov, MIT License
 # https://github.com/nalgeon/sqlean
 
-.PHONY: test gcc
+# Run `make help` for the commands.
+
+.DEFAULT_GOAL := help
 
 SQLITE_RELEASE_YEAR := 2024
 SQLITE_VERSION := 3470200
 
 SQLEAN_VERSION := '"$(or $(shell git tag --points-at HEAD),main)"'
 
-CC ?= gcc
+ifeq ($(origin CC),default)
+CC := gcc
+endif
 CFLAGS ?=
+
+# The GCC image for on=gcc.
+GCC_IMAGE ?= gcc:16.2.0
+GCC_PLATFORM ?= linux/arm64
+
+ifeq ($(on),gcc)
+
+# Runs the whole command in Docker, on Linux with GCC. The container gets
+# its own empty dist/, so the host's build artifacts stay as they are.
+GOALS := $(or $(MAKECMDGOALS),$(.DEFAULT_GOAL))
+.PHONY: $(GOALS)
+$(firstword $(GOALS)):
+	docker run --rm --platform $(GCC_PLATFORM) -v "$(CURDIR)":/src -v /src/dist -w /src $(GCC_IMAGE) \
+		make CC=gcc $(GOALS) only="$(only)" san=$(san)
+$(filter-out $(firstword $(GOALS)),$(GOALS)):
+	@:
+
+else
+
+#
+# Variants
+#
+
+ifeq ($(OS),Windows_NT)
+HOST := windows
+else
+HOST := $(shell uname -s)
+endif
+
+# A variant is the compiler, the flags and the output directory.
+# Each variant has its own directory, so they don't overwrite each other.
+ifeq ($(on),wine)
+ifeq ($(san),1)
+$(error san=1 is not supported with on=wine)
+endif
+DIR := dist/wine
+BUILD_CC := zig cc -target x86_64-windows-gnu
+TARGET := windows
+else ifneq ($(on),)
+$(error unknown on=$(on), use on=gcc or on=wine)
+else ifeq ($(san),1)
+DIR := dist/san
+BUILD_CC := $(CC)
+TARGET := $(HOST)
+else
+DIR := dist
+BUILD_CC := $(CC)
+TARGET := $(HOST)
+endif
+
 COMMON_CFLAGS := -Isrc -DSQLEAN_VERSION=$(SQLEAN_VERSION)
-
-LINIX_FLAGS := $(CFLAGS) -z now -z relro -Wall -Wsign-compare -Wno-unknown-pragmas -fPIC -shared $(COMMON_CFLAGS)
-WINDO_FLAGS := $(CFLAGS) -shared $(COMMON_CFLAGS)
-# compile-windows: the compiler and the output directory
-WINDO_CC ?= gcc
-WINDO_DIST ?= dist
-MACOS_FLAGS := $(CFLAGS) -Wall -Wsign-compare -fPIC -dynamiclib $(COMMON_CFLAGS)
-CTEST_FLAGS := $(CFLAGS) -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unknown-pragmas -Isrc
-
-# the sqlite3 shell used by the SQL tests
-SQLITE ?= sqlite3
-
-# address + undefined behavior sanitizers
+# Warnings for the C tests and the sanitized build.
+CTEST_FLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unknown-pragmas -Isrc
+# Address + undefined behavior sanitizers.
 SANITIZE_FLAGS := -g -O1 -fno-omit-frame-pointer -fsanitize=address,undefined -fno-sanitize-recover=undefined
 # Leak detection is Linux-only. Slow unwinding gives full stacks for
 # allocations made inside SQLite, which is built without frame pointers.
-ifeq ($(shell uname -s),Linux)
+ifeq ($(HOST),Linux)
 SANITIZE_ENV := ASAN_OPTIONS=detect_leaks=1:fast_unwind_on_malloc=0 UBSAN_OPTIONS=print_stacktrace=1
 else
 SANITIZE_ENV := ASAN_OPTIONS=detect_leaks=0 UBSAN_OPTIONS=print_stacktrace=1
 endif
 
-# Runs make targets on Linux with GCC, in Docker: make gcc run="ctest-all-sanitize".
-# The container gets its own empty dist/, so the host's build artifacts stay as they are.
-GCC_IMAGE ?= gcc:16.2.0
-GCC_PLATFORM ?= linux/arm64
-SAN_FLAGS := $(CTEST_FLAGS) $(SANITIZE_FLAGS) -fPIC -shared
+ifeq ($(TARGET),windows)
+EXT := dll
+EXE := .exe
+TARGET_FLAGS := -shared
+else ifeq ($(TARGET),Darwin)
+EXT := dylib
+TARGET_FLAGS := -Wall -Wsign-compare -fPIC -dynamiclib
+else
+EXT := so
+TARGET_FLAGS := -z now -z relro -Wall -Wsign-compare -Wno-unknown-pragmas -fPIC -shared
+endif
+
+BUILD_FLAGS := $(CFLAGS) $(TARGET_FLAGS) $(COMMON_CFLAGS)
+ifeq ($(san),1)
+BUILD_FLAGS += $(CTEST_FLAGS) $(SANITIZE_FLAGS)
+CTEST_FLAGS += $(SANITIZE_FLAGS)
+RUN_ENV := $(SANITIZE_ENV)
+# The shell is built without the sanitizers, since it's third-party code,
+# but linked with them, so it can load the sanitized extensions.
+SHELL_LDFLAGS := -fsanitize=address,undefined
+else
+BUILD_FLAGS += -O3
+endif
+CTEST_FLAGS := $(CFLAGS) $(CTEST_FLAGS)
+
+# The sqlite3 shell that runs the SQL tests.
+SQLITE ?= $(DIR)/sqlite3$(EXE)
+ifeq ($(on),wine)
+RUN_SQLITE := wine $(SQLITE)
+else
+RUN_SQLITE := $(SQLITE)
+endif
+
+#
+# Modules
+#
+
+# Each module is built from src/sqlite3-<module>.c and src/<module>/,
+# the bundle from src/sqlite3-sqlean.c and every module.
+MODULES := $(sort $(filter-out sqlean,$(patsubst src/sqlite3-%.c,%,$(wildcard src/sqlite3-*.c))))
+ifeq ($(TARGET),windows)
+BUNDLED := $(filter-out ipaddr,$(MODULES))
+else
+BUNDLED := $(MODULES)
+endif
+
+FLAGS_regexp := -include src/regexp/constants.h
+FLAGS_sqlean := -include src/regexp/constants.h
+LIBS_math := -lm
+LIBS_stats := -lm
+LIBS_vsv := -lm
+LIBS_sqlean := -lm
+ifeq ($(TARGET),windows)
+LIBS_ipaddr := -lws2_32
+endif
+
+# The C files of a module directory, and all of its files.
+module_c = $(wildcard src/$(1)/*.c src/$(1)/*/*.c)
+module_files = $(wildcard src/$(1)/* src/$(1)/*/*)
+# The sources of a module or the bundle, and the files it depends on.
+sources = src/sqlite3-$(1).c $(if $(filter sqlean,$(1)),$(foreach m,$(BUNDLED),$(call module_c,$(m))),$(call module_c,$(1)))
+deps = src/sqlite3-$(1).c src/*.h Makefile $(if $(filter sqlean,$(1)),$(foreach m,$(BUNDLED),$(call module_files,$(m))),$(call module_files,$(1)))
+
+define module_rule
+$(DIR)/$(1).$(EXT): $(call deps,$(1)) | $(DIR)
+	$$(BUILD_CC) $$(BUILD_FLAGS) $$(FLAGS_$(1)) $(call sources,$(1)) -o $$@ $$(LIBS_$(1))
+endef
+$(foreach m,$(MODULES) sqlean,$(eval $(call module_rule,$(m))))
+
+$(DIR):
+	mkdir -p $@
+
+$(DIR)/sqlite3$(EXE): src/sqlite3.c src/shell.c | $(DIR)
+	$(BUILD_CC) -g -O1 -w -c src/sqlite3.c -o $(DIR)/sqlite3.o
+	$(BUILD_CC) -g -O1 -w -c src/shell.c -o $(DIR)/shell.o
+	$(BUILD_CC) $(SHELL_LDFLAGS) $(DIR)/sqlite3.o $(DIR)/shell.o -o $@ $(if $(filter windows,$(TARGET)),,-lm)
+	rm -f $(DIR)/sqlite3.o $(DIR)/shell.o
+
+#
+# Tests
+#
+
+# SQL tests: test/<suite>.sql, one suite per module plus the bundle.
+SUITES := $(patsubst test/%.sql,%,$(wildcard test/*.sql))
+
+# C tests as <package>/<module>: test/<package>/<module>.test.c.
+# regexp/regexp is out of date with the regexp API.
+CTESTS := $(filter-out regexp/regexp,$(patsubst test/%.test.c,%,$(wildcard test/*/*.test.c)))
+
+# A C test compiles with the sources of its package, except extension.c,
+# unless CTEST_SRC_<package> says otherwise. define and fileio run
+# the extension in a real connection, so they link SQLite.
+CTEST_SRC_define := $(wildcard src/define/*.c) dist/ctest-sqlite3.o
+CTEST_FLAGS_define := -DSQLITE_CORE
+CTEST_SRC_fileio := $(wildcard src/fileio/*.c) dist/ctest-sqlite3.o
+CTEST_FLAGS_fileio := -DSQLITE_CORE
+ctest_src = $(or $(CTEST_SRC_$(1)),$(filter-out src/$(1)/extension.c,$(call module_c,$(1))))
+
+# only= picks the modules: only="fuzzy text", or only=time/duration
+# for a single C test.
+ONLY := $(sort $(foreach o,$(only),$(firstword $(subst /, ,$(o)))))
+ifneq ($(filter-out $(MODULES) sqlean,$(ONLY)),)
+$(error unknown module in only=$(only))
+endif
+ONLY_MODULES := $(if $(only),$(ONLY),$(MODULES) sqlean)
+ONLY_SUITES := $(filter $(ONLY_MODULES),$(SUITES))
+ONLY_CTESTS := $(if $(only),$(filter $(only) $(addsuffix /%,$(only)),$(CTESTS)),$(CTESTS))
+
+.PHONY: help build test ctest check
+
+help:
+	@echo "Usage: make <action> [option=value ...]"
+	@echo
+	@echo "Actions:"
+	@echo "  build    build the extensions"
+	@echo "  test     build the extensions and run the SQL tests (test/<module>.sql)"
+	@echo "  ctest    run the C tests (test/<module>/*.test.c)"
+	@echo "  check    build, ctest and test"
+	@echo
+	@echo "Options:"
+	@echo "  only=fuzzy      only these modules (only=\"fuzzy text\"),"
+	@echo "                  or a single C test (only=time/duration)"
+	@echo "  san=1           with ASan and UBSan, into dist/san"
+	@echo "  on=gcc          on Linux with GCC, in Docker"
+	@echo "  on=wine         the Windows build under wine, into dist/wine"
+	@echo "  SQLITE=<path>   the sqlite3 shell for the SQL tests (built by default)"
+	@echo
+	@echo "Setup: make prepare-dist download-sqlite"
+	@echo "Releases: compile-{linux,macos}-{x64,arm64}, compile-linux-musl, pack-{linux,macos,windows}"
+
+build: $(foreach m,$(ONLY_MODULES),$(DIR)/$(m).$(EXT))
+
+# Runs every suite, even after a failure, and lists the failed ones.
+# A sanitizer report kills the shell, so it fails the suite.
+test: $(foreach s,$(ONLY_SUITES),$(DIR)/$(s).$(EXT)) $(filter $(DIR)/%,$(SQLITE))
+	@failed=""; for s in $(ONLY_SUITES); do \
+		echo "test $$s"; \
+		$(RUN_ENV) sh test/run.sh $$s $(DIR) $(RUN_SQLITE) || failed="$$failed $$s"; \
+	done; \
+	if [ -n "$$failed" ]; then echo "failed:$$failed"; exit 1; fi
+
+ifeq ($(on),wine)
+ctest:
+	$(error the C tests don't run under wine)
+check: build test
+else
+ctest: $(addprefix ctest/,$(ONLY_CTESTS))
+check: build ctest test
+endif
+
+# Compiles and runs a C test, then deletes the binary.
+ctest/%: | $(DIR)
+	@echo "ctest $*"
+	@$(CC) $(CTEST_FLAGS) $(CTEST_FLAGS_$(*D)) test/$*.test.c $(call ctest_src,$(*D)) -o $(DIR)/ctest-$(*D)-$(*F) -lm
+	@$(RUN_ENV) ./$(DIR)/ctest-$(*D)-$(*F); rc=$$?; rm -rf $(DIR)/ctest-$(*D)-$(*F) $(DIR)/ctest-$(*D)-$(*F).dSYM; exit $$rc
+
+$(addprefix ctest/,$(filter define/% fileio/%,$(CTESTS))): dist/ctest-sqlite3.o
+
+# SQLite for the C tests that link it. Built without warnings and sanitizers,
+# since it's third-party code, and without threads and extension loading,
+# so it links without -lpthread and -ldl.
+dist/ctest-sqlite3.o: src/sqlite3.c
+	@mkdir -p dist
+	$(CC) -g -O1 -w -DSQLITE_THREADSAFE=0 -DSQLITE_OMIT_LOAD_EXTENSION -c src/sqlite3.c -o $@
+
+#
+# Setup and releases
+#
 
 prepare-dist:
 	mkdir -p dist
@@ -51,280 +258,31 @@ download-sqlite:
 # unzip keeps the archive timestamps, which can be older than the targets built from the previous version
 	touch src/sqlite3.c src/sqlite3.h src/sqlite3ext.h src/shell.c
 
-# A sqlite3 shell to load the sanitized extensions into.
-# Rebuilt only when the amalgamation changes (i.e. after download-sqlite).
-dist/sqlite3-sanitize: src/sqlite3.c src/shell.c
-	@mkdir -p dist
-	$(CC) -g -O1 -w -c src/sqlite3.c -o dist/sqlite3.o
-	$(CC) -g -O1 -w -c src/shell.c -o dist/shell.o
-	$(CC) -fsanitize=address,undefined dist/sqlite3.o dist/shell.o -o $@
-	rm -f dist/sqlite3.o dist/shell.o
-
-# Builds the extensions with the sanitizers enabled, plus the shell above.
-compile-sanitize: dist/sqlite3-sanitize
-	$(CC) $(SAN_FLAGS) src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.so
-	$(CC) $(SAN_FLAGS) src/sqlite3-define.c src/define/*.c -o dist/define.so
-	$(CC) $(SAN_FLAGS) src/sqlite3-fileio.c src/fileio/*.c -o dist/fileio.so
-	$(CC) $(SAN_FLAGS) src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/fuzzy.so
-	$(CC) $(SAN_FLAGS) src/sqlite3-ipaddr.c src/ipaddr/*.c -o dist/ipaddr.so
-	$(CC) $(SAN_FLAGS) src/sqlite3-math.c src/math/*.c -o dist/math.so -lm
-	$(CC) $(SAN_FLAGS) -include src/regexp/constants.h src/sqlite3-regexp.c src/regexp/*.c src/regexp/pcre2/*.c -o dist/regexp.so
-	$(CC) $(SAN_FLAGS) src/sqlite3-stats.c src/stats/*.c -o dist/stats.so -lm
-	$(CC) $(SAN_FLAGS) src/sqlite3-text.c src/text/*.c src/text/*/*.c -o dist/text.so
-	$(CC) $(SAN_FLAGS) src/sqlite3-time.c src/time/*.c -o dist/time.so
-	$(CC) $(SAN_FLAGS) src/sqlite3-unicode.c src/unicode/*.c -o dist/unicode.so
-	$(CC) $(SAN_FLAGS) src/sqlite3-uuid.c src/uuid/*.c -o dist/uuid.so
-	$(CC) $(SAN_FLAGS) src/sqlite3-vsv.c src/vsv/*.c -o dist/vsv.so -lm
-	$(CC) $(SAN_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/ipaddr/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/text/*/*.c src/time/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/sqlean.so -lm
-
-compile-linux:
-	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.so
-	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-define.c src/define/*.c -o dist/define.so
-	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-fileio.c src/fileio/*.c -o dist/fileio.so
-	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/fuzzy.so
-	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-ipaddr.c src/ipaddr/*.c -o dist/ipaddr.so
-	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-math.c src/math/*.c -o dist/math.so -lm
-	$(CC) -O3 $(LINIX_FLAGS) -include src/regexp/constants.h src/sqlite3-regexp.c src/regexp/*.c src/regexp/pcre2/*.c -o dist/regexp.so
-	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-stats.c src/stats/*.c -o dist/stats.so -lm
-	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-text.c src/text/*.c src/text/*/*.c -o dist/text.so
-	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-time.c src/time/*.c -o dist/time.so
-	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-unicode.c src/unicode/*.c -o dist/unicode.so
-	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-uuid.c src/uuid/*.c -o dist/uuid.so
-	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-vsv.c src/vsv/*.c -o dist/vsv.so -lm
-	$(CC) -O3 $(LINIX_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/ipaddr/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/text/*/*.c src/time/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/sqlean.so -lm
-
+# Release builds, each into its own directory (Windows uses `make build`).
 compile-linux-x64:
-	mkdir -p dist/x64
-	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-crypto.c src/crypto/*.c -o dist/x64/crypto.so
-	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-define.c src/define/*.c -o dist/x64/define.so
-	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-fileio.c src/fileio/*.c -o dist/x64/fileio.so
-	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/x64/fuzzy.so
-	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-ipaddr.c src/ipaddr/*.c -o dist/x64/ipaddr.so
-	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-math.c src/math/*.c -o dist/x64/math.so -lm
-	$(CC) -O3 $(LINIX_FLAGS) -include src/regexp/constants.h src/sqlite3-regexp.c src/regexp/*.c src/regexp/pcre2/*.c -o dist/x64/regexp.so
-	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-stats.c src/stats/*.c -o dist/x64/stats.so -lm
-	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-text.c src/text/*.c src/text/*/*.c -o dist/x64/text.so
-	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-time.c src/time/*.c -o dist/x64/time.so
-	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-unicode.c src/unicode/*.c -o dist/x64/unicode.so
-	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-uuid.c src/uuid/*.c -o dist/x64/uuid.so
-	$(CC) -O3 $(LINIX_FLAGS) src/sqlite3-vsv.c src/vsv/*.c -o dist/x64/vsv.so -lm
-	$(CC) -O3 $(LINIX_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/ipaddr/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/text/*/*.c src/time/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/x64/sqlean.so -lm
-
-compile-linux-musl:
-	mkdir -p dist/musl
-	musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-crypto.c src/crypto/*.c -o dist/musl/crypto.so
-	musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-define.c src/define/*.c -o dist/musl/define.so
-	musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-fileio.c src/fileio/*.c -o dist/musl/fileio.so
-	musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/musl/fuzzy.so
-	musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-ipaddr.c src/ipaddr/*.c -o dist/musl/ipaddr.so
-	musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-math.c src/math/*.c -o dist/musl/math.so -lm
-	musl-gcc -O3 $(LINIX_FLAGS) -include src/regexp/constants.h src/sqlite3-regexp.c src/regexp/*.c src/regexp/pcre2/*.c -o dist/musl/regexp.so
-	musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-stats.c src/stats/*.c -o dist/musl/stats.so -lm
-	musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-text.c src/text/*.c src/text/*/*.c -o dist/musl/text.so
-	musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-time.c src/time/*.c -o dist/musl/time.so
-	musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-unicode.c src/unicode/*.c -o dist/musl/unicode.so
-	musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-uuid.c src/uuid/*.c -o dist/musl/uuid.so
-	musl-gcc -O3 $(LINIX_FLAGS) src/sqlite3-vsv.c src/vsv/*.c -o dist/musl/vsv.so -lm
-	musl-gcc -O3 $(LINIX_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/ipaddr/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/text/*/*.c src/time/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/musl/sqlean.so -lm
+	$(MAKE) build DIR=dist/x64
 
 compile-linux-arm64:
-	mkdir -p dist/arm64
-	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) src/sqlite3-crypto.c src/crypto/*.c -o dist/arm64/crypto.so
-	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) src/sqlite3-define.c src/define/*.c -o dist/arm64/define.so
-	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) src/sqlite3-fileio.c src/fileio/*.c -o dist/arm64/fileio.so
-	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/arm64/fuzzy.so
-	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) src/sqlite3-ipaddr.c src/ipaddr/*.c -o dist/arm64/ipaddr.so
-	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) src/sqlite3-math.c src/math/*.c -o dist/arm64/math.so -lm
-	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) -include src/regexp/constants.h src/sqlite3-regexp.c src/regexp/*.c src/regexp/pcre2/*.c -o dist/arm64/regexp.so
-	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) src/sqlite3-stats.c src/stats/*.c -o dist/arm64/stats.so -lm
-	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) src/sqlite3-text.c src/text/*.c src/text/*/*.c -o dist/arm64/text.so
-	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) src/sqlite3-time.c src/time/*.c -o dist/arm64/time.so
-	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) src/sqlite3-unicode.c src/unicode/*.c -o dist/arm64/unicode.so
-	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) src/sqlite3-uuid.c src/uuid/*.c -o dist/arm64/uuid.so
-	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) src/sqlite3-vsv.c src/vsv/*.c -o dist/arm64/vsv.so -lm
-	aarch64-linux-gnu-gcc -O3 $(LINIX_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/ipaddr/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/text/*/*.c src/time/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/arm64/sqlean.so -lm
+	$(MAKE) build DIR=dist/arm64 CC=aarch64-linux-gnu-gcc
+
+compile-linux-musl:
+	$(MAKE) build DIR=dist/musl CC=musl-gcc
+
+compile-macos-x64:
+	$(MAKE) build DIR=dist/x64 CFLAGS="-target x86_64-apple-macos10.12"
+
+compile-macos-arm64:
+	$(MAKE) build DIR=dist/arm64 CFLAGS="-target arm64-apple-macos11"
 
 pack-linux:
 	zip -j dist/sqlean-linux-x64.zip dist/x64/*.so
 	zip -j dist/sqlean-linux-arm64.zip dist/arm64/*.so
 
-compile-windows:
-	$(WINDO_CC) -O3 $(WINDO_FLAGS) src/sqlite3-crypto.c src/crypto/*.c -o $(WINDO_DIST)/crypto.dll
-	$(WINDO_CC) -O3 $(WINDO_FLAGS) src/sqlite3-define.c src/define/*.c -o $(WINDO_DIST)/define.dll
-	$(WINDO_CC) -O3 $(WINDO_FLAGS) src/sqlite3-fileio.c src/fileio/*.c -o $(WINDO_DIST)/fileio.dll
-	$(WINDO_CC) -O3 $(WINDO_FLAGS) src/sqlite3-fuzzy.c src/fuzzy/*.c -o $(WINDO_DIST)/fuzzy.dll
-	$(WINDO_CC) -O3 $(WINDO_FLAGS) src/sqlite3-ipaddr.c src/ipaddr/*.c -o $(WINDO_DIST)/ipaddr.dll -lws2_32
-	$(WINDO_CC) -O3 $(WINDO_FLAGS) src/sqlite3-math.c src/math/*.c -o $(WINDO_DIST)/math.dll -lm
-	$(WINDO_CC) -O3 $(WINDO_FLAGS) src/sqlite3-regexp.c -include src/regexp/constants.h src/regexp/*.c src/regexp/pcre2/*.c -o $(WINDO_DIST)/regexp.dll
-	$(WINDO_CC) -O3 $(WINDO_FLAGS) src/sqlite3-stats.c src/stats/*.c -o $(WINDO_DIST)/stats.dll -lm
-	$(WINDO_CC) -O3 $(WINDO_FLAGS) src/sqlite3-text.c src/text/*.c src/text/*/*.c -o $(WINDO_DIST)/text.dll
-	$(WINDO_CC) -O3 $(WINDO_FLAGS) src/sqlite3-time.c src/time/*.c -o $(WINDO_DIST)/time.dll
-	$(WINDO_CC) -O3 $(WINDO_FLAGS) src/sqlite3-unicode.c src/unicode/*.c -o $(WINDO_DIST)/unicode.dll
-	$(WINDO_CC) -O3 $(WINDO_FLAGS) src/sqlite3-uuid.c src/uuid/*.c -o $(WINDO_DIST)/uuid.dll
-	$(WINDO_CC) -O3 $(WINDO_FLAGS) src/sqlite3-vsv.c src/vsv/*.c -o $(WINDO_DIST)/vsv.dll -lm
-	$(WINDO_CC) -O3 $(WINDO_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/text/*/*.c src/time/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o $(WINDO_DIST)/sqlean.dll -lm
-
 pack-windows:
 	7z a -tzip dist/sqlean-win-x64.zip ./dist/*.dll
-
-compile-macos:
-	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-crypto.c src/crypto/*.c -o dist/crypto.dylib
-	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-define.c src/define/*.c -o dist/define.dylib
-	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-fileio.c src/fileio/*.c -o dist/fileio.dylib
-	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/fuzzy.dylib
-	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-ipaddr.c src/ipaddr/*.c -o dist/ipaddr.dylib
-	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-math.c src/math/*.c -o dist/math.dylib -lm
-	$(CC) -O3 $(MACOS_FLAGS) -include src/regexp/constants.h src/sqlite3-regexp.c src/regexp/*.c src/regexp/pcre2/*.c -o dist/regexp.dylib
-	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-stats.c src/stats/*.c -o dist/stats.dylib -lm
-	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-text.c src/text/*.c src/text/*/*.c -o dist/text.dylib
-	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-time.c src/time/*.c -o dist/time.dylib
-	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-unicode.c src/unicode/*.c -o dist/unicode.dylib
-	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-uuid.c src/uuid/*.c -o dist/uuid.dylib
-	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-vsv.c src/vsv/*.c -o dist/vsv.dylib -lm
-	$(CC) -O3 $(MACOS_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/ipaddr/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/text/*/*.c src/time/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/sqlean.dylib -lm
-
-compile-macos-x64:
-	mkdir -p dist/x64
-	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-crypto.c src/crypto/*.c -o dist/x64/crypto.dylib -target x86_64-apple-macos10.12
-	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-define.c src/define/*.c -o dist/x64/define.dylib -target x86_64-apple-macos10.12
-	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-fileio.c src/fileio/*.c -o dist/x64/fileio.dylib -target x86_64-apple-macos10.12
-	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/x64/fuzzy.dylib -target x86_64-apple-macos10.12
-	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-ipaddr.c src/ipaddr/*.c -o dist/x64/ipaddr.dylib -target x86_64-apple-macos10.12
-	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-math.c src/math/*.c -o dist/x64/math.dylib -target x86_64-apple-macos10.12 -lm
-	$(CC) -O3 $(MACOS_FLAGS) -include src/regexp/constants.h src/sqlite3-regexp.c src/regexp/*.c src/regexp/pcre2/*.c -o dist/x64/regexp.dylib -target x86_64-apple-macos10.12
-	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-stats.c src/stats/*.c -o dist/x64/stats.dylib -target x86_64-apple-macos10.12 -lm
-	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-text.c src/text/*.c src/text/*/*.c -o dist/x64/text.dylib -target x86_64-apple-macos10.12
-	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-time.c src/time/*.c -o dist/x64/time.dylib -target x86_64-apple-macos10.12
-	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-unicode.c src/unicode/*.c -o dist/x64/unicode.dylib -target x86_64-apple-macos10.12
-	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-uuid.c src/uuid/*.c -o dist/x64/uuid.dylib -target x86_64-apple-macos10.12
-	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-vsv.c src/vsv/*.c -o dist/x64/vsv.dylib -target x86_64-apple-macos10.12 -lm
-	$(CC) -O3 $(MACOS_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/ipaddr/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/text/*/*.c src/time/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/x64/sqlean.dylib -target x86_64-apple-macos10.12 -lm
-
-compile-macos-arm64:
-	mkdir -p dist/arm64
-	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-crypto.c src/crypto/*.c -o dist/arm64/crypto.dylib -target arm64-apple-macos11
-	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-define.c src/define/*.c -o dist/arm64/define.dylib -target arm64-apple-macos11
-	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-fileio.c src/fileio/*.c -o dist/arm64/fileio.dylib -target arm64-apple-macos11
-	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-fuzzy.c src/fuzzy/*.c -o dist/arm64/fuzzy.dylib -target arm64-apple-macos11
-	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-ipaddr.c src/ipaddr/*.c -o dist/arm64/ipaddr.dylib -target arm64-apple-macos11
-	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-math.c src/math/*.c -o dist/arm64/math.dylib -target arm64-apple-macos11 -lm
-	$(CC) -O3 $(MACOS_FLAGS) -include src/regexp/constants.h src/sqlite3-regexp.c src/regexp/*.c src/regexp/pcre2/*.c -o dist/arm64/regexp.dylib -target arm64-apple-macos11
-	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-stats.c src/stats/*.c -o dist/arm64/stats.dylib -target arm64-apple-macos11 -lm
-	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-text.c src/text/*.c src/text/*/*.c -o dist/arm64/text.dylib -target arm64-apple-macos11
-	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-time.c src/time/*.c -o dist/arm64/time.dylib -target arm64-apple-macos11
-	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-unicode.c src/unicode/*.c -o dist/arm64/unicode.dylib -target arm64-apple-macos11
-	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-uuid.c src/uuid/*.c -o dist/arm64/uuid.dylib -target arm64-apple-macos11
-	$(CC) -O3 $(MACOS_FLAGS) src/sqlite3-vsv.c src/vsv/*.c -o dist/arm64/vsv.dylib -target arm64-apple-macos11 -lm
-	$(CC) -O3 $(MACOS_FLAGS) -include src/regexp/constants.h src/sqlite3-sqlean.c src/crypto/*.c src/define/*.c src/fileio/*.c src/fuzzy/*.c src/ipaddr/*.c src/math/*.c src/regexp/*.c src/regexp/pcre2/*.c src/stats/*.c src/text/*.c src/text/*/*.c src/time/*.c src/unicode/*.c src/uuid/*.c src/vsv/*.c -o dist/arm64/sqlean.dylib -target arm64-apple-macos11 -lm
 
 pack-macos:
 	zip -j dist/sqlean-macos-x64.zip dist/x64/*.dylib
 	zip -j dist/sqlean-macos-arm64.zip dist/arm64/*.dylib
 
-test-all:
-	make test suite=crypto
-	make test suite=define
-	make test suite=fileio
-	make test suite=fuzzy
-	make test suite=ipaddr
-	make test suite=math
-	make test suite=regexp
-	make test suite=stats
-	make test suite=time
-	make test suite=text
-	make test suite=unicode
-	make test suite=uuid
-	make test suite=vsv
-	make test suite=sqlean
-
-# Runs the SQL tests against a sanitized build. A sanitizer report kills
-# the shell, so the failing suite fails the target.
-test-all-sanitize:
-	$(SANITIZE_ENV) make test-all SQLITE=./dist/sqlite3-sanitize
-
-gcc:
-	docker run --rm --platform $(GCC_PLATFORM) -v "$(CURDIR)":/src -v /src/dist -w /src $(GCC_IMAGE) make CC=gcc $(run)
-
-# Runs both test layers with the sanitizers, on Linux with GCC.
-sanitize-gcc:
-	$(MAKE) gcc run="ctest-all-sanitize compile-sanitize test-all-sanitize"
-
-# fails if grep does find a failed test case
-# https://stackoverflow.com/questions/15367674/bash-one-liner-to-exit-with-the-opposite-status-of-a-grep-command/21788642
-test:
-	@$(SQLITE) < test/$(suite).sql > test.log
-	@cat test.log | (! grep -Ex "[0-9_]+.[^1]")
-
-# The Windows build and its SQL tests under wine, cross-compiled with zig:
-# make compile-wine, then make test-wine suite=fileio or make test-all-wine.
-# The build goes into dist/wine, so the host's artifacts stay as they are.
-WINE_CC ?= zig cc -target x86_64-windows-gnu
-WINE_DIST := dist/wine
-SUITES := crypto define fileio fuzzy ipaddr math regexp stats text time unicode uuid vsv sqlean
-
-compile-wine: $(WINE_DIST)/sqlite3.exe
-	$(MAKE) compile-windows WINDO_CC="$(WINE_CC)" WINDO_DIST=$(WINE_DIST)
-
-$(WINE_DIST)/sqlite3.exe: src/sqlite3.c src/shell.c
-	mkdir -p $(WINE_DIST)
-	$(WINE_CC) -O1 -w src/shell.c src/sqlite3.c -o $@
-
-# Like test, but wine prints \r\n line endings, which would hide the failures.
-test-wine:
-	@sh test/wine.sh $(suite) $(WINE_DIST)/sqlite3.exe $(WINE_DIST) > test.log; \
-		rc=$$?; tr -d '\r' < test.log > test.log.tmp; mv test.log.tmp test.log; exit $$rc
-	@cat test.log | (! grep -Ex "[0-9_]+.[^1]")
-
-# Runs every suite, even after a failure, and lists the failed ones.
-test-all-wine:
-	@failed=""; for s in $(SUITES); do \
-		echo "make test-wine suite=$$s"; \
-		$(MAKE) --no-print-directory test-wine suite=$$s || failed="$$failed $$s"; \
-	done; \
-	if [ -n "$$failed" ]; then echo "failed:$$failed"; exit 1; fi
-
-# C tests as <package>/<module>, each compiling test/<package>/<module>.test.c
-# together with the sources listed in CTEST_SRC_<package>_<module>.
-CTESTS := crypto/base32 crypto/base64 crypto/base85 crypto/hash crypto/hex crypto/url define/define fileio/fileio fuzzy/fuzzy text/bstring text/rstring text/utf8 time/time time/duration
-CTEST_SRC_crypto_base32 := src/crypto/base32.c
-CTEST_SRC_crypto_base64 := src/crypto/base64.c
-CTEST_SRC_crypto_base85 := src/crypto/base85.c
-CTEST_SRC_crypto_hash := src/crypto/md5.c src/crypto/sha1.c src/crypto/sha2.c src/crypto/blake3.c src/crypto/xxhash.c src/crypto/xxh3.c
-CTEST_SRC_crypto_hex := src/crypto/hex.c
-CTEST_SRC_crypto_url := src/crypto/url.c
-CTEST_SRC_define_define := src/define/*.c dist/ctest-sqlite3.o
-CTEST_FLAGS_define_define := -DSQLITE_CORE
-CTEST_SRC_fileio_fileio := src/fileio/*.c dist/ctest-sqlite3.o
-CTEST_FLAGS_fileio_fileio := -DSQLITE_CORE
-CTEST_SRC_fuzzy_fuzzy := src/fuzzy/caver.c src/fuzzy/distance.c src/fuzzy/editdist.c src/fuzzy/phonetic.c src/fuzzy/soundex.c src/fuzzy/translit.c
-CTEST_SRC_text_bstring := src/text/*.c src/text/*/*.c
-CTEST_SRC_text_rstring := src/text/*.c src/text/*/*.c
-CTEST_SRC_text_utf8 := src/text/utf8/*.c
-CTEST_SRC_time_time := src/time/*.c
-CTEST_SRC_time_duration := src/time/*.c
-
-ctest-all:
-	@for t in $(CTESTS); do $(MAKE) ctest package=$${t%/*} module=$${t#*/} || exit 1; done
-
-# Runs the C tests with the sanitizers enabled.
-ctest-all-sanitize:
-	$(SANITIZE_ENV) $(MAKE) ctest-all CFLAGS="$(SANITIZE_FLAGS)"
-
-# Compiles and runs a single C test, then deletes the binary:
-# make ctest package=time module=duration
-# Object files in CTEST_SRC_<package>_<module> are built as prerequisites.
-ctest: $(filter %.o,$(CTEST_SRC_$(package)_$(module)))
-	$(if $(CTEST_SRC_$(package)_$(module)),,$(error unknown C test: $(package)/$(module), see CTESTS))
-	$(CC) $(CTEST_FLAGS) $(CTEST_FLAGS_$(package)_$(module)) test/$(package)/$(module).test.c $(CTEST_SRC_$(package)_$(module)) -o $(package).$(module) -lm
-	@./$(package).$(module); status=$$?; rm -rf $(package).$(module) $(package).$(module).dSYM; exit $$status
-
-# SQLite for the C tests that need a real connection (define, fileio, fuzzy). Built without
-# warnings and sanitizers, since it's third-party code, and without threads
-# and extension loading, so it links without -lpthread and -ldl.
-dist/ctest-sqlite3.o: src/sqlite3.c
-	@mkdir -p dist
-	$(CC) -g -O1 -w -DSQLITE_THREADSAFE=0 -DSQLITE_OMIT_LOAD_EXTENSION -c src/sqlite3.c -o $@
-
-# Runs a single C test with the sanitizers enabled.
-ctest-sanitize:
-	$(SANITIZE_ENV) $(MAKE) ctest package=$(package) module=$(module) CFLAGS="$(SANITIZE_FLAGS)"
+endif

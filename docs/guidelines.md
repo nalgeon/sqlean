@@ -79,7 +79,7 @@ Crashes, garbage output, and undefined behavior are never acceptable, whatever t
 
 ### No undefined behavior
 
-Sqlean runs inside other people's processes, so UB counts as a security bug. The test suites run under ASan and UBSan, and they must pass. Use `make sanitize-gcc`, which runs them on Linux with GCC and leak detection (`make ctest-all-sanitize` and `make test-all-sanitize` run them on the host). Patterns from `time`:
+Sqlean runs inside other people's processes, so UB counts as a security bug. The test suites run under ASan and UBSan, and they must pass. Use `make check san=1 on=gcc`, which runs them on Linux with GCC and leak detection (without `on=gcc` they run on the host). Patterns from `time`:
 
 Wrapping arithmetic goes through unsigned types. Compute in `uint64_t`, then convert back with a fully defined helper (`uint64_to_int64` in `time/common.h`) instead of a cast.
 
@@ -334,7 +334,7 @@ Required cases beyond the happy path:
 
 C tests exercise the domain layer, without SQLite (`test/crypto/hex.test.c`). Only when the binding layer does more than map arguments and results, and that can't be asserted in SQL (error messages from spec arguments or the operating system, per-connection state, `SQLITE_LIMIT_LENGTH` handling), the C test can also run the extension in a real connection: link `dist/ctest-sqlite3.o`, define `SQLITE_CORE`, and call `<module>_init` on an in-memory database (`test/define/define.test.c`, `test/fileio/fileio.test.c`). Such a test can also check function flags and inject allocation failures with `sqlite3_config(SQLITE_CONFIG_MALLOC, ...)`, but these alone are not a reason to add one: flags and allocation checks in the binding layer are verified by review.
 
-Register each test in the `Makefile`: add `<package>/<module>` to `CTESTS` and list the sources it compiles with in `CTEST_SRC_<package>_<module>`. Run it with `make ctest package=<package> module=<module>`. It must pass under `make ctest-sanitize` with the same arguments.
+The `Makefile` finds the tests by their file names and compiles each with its package's sources except `extension.c`; a package that needs something else sets `CTEST_SRC_<package>` (`define`, `fileio`). Run a test with `make ctest only=<package>/<module>`. It must also pass with `san=1`.
 
 ### Bundle test (`test/sqlean.sql`)
 
@@ -364,5 +364,5 @@ When bringing an existing module up to these guidelines:
 2. Split the module into domain, binding, and entry point if it isn't already. Move logic out of `extension.c`.
 3. Go through the domain layer. If the code is hard to follow, consider replacing it with a port (see [Ported code](#ported-code)). Make sure every input has defined behavior, check for UB, use fixed-width types, and make private symbols `static`.
 4. Go through the binding layer: check the argument order (NULL, type, shape), the split between data (NULL) and spec arguments (error), allocation checks, registration flags and return codes, and explicit arities.
-5. Run `make sanitize-gcc`.
+5. Run `make check san=1 on=gcc`.
 6. Update `docs/<module>.md`, and call out every user-visible behavior change in the commit message (`<module>: <what changed>`).

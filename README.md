@@ -73,12 +73,10 @@ make prepare-dist
 make download-sqlite
 ```
 
-Then build for your OS (choose one of the following):
+Then build for your OS:
 
 ```
-make compile-linux
-make compile-windows
-make compile-macos
+make build
 ```
 
 You'll find the compiled extensions in the `dist` folder.

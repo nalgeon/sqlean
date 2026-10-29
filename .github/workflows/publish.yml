@@ -43,7 +43,7 @@ jobs:
               if: matrix.os == 'windows-latest'
               shell: bash
               run: |
-                  make compile-windows
+                  make build
                   make pack-windows
 
             - name: Build for macOS
