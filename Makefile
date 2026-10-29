@@ -117,11 +117,6 @@ endif
 # Each module is built from src/sqlite3-<module>.c and src/<module>/,
 # the bundle from src/sqlite3-sqlean.c and every module.
 MODULES := $(sort $(filter-out sqlean,$(patsubst src/sqlite3-%.c,%,$(wildcard src/sqlite3-*.c))))
-ifeq ($(TARGET),windows)
-BUNDLED := $(filter-out ipaddr,$(MODULES))
-else
-BUNDLED := $(MODULES)
-endif
 
 FLAGS_regexp := -include src/regexp/constants.h
 FLAGS_sqlean := -include src/regexp/constants.h
@@ -129,16 +124,13 @@ LIBS_math := -lm
 LIBS_stats := -lm
 LIBS_vsv := -lm
 LIBS_sqlean := -lm
-ifeq ($(TARGET),windows)
-LIBS_ipaddr := -lws2_32
-endif
 
 # The C files of a module directory, and all of its files.
 module_c = $(wildcard src/$(1)/*.c src/$(1)/*/*.c)
 module_files = $(wildcard src/$(1)/* src/$(1)/*/*)
 # The sources of a module or the bundle, and the files it depends on.
-sources = src/sqlite3-$(1).c $(if $(filter sqlean,$(1)),$(foreach m,$(BUNDLED),$(call module_c,$(m))),$(call module_c,$(1)))
-deps = src/sqlite3-$(1).c src/*.h Makefile $(if $(filter sqlean,$(1)),$(foreach m,$(BUNDLED),$(call module_files,$(m))),$(call module_files,$(1)))
+sources = src/sqlite3-$(1).c $(if $(filter sqlean,$(1)),$(foreach m,$(MODULES),$(call module_c,$(m))),$(call module_c,$(1)))
+deps = src/sqlite3-$(1).c src/*.h Makefile $(if $(filter sqlean,$(1)),$(foreach m,$(MODULES),$(call module_files,$(m))),$(call module_files,$(1)))
 
 define module_rule
 $(DIR)/$(1).$(EXT): $(call deps,$(1)) | $(DIR)

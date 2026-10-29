@@ -94,16 +94,41 @@ The extension now reports a function registration failure when it loads, instead
 
 Invalid data now gives `NULL` instead of an error or a made-up value, as SQLite's built-in functions do:
 
--   A `NULL` argument to a distance function gives `NULL` (was an error). `fuzzy_translit(NULL)` and `fuzzy_script(NULL)` give `NULL` (were `''` and `999`).
--   A non-ASCII string passed to `fuzzy_editdist` or a phonetic code function gives `NULL` (was an error, or a garbled code for `fuzzy_phonetic`).
--   A BLOB argument gives `NULL`. Before, it was treated as text.
--   `fuzzy_hamming` of strings with different lengths gives `NULL` (was `-1`).
+- A `NULL` argument to a distance function gives `NULL` (was an error). `fuzzy_translit(NULL)` and `fuzzy_script(NULL)` give `NULL` (were `''` and `999`).
+- A non-ASCII string passed to `fuzzy_editdist` or a phonetic code function gives `NULL` (was an error, or a garbled code for `fuzzy_phonetic`).
+- A BLOB argument gives `NULL`. Before, it was treated as text.
+- `fuzzy_hamming` of strings with different lengths gives `NULL` (was `-1`).
 
 `fuzzy_caver`, `fuzzy_soundex` and `fuzzy_rsoundex` of a string without letters give an empty string: `fuzzy_caver('123')` is `''` (was `1111111111`), `fuzzy_soundex('123')` is `''` (was `1000`).
 
 `fuzzy_script` no longer counts punctuation and symbols as Latin: `fuzzy_script('«»')` is `999` (was `215`), and `fuzzy_script('«привет»')` is `220` (was `998`).
 
 `fuzzy_translit` replaces invalid UTF-8 bytes with `?`. Before, it cut the result at the first one.
+
+## [ipaddr](https://github.com/nalgeon/sqlean/blob/main/docs/ipaddr.md)
+
+**Improvements and bug fixes**
+
+The functions are renamed to `ip_family`, `ip_host`, `ip_masklen`, `ip_network` and `ip_contains`. The old names (`ipfamily`, `iphost`, `ipmasklen`, `ipnetwork`, `ipcontains`) are kept as aliases.
+
+`ipaddr` is now available on Windows, including in the `sqlean` bundle. The extension no longer depends on the system's socket library.
+
+Addresses are parsed and formatted the same way on every platform. Before, the results depended on the OS: macOS accepted IPv4 parts with leading zeros (`01.2.3.4`) and IPv6 zones (`fe80::1%eth0`), while Linux and Windows rejected them.
+
+Fixed a crash when out of memory.
+
+The extension now reports a function registration failure when it loads, instead of ignoring it.
+
+**Breaking changes**
+
+Invalid input is now `NULL` in more cases:
+
+- A prefix length must be plain decimal: `/+24`, `/-0`, `/ 24` and `/024` are invalid. Before, they were read as 24, 0, 24 and 24.
+- IPv4 parts with leading zeros (`010.0.0.1`) and IPv6 zones (`fe80::1%eth0`) are invalid on every platform, including macOS.
+- A NUL character makes the value invalid. Before, the value was cut at the NUL: `ipfamily('192.168.16.12' || char(0) || 'x')` was `4`.
+- A BLOB argument is `NULL`. Before, it was read as text.
+
+IPv6 addresses with an IPv4 part are formatted as dotted decimal only if they are IPv4-mapped (`::ffff:192.168.16.12`), as RFC 5952 recommends. Others are in hex: `ip_host('::192.168.16.12')` is now `::c0a8:100c`, not `::192.168.16.12`.
 
 ## [time](https://github.com/nalgeon/sqlean/blob/main/docs/time.md)
 
