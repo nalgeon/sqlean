@@ -1,289 +1,357 @@
-// Copyright (c) 2023 Anton Zhiyanov, MIT License
+// Copyright (c) 2021 Anton Zhiyanov, MIT License
 // https://github.com/nalgeon/sqlean
 
 // Fuzzy string matching and phonetics.
 
 #include <assert.h>
 #include <stdbool.h>
-#include <stdlib.h>
+#include <stddef.h>
+#include <stdint.h>
 
 #include "sqlite3ext.h"
 SQLITE_EXTENSION_INIT3
 
+#include "fuzzy/extension.h"
 #include "fuzzy/fuzzy.h"
 
-// is_ascii checks if the string consists of ASCII symbols only
-static bool is_ascii(const unsigned char* str) {
-    for (int idx = 0; str[idx]; idx++) {
-        if (str[idx] & 0x80) {
+#pragma region Helpers
+
+// ArgStatus is the result of decoding an argument that can fail
+// because of bad data or because SQLite runs out of memory.
+typedef enum {
+    ARG_OK,
+    ARG_INVALID,
+    ARG_NOMEM,
+} ArgStatus;
+
+// has_null reports whether any of the arguments is NULL.
+static bool has_null(int argc, sqlite3_value** argv) {
+    for (int i = 0; i < argc; i++) {
+        if (sqlite3_value_type(argv[i]) == SQLITE_NULL) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// arg_text decodes a text argument into s and n. Numbers are converted
+// to text, and a blob is ARG_INVALID.
+static ArgStatus arg_text(sqlite3_value* value, const char** s, size_t* n) {
+    if (sqlite3_value_type(value) == SQLITE_BLOB) {
+        return ARG_INVALID;
+    }
+    const char* text = (const char*)sqlite3_value_text(value);
+    if (text == NULL) {
+        return ARG_NOMEM;
+    }
+    *s = text;
+    *n = (size_t)sqlite3_value_bytes(value);
+    return ARG_OK;
+}
+
+// arg_texts decodes the first argc text arguments into s and n,
+// and sets the NULL result or the error if any of them fails.
+// Returns false on failure.
+static bool arg_texts(sqlite3_context* context,
+                      int argc,
+                      sqlite3_value** argv,
+                      const char** s,
+                      size_t* n) {
+    for (int i = 0; i < argc; i++) {
+        ArgStatus status = arg_text(argv[i], &s[i], &n[i]);
+        if (status == ARG_NOMEM) {
+            sqlite3_result_error_nomem(context);
+            return false;
+        }
+        if (status == ARG_INVALID) {
+            sqlite3_result_null(context);
             return false;
         }
     }
     return true;
 }
 
-// Below are functions extracted from the
-// https://github.com/Rostepher/libstrcmp/
-
-// fuzzy_damlev implements Damerau-Levenshtein distance
-static void fuzzy_damlev(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    assert(argc == 2);
-    const unsigned char* str1 = sqlite3_value_text(argv[0]);
-    const unsigned char* str2 = sqlite3_value_text(argv[1]);
-    if (str1 == 0 || str2 == 0) {
-        sqlite3_result_error(context, "arguments should not be NULL", -1);
-        return;
-    }
-    if (!is_ascii(str1) || !is_ascii(str2)) {
-        sqlite3_result_error(context, "arguments should be ASCII strings", -1);
-        return;
-    }
-    unsigned distance = damerau_levenshtein((const char*)str1, (const char*)str2);
-    sqlite3_result_int(context, distance);
-}
-
-// fuzzy_hamming implements Hamming distance
-static void fuzzy_hamming(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    assert(argc == 2);
-    const unsigned char* str1 = sqlite3_value_text(argv[0]);
-    const unsigned char* str2 = sqlite3_value_text(argv[1]);
-    if (str1 == 0 || str2 == 0) {
-        sqlite3_result_error(context, "arguments should not be NULL", -1);
-        return;
-    }
-    if (!is_ascii(str1) || !is_ascii(str2)) {
-        sqlite3_result_error(context, "arguments should be ASCII strings", -1);
-        return;
-    }
-    int distance = hamming((const char*)str1, (const char*)str2);
-    sqlite3_result_int(context, distance);
-}
-
-// fuzzy_jarowin implements Jaro-Winkler distance
-static void fuzzy_jarowin(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    assert(argc == 2);
-    const unsigned char* str1 = sqlite3_value_text(argv[0]);
-    const unsigned char* str2 = sqlite3_value_text(argv[1]);
-    if (str1 == 0 || str2 == 0) {
-        sqlite3_result_error(context, "arguments should not be NULL", -1);
-        return;
-    }
-    if (!is_ascii(str1) || !is_ascii(str2)) {
-        sqlite3_result_error(context, "arguments should be ASCII strings", -1);
-        return;
-    }
-    double distance = jaro_winkler((const char*)str1, (const char*)str2);
-    sqlite3_result_double(context, distance);
-}
-
-// fuzzy_leven implements Levenshtein distance
-static void fuzzy_leven(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    assert(argc == 2);
-    const unsigned char* str1 = sqlite3_value_text(argv[0]);
-    const unsigned char* str2 = sqlite3_value_text(argv[1]);
-    if (str1 == 0 || str2 == 0) {
-        sqlite3_result_error(context, "arguments should not be NULL", -1);
-        return;
-    }
-    if (!is_ascii(str1) || !is_ascii(str2)) {
-        sqlite3_result_error(context, "arguments should be ASCII strings", -1);
-        return;
-    }
-    unsigned distance = levenshtein((const char*)str1, (const char*)str2);
-    sqlite3_result_int(context, distance);
-}
-
-// fuzzy_osadist implements Optimal String Alignment distance
-static void fuzzy_osadist(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    assert(argc == 2);
-    const unsigned char* str1 = sqlite3_value_text(argv[0]);
-    const unsigned char* str2 = sqlite3_value_text(argv[1]);
-    if (str1 == 0 || str2 == 0) {
-        sqlite3_result_error(context, "arguments should not be NULL", -1);
-        return;
-    }
-    if (!is_ascii(str1) || !is_ascii(str2)) {
-        sqlite3_result_error(context, "arguments should be ASCII strings", -1);
-        return;
-    }
-    unsigned distance = optimal_string_alignment((const char*)str1, (const char*)str2);
-    sqlite3_result_int(context, distance);
-}
-
-// fuzzy_soundex implements Soundex coding
-static void fuzzy_soundex(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    assert(argc == 1);
-    const unsigned char* source = sqlite3_value_text(argv[0]);
-    if (source == 0) {
-        return;
-    }
-    if (!is_ascii(source)) {
-        sqlite3_result_error(context, "argument should be ASCII string", -1);
-        return;
-    }
-    char* result = soundex((const char*)source);
-    sqlite3_result_text(context, result, -1, free);
-}
-
-// fuzzy_rsoundex implements Refined Soundex coding
-static void fuzzy_rsoundex(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    assert(argc == 1);
-    const unsigned char* source = sqlite3_value_text(argv[0]);
-    if (source == 0) {
-        return;
-    }
-    if (!is_ascii(source)) {
-        sqlite3_result_error(context, "argument should be ASCII string", -1);
-        return;
-    }
-    char* result = refined_soundex((const char*)source);
-    sqlite3_result_text(context, result, -1, free);
-}
-
-// Below are functions extracted from the spellfix SQLite exension
-// https://www.sqlite.org/src/file/ext/misc/spellfix.c
-
-/*
-** fuzzy_phonetic(X)
-**
-** Generate a "phonetic hash" from a string of ASCII characters in X.
-**
-**   * Map characters by character class as defined above.
-**   * Omit double-letters
-**   * Omit vowels beside R and L
-**   * Omit T when followed by CH
-**   * Omit W when followed by R
-**   * Omit D when followed by J or G
-**   * Omit K in KN or G in GN at the beginning of a word
-**
-** Space to hold the result is obtained from sqlite3_malloc()
-**
-** Return NULL if memory allocation fails.
-*/
-static void fuzzy_phonetic(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    const unsigned char* zIn;
-    unsigned char* zOut;
-
-    zIn = sqlite3_value_text(argv[0]);
-    if (zIn == 0)
-        return;
-    zOut = phonetic_hash(zIn, sqlite3_value_bytes(argv[0]));
-    if (zOut == 0) {
+// alloc_buf allocates a result buffer of size bytes.
+// Sets the error and returns NULL if out of memory.
+static char* alloc_buf(sqlite3_context* context, sqlite3_uint64 size) {
+    // sqlite3_malloc64(0) returns NULL, so allocate at least one byte.
+    char* buf = sqlite3_malloc64(size > 0 ? size : 1);
+    if (buf == NULL) {
         sqlite3_result_error_nomem(context);
-    } else {
-        sqlite3_result_text(context, (char*)zOut, -1, free);
     }
+    return buf;
 }
 
-/*
-** fuzzy_editdist(A,B)
-**
-** Return the cost of transforming string A into string B.  Both strings
-** must be pure ASCII text.  If A ends with '*' then it is assumed to be
-** a prefix of B and extra characters on the end of B have minimal additional
-** cost.
-*/
-static void fuzzy_editdist(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    int res = edit_distance((const char*)sqlite3_value_text(argv[0]),
-                            (const char*)sqlite3_value_text(argv[1]), 0);
-    if (res < 0) {
-        if (res == (-3)) {
-            sqlite3_result_error_nomem(context);
-        } else if (res == (-2)) {
-            sqlite3_result_error(context, "non-ASCII input to editdist()", -1);
-        } else {
-            sqlite3_result_error(context, "NULL input to editdist()", -1);
-        }
-    } else {
-        sqlite3_result_int(context, res);
-    }
-}
+#pragma endregion
 
-/*
-** fuzzy_translit(X)
-**
-** Convert a string that contains non-ASCII Roman characters into
-** pure ASCII.
-*/
-static void fuzzy_translit(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    const unsigned char* zIn = sqlite3_value_text(argv[0]);
-    int nIn = sqlite3_value_bytes(argv[0]);
-    unsigned char* zOut = transliterate(zIn, nIn);
-    if (zOut == 0) {
+#pragma region Distances
+
+// fuzzy_damlev(a, b)
+// fuzzy_leven(a, b)
+// fuzzy_osadist(a, b)
+static void fn_distance(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    assert(argc == 2);
+    if (has_null(argc, argv)) {
+        sqlite3_result_null(context);
+        return;
+    }
+    const char* s[2];
+    size_t n[2];
+    if (!arg_texts(context, argc, argv, s, n)) {
+        return;
+    }
+    bool (*distance)(const char*, size_t, const char*, size_t, size_t*) =
+        (bool (*)(const char*, size_t, const char*, size_t, size_t*))sqlite3_user_data(context);
+    size_t dist;
+    if (!distance(s[0], n[0], s[1], n[1], &dist)) {
         sqlite3_result_error_nomem(context);
-    } else {
-        sqlite3_result_text(context, (char*)zOut, -1, free);
+        return;
     }
+    sqlite3_result_int64(context, (sqlite3_int64)dist);
 }
 
-/*
-** fuzzy_script(X)
-**
-** Try to determine the dominant script used by the word X and return
-** its ISO 15924 numeric code.
-**
-** The current implementation only understands the following scripts:
-**
-**    215  (Latin)
-**    220  (Cyrillic)
-**    200  (Greek)
-**
-** This routine will return 998 if the input X contains characters from
-** two or more of the above scripts or 999 if X contains no characters
-** from any of the above scripts.
-*/
-static void fuzzy_script(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    const unsigned char* zIn = sqlite3_value_text(argv[0]);
-    int nIn = sqlite3_value_bytes(argv[0]);
-    int res = script_code(zIn, nIn);
-    sqlite3_result_int(context, res);
+// fuzzy_editdist(a, b)
+static void fn_editdist(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    assert(argc == 2);
+    if (has_null(argc, argv)) {
+        sqlite3_result_null(context);
+        return;
+    }
+    const char* s[2];
+    size_t n[2];
+    if (!arg_texts(context, argc, argv, s, n)) {
+        return;
+    }
+    int64_t dist;
+    FuzzyStatus status = fuzzy_editdist(s[0], n[0], s[1], n[1], &dist);
+    if (status == FUZZY_NOMEM) {
+        sqlite3_result_error_nomem(context);
+        return;
+    }
+    if (status == FUZZY_INVALID) {
+        sqlite3_result_null(context);
+        return;
+    }
+    sqlite3_result_int64(context, dist);
 }
 
-// Below are custom functions
+// fuzzy_hamming(a, b)
+static void fn_hamming(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    assert(argc == 2);
+    if (has_null(argc, argv)) {
+        sqlite3_result_null(context);
+        return;
+    }
+    const char* s[2];
+    size_t n[2];
+    if (!arg_texts(context, argc, argv, s, n)) {
+        return;
+    }
+    size_t dist;
+    if (!fuzzy_hamming(s[0], n[0], s[1], n[1], &dist)) {
+        sqlite3_result_null(context);
+        return;
+    }
+    sqlite3_result_int64(context, (sqlite3_int64)dist);
+}
 
-// fuzzy_caver implements Caverphone coding
-static void fuzzy_caver(sqlite3_context* context, int argc, sqlite3_value** argv) {
+// fuzzy_jarowin(a, b)
+static void fn_jarowin(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    assert(argc == 2);
+    if (has_null(argc, argv)) {
+        sqlite3_result_null(context);
+        return;
+    }
+    const char* s[2];
+    size_t n[2];
+    if (!arg_texts(context, argc, argv, s, n)) {
+        return;
+    }
+    double sim;
+    if (!fuzzy_jarowin(s[0], n[0], s[1], n[1], &sim)) {
+        sqlite3_result_error_nomem(context);
+        return;
+    }
+    sqlite3_result_double(context, sim);
+}
+
+#pragma endregion
+
+#pragma region Phonetic codes
+
+// fuzzy_caver(s)
+static void fn_caver(sqlite3_context* context, int argc, sqlite3_value** argv) {
     assert(argc == 1);
-    const unsigned char* source = sqlite3_value_text(argv[0]);
-    if (source == 0) {
+    if (has_null(argc, argv)) {
+        sqlite3_result_null(context);
         return;
     }
-    if (!is_ascii(source)) {
-        sqlite3_result_error(context, "argument should be ASCII string", -1);
+    const char* s;
+    size_t n;
+    if (!arg_texts(context, argc, argv, &s, &n)) {
         return;
     }
-    char* result = caverphone((const char*)source);
-    sqlite3_result_text(context, result, -1, free);
+    char buf[FUZZY_CAVER_SIZE];
+    FuzzyStatus status = fuzzy_caver(s, n, buf);
+    if (status == FUZZY_NOMEM) {
+        sqlite3_result_error_nomem(context);
+        return;
+    }
+    if (status == FUZZY_INVALID) {
+        sqlite3_result_null(context);
+        return;
+    }
+    sqlite3_result_text(context, buf, -1, SQLITE_TRANSIENT);
 }
+
+// fuzzy_phonetic(s)
+// fuzzy_rsoundex(s)
+static void fn_code(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    assert(argc == 1);
+    if (has_null(argc, argv)) {
+        sqlite3_result_null(context);
+        return;
+    }
+    const char* s;
+    size_t n;
+    if (!arg_texts(context, argc, argv, &s, &n)) {
+        return;
+    }
+    // FUZZY_RSOUNDEX_SIZE is the larger of the two sizes
+    char* buf = alloc_buf(context, FUZZY_RSOUNDEX_SIZE((sqlite3_uint64)n));
+    if (buf == NULL) {
+        return;
+    }
+    bool (*encode)(const char*, size_t, char*) =
+        (bool (*)(const char*, size_t, char*))sqlite3_user_data(context);
+    if (!encode(s, n, buf)) {
+        sqlite3_free(buf);
+        sqlite3_result_null(context);
+        return;
+    }
+    sqlite3_result_text(context, buf, -1, sqlite3_free);
+}
+
+// fuzzy_soundex(s)
+static void fn_soundex(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    assert(argc == 1);
+    if (has_null(argc, argv)) {
+        sqlite3_result_null(context);
+        return;
+    }
+    const char* s;
+    size_t n;
+    if (!arg_texts(context, argc, argv, &s, &n)) {
+        return;
+    }
+    char buf[FUZZY_SOUNDEX_SIZE];
+    if (!fuzzy_soundex(s, n, buf)) {
+        sqlite3_result_null(context);
+        return;
+    }
+    sqlite3_result_text(context, buf, -1, SQLITE_TRANSIENT);
+}
+
+#pragma endregion
+
+#pragma region Transliteration
+
+// fuzzy_translit(s)
+static void fn_translit(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    assert(argc == 1);
+    if (has_null(argc, argv)) {
+        sqlite3_result_null(context);
+        return;
+    }
+    const char* s;
+    size_t n;
+    if (!arg_texts(context, argc, argv, &s, &n)) {
+        return;
+    }
+    // n is at most SQLITE_MAX_LENGTH < 2^31, so the size doesn't overflow
+    char* buf = alloc_buf(context, FUZZY_TRANSLIT_SIZE((sqlite3_uint64)n));
+    if (buf == NULL) {
+        return;
+    }
+    size_t len = fuzzy_translit(s, n, buf);
+    // sqlite3_result_text64 frees buf and sets the error if it's too long
+    sqlite3_result_text64(context, buf, len, sqlite3_free, SQLITE_UTF8);
+}
+
+// fuzzy_script(s)
+static void fn_script(sqlite3_context* context, int argc, sqlite3_value** argv) {
+    assert(argc == 1);
+    if (has_null(argc, argv)) {
+        sqlite3_result_null(context);
+        return;
+    }
+    const char* s;
+    size_t n;
+    if (!arg_texts(context, argc, argv, &s, &n)) {
+        return;
+    }
+    sqlite3_result_int(context, fuzzy_script(s, n));
+}
+
+#pragma endregion
+
+#pragma region Registration
+
+#define FLAGS (SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC)
+
+// Function describes an SQL function to register.
+typedef struct {
+    const char* name;
+    int nargs;
+    int flags;
+    void* user_data;
+    void (*fn)(sqlite3_context* context, int argc, sqlite3_value** argv);
+} Function;
+
+static const Function functions[] = {
+    // distances
+    {"fuzzy_damlev", 2, FLAGS, fuzzy_damlev, fn_distance},
+    {"fuzzy_editdist", 2, FLAGS, 0, fn_editdist},
+    {"fuzzy_hamming", 2, FLAGS, 0, fn_hamming},
+    {"fuzzy_jarowin", 2, FLAGS, 0, fn_jarowin},
+    {"fuzzy_leven", 2, FLAGS, fuzzy_leven, fn_distance},
+    {"fuzzy_osadist", 2, FLAGS, fuzzy_osadist, fn_distance},
+
+    // phonetic codes
+    {"fuzzy_caver", 1, FLAGS, 0, fn_caver},
+    {"fuzzy_phonetic", 1, FLAGS, fuzzy_phonetic, fn_code},
+    {"fuzzy_soundex", 1, FLAGS, 0, fn_soundex},
+    {"fuzzy_rsoundex", 1, FLAGS, fuzzy_rsoundex, fn_code},
+
+    // transliteration
+    {"fuzzy_translit", 1, FLAGS, 0, fn_translit},
+    {"fuzzy_script", 1, FLAGS, 0, fn_script},
+
+    // aliases
+    {"dlevenshtein", 2, FLAGS, fuzzy_damlev, fn_distance},
+    {"edit_distance", 2, FLAGS, 0, fn_editdist},
+    {"hamming", 2, FLAGS, 0, fn_hamming},
+    {"jaro_winkler", 2, FLAGS, 0, fn_jarowin},
+    {"levenshtein", 2, FLAGS, fuzzy_leven, fn_distance},
+    {"osa_distance", 2, FLAGS, fuzzy_osadist, fn_distance},
+    {"caverphone", 1, FLAGS, 0, fn_caver},
+    {"phonetic_hash", 1, FLAGS, fuzzy_phonetic, fn_code},
+    {"soundex", 1, FLAGS, 0, fn_soundex},
+    {"rsoundex", 1, FLAGS, fuzzy_rsoundex, fn_code},
+    {"translit", 1, FLAGS, 0, fn_translit},
+    {"script_code", 1, FLAGS, 0, fn_script},
+};
 
 int fuzzy_init(sqlite3* db) {
-    static const int flags = SQLITE_UTF8 | SQLITE_INNOCUOUS | SQLITE_DETERMINISTIC;
-    // libstrcmp
-    sqlite3_create_function(db, "fuzzy_damlev", 2, flags, 0, fuzzy_damlev, 0, 0);
-    sqlite3_create_function(db, "dlevenshtein", 2, flags, 0, fuzzy_damlev, 0, 0);
-    sqlite3_create_function(db, "fuzzy_hamming", 2, flags, 0, fuzzy_hamming, 0, 0);
-    sqlite3_create_function(db, "hamming", 2, flags, 0, fuzzy_hamming, 0, 0);
-    sqlite3_create_function(db, "fuzzy_jarowin", 2, flags, 0, fuzzy_jarowin, 0, 0);
-    sqlite3_create_function(db, "jaro_winkler", 2, flags, 0, fuzzy_jarowin, 0, 0);
-    sqlite3_create_function(db, "fuzzy_leven", 2, flags, 0, fuzzy_leven, 0, 0);
-    sqlite3_create_function(db, "levenshtein", 2, flags, 0, fuzzy_leven, 0, 0);
-    sqlite3_create_function(db, "fuzzy_osadist", 2, flags, 0, fuzzy_osadist, 0, 0);
-    sqlite3_create_function(db, "osa_distance", 2, flags, 0, fuzzy_osadist, 0, 0);
-    sqlite3_create_function(db, "fuzzy_soundex", 1, flags, 0, fuzzy_soundex, 0, 0);
-    sqlite3_create_function(db, "soundex", 1, flags, 0, fuzzy_soundex, 0, 0);
-    sqlite3_create_function(db, "fuzzy_rsoundex", 1, flags, 0, fuzzy_rsoundex, 0, 0);
-    sqlite3_create_function(db, "rsoundex", 1, flags, 0, fuzzy_rsoundex, 0, 0);
-    // spellfix
-    sqlite3_create_function(db, "fuzzy_editdist", 2, flags, 0, fuzzy_editdist, 0, 0);
-    sqlite3_create_function(db, "edit_distance", 2, flags, 0, fuzzy_editdist, 0, 0);
-    sqlite3_create_function(db, "fuzzy_phonetic", 1, flags, 0, fuzzy_phonetic, 0, 0);
-    sqlite3_create_function(db, "phonetic_hash", 1, flags, 0, fuzzy_phonetic, 0, 0);
-    sqlite3_create_function(db, "fuzzy_script", 1, flags, 0, fuzzy_script, 0, 0);
-    sqlite3_create_function(db, "script_code", 1, flags, 0, fuzzy_script, 0, 0);
-    sqlite3_create_function(db, "fuzzy_translit", 1, flags, 0, fuzzy_translit, 0, 0);
-    sqlite3_create_function(db, "translit", 1, flags, 0, fuzzy_translit, 0, 0);
-    // custom
-    sqlite3_create_function(db, "fuzzy_caver", 1, flags, 0, fuzzy_caver, 0, 0);
-    sqlite3_create_function(db, "caverphone", 1, flags, 0, fuzzy_caver, 0, 0);
+    for (size_t i = 0; i < sizeof(functions) / sizeof(functions[0]); i++) {
+        const Function* f = &functions[i];
+        int rc =
+            sqlite3_create_function(db, f->name, f->nargs, f->flags, f->user_data, f->fn, 0, 0);
+        if (rc != SQLITE_OK) {
+            return rc;
+        }
+    }
     return SQLITE_OK;
 }
+
+#pragma endregion

@@ -1,27 +1,40 @@
 // Copyright (c) 2014 Ross Bayer, MIT License
 // https://github.com/Rostepher/libstrcmp
+// Modified by Anton Zhiyanov, https://github.com/nalgeon/sqlean/, MIT License
 
-#include <assert.h>
-#include <ctype.h>
-#include <stdlib.h>
-#include <string.h>
+// Soundex and Refined Soundex phonetic codes.
+
+#include <stdbool.h>
+#include <stddef.h>
 
 #include "fuzzy/common.h"
+#include "fuzzy/fuzzy.h"
 
-/// Helper function that returns the numeric code for a given char as specified
-/// by the soundex algorithm.
-///
-/// @param c char to encode
-///
-/// @returns char representation of the number associated with the given char
-static char soundex_encode(const char c) {
-    switch (tolower(c)) {
+#pragma region Helpers
+
+// skip_non_letters returns the index of the first letter in s,
+// or n if there are none.
+static size_t skip_non_letters(const char* s, size_t n) {
+    size_t i = 0;
+    while (i < n && !is_alpha(s[i])) {
+        i++;
+    }
+    return i;
+}
+
+#pragma endregion
+
+#pragma region Soundex
+
+// soundex_encode returns the Soundex digit for c,
+// or '0' for vowels and non-letters.
+static char soundex_encode(char c) {
+    switch (to_lower(c)) {
         case 'b':
         case 'f':
         case 'p':
         case 'v':
             return '1';
-
         case 'c':
         case 'g':
         case 'j':
@@ -31,85 +44,128 @@ static char soundex_encode(const char c) {
         case 'x':
         case 'z':
             return '2';
-
         case 'd':
         case 't':
             return '3';
-
         case 'l':
             return '4';
-
         case 'm':
         case 'n':
             return '5';
-
         case 'r':
             return '6';
-
         default:
-            break;
+            return '0';
     }
-
-    return '0';
 }
 
-/// Computes and returns the soundex representation of a given non NULL string.
-/// More information about the algorithm can be found here:
-///     https://en.wikipedia.org/wiki/Soundex
-///
-/// @param str non NULL string to encode
-///
-/// @returns soundex representation of str
-char* soundex(const char* str) {
-    // string cannot be NULL
-    assert(str != NULL);
-
-    size_t str_len = strlen(str);
-
-    // allocate space for final code and null terminator
-    char* code = malloc(5 * sizeof(char));
-
-    // temporary buffer to encode string
-    char* buf = malloc((str_len + 1) * sizeof(char));
-
-    // set first value to first char in str
-    code[0] = toupper(str[0]);
-
-    // number of digits in code
-    unsigned d = 1;
-
-    // encode all chars in str
-    for (unsigned i = 0; i < str_len; i++) {
-        buf[i] = soundex_encode(str[i]);
+// fuzzy_soundex writes the Soundex code of s into buf, which must hold
+// at least FUZZY_SOUNDEX_SIZE bytes. The code is the first letter of s
+// followed by three digits. Leading non-letters are skipped,
+// and a string without letters has an empty code.
+// See https://en.wikipedia.org/wiki/Soundex
+// Returns false if s is not ASCII.
+bool fuzzy_soundex(const char* s, size_t n, char* buf) {
+    if (!is_ascii(s, n)) {
+        return false;
+    }
+    size_t start = skip_non_letters(s, n);
+    if (start == n) {
+        buf[0] = 0;
+        return true;
     }
 
-    // add all viable chars to code
-    for (unsigned i = 1; i < str_len && d < 4; i++) {
-        // check if current char in buf is not the same as previous char
-        // and that the current char is not '0'
-        if (NOT_EQ(buf[i], buf[i - 1]) && NOT_EQ(buf[i], '0')) {
-            // if digits separated by an 'h' or 'w' are the same, skip them
-            if (i > 1 && EQ(buf[i], buf[i - 2]) && strchr("hw", str[i - 1])) {
-                continue;
-            }
+    buf[0] = to_upper(s[start]);
+    size_t d = 1;
+    for (size_t i = start + 1; i < n && d < 4; i++) {
+        char code = soundex_encode(s[i]);
+        if (code == '0' || code == soundex_encode(s[i - 1])) {
+            continue;
+        }
+        // digits separated by an 'h' or 'w' are coded once
+        char sep = to_lower(s[i - 1]);
+        if (i > start + 1 && code == soundex_encode(s[i - 2]) && (sep == 'h' || sep == 'w')) {
+            continue;
+        }
+        buf[d++] = code;
+    }
+    // pad with zeros if too short
+    while (d < 4) {
+        buf[d++] = '0';
+    }
+    buf[d] = 0;
+    return true;
+}
 
-            // add digit to the code
-            code[d] = buf[i];
+#pragma endregion
 
-            // increment digit counter
-            d++;
+#pragma region Refined Soundex
+
+// rsoundex_encode returns the Refined Soundex digit for c,
+// or '0' for vowels and non-letters.
+static char rsoundex_encode(char c) {
+    switch (to_lower(c)) {
+        case 'b':
+        case 'p':
+            return '1';
+        case 'f':
+        case 'v':
+            return '2';
+        case 'c':
+        case 'k':
+        case 's':
+            return '3';
+        case 'g':
+        case 'j':
+            return '4';
+        case 'q':
+        case 'x':
+        case 'z':
+            return '5';
+        case 'd':
+        case 't':
+            return '6';
+        case 'l':
+            return '7';
+        case 'm':
+        case 'n':
+            return '8';
+        case 'r':
+            return '9';
+        default:
+            return '0';
+    }
+}
+
+// fuzzy_rsoundex writes the Refined Soundex code of s into buf, which must
+// hold at least FUZZY_RSOUNDEX_SIZE(n) bytes. The code is the first letter
+// of s followed by the digits of every character, with repeated digits
+// coded once. Leading non-letters are skipped, and a string without letters
+// has an empty code.
+// See http://ntz-develop.blogspot.com/2011/03/phonetic-algorithms.html
+// Returns false if s is not ASCII.
+bool fuzzy_rsoundex(const char* s, size_t n, char* buf) {
+    if (!is_ascii(s, n)) {
+        return false;
+    }
+    size_t start = skip_non_letters(s, n);
+    if (start == n) {
+        buf[0] = 0;
+        return true;
+    }
+
+    buf[0] = to_upper(s[start]);
+    size_t d = 1;
+    char prev = 0;
+    for (size_t i = start; i < n; i++) {
+        char code = rsoundex_encode(s[i]);
+        if (code != prev) {
+            buf[d++] = code;
+            prev = code;
         }
     }
-
-    // pad the end of code with '0' if too short
-    while (d < 4) {
-        code[d] = '0';
-        d++;
-    }
-
-    // null terminate string
-    code[d] = '\0';
-    free(buf);
-
-    return code;
+    buf[d] = 0;
+    return true;
 }
+
+#pragma endregion

@@ -332,7 +332,7 @@ Required cases beyond the happy path:
 - Roundtrips: format ↔ parse, encode ↔ decode;
 - Corrupt input: invalid serialized data or unparseable text is reported as a failure.
 
-When the binding layer has behavior the SQL runner can't assert (error messages, function flags, limits, out-of-memory handling), the C test can also run the extension in a real connection: link `dist/ctest-sqlite3.o`, define `SQLITE_CORE`, and call `<module>_init` on an in-memory database (`test/define/define.test.c`, `test/fileio/fileio.test.c`). Inject allocation failures with `sqlite3_config(SQLITE_CONFIG_MALLOC, ...)` to check that every allocation is checked.
+C tests exercise the domain layer, without SQLite (`test/crypto/hex.test.c`). Only when the binding layer does more than map arguments and results, and that can't be asserted in SQL (error messages from spec arguments or the operating system, per-connection state, `SQLITE_LIMIT_LENGTH` handling), the C test can also run the extension in a real connection: link `dist/ctest-sqlite3.o`, define `SQLITE_CORE`, and call `<module>_init` on an in-memory database (`test/define/define.test.c`, `test/fileio/fileio.test.c`). Such a test can also check function flags and inject allocation failures with `sqlite3_config(SQLITE_CONFIG_MALLOC, ...)`, but these alone are not a reason to add one: flags and allocation checks in the binding layer are verified by review.
 
 Register each test in the `Makefile`: add `<package>/<module>` to `CTESTS` and list the sources it compiles with in `CTEST_SRC_<package>_<module>`. Run it with `make ctest package=<package> module=<module>`. It must pass under `make ctest-sanitize` with the same arguments.
 

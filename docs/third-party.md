@@ -10,6 +10,7 @@ SQLean relies heavily on third-party SQLite extensions and open source libraries
 | extension-functions.c                                                                          | Liam Healy      | Public Domain        |
 | [fileio.c](https://www.sqlite.org/src/file/ext/misc/fileio.c)                                  | D. Richard Hipp | Public Domain        |
 | [go](https://github.com/golang/go)                                                             | The Go Authors  | BSD 3-Clause License |
+| [go-edlib](https://github.com/hbollon/go-edlib)                                                | Hugo Bollon     | MIT License          |
 | [libstrcmp](https://github.com/Rostepher/libstrcmp)                                            | Ross Bayer      | MIT License          |
 | [percentile.c](https://sqlite.org/src/file/ext/misc/percentile.c)                              | D. Richard Hipp | Public Domain        |
 | [pcre2](https://github.com/pcre2project/pcre2)                                                 | Philip Hazel    | BSD 3-Clause License |
