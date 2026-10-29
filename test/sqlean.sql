@@ -23,8 +23,8 @@ select '4_01', dlevenshtein('abc', 'abcd') = 1;
 select '4_02', caverphone('awesome') = 'AWSM111111';
 
 -- ipaddr
-select '12_01', iphost('192.168.16.12/24') = '192.168.16.12';
-select '12_02', ipcontains('192.168.16.0/24', '192.168.16.3') = 1;
+select '12_01', ip_host('192.168.16.12/24') = '192.168.16.12';
+select '12_02', ip_contains('192.168.16.0/24', '192.168.16.3') = 1;
 
 -- math
 select '5_01', trunc(3.9) = 3;

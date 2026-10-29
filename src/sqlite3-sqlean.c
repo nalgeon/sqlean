@@ -11,9 +11,7 @@ SQLITE_EXTENSION_INIT1
 #include "define/extension.h"
 #include "fileio/extension.h"
 #include "fuzzy/extension.h"
-#if !defined(_WIN32)
 #include "ipaddr/extension.h"
-#endif
 #include "math/extension.h"
 #include "regexp/extension.h"
 #include "stats/extension.h"
@@ -41,9 +39,7 @@ __declspec(dllexport)
     crypto_init(db);
     fileio_init(db);
     fuzzy_init(db);
-#if !defined(_WIN32)
     ipaddr_init(db);
-#endif
     math_init(db);
     regexp_init(db);
     stats_init(db);

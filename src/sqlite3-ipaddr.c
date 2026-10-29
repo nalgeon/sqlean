@@ -1,7 +1,7 @@
 // Copyright (c) 2021 Vincent Bernat, MIT License
 // https://github.com/nalgeon/sqlean
 
-// IP address manipulation in SQLite.
+// SQLite extension for working with IP addresses.
 
 #include "sqlite3ext.h"
 SQLITE_EXTENSION_INIT1
@@ -9,7 +9,7 @@ SQLITE_EXTENSION_INIT1
 #include "ipaddr/extension.h"
 #include "sqlean.h"
 
-// Returns the current Sqlean version.
+// sqlean_version returns the current Sqlean version.
 static void sqlean_version(sqlite3_context* context, int argc, sqlite3_value** argv) {
     sqlite3_result_text(context, SQLEAN_VERSION, -1, SQLITE_STATIC);
 }
