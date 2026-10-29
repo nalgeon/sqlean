@@ -285,7 +285,7 @@ test-all-wine:
 
 # C tests as <package>/<module>, each compiling test/<package>/<module>.test.c
 # together with the sources listed in CTEST_SRC_<package>_<module>.
-CTESTS := crypto/base32 crypto/base64 crypto/base85 crypto/hash crypto/hex crypto/url define/define fileio/fileio text/bstring text/rstring text/utf8 time/time time/duration
+CTESTS := crypto/base32 crypto/base64 crypto/base85 crypto/hash crypto/hex crypto/url define/define fileio/fileio fuzzy/fuzzy text/bstring text/rstring text/utf8 time/time time/duration
 CTEST_SRC_crypto_base32 := src/crypto/base32.c
 CTEST_SRC_crypto_base64 := src/crypto/base64.c
 CTEST_SRC_crypto_base85 := src/crypto/base85.c
@@ -296,6 +296,8 @@ CTEST_SRC_define_define := src/define/*.c dist/ctest-sqlite3.o
 CTEST_FLAGS_define_define := -DSQLITE_CORE
 CTEST_SRC_fileio_fileio := src/fileio/*.c dist/ctest-sqlite3.o
 CTEST_FLAGS_fileio_fileio := -DSQLITE_CORE
+CTEST_SRC_fuzzy_fuzzy := src/fuzzy/*.c dist/ctest-sqlite3.o
+CTEST_FLAGS_fuzzy_fuzzy := -DSQLITE_CORE
 CTEST_SRC_text_bstring := src/text/*.c src/text/*/*.c
 CTEST_SRC_text_rstring := src/text/*.c src/text/*/*.c
 CTEST_SRC_text_utf8 := src/text/utf8/*.c
@@ -317,7 +319,7 @@ ctest: $(filter %.o,$(CTEST_SRC_$(package)_$(module)))
 	$(CC) $(CTEST_FLAGS) $(CTEST_FLAGS_$(package)_$(module)) test/$(package)/$(module).test.c $(CTEST_SRC_$(package)_$(module)) -o $(package).$(module) -lm
 	@./$(package).$(module); status=$$?; rm -rf $(package).$(module) $(package).$(module).dSYM; exit $$status
 
-# SQLite for the C tests that need a real connection (define, fileio). Built without
+# SQLite for the C tests that need a real connection (define, fileio, fuzzy). Built without
 # warnings and sanitizers, since it's third-party code, and without threads
 # and extension loading, so it links without -lpthread and -ldl.
 dist/ctest-sqlite3.o: src/sqlite3.c
