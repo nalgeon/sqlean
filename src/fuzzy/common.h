@@ -52,21 +52,21 @@ static inline char to_upper(char c) {
 #pragma region Character classes
 
 // Character classes for ASCII characters, used by the spellfix functions
-// (editdist, phonetic, script):
+// (editdist, phonetic). The quoted symbol is the class in a phonetic hash:
 //
-//   0   ''        Silent letters:   H W
-//   1   'A'       Any vowel:   A E I O U (Y)
-//   2   'B'       A bilabeal stop or fricative:  B F P V W
+//   0   '.'       Silent: H, and an apostrophe inside a word
+//   1   'A'       Any vowel:   A E I O U, and Y inside a word
+//   2   'B'       A bilabial stop or fricative:  B F P V W
 //   3   'C'       Other fricatives or back stops:  C G J K Q S X Z
 //   4   'D'       Alveolar stops:  D T
-//   5   'H'       Letter H at the beginning of a word
+//   5   'H'       Unused (kept so that the class numbers match spellfix)
 //   6   'L'       Glide:  L
 //   7   'R'       Semivowel:  R
 //   8   'M'       Nasals:  M N
-//   9   'Y'       Letter Y at the beginning of a word.
+//   9   'Y'       Letter Y at the beginning of a word
 //   10  '9'       Digits: 0 1 2 3 4 5 6 7 8 9
 //   11  ' '       White space
-//   12  '?'       Other.
+//   12  '?'       Other
 #define CCLASS_SILENT 0
 #define CCLASS_VOWEL 1
 #define CCLASS_B 2
@@ -129,8 +129,8 @@ static const unsigned char mid_class[128] = {
 };
 
 // init_class gives the character class for ASCII characters that form
-// the initial character of a word. The only difference from mid_class
-// is with the letters H, W, and Y.
+// the initial character of a word. The only differences from mid_class
+// are the letter Y and the apostrophe.
 static const unsigned char init_class[128] = {
     /*   */ CCLASS_OTHER,  /*   */ CCLASS_OTHER, /*   */ CCLASS_OTHER,
     /*   */ CCLASS_OTHER,  /*   */ CCLASS_OTHER, /*   */ CCLASS_OTHER,

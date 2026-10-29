@@ -82,6 +82,8 @@ Extra arguments are now an error: `fileio_read` used to ignore them.
 
 `fuzzy_soundex` and `fuzzy_rsoundex` now skip leading non-letters: `fuzzy_soundex('1abc')` is `A120` (was `1120`). `fuzzy_soundex` now treats an uppercase `H` or `W` between two letters with the same code the same way as a lowercase one.
 
+`fuzzy_phonetic` now ignores case in all its rules, as it does for single letters: `fuzzy_phonetic('KNIGHT')` is `MACD` (was `CMACD`), the same as `fuzzy_phonetic('knight')`. Before, the rules for an initial `KN`/`GN`, `WR`, `TCH` and `DGE` only applied to lowercase letters.
+
 A NUL character inside a string is now an ordinary character. Before, most functions ignored everything after it.
 
 Fixed crashes when out of memory: most functions didn't check their allocations.
@@ -97,7 +99,9 @@ Invalid data now gives `NULL` instead of an error or a made-up value, as SQLite'
 -   A BLOB argument gives `NULL`. Before, it was treated as text.
 -   `fuzzy_hamming` of strings with different lengths gives `NULL` (was `-1`).
 
-`fuzzy_soundex` and `fuzzy_rsoundex` of a string without letters give an empty string: `fuzzy_soundex('123')` is `''` (was `1000`).
+`fuzzy_caver`, `fuzzy_soundex` and `fuzzy_rsoundex` of a string without letters give an empty string: `fuzzy_caver('123')` is `''` (was `1111111111`), `fuzzy_soundex('123')` is `''` (was `1000`).
+
+`fuzzy_script` no longer counts punctuation and symbols as Latin: `fuzzy_script('«»')` is `999` (was `215`), and `fuzzy_script('«привет»')` is `220` (was `998`).
 
 `fuzzy_translit` replaces invalid UTF-8 bytes with `?`. Before, it cut the result at the first one.
 

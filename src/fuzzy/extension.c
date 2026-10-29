@@ -16,14 +16,6 @@ SQLITE_EXTENSION_INIT3
 
 #pragma region Helpers
 
-// ArgStatus is the result of decoding an argument that can fail
-// because of bad data or because SQLite runs out of memory.
-typedef enum {
-    ARG_OK,
-    ARG_INVALID,
-    ARG_NOMEM,
-} ArgStatus;
-
 // has_null reports whether any of the arguments is NULL.
 static bool has_null(int argc, sqlite3_value** argv) {
     for (int i = 0; i < argc; i++) {
@@ -34,41 +26,43 @@ static bool has_null(int argc, sqlite3_value** argv) {
     return false;
 }
 
-// arg_text decodes a text argument into s and n. Numbers are converted
-// to text, and a blob is ARG_INVALID.
-static ArgStatus arg_text(sqlite3_value* value, const char** s, size_t* n) {
-    if (sqlite3_value_type(value) == SQLITE_BLOB) {
-        return ARG_INVALID;
-    }
-    const char* text = (const char*)sqlite3_value_text(value);
-    if (text == NULL) {
-        return ARG_NOMEM;
-    }
-    *s = text;
-    *n = (size_t)sqlite3_value_bytes(value);
-    return ARG_OK;
-}
-
-// arg_texts decodes the first argc text arguments into s and n,
-// and sets the NULL result or the error if any of them fails.
-// Returns false on failure.
+// arg_texts decodes the argc text arguments into s and n. Numbers are
+// converted to text. Sets the NULL result for a blob, and the error
+// if out of memory. Returns false on failure.
 static bool arg_texts(sqlite3_context* context,
                       int argc,
                       sqlite3_value** argv,
                       const char** s,
                       size_t* n) {
     for (int i = 0; i < argc; i++) {
-        ArgStatus status = arg_text(argv[i], &s[i], &n[i]);
-        if (status == ARG_NOMEM) {
-            sqlite3_result_error_nomem(context);
-            return false;
-        }
-        if (status == ARG_INVALID) {
+        if (sqlite3_value_type(argv[i]) == SQLITE_BLOB) {
             sqlite3_result_null(context);
             return false;
         }
+        s[i] = (const char*)sqlite3_value_text(argv[i]);
+        if (s[i] == NULL) {
+            sqlite3_result_error_nomem(context);
+            return false;
+        }
+        n[i] = (size_t)sqlite3_value_bytes(argv[i]);
     }
     return true;
+}
+
+// check_status sets the NULL result for FUZZY_INVALID, and the error
+// for FUZZY_NOMEM. Returns false for either of them.
+static bool check_status(sqlite3_context* context, FuzzyStatus status) {
+    switch (status) {
+        case FUZZY_OK:
+            return true;
+        case FUZZY_INVALID:
+            sqlite3_result_null(context);
+            return false;
+        case FUZZY_NOMEM:
+            sqlite3_result_error_nomem(context);
+            return false;
+    }
+    return false;
 }
 
 // alloc_buf allocates a result buffer of size bytes.
@@ -86,7 +80,11 @@ static char* alloc_buf(sqlite3_context* context, sqlite3_uint64 size) {
 
 #pragma region Distances
 
+// Distance is the signature of the functions fn_distance calls.
+typedef FuzzyStatus (*Distance)(const char* a, size_t na, const char* b, size_t nb, size_t* dist);
+
 // fuzzy_damlev(a, b)
+// fuzzy_hamming(a, b)
 // fuzzy_leven(a, b)
 // fuzzy_osadist(a, b)
 static void fn_distance(sqlite3_context* context, int argc, sqlite3_value** argv) {
@@ -100,11 +98,9 @@ static void fn_distance(sqlite3_context* context, int argc, sqlite3_value** argv
     if (!arg_texts(context, argc, argv, s, n)) {
         return;
     }
-    bool (*distance)(const char*, size_t, const char*, size_t, size_t*) =
-        (bool (*)(const char*, size_t, const char*, size_t, size_t*))sqlite3_user_data(context);
+    Distance distance = (Distance)sqlite3_user_data(context);
     size_t dist;
-    if (!distance(s[0], n[0], s[1], n[1], &dist)) {
-        sqlite3_result_error_nomem(context);
+    if (!check_status(context, distance(s[0], n[0], s[1], n[1], &dist))) {
         return;
     }
     sqlite3_result_int64(context, (sqlite3_int64)dist);
@@ -123,36 +119,10 @@ static void fn_editdist(sqlite3_context* context, int argc, sqlite3_value** argv
         return;
     }
     int64_t dist;
-    FuzzyStatus status = fuzzy_editdist(s[0], n[0], s[1], n[1], &dist);
-    if (status == FUZZY_NOMEM) {
-        sqlite3_result_error_nomem(context);
-        return;
-    }
-    if (status == FUZZY_INVALID) {
-        sqlite3_result_null(context);
+    if (!check_status(context, fuzzy_editdist(s[0], n[0], s[1], n[1], &dist))) {
         return;
     }
     sqlite3_result_int64(context, dist);
-}
-
-// fuzzy_hamming(a, b)
-static void fn_hamming(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    assert(argc == 2);
-    if (has_null(argc, argv)) {
-        sqlite3_result_null(context);
-        return;
-    }
-    const char* s[2];
-    size_t n[2];
-    if (!arg_texts(context, argc, argv, s, n)) {
-        return;
-    }
-    size_t dist;
-    if (!fuzzy_hamming(s[0], n[0], s[1], n[1], &dist)) {
-        sqlite3_result_null(context);
-        return;
-    }
-    sqlite3_result_int64(context, (sqlite3_int64)dist);
 }
 
 // fuzzy_jarowin(a, b)
@@ -168,8 +138,7 @@ static void fn_jarowin(sqlite3_context* context, int argc, sqlite3_value** argv)
         return;
     }
     double sim;
-    if (!fuzzy_jarowin(s[0], n[0], s[1], n[1], &sim)) {
-        sqlite3_result_error_nomem(context);
+    if (!check_status(context, fuzzy_jarowin(s[0], n[0], s[1], n[1], &sim))) {
         return;
     }
     sqlite3_result_double(context, sim);
@@ -179,32 +148,12 @@ static void fn_jarowin(sqlite3_context* context, int argc, sqlite3_value** argv)
 
 #pragma region Phonetic codes
 
-// fuzzy_caver(s)
-static void fn_caver(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    assert(argc == 1);
-    if (has_null(argc, argv)) {
-        sqlite3_result_null(context);
-        return;
-    }
-    const char* s;
-    size_t n;
-    if (!arg_texts(context, argc, argv, &s, &n)) {
-        return;
-    }
-    char buf[FUZZY_CAVER_SIZE];
-    FuzzyStatus status = fuzzy_caver(s, n, buf);
-    if (status == FUZZY_NOMEM) {
-        sqlite3_result_error_nomem(context);
-        return;
-    }
-    if (status == FUZZY_INVALID) {
-        sqlite3_result_null(context);
-        return;
-    }
-    sqlite3_result_text(context, buf, -1, SQLITE_TRANSIENT);
-}
+// Encoder is the signature of the functions fn_code calls.
+typedef FuzzyStatus (*Encoder)(const char* s, size_t n, char* buf);
 
+// fuzzy_caver(s)
 // fuzzy_phonetic(s)
+// fuzzy_soundex(s)
 // fuzzy_rsoundex(s)
 static void fn_code(sqlite3_context* context, int argc, sqlite3_value** argv) {
     assert(argc == 1);
@@ -217,39 +166,22 @@ static void fn_code(sqlite3_context* context, int argc, sqlite3_value** argv) {
     if (!arg_texts(context, argc, argv, &s, &n)) {
         return;
     }
-    // FUZZY_RSOUNDEX_SIZE is the larger of the two sizes
-    char* buf = alloc_buf(context, FUZZY_RSOUNDEX_SIZE((sqlite3_uint64)n));
+    // the buffer must fit any of the codes: FUZZY_PHONETIC_SIZE(n) and
+    // FUZZY_SOUNDEX_SIZE are never larger than FUZZY_RSOUNDEX_SIZE(n)
+    sqlite3_uint64 size = FUZZY_RSOUNDEX_SIZE((sqlite3_uint64)n);
+    if (size < FUZZY_CAVER_SIZE) {
+        size = FUZZY_CAVER_SIZE;
+    }
+    char* buf = alloc_buf(context, size);
     if (buf == NULL) {
         return;
     }
-    bool (*encode)(const char*, size_t, char*) =
-        (bool (*)(const char*, size_t, char*))sqlite3_user_data(context);
-    if (!encode(s, n, buf)) {
+    Encoder encode = (Encoder)sqlite3_user_data(context);
+    if (!check_status(context, encode(s, n, buf))) {
         sqlite3_free(buf);
-        sqlite3_result_null(context);
         return;
     }
     sqlite3_result_text(context, buf, -1, sqlite3_free);
-}
-
-// fuzzy_soundex(s)
-static void fn_soundex(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    assert(argc == 1);
-    if (has_null(argc, argv)) {
-        sqlite3_result_null(context);
-        return;
-    }
-    const char* s;
-    size_t n;
-    if (!arg_texts(context, argc, argv, &s, &n)) {
-        return;
-    }
-    char buf[FUZZY_SOUNDEX_SIZE];
-    if (!fuzzy_soundex(s, n, buf)) {
-        sqlite3_result_null(context);
-        return;
-    }
-    sqlite3_result_text(context, buf, -1, SQLITE_TRANSIENT);
 }
 
 #pragma endregion
@@ -290,7 +222,7 @@ static void fn_script(sqlite3_context* context, int argc, sqlite3_value** argv) 
     if (!arg_texts(context, argc, argv, &s, &n)) {
         return;
     }
-    sqlite3_result_int(context, fuzzy_script(s, n));
+    sqlite3_result_int(context, (int)fuzzy_script(s, n));
 }
 
 #pragma endregion
@@ -312,15 +244,15 @@ static const Function functions[] = {
     // distances
     {"fuzzy_damlev", 2, FLAGS, fuzzy_damlev, fn_distance},
     {"fuzzy_editdist", 2, FLAGS, 0, fn_editdist},
-    {"fuzzy_hamming", 2, FLAGS, 0, fn_hamming},
+    {"fuzzy_hamming", 2, FLAGS, fuzzy_hamming, fn_distance},
     {"fuzzy_jarowin", 2, FLAGS, 0, fn_jarowin},
     {"fuzzy_leven", 2, FLAGS, fuzzy_leven, fn_distance},
     {"fuzzy_osadist", 2, FLAGS, fuzzy_osadist, fn_distance},
 
     // phonetic codes
-    {"fuzzy_caver", 1, FLAGS, 0, fn_caver},
+    {"fuzzy_caver", 1, FLAGS, fuzzy_caver, fn_code},
     {"fuzzy_phonetic", 1, FLAGS, fuzzy_phonetic, fn_code},
-    {"fuzzy_soundex", 1, FLAGS, 0, fn_soundex},
+    {"fuzzy_soundex", 1, FLAGS, fuzzy_soundex, fn_code},
     {"fuzzy_rsoundex", 1, FLAGS, fuzzy_rsoundex, fn_code},
 
     // transliteration
@@ -330,13 +262,13 @@ static const Function functions[] = {
     // aliases
     {"dlevenshtein", 2, FLAGS, fuzzy_damlev, fn_distance},
     {"edit_distance", 2, FLAGS, 0, fn_editdist},
-    {"hamming", 2, FLAGS, 0, fn_hamming},
+    {"hamming", 2, FLAGS, fuzzy_hamming, fn_distance},
     {"jaro_winkler", 2, FLAGS, 0, fn_jarowin},
     {"levenshtein", 2, FLAGS, fuzzy_leven, fn_distance},
     {"osa_distance", 2, FLAGS, fuzzy_osadist, fn_distance},
-    {"caverphone", 1, FLAGS, 0, fn_caver},
+    {"caverphone", 1, FLAGS, fuzzy_caver, fn_code},
     {"phonetic_hash", 1, FLAGS, fuzzy_phonetic, fn_code},
-    {"soundex", 1, FLAGS, 0, fn_soundex},
+    {"soundex", 1, FLAGS, fuzzy_soundex, fn_code},
     {"rsoundex", 1, FLAGS, fuzzy_rsoundex, fn_code},
     {"translit", 1, FLAGS, 0, fn_translit},
     {"script_code", 1, FLAGS, 0, fn_script},

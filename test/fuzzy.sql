@@ -3,10 +3,6 @@
 
 .load dist/fuzzy
 
--- Errors (NULL and non-ASCII arguments to the distance functions, non-ASCII
--- arguments to the phonetic functions) can't be asserted here, so they are
--- covered in test/fuzzy/fuzzy.test.c.
-
 -- fuzzy_damlev
 select '01_01', fuzzy_damlev('abc', 'abc') = 0;
 select '01_02', fuzzy_damlev('abc', '') = 3;
@@ -151,9 +147,12 @@ select '11_22', fuzzy_caver('Lee') = fuzzy_caver('lee');
 -- anything but letters is ignored
 select '11_23', fuzzy_caver('O''Brien') = 'APRN111111';
 select '11_24', fuzzy_caver('van der Berg') = 'FNTPK11111';
-select '11_25', fuzzy_caver('123') = '1111111111';
+-- a string without letters has an empty code
+select '11_25', fuzzy_caver('123') = '';
 -- the code is cut to 10 characters
 select '11_26', fuzzy_caver('abcdefghijklmnopqrstuvwxyz') = 'APKTFKMNPK';
+-- a string with letters has a 10-character code, even if they are all removed
+select '11_27', fuzzy_caver('e') = '1111111111';
 
 -- fuzzy_phonetic
 select '12_01', fuzzy_phonetic('') = '';
@@ -174,6 +173,12 @@ select '12_11', fuzzy_phonetic('edge') = 'ACA';
 select '12_12', fuzzy_phonetic('hello world') = 'LBRLD';
 select '12_13', fuzzy_phonetic('a1b2') = 'A9B9';
 select '12_14', fuzzy_phonetic(1.5) = '9?9';
+-- case-insensitive, including the rules above
+select '12_15', fuzzy_phonetic('KNIGHT') = 'MACD';
+select '12_16', fuzzy_phonetic('Gnome') = 'MAMA';
+select '12_17', fuzzy_phonetic('WRIGHT') = 'RCD';
+select '12_18', fuzzy_phonetic('MATCH') = 'MAC';
+select '12_19', fuzzy_phonetic('EDGE') = 'ACA';
 
 -- fuzzy_soundex
 select '13_01', fuzzy_soundex('') = '';
@@ -199,11 +204,11 @@ select '13_15', fuzzy_soundex('a') = 'A000';
 -- leading non-letters are skipped
 select '13_16', fuzzy_soundex('1abc') = 'A120';
 select '13_17', fuzzy_soundex(' a') = 'A000';
+select '13_18', fuzzy_soundex('O''Hara') = 'O600';
 -- a string without letters has an empty code
 select '13_19', fuzzy_soundex('123') = '';
 -- h and w separate letters with the same code in any case
 select '13_20', fuzzy_soundex('ASHCRAFT') = 'A261';
-select '13_18', fuzzy_soundex('O''Hara') = 'O600';
 
 -- fuzzy_rsoundex
 select '14_01', fuzzy_rsoundex('') = '';
@@ -217,6 +222,8 @@ select '14_08', fuzzy_rsoundex('robert') = 'R901096';
 select '14_09', fuzzy_rsoundex('a') = 'A0';
 -- the code is not cut
 select '14_10', length(fuzzy_rsoundex(replace(printf('%.*c', 500, 'x'), 'x', 'ab'))) = 1001;
+-- a string without letters has an empty code
+select '14_11', fuzzy_rsoundex('123') = '';
 
 -- fuzzy_translit
 select '21_01', fuzzy_translit('') = '';
@@ -254,6 +261,15 @@ select '22_09', fuzzy_script('привет 123') = 220;
 select '22_10', fuzzy_script('') = 999;
 select '22_11', fuzzy_script('日本') = 999;
 select '22_12', fuzzy_script('!?') = 999;
+-- punctuation and symbols don't count as Latin
+select '22_13', fuzzy_script('''') = 999;
+select '22_14', fuzzy_script('«»') = 999;
+select '22_15', fuzzy_script('© ×÷') = 999;
+select '22_16', fuzzy_script('«привет»') = 220;
+select '22_17', fuzzy_script('O''Brien') = 215;
+-- Latin letters beyond ASCII
+select '22_18', fuzzy_script('Ærøskøbing') = 215;
+select '22_19', fuzzy_script('ʯ') = 215;
 
 -- aliases
 select '31_01', dlevenshtein('abc', 'acb') = 1;
@@ -308,7 +324,7 @@ select '51_03', fuzzy_hamming(123, 124) = 1;
 select '51_04', round(fuzzy_jarowin(123, 124), 3) = 0.822;
 select '51_05', fuzzy_leven(1.5, 1.25) = 1;
 select '51_06', fuzzy_osadist(123, 124) = 1;
-select '51_07', fuzzy_caver(123) = '1111111111';
+select '51_07', fuzzy_caver(123) = '';
 select '51_08', fuzzy_phonetic(123) = '9';
 select '51_09', fuzzy_soundex(123) = '';
 select '51_10', fuzzy_rsoundex(123) = '';

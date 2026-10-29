@@ -39,26 +39,59 @@ static bool runes_equal(const uint32_t* a, size_t na, const uint32_t* b, size_t 
     return na == nb && (na == 0 || memcmp(a, b, na * sizeof(uint32_t)) == 0);
 }
 
-// decode_pair decodes a and b into code point arrays. Returns false
-// if out of memory. On success, the caller frees ra and rb.
-static bool decode_pair(const char* a,
-                        size_t na,
-                        const char* b,
-                        size_t nb,
-                        uint32_t** ra,
-                        size_t* la,
-                        uint32_t** rb,
-                        size_t* lb) {
-    *ra = utf8_runes(a, na, la);
-    if (*ra == NULL) {
+// Runes is a string decoded into code points.
+typedef struct {
+    uint32_t* p;
+    size_t n;
+} Runes;
+
+// decode_pair decodes a and b into ra and rb. Returns false if out
+// of memory. On success, the caller frees ra->p and rb->p.
+static bool decode_pair(const char* a, size_t na, const char* b, size_t nb, Runes* ra, Runes* rb) {
+    ra->p = utf8_runes(a, na, &ra->n);
+    if (ra->p == NULL) {
         return false;
     }
-    *rb = utf8_runes(b, nb, lb);
-    if (*rb == NULL) {
-        free(*ra);
+    rb->p = utf8_runes(b, nb, &rb->n);
+    if (rb->p == NULL) {
+        free(ra->p);
         return false;
     }
     return true;
+}
+
+// RuneDistance computes an edit distance between the non-empty, different
+// code point arrays a and b. Returns false if out of memory.
+typedef bool (
+    *RuneDistance)(const uint32_t* a, size_t na, const uint32_t* b, size_t nb, size_t* dist);
+
+// edit_distance sets dist to the edit distance between a and b computed
+// by distance. The distance to an empty string is the length of the other
+// string, and the distance between equal strings is 0, so distance only
+// handles the rest. Returns FUZZY_NOMEM if out of memory.
+static FuzzyStatus edit_distance(const char* a,
+                                 size_t na,
+                                 const char* b,
+                                 size_t nb,
+                                 RuneDistance distance,
+                                 size_t* dist) {
+    Runes ra, rb;
+    if (!decode_pair(a, na, b, nb, &ra, &rb)) {
+        return FUZZY_NOMEM;
+    }
+    bool ok = true;
+    if (ra.n == 0) {
+        *dist = rb.n;
+    } else if (rb.n == 0) {
+        *dist = ra.n;
+    } else if (runes_equal(ra.p, ra.n, rb.p, rb.n)) {
+        *dist = 0;
+    } else {
+        ok = distance(ra.p, ra.n, rb.p, rb.n, dist);
+    }
+    free(ra.p);
+    free(rb.p);
+    return ok ? FUZZY_OK : FUZZY_NOMEM;
 }
 
 // alloc_matrix allocates a rows x cols matrix of size_t values.
@@ -166,26 +199,9 @@ done:
 // the minimum number of insertions, deletions, substitutions and transpositions
 // of adjacent characters that turn a into b. Unlike the optimal string
 // alignment distance, it allows editing a substring more than once.
-// Returns false if out of memory.
-bool fuzzy_damlev(const char* a, size_t na, const char* b, size_t nb, size_t* dist) {
-    uint32_t *ra, *rb;
-    size_t la, lb;
-    if (!decode_pair(a, na, b, nb, &ra, &la, &rb, &lb)) {
-        return false;
-    }
-    bool ok = true;
-    if (la == 0) {
-        *dist = lb;
-    } else if (lb == 0) {
-        *dist = la;
-    } else if (runes_equal(ra, la, rb, lb)) {
-        *dist = 0;
-    } else {
-        ok = damlev(ra, la, rb, lb, dist);
-    }
-    free(ra);
-    free(rb);
-    return ok;
+// Returns FUZZY_NOMEM if out of memory.
+FuzzyStatus fuzzy_damlev(const char* a, size_t na, const char* b, size_t nb, size_t* dist) {
+    return edit_distance(a, na, b, nb, damlev, dist);
 }
 
 #pragma endregion
@@ -194,8 +210,8 @@ bool fuzzy_damlev(const char* a, size_t na, const char* b, size_t nb, size_t* di
 
 // fuzzy_hamming sets dist to the Hamming distance between a and b:
 // the number of positions where their characters differ.
-// Returns false if a and b have a different number of characters.
-bool fuzzy_hamming(const char* a, size_t na, const char* b, size_t nb, size_t* dist) {
+// Returns FUZZY_INVALID if a and b have a different number of characters.
+FuzzyStatus fuzzy_hamming(const char* a, size_t na, const char* b, size_t nb, size_t* dist) {
     size_t i = 0, j = 0, count = 0;
     while (i < na && j < nb) {
         size_t sa, sb;
@@ -208,17 +224,17 @@ bool fuzzy_hamming(const char* a, size_t na, const char* b, size_t nb, size_t* d
         j += sb;
     }
     if (i < na || j < nb) {
-        return false;
+        return FUZZY_INVALID;
     }
     *dist = count;
-    return true;
+    return FUZZY_OK;
 }
 
 #pragma endregion
 
 #pragma region Jaro-Winkler
 
-// jaro returns the Jaro similarity between the non-empty, different
+// jaro sets sim to the Jaro similarity between the non-empty, different
 // code point arrays a and b. Returns false if out of memory.
 static bool jaro(const uint32_t* a, size_t na, const uint32_t* b, size_t nb, double* sim) {
     bool* matched = calloc(na + nb, sizeof(bool));
@@ -278,32 +294,31 @@ static bool jaro(const uint32_t* a, size_t na, const uint32_t* b, size_t nb, dou
 // fuzzy_jarowin sets sim to the Jaro-Winkler similarity between a and b:
 // from 0 for no similarity to 1 for an exact match. It's the Jaro similarity
 // boosted by 0.1 for each character of a common prefix of up to 4 characters.
-// Returns false if out of memory.
-bool fuzzy_jarowin(const char* a, size_t na, const char* b, size_t nb, double* sim) {
-    uint32_t *ra, *rb;
-    size_t la, lb;
-    if (!decode_pair(a, na, b, nb, &ra, &la, &rb, &lb)) {
-        return false;
+// Returns FUZZY_NOMEM if out of memory.
+FuzzyStatus fuzzy_jarowin(const char* a, size_t na, const char* b, size_t nb, double* sim) {
+    Runes ra, rb;
+    if (!decode_pair(a, na, b, nb, &ra, &rb)) {
+        return FUZZY_NOMEM;
     }
     bool ok = true;
-    if (runes_equal(ra, la, rb, lb)) {
+    if (runes_equal(ra.p, ra.n, rb.p, rb.n)) {
         *sim = 1.0;
-    } else if (la == 0 || lb == 0) {
+    } else if (ra.n == 0 || rb.n == 0) {
         *sim = 0.0;
     } else {
-        ok = jaro(ra, la, rb, lb, sim);
-        if (ok && *sim != 0.0) {
+        ok = jaro(ra.p, ra.n, rb.p, rb.n, sim);
+        if (ok) {
             size_t prefix = 0;
-            size_t limit = min3(la, lb, 4);
-            while (prefix < limit && ra[prefix] == rb[prefix]) {
+            size_t limit = min3(ra.n, rb.n, 4);
+            while (prefix < limit && ra.p[prefix] == rb.p[prefix]) {
                 prefix++;
             }
             *sim += 0.1 * (double)prefix * (1.0 - *sim);
         }
     }
-    free(ra);
-    free(rb);
-    return ok;
+    free(ra.p);
+    free(rb.p);
+    return ok ? FUZZY_OK : FUZZY_NOMEM;
 }
 
 #pragma endregion
@@ -340,26 +355,9 @@ static bool leven(const uint32_t* a, size_t na, const uint32_t* b, size_t nb, si
 
 // fuzzy_leven sets dist to the Levenshtein distance between a and b:
 // the minimum number of insertions, deletions and substitutions
-// that turn a into b. Returns false if out of memory.
-bool fuzzy_leven(const char* a, size_t na, const char* b, size_t nb, size_t* dist) {
-    uint32_t *ra, *rb;
-    size_t la, lb;
-    if (!decode_pair(a, na, b, nb, &ra, &la, &rb, &lb)) {
-        return false;
-    }
-    bool ok = true;
-    if (la == 0) {
-        *dist = lb;
-    } else if (lb == 0) {
-        *dist = la;
-    } else if (runes_equal(ra, la, rb, lb)) {
-        *dist = 0;
-    } else {
-        ok = leven(ra, la, rb, lb, dist);
-    }
-    free(ra);
-    free(rb);
-    return ok;
+// that turn a into b. Returns FUZZY_NOMEM if out of memory.
+FuzzyStatus fuzzy_leven(const char* a, size_t na, const char* b, size_t nb, size_t* dist) {
+    return edit_distance(a, na, b, nb, leven, dist);
 }
 
 #pragma endregion
@@ -367,9 +365,12 @@ bool fuzzy_leven(const char* a, size_t na, const char* b, size_t nb, size_t* dis
 #pragma region Optimal string alignment
 
 // osadist computes the optimal string alignment distance between the
-// non-empty code point arrays a and b, where a is not shorter than b.
-// Returns false if out of memory.
+// non-empty code point arrays a and b. Returns false if out of memory.
 static bool osadist(const uint32_t* a, size_t na, const uint32_t* b, size_t nb, size_t* dist) {
+    if (na < nb) {
+        // the distance is symmetric, and a shorter b means shorter rows
+        return osadist(b, nb, a, na, dist);
+    }
     // three rolling rows of the matrix[0..na][0..nb]
     size_t cols = nb + 1;
     size_t* matrix = alloc_matrix(3, cols);
@@ -377,9 +378,6 @@ static bool osadist(const uint32_t* a, size_t na, const uint32_t* b, size_t nb, 
         return false;
     }
 #define M(i, j) matrix[((i) % 3) * cols + (j)]
-    for (size_t i = 0; i < 3; i++) {
-        M(i, 0) = i;
-    }
     for (size_t j = 0; j <= nb; j++) {
         M(0, j) = j;
     }
@@ -404,28 +402,9 @@ static bool osadist(const uint32_t* a, size_t na, const uint32_t* b, size_t nb, 
 // fuzzy_osadist sets dist to the optimal string alignment distance
 // between a and b: the minimum number of insertions, deletions, substitutions
 // and transpositions of adjacent characters that turn a into b, where
-// no substring is edited more than once. Returns false if out of memory.
-bool fuzzy_osadist(const char* a, size_t na, const char* b, size_t nb, size_t* dist) {
-    uint32_t *ra, *rb;
-    size_t la, lb;
-    if (!decode_pair(a, na, b, nb, &ra, &la, &rb, &lb)) {
-        return false;
-    }
-    bool ok = true;
-    if (la == 0) {
-        *dist = lb;
-    } else if (lb == 0) {
-        *dist = la;
-    } else if (runes_equal(ra, la, rb, lb)) {
-        *dist = 0;
-    } else if (la < lb) {
-        ok = osadist(rb, lb, ra, la, dist);
-    } else {
-        ok = osadist(ra, la, rb, lb, dist);
-    }
-    free(ra);
-    free(rb);
-    return ok;
+// no substring is edited more than once. Returns FUZZY_NOMEM if out of memory.
+FuzzyStatus fuzzy_osadist(const char* a, size_t na, const char* b, size_t nb, size_t* dist) {
+    return edit_distance(a, na, b, nb, osadist, dist);
 }
 
 #pragma endregion

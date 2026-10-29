@@ -4,7 +4,6 @@
 
 // Spellfix phonetic hash.
 
-#include <stdbool.h>
 #include <stddef.h>
 
 #include "fuzzy/common.h"
@@ -12,9 +11,13 @@
 
 #pragma region Phonetic hash
 
+// NO_CLASS marks that there is no previous character class yet.
+#define NO_CLASS 0x77
+
 // fuzzy_phonetic writes the spellfix phonetic hash of s into buf,
 // which must hold at least FUZZY_PHONETIC_SIZE(n) bytes:
 //
+//   - Ignore case.
 //   - Map characters by character class (see common.h).
 //   - Omit double letters.
 //   - Omit vowels beside R and L.
@@ -24,32 +27,34 @@
 //   - Omit K in KN or G in GN at the beginning of a word
 //     (of more than two characters).
 //
-// Returns false if s is not ASCII.
-bool fuzzy_phonetic(const char* s, size_t n, char* buf) {
+// Unlike spellfix, the rules above ignore case: "KNIGHT" and "knight"
+// have the same hash.
+// Returns FUZZY_INVALID if s is not ASCII.
+FuzzyStatus fuzzy_phonetic(const char* s, size_t n, char* buf) {
     if (!is_ascii(s, n)) {
-        return false;
+        return FUZZY_INVALID;
     }
-    if (n > 2 && (s[0] == 'g' || s[0] == 'k') && s[1] == 'n') {
+    if (n > 2 && (to_lower(s[0]) == 'g' || to_lower(s[0]) == 'k') && to_lower(s[1]) == 'n') {
         s++;
         n--;
     }
 
     size_t len = 0;
-    unsigned char prev = 0x77;
-    unsigned char prevx = 0x77;
+    unsigned char prev = NO_CLASS;
+    unsigned char prevx = NO_CLASS;
     const unsigned char* classes = init_class;
     for (size_t i = 0; i < n; i++) {
-        char c = s[i];
-        if (i + 1 < n) {
-            if (c == 'w' && s[i + 1] == 'r') {
-                continue;
-            }
-            if (c == 'd' && (s[i + 1] == 'j' || s[i + 1] == 'g')) {
-                continue;
-            }
-            if (i + 2 < n && c == 't' && s[i + 1] == 'c' && s[i + 2] == 'h') {
-                continue;
-            }
+        char c = to_lower(s[i]);
+        char next = i + 1 < n ? to_lower(s[i + 1]) : 0;
+        char next2 = i + 2 < n ? to_lower(s[i + 2]) : 0;
+        if (c == 'w' && next == 'r') {
+            continue;
+        }
+        if (c == 'd' && (next == 'j' || next == 'g')) {
+            continue;
+        }
+        if (c == 't' && next == 'c' && next2 == 'h') {
+            continue;
         }
         unsigned char cls = classes[(unsigned char)c];
         if (cls == CCLASS_SPACE) {
@@ -78,7 +83,7 @@ bool fuzzy_phonetic(const char* s, size_t n, char* buf) {
         }
     }
     buf[len] = 0;
-    return true;
+    return FUZZY_OK;
 }
 
 #pragma endregion

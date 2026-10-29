@@ -96,17 +96,14 @@ static void replace_seq(char* s, size_t* n, char old, char new) {
 
 // fuzzy_caver writes the Caverphone 2.0 code of s into buf, which must hold
 // at least FUZZY_CAVER_SIZE bytes. The code is 10 characters long, except
-// for an empty s, which has an empty code. Non-letters are ignored.
+// for a string without letters, which has an empty code. Non-letters
+// are ignored.
 // Returns FUZZY_INVALID if s is not ASCII, and FUZZY_NOMEM if out of memory.
 FuzzyStatus fuzzy_caver(const char* s, size_t n, char* buf) {
     if (!is_ascii(s, n)) {
         return FUZZY_INVALID;
     }
-    if (n == 0) {
-        buf[0] = 0;
-        return FUZZY_OK;
-    }
-    char* w = malloc(n);
+    char* w = alloc_array(n, sizeof(char));
     if (w == NULL) {
         return FUZZY_NOMEM;
     }
@@ -114,6 +111,11 @@ FuzzyStatus fuzzy_caver(const char* s, size_t n, char* buf) {
 
     // Convert to lowercase, remove anything not in the standard alphabet
     remove_non_letters(w, &n);
+    if (n == 0) {
+        buf[0] = 0;
+        free(w);
+        return FUZZY_OK;
+    }
     // Remove final e
     replace_end(w, &n, "e", "");
     // If the name starts with *gh make it *2f

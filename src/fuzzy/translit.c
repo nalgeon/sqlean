@@ -4,6 +4,7 @@
 
 // Transliteration to ASCII and script detection.
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -470,12 +471,22 @@ size_t fuzzy_translit(const char* s, size_t n, char* buf) {
 #define SCRIPT_HEBREW 0x0008
 #define SCRIPT_ARABIC 0x0010
 
-// fuzzy_script returns the ISO 15924 numeric code of the script s is written
-// in: 215 for Latin, 220 for Cyrillic, 200 for Greek, 125 for Hebrew,
-// 160 for Arabic, 998 for a mix of these, and 999 for none of them.
-// Digits count as Latin if there are no other letters. Other characters
-// and invalid UTF-8 bytes are ignored.
-int fuzzy_script(const char* s, size_t n) {
+// is_latin reports whether c is a Latin letter: an ASCII letter,
+// or a character from U+00C0 to U+02AF except for × and ÷.
+static bool is_latin(uint32_t c) {
+    if (c < 0x80) {
+        return is_alpha((char)c);
+    }
+    return c >= 0x00C0 && c <= 0x02AF && c != 0x00D7 && c != 0x00F7;
+}
+
+// fuzzy_script returns the script s is written in. A character counts
+// toward a script if it's a Latin letter (see is_latin) or belongs to the
+// Unicode block of the script: U+0400-U+04FF for Cyrillic, U+0386-U+03CE
+// for Greek, U+0590-U+05FF for Hebrew, U+0600-U+06FF for Arabic. Other
+// characters and invalid UTF-8 bytes are ignored, except that ASCII digits
+// count as Latin if there is nothing else.
+FuzzyScript fuzzy_script(const char* s, size_t n) {
     int mask = 0;
     bool seen_digit = false;
     size_t i = 0;
@@ -483,19 +494,17 @@ int fuzzy_script(const char* s, size_t n) {
         size_t size;
         uint32_t c = utf8_decode(s + i, n - i, &size);
         i += size;
-        if (c < 0x02af) {
-            if (c >= 0x80 || mid_class[c] < CCLASS_DIGIT) {
-                mask |= SCRIPT_LATIN;
-            } else if (c >= '0' && c <= '9') {
-                seen_digit = true;
-            }
-        } else if (c >= 0x0400 && c <= 0x04ff) {
+        if (is_latin(c)) {
+            mask |= SCRIPT_LATIN;
+        } else if (c >= '0' && c <= '9') {
+            seen_digit = true;
+        } else if (c >= 0x0400 && c <= 0x04FF) {
             mask |= SCRIPT_CYRILLIC;
-        } else if (c >= 0x0386 && c <= 0x03ce) {
+        } else if (c >= 0x0386 && c <= 0x03CE) {
             mask |= SCRIPT_GREEK;
-        } else if (c >= 0x0590 && c <= 0x05ff) {
+        } else if (c >= 0x0590 && c <= 0x05FF) {
             mask |= SCRIPT_HEBREW;
-        } else if (c >= 0x0600 && c <= 0x06ff) {
+        } else if (c >= 0x0600 && c <= 0x06FF) {
             mask |= SCRIPT_ARABIC;
         }
     }
@@ -504,19 +513,19 @@ int fuzzy_script(const char* s, size_t n) {
     }
     switch (mask) {
         case 0:
-            return 999;
+            return FUZZY_SCRIPT_UNKNOWN;
         case SCRIPT_LATIN:
-            return 215;
+            return FUZZY_SCRIPT_LATIN;
         case SCRIPT_CYRILLIC:
-            return 220;
+            return FUZZY_SCRIPT_CYRILLIC;
         case SCRIPT_GREEK:
-            return 200;
+            return FUZZY_SCRIPT_GREEK;
         case SCRIPT_HEBREW:
-            return 125;
+            return FUZZY_SCRIPT_HEBREW;
         case SCRIPT_ARABIC:
-            return 160;
+            return FUZZY_SCRIPT_ARABIC;
         default:
-            return 998;
+            return FUZZY_SCRIPT_MIXED;
     }
 }
 
