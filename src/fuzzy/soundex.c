@@ -4,7 +4,6 @@
 
 // Soundex and Refined Soundex phonetic codes.
 
-#include <stdbool.h>
 #include <stddef.h>
 
 #include "fuzzy/common.h"
@@ -64,15 +63,15 @@ static char soundex_encode(char c) {
 // followed by three digits. Leading non-letters are skipped,
 // and a string without letters has an empty code.
 // See https://en.wikipedia.org/wiki/Soundex
-// Returns false if s is not ASCII.
-bool fuzzy_soundex(const char* s, size_t n, char* buf) {
+// Returns FUZZY_INVALID if s is not ASCII.
+FuzzyStatus fuzzy_soundex(const char* s, size_t n, char* buf) {
     if (!is_ascii(s, n)) {
-        return false;
+        return FUZZY_INVALID;
     }
     size_t start = skip_non_letters(s, n);
     if (start == n) {
         buf[0] = 0;
-        return true;
+        return FUZZY_OK;
     }
 
     buf[0] = to_upper(s[start]);
@@ -94,7 +93,7 @@ bool fuzzy_soundex(const char* s, size_t n, char* buf) {
         buf[d++] = '0';
     }
     buf[d] = 0;
-    return true;
+    return FUZZY_OK;
 }
 
 #pragma endregion
@@ -143,15 +142,15 @@ static char rsoundex_encode(char c) {
 // coded once. Leading non-letters are skipped, and a string without letters
 // has an empty code.
 // See http://ntz-develop.blogspot.com/2011/03/phonetic-algorithms.html
-// Returns false if s is not ASCII.
-bool fuzzy_rsoundex(const char* s, size_t n, char* buf) {
+// Returns FUZZY_INVALID if s is not ASCII.
+FuzzyStatus fuzzy_rsoundex(const char* s, size_t n, char* buf) {
     if (!is_ascii(s, n)) {
-        return false;
+        return FUZZY_INVALID;
     }
     size_t start = skip_non_letters(s, n);
     if (start == n) {
         buf[0] = 0;
-        return true;
+        return FUZZY_OK;
     }
 
     buf[0] = to_upper(s[start]);
@@ -165,7 +164,7 @@ bool fuzzy_rsoundex(const char* s, size_t n, char* buf) {
         }
     }
     buf[d] = 0;
-    return true;
+    return FUZZY_OK;
 }
 
 #pragma endregion

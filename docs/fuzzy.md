@@ -180,7 +180,7 @@ The functions only support ASCII strings, and return `NULL` otherwise. Use the [
 fuzzy_caver(x)
 ```
 
-Calculates the [Caverphone 2.0](https://en.wikipedia.org/wiki/Caverphone) code, which is always 10 characters long (or empty for an empty string).
+Calculates the [Caverphone 2.0](https://en.wikipedia.org/wiki/Caverphone) code, which is always 10 characters long, or empty for a string without letters.
 
 ```sql
 select fuzzy_caver('awesome');
@@ -195,7 +195,7 @@ Aliased as `caverphone(x)`.
 fuzzy_phonetic(x)
 ```
 
-Calculates the spellcheck phonetic code from the [spellfix](https://www.sqlite.org/spellfix1.html) extension.
+Calculates the spellcheck phonetic code from the [spellfix](https://www.sqlite.org/spellfix1.html) extension. Ignores case.
 
 ```sql
 select fuzzy_phonetic('awesome');
@@ -282,7 +282,7 @@ Returns the [ISO 15924](https://en.wikipedia.org/wiki/ISO_15924) numeric code of
 - `998` for a mix of these,
 - `999` for none of them.
 
-Characters that belong to no script (digits, punctuation, spaces) are ignored, except that a string with digits but no letters is considered Latin.
+Characters that belong to no script (digits, punctuation, symbols, spaces) are ignored, except that a string with digits but no letters is considered Latin. The Latin script includes the accented letters of Latin-1 and Latin Extended, but not the symbols there, such as `«`, `©` or `×`.
 
 ```sql
 select fuzzy_script('Ελλάδα');
