@@ -61,10 +61,10 @@ select '03_03', fuzzy_hamming('hello', 'hellp') = 1;
 select '03_04', fuzzy_hamming('hello', 'heloh') = 2;
 select '03_05', fuzzy_hamming('karolin', 'kathrin') = 3;
 select '03_06', fuzzy_hamming('abc', 'ABC') = 3;
--- strings of different lengths are -1 (current behavior)
-select '03_07', fuzzy_hamming('abc', '') = -1;
-select '03_08', fuzzy_hamming('', 'abc') = -1;
-select '03_09', fuzzy_hamming('abc', 'abcd') = -1;
+-- strings of different lengths are NULL
+select '03_07', fuzzy_hamming('abc', '') is null;
+select '03_08', fuzzy_hamming('', 'abc') is null;
+select '03_09', fuzzy_hamming('abc', 'abcd') is null;
 
 -- fuzzy_jarowin
 select '04_01', fuzzy_jarowin('abc', 'abc') = 1.0;
@@ -80,12 +80,14 @@ select '04_10', round(fuzzy_jarowin('dwayne', 'duane'), 3) = 0.840;
 select '04_11', round(fuzzy_jarowin('dixon', 'dicksonx'), 3) = 0.813;
 select '04_12', round(fuzzy_jarowin('ab', 'acb'), 3) = 0.650;
 select '04_13', round(fuzzy_jarowin('awesome', 'aewsme'), 3) = 0.907;
--- the match window is wrong when the first string is longer,
--- so the distance is not symmetric (current behavior):
--- the correct values are 0.813 and 0.650
-select '04_14', round(fuzzy_jarowin('dicksonx', 'dixon'), 3) = 0.820;
-select '04_15', round(fuzzy_jarowin('acb', 'ab'), 3) = 0.900;
-select '04_16', round(fuzzy_jarowin('ab', 'b'), 3) = 0.833;
+-- the similarity is symmetric
+select '04_14', round(fuzzy_jarowin('dicksonx', 'dixon'), 3) = 0.813;
+select '04_15', round(fuzzy_jarowin('acb', 'ab'), 3) = 0.650;
+-- the match window is max(len)/2 - 1 characters, so 'b' doesn't match
+select '04_16', fuzzy_jarowin('ab', 'b') = 0.0;
+select '04_17', fuzzy_jarowin('b', 'ab') = 0.0;
+-- the prefix boost is limited to 4 characters
+select '04_18', round(fuzzy_jarowin('abcdefgh', 'abcdefhg'), 3) = 0.975;
 
 -- fuzzy_leven
 select '05_01', fuzzy_leven('abc', 'abc') = 0;
@@ -112,12 +114,11 @@ select '06_07', fuzzy_osadist('kitten', 'sitting') = 3;
 -- unlike Damerau-Levenshtein, a substring is edited at most once
 select '06_08', fuzzy_osadist('abc', 'ca') = 3;
 select '06_09', fuzzy_osadist('ca', 'abc') = 3;
--- transpositions are not detected, so they cost 2 (current behavior):
--- the correct values are 1, 1, 1, 2
-select '06_10', fuzzy_osadist('abc', 'acb') = 2;
-select '06_11', fuzzy_osadist('ab', 'ba') = 2;
-select '06_12', fuzzy_osadist('martha', 'marhta') = 2;
-select '06_13', fuzzy_osadist('awesome', 'aewsme') = 3;
+-- a transposition costs 1
+select '06_10', fuzzy_osadist('abc', 'acb') = 1;
+select '06_11', fuzzy_osadist('ab', 'ba') = 1;
+select '06_12', fuzzy_osadist('martha', 'marhta') = 1;
+select '06_13', fuzzy_osadist('awesome', 'aewsme') = 2;
 
 -- fuzzy_caver
 select '11_01', fuzzy_caver('') = '';
@@ -195,9 +196,13 @@ select '13_13', fuzzy_soundex('Tymczak') = 'T522';
 select '13_14', fuzzy_soundex('robert') = 'R163';
 -- a short code is padded with zeros
 select '13_15', fuzzy_soundex('a') = 'A000';
--- a non-letter is kept as the first character (current behavior)
-select '13_16', fuzzy_soundex('1abc') = '1120';
-select '13_17', fuzzy_soundex(' a') = ' 000';
+-- leading non-letters are skipped
+select '13_16', fuzzy_soundex('1abc') = 'A120';
+select '13_17', fuzzy_soundex(' a') = 'A000';
+-- a string without letters has an empty code
+select '13_19', fuzzy_soundex('123') = '';
+-- h and w separate letters with the same code in any case
+select '13_20', fuzzy_soundex('ASHCRAFT') = 'A261';
 select '13_18', fuzzy_soundex('O''Hara') = 'O600';
 
 -- fuzzy_rsoundex
@@ -265,22 +270,38 @@ select '31_11', translit('привет') = 'privet';
 select '31_12', script_code('привет') = 220;
 
 -- null propagation
--- (the distance functions raise an error on NULL, see the C tests)
 select '41_01', fuzzy_caver(null) is null;
 select '41_02', fuzzy_phonetic(null) is null;
 select '41_03', fuzzy_soundex(null) is null;
 select '41_04', fuzzy_rsoundex(null) is null;
--- translit and script treat NULL as an empty string (current behavior)
-select '41_05', fuzzy_translit(null) = '';
-select '41_06', fuzzy_script(null) = 999;
+select '41_05', fuzzy_translit(null) is null;
+select '41_06', fuzzy_script(null) is null;
 select '41_07', caverphone(null) is null;
 select '41_08', phonetic_hash(null) is null;
 select '41_09', soundex(null) is null;
 select '41_10', rsoundex(null) is null;
-select '41_11', translit(null) = '';
-select '41_12', script_code(null) = 999;
+select '41_11', translit(null) is null;
+select '41_12', script_code(null) is null;
+select '41_13', fuzzy_damlev(null, 'abc') is null;
+select '41_14', fuzzy_damlev('abc', null) is null;
+select '41_15', fuzzy_editdist(null, 'abc') is null;
+select '41_16', fuzzy_editdist('abc', null) is null;
+select '41_17', fuzzy_hamming(null, 'abc') is null;
+select '41_18', fuzzy_hamming('abc', null) is null;
+select '41_19', fuzzy_jarowin(null, 'abc') is null;
+select '41_20', fuzzy_jarowin('abc', null) is null;
+select '41_21', fuzzy_leven(null, 'abc') is null;
+select '41_22', fuzzy_leven('abc', null) is null;
+select '41_23', fuzzy_osadist(null, 'abc') is null;
+select '41_24', fuzzy_osadist('abc', null) is null;
+select '41_25', dlevenshtein(null, null) is null;
+select '41_26', edit_distance(null, null) is null;
+select '41_27', hamming(null, null) is null;
+select '41_28', jaro_winkler(null, null) is null;
+select '41_29', levenshtein(null, null) is null;
+select '41_30', osa_distance(null, null) is null;
 
--- bad data: numbers and blobs are converted to text (current behavior)
+-- bad data: numbers are converted to text
 select '51_01', fuzzy_damlev(123, 124) = 1;
 select '51_02', fuzzy_editdist(123, 124) = 40;
 select '51_03', fuzzy_hamming(123, 124) = 1;
@@ -289,49 +310,81 @@ select '51_05', fuzzy_leven(1.5, 1.25) = 1;
 select '51_06', fuzzy_osadist(123, 124) = 1;
 select '51_07', fuzzy_caver(123) = '1111111111';
 select '51_08', fuzzy_phonetic(123) = '9';
-select '51_09', fuzzy_soundex(123) = '1000';
-select '51_10', fuzzy_rsoundex(123) = '10';
+select '51_09', fuzzy_soundex(123) = '';
+select '51_10', fuzzy_rsoundex(123) = '';
 select '51_11', fuzzy_translit(123) = '123';
 select '51_12', fuzzy_script(123) = 215;
-select '52_01', fuzzy_damlev(x'616263', 'abd') = 1;
-select '52_02', fuzzy_editdist(x'616263', 'abd') = 75;
-select '52_03', fuzzy_hamming(x'616263', 'abd') = 1;
-select '52_04', fuzzy_jarowin(x'616263', 'abc') = 1.0;
-select '52_05', fuzzy_leven(x'616263', x'616264') = 1;
-select '52_06', fuzzy_osadist(x'616263', 'abd') = 1;
-select '52_07', fuzzy_caver(x'616263') = 'APK1111111';
-select '52_08', fuzzy_phonetic(x'616263') = 'ABC';
-select '52_09', fuzzy_soundex(x'616263') = 'A120';
-select '52_10', fuzzy_rsoundex(x'616263') = 'A013';
-select '52_11', fuzzy_translit(x'616263') = 'abc';
-select '52_12', fuzzy_script(x'd0bf') = 220;
+-- bad data: blobs are NULL
+select '52_01', fuzzy_damlev(x'616263', 'abd') is null;
+select '52_02', fuzzy_editdist(x'616263', 'abd') is null;
+select '52_03', fuzzy_hamming(x'616263', 'abd') is null;
+select '52_04', fuzzy_jarowin('abc', x'616263') is null;
+select '52_05', fuzzy_leven(x'616263', x'616264') is null;
+select '52_06', fuzzy_osadist(x'616263', 'abd') is null;
+select '52_07', fuzzy_caver(x'616263') is null;
+select '52_08', fuzzy_phonetic(x'616263') is null;
+select '52_09', fuzzy_soundex(x'616263') is null;
+select '52_10', fuzzy_rsoundex(x'616263') is null;
+select '52_11', fuzzy_translit(x'616263') is null;
+select '52_12', fuzzy_script(x'd0bf') is null;
+select '52_13', fuzzy_translit(x'') is null;
 
--- bad data: invalid UTF-8 (current behavior)
-select '53_01', fuzzy_translit(x'ff') = '';
+-- bad data: invalid UTF-8
+-- each invalid byte is a separate U+FFFD character
+select '53_01', fuzzy_translit(cast(x'ff' as text)) = '?';
+select '53_02', fuzzy_translit(cast(x'61ff62' as text)) = 'a?b';
+-- a truncated sequence
+select '53_03', fuzzy_translit(cast(x'61d0' as text)) = 'a?';
+-- an overlong encoding
+select '53_04', fuzzy_translit(cast(x'c0af' as text)) = '??';
+-- a surrogate
+select '53_05', fuzzy_translit(cast(x'eda080' as text)) = '???';
+-- the longest invalid lead byte run
+select '53_06', fuzzy_translit(cast(x'dfbfbfbfbfbfbfbfbf' as text)) = '????????';
+select '53_07', fuzzy_leven(cast(x'ff' as text), cast(x'fe' as text)) = 0;
+select '53_08', fuzzy_leven(cast(x'ff' as text), 'a') = 1;
+select '53_09', fuzzy_hamming(cast(x'ffff' as text), 'ab') = 2;
+select '53_10', fuzzy_script(cast(x'ff' as text)) = 999;
+select '53_11', fuzzy_script(cast(x'80' as text) || 'привет') = 220;
 
--- bad data: non-ASCII text (current behavior)
--- (the other functions raise an error, see the C tests)
--- editdist checks only what is left after the common prefix
-select '54_01', fuzzy_editdist('é', 'é') = 0;
-select '54_02', fuzzy_editdist('xé', 'xé') = 0;
--- phonetic uses the lower 7 bits of each byte
-select '54_03', fuzzy_phonetic('привет') = 'BCB9B9B9C';
+-- non-ASCII text
+-- the distances count characters, not bytes
+select '54_01', fuzzy_damlev('привет', 'превед') = 2;
+select '54_02', fuzzy_damlev('привет', 'пирвет') = 1;
+select '54_03', fuzzy_hamming('café', 'cafe') = 1;
+select '54_04', fuzzy_hamming('café', 'caf') is null;
+select '54_05', round(fuzzy_jarowin('café', 'cafe'), 3) = 0.883;
+select '54_06', fuzzy_leven('café', 'cafe') = 1;
+select '54_07', fuzzy_leven('日本語', '日本') = 1;
+select '54_08', fuzzy_osadist('привет', 'пирвет') = 1;
+select '54_09', fuzzy_leven('😀', '😃') = 1;
+-- the phonetic functions and editdist only accept ASCII
+select '54_10', fuzzy_editdist('é', 'é') is null;
+select '54_11', fuzzy_editdist('xé', 'x') is null;
+select '54_12', fuzzy_editdist('x', 'xé') is null;
+select '54_13', fuzzy_caver('café') is null;
+select '54_14', fuzzy_phonetic('привет') is null;
+select '54_15', fuzzy_soundex('café') is null;
+select '54_16', fuzzy_rsoundex('café') is null;
+-- transliterate first to use them with non-ASCII text
+select '54_17', fuzzy_soundex(fuzzy_translit('Müller')) = 'M460';
 
--- bad data: text with an embedded NUL (current behavior)
--- most functions stop at the NUL
-select '55_01', fuzzy_damlev('ab' || char(0) || 'c', 'ab') = 0;
-select '55_02', fuzzy_editdist('ab' || char(0) || 'c', 'ab') = 0;
-select '55_03', fuzzy_hamming('ab' || char(0) || 'c', 'ab') = 0;
-select '55_04', fuzzy_jarowin('abc' || char(0) || 'c', 'abc') = 1.0;
-select '55_05', fuzzy_leven('ab' || char(0) || 'c', 'ab') = 0;
-select '55_06', fuzzy_osadist('ab' || char(0) || 'c', 'ab') = 0;
-select '55_07', fuzzy_caver('ab' || char(0) || 'c') = 'AP11111111';
-select '55_08', fuzzy_soundex('ab' || char(0) || 'c') = 'A100';
-select '55_09', fuzzy_rsoundex('ab' || char(0) || 'c') = 'A01';
-select '55_10', hex(fuzzy_translit('a' || char(0) || 'b')) = '61';
--- phonetic and script read past it
+-- text with an embedded NUL
+-- NUL is an ordinary character
+select '55_01', fuzzy_damlev('ab' || char(0) || 'c', 'ab') = 2;
+select '55_02', fuzzy_editdist('ab' || char(0) || 'c', 'ab') = 200;
+select '55_03', fuzzy_hamming('ab' || char(0) || 'c', 'ab') is null;
+select '55_04', fuzzy_hamming('ab' || char(0), 'abc') = 1;
+select '55_05', round(fuzzy_jarowin('abc' || char(0) || 'c', 'abc'), 3) = 0.907;
+select '55_06', fuzzy_leven('ab' || char(0) || 'c', 'ab') = 2;
+select '55_07', fuzzy_osadist('ab' || char(0) || 'c', 'ab') = 2;
+-- and the phonetic functions ignore it as a non-letter
+select '55_08', fuzzy_caver('ab' || char(0) || 'c') = 'APK1111111';
+select '55_09', fuzzy_soundex('ab' || char(0) || 'c') = 'A120';
+select '55_10', fuzzy_rsoundex('ab' || char(0) || 'c') = 'A0103';
 select '55_11', fuzzy_phonetic('ab' || char(0) || 'cd') = 'ABCD';
-select '55_12', fuzzy_script('ab' || char(0) || 'привет') = 998;
+select '55_12', hex(fuzzy_translit('a' || char(0) || 'b')) = '610062';
+select '55_13', fuzzy_script('ab' || char(0) || 'привет') = 998;
 
 -- long strings
 -- 1000 x 'a' vs 1000 x 'b'

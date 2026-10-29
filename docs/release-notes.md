@@ -70,6 +70,37 @@ A failure to change the file system is now always an error, and the error messag
 
 Extra arguments are now an error: `fileio_read` used to ignore them.
 
+## [fuzzy](https://github.com/nalgeon/sqlean/blob/main/docs/fuzzy.md)
+
+**Improvements and bug fixes**
+
+`fuzzy_damlev`, `fuzzy_hamming`, `fuzzy_jarowin`, `fuzzy_leven` and `fuzzy_osadist` now support Unicode strings and count characters instead of bytes: `fuzzy_leven('café', 'cafe')` is `1`. Before, they raised an error for non-ASCII strings.
+
+`fuzzy_osadist` now counts a transposition of two adjacent characters as one edit, as the Optimal String Alignment distance should. Before, it cost two edits: `fuzzy_osadist('ab', 'ba')` was `2`, now it's `1`.
+
+`fuzzy_jarowin` is now symmetric. Before, it used the wrong match window when the first string was longer, so `fuzzy_jarowin('dicksonx', 'dixon')` and `fuzzy_jarowin('dixon', 'dicksonx')` gave different results.
+
+`fuzzy_soundex` and `fuzzy_rsoundex` now skip leading non-letters: `fuzzy_soundex('1abc')` is `A120` (was `1120`). `fuzzy_soundex` now treats an uppercase `H` or `W` between two letters with the same code the same way as a lowercase one.
+
+A NUL character inside a string is now an ordinary character. Before, most functions ignored everything after it.
+
+Fixed crashes when out of memory: most functions didn't check their allocations.
+
+The extension now reports a function registration failure when it loads, instead of ignoring it.
+
+**Breaking changes**
+
+Invalid data now gives `NULL` instead of an error or a made-up value, as SQLite's built-in functions do:
+
+-   A `NULL` argument to a distance function gives `NULL` (was an error). `fuzzy_translit(NULL)` and `fuzzy_script(NULL)` give `NULL` (were `''` and `999`).
+-   A non-ASCII string passed to `fuzzy_editdist` or a phonetic code function gives `NULL` (was an error, or a garbled code for `fuzzy_phonetic`).
+-   A BLOB argument gives `NULL`. Before, it was treated as text.
+-   `fuzzy_hamming` of strings with different lengths gives `NULL` (was `-1`).
+
+`fuzzy_soundex` and `fuzzy_rsoundex` of a string without letters give an empty string: `fuzzy_soundex('123')` is `''` (was `1000`).
+
+`fuzzy_translit` replaces invalid UTF-8 bytes with `?`. Before, it cut the result at the first one.
+
 ## [time](https://github.com/nalgeon/sqlean/blob/main/docs/time.md)
 
 **Improvements and bug fixes**
