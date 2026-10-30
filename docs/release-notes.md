@@ -259,3 +259,33 @@ Invalid data now gives `NULL` instead of an error or a made-up value, as SQLite'
 **Breaking changes**
 
 The deprecated `unicode` extension is removed. Use [text](https://github.com/nalgeon/sqlean/blob/main/docs/text.md) instead: `text_upper`, `text_lower` and `text_casefold` change case, and the `text_nocase` collation compares strings without regard to case.
+
+## [uuid](https://github.com/nalgeon/sqlean/blob/main/docs/uuid.md)
+
+**Improvements and bug fixes**
+
+`uuid7()` now stores the sub-millisecond part of the current time in the 12 bits after the version (RFC 9562, method 3), so UUIDs made within the same millisecond sort by time. Before, about half of them were out of order.
+
+`uuid_str`, `uuid_blob` and `uuid7_timestamp_ms` now accept the URN form `urn:uuid:a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11`.
+
+The extension now reports a function registration failure when it loads, instead of ignoring it.
+
+**Breaking changes**
+
+Invalid data now gives `NULL` instead of a made-up value, as SQLite's built-in functions do:
+
+- `uuid7(seconds)` with a non-integer argument gives `NULL`. Before, the argument was ignored and the current time was used, so `uuid7(null)` and `uuid7(1.5)` returned a UUID for now. Integer text such as `'1000'` now works (before, it was ignored too).
+- `uuid7(seconds)` outside the version 7 range (`0` to `281474976710`) gives `NULL`. Before, the time wrapped around: `uuid7(-1)` was `ffffffff-fc18-...` (the year 10889).
+
+UUID strings are now parsed strictly. A string must be in one of the forms:
+
+```text
+a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
+{a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11}
+urn:uuid:a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
+a0eebc999c0b4ef8bb6d6bb9bd380a11
+```
+
+Anything else gives `NULL`. Before, a hyphen was allowed before any pair of digits and braces didn't have to match, so the PostgreSQL forms `a0ee-bc99-9c0b-4ef8-bb6d-6bb9-bd38-0a11` and `{a0eebc99-9c0b4ef8-bb6d6bb9-bd380a11}` were accepted, as were `{a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11` and `a0-ee-bc-99-...`.
+
+A UUID string followed by a NUL character and more text (`'a0eebc99-...-6bb9bd380a11' || char(0) || 'x'`) now gives `NULL`. Before, everything after the NUL was ignored.
