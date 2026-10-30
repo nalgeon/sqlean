@@ -168,6 +168,41 @@ A match that hits PCRE2's backtracking limit raises an error (`regexp: match lim
 
 `regexp_replace` always returns text. Before, it returned the source as is when nothing matched, so `regexp_replace(123, 'z', 'x')` was the integer `123`, and is now the text `'123'`.
 
+## [stats](https://github.com/nalgeon/sqlean/blob/main/docs/stats.md)
+
+**Improvements and bug fixes**
+
+All the aggregate functions now work as window functions: `stats_median(x) over (order by t rows 6 preceding)` gives a moving median.
+
+`stats_seq` no longer hangs or overflows near the ends of the 64-bit range. `stats_seq(9223372036854775806, 9223372036854775807)` gives the two values and stops, and a step larger than the range gives just `start`.
+
+`stats_seq` with `order by rowid desc` now returns the rows in the right order. The `step` hidden column now shows the step as given, so it is `-2` for `stats_seq(1, 10, -2)` (it was `2`).
+
+The median and other percentiles no longer overflow when interpolating between huge values: `median` of `1e308` and `-1e308` is `0.0` (it was `+Inf`).
+
+A variance too large to fit a real number is `+Inf`. Before, it was `-Inf`.
+
+The documentation now gives the right default `stop` for `stats_seq`: 4294967295, not 9223372036854775807.
+
+Fixed a crash in the variance functions when out of memory, and a buffer overflow in the percentile functions past 2^31 values.
+
+The extension now reports a function registration failure when it loads, instead of ignoring it.
+
+**Breaking changes**
+
+Variance and standard deviation of no rows, or only `NULL`s, is now `NULL`, as for SQLite's built-in aggregates. Before, it was `0.0`. The sample variance and deviation of a single value is also `NULL` now, since it is undefined.
+
+Invalid data is now skipped, as `NULL`s are:
+
+- Text that is not a number and blobs. Before, the variance functions counted them as `0`, and the percentile functions raised an error (`1st argument to percentile() is not numeric`).
+- In `stats_seq`, an argument that is not an integer (`1.5`, `'abc'` or a blob) gives no rows. Before, `1.5` was truncated to `1`, and `'abc'` and blobs were `0`. Whole reals are still accepted, so `stats_seq(1, 1e6)` works.
+
+The percentile functions now accept numeric text (`'42'`) and infinite values. Before, both raised an error.
+
+A `NULL` percentile in `stats_perc` skips the row. Before, it raised an error.
+
+The error messages have changed: `percentile should be a number between 0 and 100`, `percentile should be the same for all rows`, and `table function stats_seq requires an argument`.
+
 ## [time](https://github.com/nalgeon/sqlean/blob/main/docs/time.md)
 
 **Improvements and bug fixes**
