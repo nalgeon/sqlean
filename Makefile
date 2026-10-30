@@ -159,12 +159,14 @@ SUITES := $(patsubst test/%.sql,%,$(wildcard test/*.sql))
 CTESTS := $(filter-out regexp/regexp,$(patsubst test/%.test.c,%,$(wildcard test/*/*.test.c)))
 
 # A C test compiles with the sources of its package, except extension.c,
-# unless CTEST_SRC_<package> says otherwise. define and fileio run
+# unless CTEST_SRC_<package> says otherwise. define, fileio and math run
 # the extension in a real connection, so they link SQLite.
 CTEST_SRC_define := $(wildcard src/define/*.c) dist/ctest-sqlite3.o
 CTEST_FLAGS_define := -DSQLITE_CORE
 CTEST_SRC_fileio := $(wildcard src/fileio/*.c) dist/ctest-sqlite3.o
 CTEST_FLAGS_fileio := -DSQLITE_CORE
+CTEST_SRC_math := $(wildcard src/math/*.c) dist/ctest-sqlite3.o
+CTEST_FLAGS_math := -DSQLITE_CORE
 ctest_src = $(or $(CTEST_SRC_$(1)),$(filter-out src/$(1)/extension.c,$(call module_c,$(1))))
 
 # only= picks the modules: only="fuzzy text", or only=time/duration
@@ -225,7 +227,7 @@ ctest/%: | $(DIR)
 	@$(CC) $(CTEST_FLAGS) $(CTEST_FLAGS_$(*D)) test/$*.test.c $(call ctest_src,$(*D)) -o $(DIR)/ctest-$(*D)-$(*F) -lm
 	@$(RUN_ENV) ./$(DIR)/ctest-$(*D)-$(*F); rc=$$?; rm -rf $(DIR)/ctest-$(*D)-$(*F) $(DIR)/ctest-$(*D)-$(*F).dSYM; exit $$rc
 
-$(addprefix ctest/,$(filter define/% fileio/%,$(CTESTS))): dist/ctest-sqlite3.o
+$(addprefix ctest/,$(filter define/% fileio/% math/%,$(CTESTS))): dist/ctest-sqlite3.o
 
 # SQLite for the C tests that link it. Built without warnings and sanitizers,
 # since it's third-party code, and without threads and extension loading,
