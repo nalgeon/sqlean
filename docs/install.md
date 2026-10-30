@@ -2,24 +2,24 @@
 
 Examples below use the `stats` extension; you can specify any other supported extension. To load all extensions at once, use the single-file `sqlean` bundle.
 
--   [Download](#download)
--   [Install: Command-line interface](#install-command-line-interface)
--   [Install: GUI database browser](#install-gui-database-browser)
--   [Install: rqlite](#install-rqlite)
--   [Install: Python](#install-python)
--   [Install: Node.js](#install-nodejs)
--   [Install: Browser JavaScript](#install-browser-javascript)
--   [Install: Go](#install-go)
+- [Download](#download)
+- [Install: Command-line interface](#install-command-line-interface)
+- [Install: GUI database browser](#install-gui-database-browser)
+- [Install: rqlite](#install-rqlite)
+- [Install: Python](#install-python)
+- [Install: Node.js](#install-nodejs)
+- [Install: Browser JavaScript](#install-browser-javascript)
+- [Install: Go](#install-go)
 
 ## Download
 
 There are [precompiled binaries](https://github.com/nalgeon/sqlean/releases/latest) for every OS:
 
--   `sqlean-win-x64.zip` - Windows (Intel/AMD x64 CPU)
--   `sqlean-linux-x64.zip` - Linux (Intel/AMD x64 CPU)
--   `sqlean-linux-arm64.zip` - Linux (ARM CPU)
--   `sqlean-macos-x64.zip` - Intel-based macOS
--   `sqlean-macos-arm64.zip` - Apple silicon (ARM-based) macOS
+- `sqlean-win-x64.zip` - Windows (Intel/AMD x64 CPU)
+- `sqlean-linux-x64.zip` - Linux (Intel/AMD x64 CPU)
+- `sqlean-linux-arm64.zip` - Linux (ARM CPU)
+- `sqlean-macos-x64.zip` - Intel-based macOS
+- `sqlean-macos-arm64.zip` - Apple silicon (ARM-based) macOS
 
 Binaries are 64-bit and require a 64-bit SQLite version.
 
@@ -41,10 +41,10 @@ Linux/macOS:
 .load /Users/anton/Downloads/stats
 ```
 
-Now you can use the extension! For example, the `stats` extension adds the `median` and `generate_series` functions:
+Now you can use the extension! For example, the `stats` extension adds the `stats_median` and `stats_seq` functions:
 
 ```sql
-select median(value) from generate_series(1, 99);
+select stats_median(value) from stats_seq(1, 99);
 ```
 
 **Note for macOS users**. macOS may disable unsigned binaries and prevent the extension from loading. To resolve this issue, remove the extension from quarantine by running the following command in Terminal:
@@ -99,7 +99,7 @@ import sqlite3
 conn = sqlite3.connect(":memory:")
 conn.enable_load_extension(True)
 conn.load_extension(r"c:\Users\anton\Downloads\stats")
-conn.execute("select median(value) from generate_series(1, 99)")
+conn.execute("select stats_median(value) from stats_seq(1, 99)")
 conn.close()
 ```
 
@@ -111,7 +111,7 @@ import sqlite3
 conn = sqlite3.connect(":memory:")
 conn.enable_load_extension(True)
 conn.load_extension("/Users/anton/Downloads/stats")
-conn.execute("select median(value) from generate_series(1, 99)")
+conn.execute("select stats_median(value) from stats_seq(1, 99)")
 conn.close()
 ```
 
@@ -127,7 +127,7 @@ Windows:
 const sqlite3 = require("better-sqlite3");
 const db = new sqlite3(":memory:");
 db.loadExtension(`c:\Users\anton\Downloads\stats`);
-db.exec("select median(value) from generate_series(1, 99)");
+db.exec("select stats_median(value) from stats_seq(1, 99)");
 db.close();
 ```
 
@@ -137,7 +137,7 @@ Linux/macOS:
 const sqlite3 = require("better-sqlite3");
 const db = new sqlite3(":memory:");
 db.loadExtension("/Users/anton/Downloads/stats");
-db.exec("select median(value) from generate_series(1, 99)");
+db.exec("select stats_median(value) from stats_seq(1, 99)");
 db.close();
 ```
 
@@ -157,7 +157,7 @@ async function init() {
 
 init().then((sqlite3) => {
     const db = new sqlite3.oo1.DB();
-    db.exec("select median(value) from generate_series(1, 99)");
+    db.exec("select stats_median(value) from stats_seq(1, 99)");
 });
 ```
 
@@ -186,7 +186,7 @@ func main() {
         })
 
     db, err := sql.Open("sqlite_ext", ":memory:")
-    db.Query("select median(value) from generate_series(1, 99)")
+    db.Query("select stats_median(value) from stats_seq(1, 99)")
     db.Close()
 }
 ```
@@ -212,7 +212,7 @@ func main() {
         })
 
     db, err := sql.Open("sqlite_ext", ":memory:")
-    db.Query("select median(value) from generate_series(1, 99)")
+    db.Query("select stats_median(value) from stats_seq(1, 99)")
     db.Close()
 }
 ```
