@@ -3,6 +3,10 @@
 
 // PCRE2 build constants.
 
+// The vendored PCRE2 sources expect these before any of their own includes,
+// so the Makefile force-includes this file (-include) into every compilation
+// unit of the module, instead of the sources including it.
+
 #ifndef REGEXP_CONSTANTS_H
 #define REGEXP_CONSTANTS_H
 

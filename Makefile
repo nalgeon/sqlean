@@ -155,8 +155,7 @@ $(DIR)/sqlite3$(EXE): src/sqlite3.c src/shell.c | $(DIR)
 SUITES := $(patsubst test/%.sql,%,$(wildcard test/*.sql))
 
 # C tests as <package>/<module>: test/<package>/<module>.test.c.
-# regexp/regexp is out of date with the regexp API.
-CTESTS := $(filter-out regexp/regexp,$(patsubst test/%.test.c,%,$(wildcard test/*/*.test.c)))
+CTESTS := $(patsubst test/%.test.c,%,$(wildcard test/*/*.test.c))
 
 # A C test compiles with the sources of its package, except extension.c,
 # unless CTEST_SRC_<package> says otherwise. define, fileio and math run
@@ -167,6 +166,7 @@ CTEST_SRC_fileio := $(wildcard src/fileio/*.c) dist/ctest-sqlite3.o
 CTEST_FLAGS_fileio := -DSQLITE_CORE
 CTEST_SRC_math := $(wildcard src/math/*.c) dist/ctest-sqlite3.o
 CTEST_FLAGS_math := -DSQLITE_CORE
+CTEST_FLAGS_regexp := -include src/regexp/constants.h
 ctest_src = $(or $(CTEST_SRC_$(1)),$(filter-out src/$(1)/extension.c,$(call module_c,$(1))))
 
 # only= picks the modules: only="fuzzy text", or only=time/duration

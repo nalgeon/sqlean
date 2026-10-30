@@ -130,6 +130,44 @@ Invalid input is now `NULL` in more cases:
 
 IPv6 addresses with an IPv4 part are formatted as dotted decimal only if they are IPv4-mapped (`::ffff:192.168.16.12`), as RFC 5952 recommends. Others are in hex: `ip_host('::192.168.16.12')` is now `::c0a8:100c`, not `::192.168.16.12`.
 
+## [regexp](https://github.com/nalgeon/sqlean/blob/main/docs/regexp.md)
+
+**Improvements and bug fixes**
+
+`regexp_replace` no longer returns the source unchanged when the result is more than 1 KiB longer than the source. `regexp_replace('a', 'a', printf('%.*c', 2000, 'b'))` now gives the 2000 `b`s.
+
+A NUL character is matched like any other. Before, the source and the pattern were cut at the first NUL: `regexp_like('a' || char(0) || 'b', 'b')` was `0`, and `regexp_replace` lost everything after the NUL.
+
+In `regexp_replace`, a group that didn't take part in the match is replaced with an empty string. Before, the whole call returned the source unchanged: `regexp_replace('ac', 'a(b)?c', '[$1]')` was `ac`, now it's `[]`.
+
+Fixed undefined behavior in `regexp_capture` when the group didn't take part in the match but a later group did, as in `regexp_capture('ac', 'a(b)?(c)', 1)`. It now returns `NULL`.
+
+A query with a constant pattern compiles it once, even when most rows don't match. Before, the pattern was recompiled after every row that didn't match.
+
+Fixed crashes when out of memory.
+
+The functions can now be used in views and triggers with an untrusted schema.
+
+The extension now reports a function registration failure when it loads, instead of ignoring it.
+
+**Breaking changes**
+
+`NULL` in any argument gives `NULL`, as SQLite's built-in functions do. Before, `null regexp 'a'` and `regexp_like(null, 'a')` were `0`, and `regexp_replace('abc', 'b', null)` returned the source.
+
+Invalid data now gives `NULL` instead of being treated as no match:
+
+- A BLOB argument is `NULL`. Before, it was read as text. Cast it to text to keep the old behavior.
+- Text that is not valid UTF-8, in the source or in the replacement, is `NULL`. Before, `regexp_like` gave `0` and `regexp_replace` returned the source.
+
+A mistake in the query now raises an error instead of being treated as no match:
+
+- A group number in `regexp_capture` that is negative, not an integer, or larger than the number of groups in the pattern: `regexp_capture('abc', 'b', 1)` fails with `invalid group: 1`. Before, it was `NULL`.
+- An invalid replacement, or one that refers to a group the pattern doesn't have: `regexp_replace('abc', 'b', '$1')` fails with `invalid replacement: unknown substring at offset 2`. Before, it returned the source.
+
+A match that hits PCRE2's backtracking limit raises an error (`regexp: match limit exceeded`). Before, it was treated as no match, so the result silently depended on the input size.
+
+`regexp_replace` always returns text. Before, it returned the source as is when nothing matched, so `regexp_replace(123, 'z', 'x')` was the integer `123`, and is now the text `'123'`.
+
 ## [time](https://github.com/nalgeon/sqlean/blob/main/docs/time.md)
 
 **Improvements and bug fixes**
