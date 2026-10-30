@@ -6,7 +6,8 @@
 -- Positions are 1-based and count characters, not bytes.
 -- 'hello world' has 11 characters, 'привет' has 6 characters and 12 bytes.
 -- x'41ff42' is 'A', an invalid byte, 'B'; x'410042' is 'A', a zero byte, 'B'.
--- A comment starting with "now:" marks current behavior that is wrong (see TODO.md).
+-- Integer arguments take integers and integer text; a NULL, a real or other text gives NULL.
+-- A blob in place of any text argument gives NULL.
 
 -- text_substring
 select '01_01', text_substring('hello world', 1) = 'hello world';
@@ -23,8 +24,13 @@ select '01_10', text_substring('привет', 3) = 'ивет';
 select '01_11', text_substring('', 1) = '';
 select '01_12', text_substring(null, 1) is null;
 select '01_13', text_substring(12345, 2) = '2345';
--- now: the start is truncated to 32 bits, 4294967297 becomes 1
-select '01_14', text_substring('hello', 4294967297) = 'hello';
+select '01_14', text_substring('hello', 4294967297) = '';
+select '01_15', text_substring('hello', '2') = 'ello';
+select '01_16', text_substring('hello', 2.0) is null;
+select '01_17', text_substring('hello', 'x') is null;
+select '01_18', text_substring('hello', null) is null;
+select '01_19', text_substring(x'41', 1) is null;
+select '01_20', text_substring('hello', 9223372036854775807) = '';
 -- start + length
 select '01_21', text_substring('hello world', 1, 5) = 'hello';
 select '01_22', text_substring('hello world', 7, 5) = 'world';
@@ -48,6 +54,16 @@ select '01_38', text_substring('', 1, 2) = '';
 select '01_39', text_substring(null, 1, 2) is null;
 select '01_40', text_substring('hello', 2147483647, 2147483647) = '';
 select '01_41', text_substring('hello', -2147483647, 2147483647) = '';
+select '01_42', text_substring('hello', -2147483648, 5) = '';
+select '01_43', text_substring('hello', -9223372036854775808, 5) = '';
+select '01_44', text_substring('hello', -9223372036854775808, 9223372036854775807) = '';
+select '01_45', text_substring('hello', 2, 9223372036854775807) = 'ello';
+select '01_46', text_substring('hello', 9223372036854775807, 9223372036854775807) = '';
+-- a negative length gives an empty string
+select '01_47', text_substring('hello', 1, -1) = '';
+select '01_48', text_substring('hello', 1, -9223372036854775808) = '';
+select '01_49', text_substring('hello', 1, null) is null;
+select '01_50', text_substring('hello', 1, 2.0) is null;
 
 -- text_slice
 select '02_01', text_slice('hello world', 1) = 'hello world';
@@ -67,8 +83,11 @@ select '02_12', text_slice('hello', -2147483648) = 'hello';
 select '02_13', text_slice('привет', -3) = 'вет';
 select '02_14', text_slice('', 1) = '';
 select '02_15', text_slice(null, 1) is null;
--- now: the start is truncated to 32 bits, 4294967298 becomes 2
-select '02_16', text_slice('hello', 4294967298) = 'ello';
+select '02_16', text_slice('hello', 4294967298) = '';
+select '02_17', text_slice('hello', null) is null;
+select '02_18', text_slice('hello', 2.0) is null;
+select '02_19', text_slice(x'41', 1) is null;
+select '02_20', text_slice('hello', -9223372036854775808) = 'hello';
 -- start >= 0, end >= 0; the end is exclusive, and 0 and 1 are both the beginning
 select '02_21', text_slice('hello world', 0, 0) = '';
 select '02_22', text_slice('hello world', 0, 5) = 'hell';
@@ -87,6 +106,8 @@ select '02_34', text_slice('hello world', 12, 1) = '';
 select '02_35', text_slice('hello', 1, 2147483647) = 'hello';
 select '02_36', text_slice('привет', 2, 4) = 'ри';
 select '02_37', text_slice(null, 1, 2) is null;
+select '02_38', text_slice('hello', 1, null) is null;
+select '02_39', text_slice('hello', 1, 9223372036854775807) = 'hello';
 -- start >= 0, end < 0
 select '02_41', text_slice('hello world', 0, -1) = 'hello worl';
 select '02_42', text_slice('hello world', 1, -1) = 'hello worl';
@@ -100,6 +121,7 @@ select '02_49', text_slice('hello world', 10, -1) = 'l';
 select '02_50', text_slice('hello world', 11, -1) = '';
 select '02_51', text_slice('hello world', 15, -1) = '';
 select '02_52', text_slice('hello', 1, -2147483648) = '';
+select '02_53', text_slice('hello', 1, -9223372036854775808) = '';
 -- start < 0, end >= 0
 select '02_61', text_slice('hello world', -1, 0) = '';
 select '02_62', text_slice('hello world', -1, 10) = '';
@@ -147,8 +169,12 @@ select '03_13', text_left('привет', 2) = 'пр';
 select '03_14', text_left('', 5) = '';
 select '03_15', text_left(null, 5) is null;
 select '03_16', left('hello world', 5) = 'hello';
--- now: the length is truncated to 32 bits, 4294967297 becomes 1
-select '03_17', text_left('hello', 4294967297) = 'h';
+select '03_17', text_left('hello', 4294967297) = 'hello';
+select '03_18', text_left('hello', -9223372036854775808) = '';
+select '03_19', text_left('hello', 9223372036854775807) = 'hello';
+select '03_20', text_left('hello', null) is null;
+select '03_21', text_left('hello', 2.0) is null;
+select '03_22', text_left(x'41', 1) is null;
 
 -- text_right, right
 select '04_01', text_right('hello world', 0) = '';
@@ -168,6 +194,11 @@ select '04_13', text_right('привет', 2) = 'ет';
 select '04_14', text_right('', 5) = '';
 select '04_15', text_right(null, 5) is null;
 select '04_16', right('hello world', 5) = 'world';
+select '04_17', text_right('hello', -2147483648) = '';
+select '04_18', text_right('hello', -9223372036854775808) = '';
+select '04_19', text_right('hello', 9223372036854775807) = 'hello';
+select '04_20', text_right('hello', null) is null;
+select '04_21', text_right('hello', 2.0) is null;
 
 -- text_index, strpos
 select '11_01', text_index('hello yellow', 'hello') = 1;
@@ -188,6 +219,8 @@ select '11_12', text_index(12345, 34) = 3;
 select '11_13', text_index(null, 'ello') is null;
 select '11_14', text_index('hello yellow', null) is null;
 select '11_15', strpos('hello yellow', 'ello') = 2;
+select '11_16', text_index(x'41', 'A') is null;
+select '11_17', text_index('A', x'41') is null;
 
 -- text_last_index
 select '12_01', text_last_index('hello yellow', 'hello') = 1;
@@ -196,10 +229,9 @@ select '12_03', text_last_index('hello yellow', 'ello') = 8;
 select '12_04', text_last_index('hello yellow', 'x') = 0;
 select '12_05', text_last_index('abaa', 'ab') = 1;
 select '12_06', text_last_index('мир мир', 'мир') = 5;
--- now: an empty substring is found at the last character, but not in an empty string
--- (text_index finds it in both)
-select '12_07', text_last_index('hello', '') = 5;
-select '12_08', text_last_index('', '') = 0;
+-- an empty substring is found after the last character
+select '12_07', text_last_index('hello', '') = 6;
+select '12_08', text_last_index('', '') = 1;
 select '12_09', text_last_index('', 'a') = 0;
 select '12_10', text_last_index(null, 'ello') is null;
 select '12_11', text_last_index('hello yellow', null) is null;
@@ -253,8 +285,10 @@ select '16_05', text_count('hello yellow', 'x') = 0;
 -- matches don't overlap
 select '16_06', text_count('aaaa', 'aa') = 2;
 select '16_07', text_count('мама', 'ма') = 2;
--- now: an empty substring is never counted, though text_contains finds it
-select '16_08', text_count('hello', '') = 0;
+-- an empty substring is found before each character and at the end
+select '16_08', text_count('hello', '') = 6;
+select '16_12', text_count('', '') = 1;
+select '16_13', text_count('привет', '') = 7;
 select '16_09', text_count('', 'a') = 0;
 select '16_10', text_count(null, 'ello') is null;
 select '16_11', text_count('hello yellow', null) is null;
@@ -268,6 +302,14 @@ select '17_05', text_like('H%l_, w%ld.', 'hello, world!') = 0;
 select '17_06', text_like('%a', 'ba') = 1;
 select '17_07', text_like('a%b%c', 'aXbYc') = 1;
 select '17_08', text_like('ab', 'a') = 0;
+-- % matches an empty string anywhere
+select '17_21', text_like('%a', 'a') = 1;
+select '17_22', text_like('a%', 'a') = 1;
+select '17_23', text_like('a%b', 'ab') = 1;
+select '17_24', text_like('%%a%%', 'a') = 1;
+select '17_25', text_like('%ab%', 'aab') = 1;
+select '17_26', text_like('%a_c', 'abaabc') = 1;
+select '17_27', text_like('a%', 'ba') = 0;
 -- case-insensitive for all of Unicode
 select '17_09', text_like('HELLO', 'hello') = 1;
 select '17_10', text_like('прив_т', 'пРиВеТ') = 1;
@@ -294,7 +336,8 @@ select '21_06', text_split('one|two|three', ';', 1) = 'one|two|three';
 select '21_07', text_split('one|two|three', ';', 2) = '';
 select '21_08', text_split('', '|', 1) = '';
 select '21_09', text_split('', '|', 2) = '';
-select '21_10', text_split('a', 'abc', 1) = '';
+-- a separator longer than the string doesn't split it
+select '21_10', text_split('a', 'abc', 1) = 'a';
 -- an empty separator doesn't split
 select '21_11', text_split('one|two|three', '', 1) = 'one|two|three';
 select '21_12', text_split('one|two|three', '', 2) = '';
@@ -325,6 +368,14 @@ select '21_46', text_split(12345, 3, 2) = '45';
 select '21_47', text_split(null, '|', 2) is null;
 select '21_48', text_split('one,two,three', null, 2) is null;
 select '21_49', split_part('one|two|three', '|', 2) = 'two';
+-- there is no part 0
+select '21_50', text_split('one|two', '|', 0) is null;
+select '21_51', text_split('a|b', '|', -9223372036854775808) = '';
+select '21_52', text_split('a|b', '|', 9223372036854775807) = '';
+select '21_53', text_split('a|b', '|', null) is null;
+select '21_54', text_split('a|b', '|', 2.0) is null;
+select '21_55', text_split('a|b', '|', '2') = 'b';
+select '21_56', text_split(x'41', '|', 1) is null;
 
 -- text_join, concat_ws
 select '22_01', text_join('|', 'one') = 'one';
@@ -338,8 +389,8 @@ select '22_08', text_join('|', 'один', 'два', 'три') = 'один|дв�
 select '22_09', text_join('(ಠ_ಠ)', 'one', 'two', 'three') = 'one(ಠ_ಠ)two(ಠ_ಠ)three';
 select '22_10', text_join('(ಠ_ಠ)', 'один', 'два', 'три') = 'один(ಠ_ಠ)два(ಠ_ಠ)три';
 select '22_11', text_join(0, 1, 2.5) = '102.5';
--- now: blobs are joined as text
-select '22_12', text_join('|', x'41', x'42') = 'A|B';
+select '22_12', text_join('|', x'41', 'B') is null;
+select '22_13', text_join(x'7c', 'A', 'B') is null;
 -- NULL parts are skipped, a NULL separator gives NULL
 select '22_21', text_join(null, 'one', 'two', 'three') is null;
 select '22_22', text_join('|', null, 'two', 'three') = 'two|three';
@@ -358,8 +409,7 @@ select '23_05', text_concat('one', '', 'three') = 'onethree';
 select '23_06', text_concat('one', 'two', '') = 'onetwo';
 select '23_07', text_concat('один', 'два', 'три') = 'одиндватри';
 select '23_08', text_concat(1, 2.5) = '12.5';
--- now: blobs are concatenated as text
-select '23_09', text_concat(x'41', x'42') = 'AB';
+select '23_09', text_concat('A', x'42') is null;
 -- NULL parts are skipped
 select '23_11', text_concat(null, 'two', 'three') = 'twothree';
 select '23_12', text_concat('one', null, 'three') = 'onethree';
@@ -380,8 +430,12 @@ select '24_07', text_repeat('one', -1) = '';
 select '24_08', text_repeat(12, 2) = '1212';
 select '24_09', text_repeat(null, 1) is null;
 select '24_10', repeat('one', 2) = 'oneone';
--- now: the count is truncated to 32 bits, 4294967297 becomes 1
-select '24_11', text_repeat('a', 4294967297) = 'a';
+select '24_11', text_repeat('', 4294967297) = '';
+select '24_12', text_repeat('', 9223372036854775807) = '';
+select '24_13', text_repeat('a', -9223372036854775808) = '';
+select '24_14', text_repeat('a', null) is null;
+select '24_15', text_repeat('a', 2.0) is null;
+select '24_16', text_repeat(x'41', 2) is null;
 
 -- text_ltrim, ltrim
 select '31_01', text_ltrim('hello') = 'hello';
@@ -404,7 +458,7 @@ select '31_17', text_ltrim('хохохпривет', 'ох') = 'привет';
 select '31_18', text_ltrim(11123, 1) = '23';
 select '31_19', text_ltrim(null, 'x') is null;
 select '31_20', text_ltrim('hello', null) is null;
-select '31_21', ltrim('xxhello', 'x') = 'hello';
+select '31_21', text_ltrim(x'20', ' ') is null;
 
 -- text_rtrim, rtrim
 select '32_01', text_rtrim('hello') = 'hello';
@@ -426,7 +480,7 @@ select '32_17', text_rtrim('приветхохох', 'ох') = 'привет';
 select '32_18', text_rtrim(12333, 3) = '12';
 select '32_19', text_rtrim(null, 'x') is null;
 select '32_20', text_rtrim('hello', null) is null;
-select '32_21', rtrim('helloxx', 'x') = 'hello';
+select '32_21', text_rtrim('a', x'61') is null;
 
 -- text_trim, btrim
 select '33_01', text_trim('hello') = 'hello';
@@ -480,8 +534,11 @@ select '34_28', text_lpad(12, 4, 0) = '0012';
 select '34_29', text_lpad(null, 5, '*') is null;
 select '34_30', text_lpad('hello', 5, null) is null;
 select '34_31', lpad('hello', 8, '*') = '***hello';
--- now: the length is truncated to 32 bits, 4294967300 becomes 4
-select '34_32', text_lpad('a', 4294967300) = '   a';
+select '34_32', text_lpad('a', 4294967300, '') = 'a';
+select '34_33', text_lpad('hello', -9223372036854775808) = '';
+select '34_34', text_lpad('a', null) is null;
+select '34_35', text_lpad('a', 2.0) is null;
+select '34_36', text_lpad('a', 2, x'2a') is null;
 
 -- text_rpad, rpad
 select '35_01', text_rpad('hello', 6) = 'hello ';
@@ -522,8 +579,7 @@ select '41_10', octet_length(text_upper('ß')) = 3;
 select '41_11', text_upper('') = '';
 select '41_12', text_upper(1.5e10) = '15000000000.0';
 select '41_13', text_upper(null) is null;
--- now: a blob is converted as text
-select '41_14', text_upper(x'61') = 'A';
+select '41_14', text_upper(x'61') is null;
 
 -- text_lower
 select '42_01', text_lower('HELLO') = 'hello';
@@ -561,8 +617,12 @@ select '43_10', text_title('straße') = 'Straße';
 select '43_11', text_title('ßx') = 'ẞx';
 select '43_12', octet_length(text_title('ßx')) = 4;
 select '43_13', octet_length(text_title('a' || char(8490))) = 2;
--- now: the titlecase of ǳ is ǲ, not the uppercase Ǳ
-select '43_14', text_title('ǳ') = 'Ǳ';
+-- titlecase differs from uppercase for digraphs
+select '43_14', text_title('ǳ') = 'ǲ';
+select '43_17', text_title('ǆemal') = 'ǅemal';
+-- words in other scripts, and numbers
+select '43_18', text_title('բարեւ աշխարհ') = 'Բարեւ Աշխարհ';
+select '43_19', text_title('x²y') = 'X²Y';
 select '43_15', text_title('') = '';
 select '43_16', text_title(null) is null;
 
@@ -598,8 +658,10 @@ select '45_10', (select 1 where 's' < 'ſx' collate text_nocase) = 1;
 select '45_11', (select 1 where '' < 'a' collate text_nocase) = 1;
 select '45_12', (select 1 where '' = '' collate text_nocase) = 1;
 select '45_13', (select group_concat(column1, ',') from (select column1 from (values ('b'), ('A'), ('a'), ('B')) order by column1 collate text_nocase, column1)) = 'A,a,B,b';
--- now: the comparison stops at a zero byte in the second string, so these are equal
-select '45_14', (select 1 where cast(x'610062' as text) = cast(x'610063' as text) collate text_nocase) = 1;
+-- zero bytes are compared like any other character
+select '45_14', (select 1 where cast(x'610062' as text) = cast(x'610063' as text) collate text_nocase) is null;
+select '45_15', (select 1 where cast(x'610042' as text) = cast(x'410062' as text) collate text_nocase) = 1;
+select '45_16', (select 1 where cast(x'6100' as text) > 'a' collate text_nocase) = 1;
 
 -- text_replace
 select '51_01', text_replace('hello', 'l', '*') = 'he**o';
@@ -636,8 +698,11 @@ select '51_33', text_replace('hello', 'l', '*', -1) = 'hello';
 select '51_34', text_replace(null, 'a', '*', 1) is null;
 select '51_35', text_replace('abc', null, '*', 1) is null;
 select '51_36', text_replace('abc', 'a', null, 1) is null;
--- now: the count is truncated to 32 bits, 4294967297 becomes 1
-select '51_37', text_replace('aaa', 'a', 'b', 4294967297) = 'baa';
+select '51_37', text_replace('aaa', 'a', 'b', 4294967297) = 'bbb';
+select '51_38', text_replace('aaa', 'a', 'b', -9223372036854775808) = 'aaa';
+select '51_39', text_replace('aaa', 'a', 'b', null) is null;
+select '51_40', text_replace('aaa', 'a', 'b', 2.0) is null;
+select '51_41', text_replace('aaa', x'61', 'b') is null;
 
 -- text_translate, translate
 select '52_01', text_translate('hello', 'l', '1') = 'he11o';
@@ -672,6 +737,7 @@ select '53_07', text_reverse('') = '';
 select '53_08', text_reverse(123) = '321';
 select '53_09', text_reverse(null) is null;
 select '53_10', reverse('hello') = 'olleh';
+select '53_11', text_reverse(x'4142') is null;
 
 -- text_length, char_length, character_length
 select '61_01', text_length('h') = 1;
@@ -685,8 +751,7 @@ select '61_08', text_length(1.5) = 3;
 select '61_09', text_length(null) is null;
 select '61_10', char_length('привет') = 6;
 select '61_11', character_length('привет') = 6;
--- now: a blob is counted as text
-select '61_12', text_length(x'414243') = 3;
+select '61_12', text_length(x'414243') is null;
 
 -- text_size, octet_length
 select '62_01', text_size('h') = 1;
@@ -695,7 +760,7 @@ select '62_03', text_size('привет') = 12;
 select '62_04', text_size('𐌀𐌁𐌂') = 12;
 select '62_05', text_size('') = 0;
 select '62_06', text_size(12345) = 5;
-select '62_07', text_size(x'414243') = 3;
+select '62_07', text_size(x'414243') is null;
 select '62_08', text_size(null) is null;
 select '62_09', octet_length('привет') = 12;
 
@@ -705,12 +770,12 @@ select '63_02', text_bitsize('hello') = 5*8;
 select '63_03', text_bitsize('привет') = 2*6*8;
 select '63_04', text_bitsize('') = 0;
 select '63_05', text_bitsize(12345) = 5*8;
-select '63_06', text_bitsize(x'4142') = 2*8;
+select '63_06', text_bitsize(x'4142') is null;
 select '63_07', text_bitsize(null) is null;
 select '63_08', bit_length('one') = 24;
 
 -- Invalid UTF-8
--- Character functions decode each maximal ill-formed subpart as U+FFFD = char(65533)
+-- Each maximal ill-formed subpart is one character, and functions keep its bytes as is
 -- (x'80' is a stray continuation byte, x'c3' a truncated 2-byte sequence)
 select '71_01', text_length(cast(x'80' as text)) = 1;
 select '71_02', text_length(cast(x'c3' as text)) = 1;
@@ -719,61 +784,66 @@ select '71_04', text_length(cast(x'41ff42' as text)) = 3;
 select '71_05', text_length(cast(x'c341' as text)) = 2;
 select '71_06', text_index(cast(x'80' as text), 'a') = 0;
 select '71_07', text_index(cast(x'41ff42' as text), 'B') = 3;
-select '71_08', text_substring(cast(x'c3' as text), 1, 1) = char(65533);
-select '71_09', hex(text_reverse(cast(x'41ff42' as text))) = '42EFBFBD41';
-select '71_10', text_trim(cast(x'e4b8' as text)) = char(65533);
-select '71_11', text_left(cast(x'ff' as text), 1) = char(65533);
+select '71_08', hex(text_substring(cast(x'c3' as text), 1, 1)) = 'C3';
+select '71_09', hex(text_reverse(cast(x'41ff42' as text))) = '42FF41';
+select '71_10', hex(text_trim(cast(x'e4b8' as text))) = 'E4B8';
+select '71_11', hex(text_left(cast(x'ff' as text), 1)) = 'FF';
 select '71_12', text_like('a_b', cast(x'41ff42' as text)) = 1;
-select '71_13', hex(text_translate(cast(x'41ff42' as text), 'A', 'Z')) = '5AEFBFBD42';
-select '71_14', hex(text_lpad(cast(x'ff' as text), 2, '*')) = '2AEFBFBD';
--- byte functions pass invalid bytes through unchanged
+select '71_13', hex(text_translate(cast(x'41ff42' as text), 'A', 'Z')) = '5AFF42';
+select '71_14', hex(text_lpad(cast(x'ff' as text), 2, '*')) = '2AFF';
+select '71_15', hex(text_reverse(cast(x'41e4b842' as text))) = '42E4B841';
+select '71_16', hex(text_substring(cast(x'e4b841' as text), 2)) = '41';
+select '71_17', hex(text_trim(cast(x'ff41ff' as text), cast(x'ff' as text))) = '41';
+select '71_18', hex(text_translate(cast(x'41ff42' as text), cast(x'ff' as text), 'x')) = '417842';
+select '71_19', text_like(cast(x'41ff' as text), cast(x'61ff' as text)) = 1;
+select '71_20', text_like(cast(x'41fe' as text), cast(x'61ff' as text)) = 0;
 select '71_21', hex(text_replace(cast(x'41ff42' as text), 'A', 'Z')) = '5AFF42';
 select '71_22', text_contains(cast(x'41ff42' as text), cast(x'ff' as text)) = 1;
 select '71_23', text_count(cast(x'41ff42ff' as text), cast(x'ff' as text)) = 2;
 select '71_24', hex(text_split(cast(x'41ff42' as text), 'B', 1)) = '41FF';
 select '71_25', hex(text_concat(cast(x'41ff' as text), 'B')) = '41FF42';
 select '71_26', text_size(cast(x'41ff42' as text)) = 3;
--- now: an invalid byte in the search string makes text_contains and text_index disagree
-select '71_27', text_index(cast(x'41ff42' as text), cast(x'fe' as text)) = 2;
+-- search compares bytes, so text_index and text_contains agree
+select '71_27', text_index(cast(x'41ff42' as text), cast(x'fe' as text)) = 0;
 select '71_28', text_contains(cast(x'41ff42' as text), cast(x'fe' as text)) = 0;
--- case functions return the input unchanged
-select '71_31', hex(text_upper(cast(x'61ff62' as text))) = '61FF62';
-select '71_32', hex(text_lower(cast(x'41ff42' as text))) = '41FF42';
-select '71_33', hex(text_title(cast(x'61ff62' as text))) = '61FF62';
+select '71_29', text_index(cast(x'41ff42' as text), cast(x'ff' as text)) = 2;
+-- case functions convert the valid characters
+select '71_31', hex(text_upper(cast(x'61ff62' as text))) = '41FF42';
+select '71_32', hex(text_lower(cast(x'41ff42' as text))) = '61FF62';
+select '71_33', hex(text_title(cast(x'61ff62' as text))) = '41FF42';
 select '71_34', hex(text_casefold(cast(x'80ff' as text))) = '80FF';
--- the collation decodes like the character functions
+-- the collation only equals the same bytes, and sorts them after every character
 select '71_41', (select 1 where cast(x'80' as text) = cast(x'80' as text) collate text_nocase) = 1;
 select '71_42', (select 1 where cast(x'80' as text) = 'a' collate text_nocase) is null;
 select '71_43', (select 1 where cast(x'41ff42' as text) = cast(x'61ff62' as text) collate text_nocase) = 1;
--- both decode to a single U+FFFD, so they compare equal
-select '71_44', (select 1 where cast(x'e4b8' as text) = cast(x'ff' as text) collate text_nocase) = 1;
+select '71_44', (select 1 where cast(x'e4b8' as text) = cast(x'ff' as text) collate text_nocase) is null;
+select '71_45', (select 1 where cast(x'ff' as text) > '𐌀' collate text_nocase) = 1;
 
--- Embedded zero bytes
+-- Embedded zero bytes are characters like any other
 select '72_01', text_size(cast(x'410042' as text)) = 3;
 select '72_02', text_contains(cast(x'41004243' as text), 'B') = 1;
 select '72_03', text_count(cast(x'41004241' as text), 'A') = 2;
 select '72_04', text_has_suffix(cast(x'410042' as text), 'B') = 1;
--- case functions keep them
 select '72_05', hex(text_lower(cast(x'41004243' as text))) = '61006263';
 select '72_06', octet_length(text_lower(cast(x'41004243' as text))) = 4;
--- now: everything else stops at the first zero byte
-select '72_11', text_length(cast(x'410042' as text)) = 1;
-select '72_12', hex(text_substring(cast(x'41004243' as text), 1)) = '41';
-select '72_13', text_index(cast(x'41004243' as text), 'B') = 0;
-select '72_14', hex(text_reverse(cast(x'410042' as text))) = '41';
-select '72_15', hex(text_ltrim(cast(x'20410042' as text))) = '41';
-select '72_16', hex(text_translate(cast(x'410042' as text), 'B', 'C')) = '41';
-select '72_17', text_like(cast(x'00' as text), '') = 1;
-select '72_18', text_split(cast(x'41007C42' as text), '|', 2) = '';
-select '72_19', hex(text_join('|', cast(x'4100' as text), 'B')) = '41';
-select '72_20', hex(text_concat(cast(x'4100' as text), 'B')) = '41';
-select '72_21', hex(text_repeat(cast(x'4100' as text), 2)) = '41';
-select '72_22', hex(text_replace(cast(x'41004241' as text), 'A', 'Z')) = '5A';
+select '72_11', text_length(cast(x'410042' as text)) = 3;
+select '72_12', hex(text_substring(cast(x'41004243' as text), 1)) = '41004243';
+select '72_13', text_index(cast(x'41004243' as text), 'B') = 3;
+select '72_14', hex(text_reverse(cast(x'410042' as text))) = '420041';
+select '72_15', hex(text_ltrim(cast(x'20410042' as text))) = '410042';
+select '72_16', hex(text_translate(cast(x'410042' as text), 'B', 'C')) = '410043';
+select '72_17', text_like(cast(x'00' as text), '') = 0;
+select '72_18', text_split(cast(x'41007C42' as text), '|', 2) = 'B';
+select '72_19', hex(text_join('|', cast(x'4100' as text), 'B')) = '41007C42';
+select '72_20', hex(text_concat(cast(x'4100' as text), 'B')) = '410042';
+select '72_21', hex(text_repeat(cast(x'4100' as text), 2)) = '41004100';
+select '72_22', hex(text_replace(cast(x'41004241' as text), 'A', 'Z')) = '5A00425A';
 
 -- SQLite built-ins
--- now: concat, concat_ws, ltrim, rtrim and octet_length replace the SQLite built-ins
--- of the same name, which keep zero bytes and don't decode invalid utf8
-select '81_01', hex(concat(cast(x'4100' as text), 'B')) = '41';
-select '81_02', hex(concat_ws('|', cast(x'4100' as text), 'B')) = '41';
-select '81_03', hex(rtrim(cast(x'41ff' as text), 'x')) = '41EFBFBD';
-select '81_04', hex(ltrim(cast(x'ff41' as text), 'x')) = 'EFBFBD41';
+-- the extension doesn't replace concat, concat_ws, ltrim, rtrim and octet_length,
+-- so the built-ins keep their own behavior
+select '81_01', hex(concat(cast(x'4100' as text), 'B')) = '410042';
+select '81_02', hex(concat_ws('|', cast(x'4100' as text), 'B')) = '41007C42';
+select '81_03', hex(rtrim(cast(x'41ff' as text), 'x')) = '41FF';
+select '81_04', hex(ltrim(cast(x'ff41' as text), 'x')) = 'FF41';
+select '81_05', octet_length(x'414243') = 3;
