@@ -260,7 +260,17 @@ An eponymous virtual table with arguments as hidden columns, following the scala
 - `xFilter` frees the previous scan's state first. A NULL or invalid data argument gives no rows; a bad spec argument sets `zErrMsg` and returns `SQLITE_ERROR`. Arguments returned as hidden columns are copied with `sqlite3_value_dup`.
 - Resource failures return `SQLITE_NOMEM`, `SQLITE_TOOBIG` or `SQLITE_IOERR`. Buffers are capped at `SQLITE_LIMIT_LENGTH`. A row that can't be produced (a file that disappeared mid-listing) is skipped.
 
-Virtual tables with their own schema (`vsv`, `define`) aren't covered yet. Add their conventions here when the first one is refactored.
+### Virtual tables
+
+A table created with `create virtual table <name> using <module>(<args>)`, with columns defined by the arguments rather than fixed by the module. The reference is `src/vsv/extension.c`. The cursor rules of [table-valued functions](#table-valued-functions) apply too: `xFilter` starts a fresh scan, resource failures are error codes, and `DIRECTONLY` is used for outside state.
+
+- The arguments are spec, so any problem with them is an error from `xConnect`, never a silent default. The message names the argument: `unknown parameter: x`, `invalid value for x: '...'`. A removed parameter is an error (`unsupported parameter: x`), because ignoring it would change the results.
+- SQLite passes the arguments as raw tokens, not expressions: `x='a' || 'b'` is not evaluated. Dequote values as `sqlite3Dequote` does. For `name=value` parameters, names are case-insensitive, and booleans take a bare name, `yes`/`no`, `on`/`off`, `true`/`false` or `1`/`0`.
+- On failure, `xConnect` always sets `*errptr`: without a message, SQLite reports only `vtable constructor failed: <name>`.
+- Check a schema built from user input with `sqlite3_declare_vtab`, and include SQLite's message in the error. To learn more about the schema (such as declared types), ask SQLite about it in a private `:memory:` connection rather than parsing it.
+- Typed columns give values as SQLite would store them in a regular table with the same types. Test this against such a table.
+- Bad data inside the table (malformed records) is an error from `xFilter` or `xNext` that says where the problem is, not silently skipped or mangled rows. This differs from the scalar rule because the user can't see what was dropped.
+- Test the binding in a connection (`test/vsv/extension.test.c`): every argument and schema error, data errors when the table is created and when it's queried (including after some rows), and `DIRECTONLY`.
 
 ## Review checklist
 

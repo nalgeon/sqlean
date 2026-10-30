@@ -4,7 +4,7 @@
 // Based on Go's encoding/csv package, BSD 3-Clause License
 // https://github.com/golang/go
 
-// Reading CSV records.
+// Reading CSV records, and converting their fields.
 
 // The reader follows RFC 4180, as Go's encoding/csv Reader does with its
 // default settings:
@@ -54,6 +54,10 @@ typedef enum {
 // the number of bytes read. Setting n to 0 means the end of the input.
 // Returns VSV_OK, or VSV_IOERR if reading failed.
 typedef VsvStatus (*VsvReadFunc)(void* src, char* buf, size_t size, size_t* n);
+
+// vsv_open_file opens the file at path, given in UTF-8, for reading.
+// Returns 0 or an errno value. The caller closes the file with fclose.
+int vsv_open_file(const char* path, FILE** file);
 
 // vsv_read_file is a VsvReadFunc that reads from src, an open FILE*.
 VsvStatus vsv_read_file(void* src, char* buf, size_t size, size_t* n);
@@ -146,5 +150,26 @@ const char* vsv_reader_field(const VsvReader* r, size_t i, size_t* len);
 
 // vsv_reader_free frees the memory used by the reader. Doesn't touch src.
 void vsv_reader_free(VsvReader* r);
+
+// Values.
+
+// VsvAffinity is SQLite's type affinity of a column.
+typedef enum {
+    VSV_AFF_BLOB,  // no conversion (a column without a declared type)
+    VSV_AFF_TEXT,
+    VSV_AFF_NUMERIC,
+    VSV_AFF_INTEGER,
+    VSV_AFF_REAL,
+} VsvAffinity;
+
+// vsv_affinity returns the affinity of a column with the declared type,
+// following SQLite's rules (https://sqlite.org/datatype3.html#affname).
+// An empty type is VSV_AFF_BLOB.
+VsvAffinity vsv_affinity(const char* type);
+
+// vsv_real_to_int sets i to the value of r and returns true if r is an integer
+// that SQLite's INTEGER and NUMERIC affinities store as one: an exact integer
+// that fits in int64_t, except for its smallest and largest values.
+bool vsv_real_to_int(double r, int64_t* i);
 
 #endif /* VSV_VSV_H */
