@@ -253,3 +253,9 @@ The extension now reports a function registration failure when it loads, instead
 **Breaking changes**
 
 Invalid data now gives `NULL` instead of an error or a made-up value, as SQLite's built-in date and math functions do. An error is still raised for a mistake in the query itself, such as an unknown field name.
+
+## unicode
+
+**Breaking changes**
+
+The deprecated `unicode` extension is removed. Use [text](https://github.com/nalgeon/sqlean/blob/main/docs/text.md) instead: `text_upper`, `text_lower` and `text_casefold` change case, and the `text_nocase` collation compares strings without regard to case.
