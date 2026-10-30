@@ -49,10 +49,6 @@ select '8_03', text_translate('hello', 'l', '1')  = 'he11o';
 select '13_01', time_fmt_iso(time_unix(1321631795)) = '2011-11-18T15:56:35Z';
 select '13_02', dur_h() = 3600000000000;
 
--- unicode
-select '9_01', nupper('пРиВеТ') = 'ПРИВЕТ';
-select '9_02', unaccent('hôtel') = 'hotel';
-
 -- uuid
 select '10_01', uuid4() like '________-____-4___-____-____________';
 
