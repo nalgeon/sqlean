@@ -8,48 +8,39 @@ We do not try to gather all the existing extensions into one giant pile — that
 
 To achieve it, we split extensions that are too broad, merge the ones that are too narrow, refactor, add missing features, test, document, and do a ton of other small things.
 
-[Main set](#main-set) •
-[Other extensions](#other-extensions) •
+[Extensions](#extensions) •
 [Downloading](#downloading) •
 [Installation](#installation-and-usage) •
 [Support](#support)
 
-## Main set
+## Extensions
 
-These are the most popular functions. They are tested, documented and organized into the domain modules with clear API.
+The functions are organized into the domain modules with clear API. Think of them as the extended standard library for SQLite:
 
-Think of them as the extended standard library for SQLite:
+- [crypto](docs/crypto.md): hashing, encoding and decoding data
+- [define](docs/define.md): user-defined functions and dynamic sql
+- [fileio](docs/fileio.md): read and write files
+- [fuzzy](docs/fuzzy.md): fuzzy string matching and phonetics
+- [ipaddr](docs/ipaddr.md): IP address manipulation
+- [math](docs/math.md): math functions
+- [regexp](docs/regexp.md): regular expressions
+- [stats](docs/stats.md): math statistics
+- [text](docs/text.md): string functions and Unicode
+- [time](docs/time.md): high-precision date/time
+- [uuid](docs/uuid.md): Universally Unique IDentifiers
+- [vsv](docs/vsv.md): CSV files as virtual tables
 
--   [crypto](docs/crypto.md): hashing, encoding and decoding data
--   [define](docs/define.md): user-defined functions and dynamic sql
--   [fileio](docs/fileio.md): read and write files
--   [fuzzy](docs/fuzzy.md): fuzzy string matching and phonetics
--   [ipaddr](docs/ipaddr.md): IP address manipulation
--   [math](docs/math.md): math functions
--   [regexp](docs/regexp.md): regular expressions
--   [stats](docs/stats.md): math statistics
--   [text](docs/text.md): string functions and Unicode
--   [time](docs/time.md): high-precision date/time
--   [uuid](docs/uuid.md): Universally Unique IDentifiers
--   [vsv](docs/vsv.md): CSV files as virtual tables
-
-The single-file `sqlean` bundle contains all extensions from the main set.
-
-## Other extensions
-
-The scope of this project is limited to extensions without external dependencies (other than the C standard library and SQLite itself).
-
-There are a lot of useful extensions that do not quite fit the scope for various reasons — so you won't find them here.
+The single-file `sqlean` bundle contains all listed extensions.
 
 ## Downloading
 
 There are [precompiled binaries](https://github.com/nalgeon/sqlean/releases/latest) for every OS:
 
--   `sqlean-win-x64.zip` - Windows (Intel/AMD x64 CPU)
--   `sqlean-linux-x64.zip` - Linux (Intel/AMD x64 CPU)
--   `sqlean-linux-arm64.zip` - Linux (ARM CPU)
--   `sqlean-macos-x64.zip` - Intel-based macOS
--   `sqlean-macos-arm64.zip` - Apple silicon (ARM-based) macOS
+- `sqlean-win-x64.zip` - Windows (Intel/AMD x64 CPU)
+- `sqlean-linux-x64.zip` - Linux (Intel/AMD x64 CPU)
+- `sqlean-linux-arm64.zip` - Linux (ARM CPU)
+- `sqlean-macos-x64.zip` - Intel-based macOS
+- `sqlean-macos-arm64.zip` - Apple silicon (ARM-based) macOS
 
 Binaries are 64-bit and require a 64-bit SQLite version.
 
@@ -59,7 +50,7 @@ The easiest way to try out Sqlean extensions is to load them in the SQLite comma
 
 ```
 sqlite> .load ./sqlean
-sqlite> select median(value) from generate_series(1, 99);
+sqlite> select stats_median(value) from stats_seq(1, 99);
 ```
 
 See [How to install an extension](docs/install.md) for usage with IDE, Python, JavaScript, etc.
@@ -81,18 +72,20 @@ make build
 
 You'll find the compiled extensions in the `dist` folder.
 
-See also: Instructions for building on [iOS and Android platforms](https://github.com/nalgeon/sqlean/issues/156).
-
 ## Contributing
 
-This project only accepts bug fixes.
+If there's a feature you need that's missing, please open an issue to discuss it. Only open issues for real use cases you actually have, not for hypothetical situations or features that would just be nice to have.
+
+If you find a bug, open an issue or send a PR. Please don't send PRs with new features — open an issue instead.
 
 ## License
 
-Copyright 2021-2025 [Anton Zhiyanov](https://antonz.org/), [Contributors](https://github.com/nalgeon/sqlean/graphs/contributors) and [Third-party Authors](docs/third-party.md).
+Copyright 2021-2026 [Anton Zhiyanov](https://antonz.org/), [Contributors](https://github.com/nalgeon/sqlean/graphs/contributors) and [Third-party Authors](docs/third-party.md).
 
 The software is available under the MIT License.
 
 ## Support
 
-Sqlean is mostly a [one-man](https://antonz.org/) project. It's currently in maintenance mode, and no new features are planned.
+Sqlean is mostly a [one-man](https://antonz.org/) project, not backed by a VC fund or anything.
+
+If you find Sqlean useful, please star it on GitHub and spread the word among your peers. It really helps to move the project forward.
