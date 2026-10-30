@@ -58,9 +58,8 @@ select '10_01', uuid4() like '________-____-4___-____-____________';
 .shell echo '33,Alice,Paris' >> people.csv
 create virtual table people using vsv(
     filename=people.csv,
-    schema="create table people(id integer, name text, city text)",
-    columns=3,
-    affinity=integer
+    schema="create table people(id integer, name text, city text)"
 );
 select '11_01', count(*) = 3 from people;
+select '11_02', (select sum(id) from people) = 66;
 .shell rm -f people.csv

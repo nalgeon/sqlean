@@ -6,6 +6,7 @@ Sqlean relies heavily on third-party SQLite extensions and open source libraries
 | ---------------------------------------------------------------------------------------------- | --------------- | -------------------- |
 | [blake3](https://github.com/oconnor663/blake3_reference_impl_c)                                | Peter Tripp     | Public Domain        |
 | [cryptii](https://github.com/cryptii/cryptii)                                                  | Fränz Friederes | MIT License          |
+| [csv.c](https://sqlite.org/src/file/ext/misc/csv.c)                                            | D. Richard Hipp | Public Domain        |
 | [eval.c](https://www.sqlite.org/src/file/ext/misc/eval.c)                                      | D. Richard Hipp | Public Domain        |
 | extension-functions.c                                                                          | Liam Healy      | Public Domain        |
 | [fileio.c](https://www.sqlite.org/src/file/ext/misc/fileio.c)                                  | D. Richard Hipp | Public Domain        |

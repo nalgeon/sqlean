@@ -289,3 +289,47 @@ a0eebc999c0b4ef8bb6d6bb9bd380a11
 Anything else gives `NULL`. Before, a hyphen was allowed before any pair of digits and braces didn't have to match, so the PostgreSQL forms `a0ee-bc99-9c0b-4ef8-bb6d-6bb9-bd38-0a11` and `{a0eebc99-9c0b4ef8-bb6d6bb9-bd380a11}` were accepted, as were `{a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11` and `a0-ee-bc-99-...`.
 
 A UUID string followed by a NUL character and more text (`'a0eebc99-...-6bb9bd380a11' || char(0) || 'x'`) now gives `NULL`. Before, everything after the NUL was ignored.
+
+## [vsv](https://github.com/nalgeon/sqlean/blob/main/docs/vsv.md)
+
+The extension is rewritten as SQLite's `csv` extension plus a field separator, column types and error reporting. The CSV reader is now a port of Go's `encoding/csv`, and the rarely used options are removed.
+
+**Improvements and bug fixes**
+
+Columns now get their types from the declared types in `schema`, with SQLite's rules for a regular table: with `id integer`, `'22'` is the integer `22`, `'1.0'` is `1`, and `'1.5'` is the real `1.5`. Before, all values were text unless `affinity` was set, and then one affinity applied to every column, with its own rules (`affinity=integer` left `'1.0'` as text, and `numeric` depended on the platform).
+
+`schema` no longer needs `columns`. Before, a schema without `columns` failed with `out of memory`, and a schema with more columns than `columns=N` crashed.
+
+Malformed CSV is now an error with the line and column, as in Go: `parse error on line 1, column 4: bare " in non-quoted-field`. Before, an unterminated quoted field silently took the rest of the input, and text after a closing quote started a new row.
+
+Blank lines are now skipped, as in Go. Before, each was a row of an empty string and `NULL`s.
+
+An empty field is now always an empty string. Before, an empty last field at the end of the input was `NULL`, and an empty first field was a NUL character.
+
+Fields are no longer cut at a NUL character, and a `0xff` byte at the start of a 1 KiB block no longer ends the input on platforms where `char` is signed (x86).
+
+The BOM is now skipped on every scan. Before, the inner table of a join kept it in the first field after the first pass.
+
+The field separator can now be any UTF-8 character (`fsep='→'`). An invalid separator is an error: before, `fsep='abc'` silently used a NUL character.
+
+Parameter names are now case-insensitive, and boolean values can be quoted (`header='yes'`).
+
+Errors now say what is wrong: `unknown parameter: x`, `invalid value for header: 'maybe'`, `cannot open file: 'people.csv'`. A missing file is always an error when the table is created. A field longer than SQLite's length limit is a `string or blob too big` error. Before, some failures were reported as `vtable constructor failed`, and a read error ended the table without an error.
+
+On Windows, file names with non-ASCII characters now work.
+
+The extension now reports a module registration failure when it loads, instead of ignoring it.
+
+**Breaking changes**
+
+The `rsep`, `dsep`, `nulls`, `skip`, `validatetext` and `affinity` parameters are removed, and using them is an error (`unsupported parameter: affinity`). Persistent `vsv` tables that use them fail with this error when used: they hold no data, so drop and recreate them. Instead of:
+
+- `affinity`: declare the column types in `schema`.
+- `nulls`: `nullif(c0, '')`.
+- `skip=N`: `where rowid > N`.
+- `dsep`: `cast(replace(c0, ',', '.') as real)`.
+- `rsep`: records are always separated by newlines.
+
+`columns` is accepted and ignored: the number of columns comes from the schema, the header, or the first record.
+
+A bare `"` inside an unquoted field (`ab"c`) is now an error, as in Go and RFC 4180.

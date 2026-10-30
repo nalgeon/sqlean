@@ -6,6 +6,7 @@
 
 // Reading CSV records.
 
+#include <errno.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -15,7 +16,45 @@
 
 #include "vsv/vsv.h"
 
+#ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+#endif
+
 #pragma region Input
+
+// vsv_open_file opens the file at path (UTF-8) for reading.
+// Returns 0 or an errno value. The caller closes the file with fclose.
+int vsv_open_file(const char* path, FILE** file) {
+#ifdef _WIN32
+    // The narrow API takes the path in the ANSI code page, not UTF-8.
+    int n = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, path, -1, NULL, 0);
+    if (n <= 0) {
+        return EINVAL;
+    }
+    wchar_t* wpath = malloc((size_t)n * sizeof(wchar_t));
+    if (wpath == NULL) {
+        return ENOMEM;
+    }
+    if (MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, path, -1, wpath, n) <= 0) {
+        free(wpath);
+        return EINVAL;
+    }
+    FILE* f = _wfopen(wpath, L"rb");
+    int err = errno;
+    free(wpath);
+#else
+    FILE* f = fopen(path, "rb");
+    int err = errno;
+#endif
+    if (f == NULL) {
+        return err != 0 ? err : EIO;
+    }
+    *file = f;
+    return 0;
+}
 
 // vsv_read_file is a VsvReadFunc that reads from src, an open FILE*.
 VsvStatus vsv_read_file(void* src, char* buf, size_t size, size_t* n) {
