@@ -1,16 +1,50 @@
-#ifndef UTF8_TABLES_H
-#define UTF8_TABLES_H
+/* MIT License
+ *
+ * Copyright (c) 2023 Tyge Løvset
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 
+// Case mapping tables from the STC library (utf8tabs), by Tyge Løvset, MIT License
+// https://github.com/stclib/STC
+// Unicode category and script ranges extracted from the RE2 library, BSD 3-Clause License
+// https://github.com/google/re2
+
+// Unicode tables for the rune functions. Included by rune.c only.
+
+#ifndef TEXT_TABLES_H
+#define TEXT_TABLES_H
+
+#include <stddef.h>
 #include <stdint.h>
 
-struct CaseMapping {
+#pragma region Case mappings
+
+// CaseMapping maps a range of uppercase runes to lowercase ones.
+typedef struct {
     // c1 - rune at the start of the uppercase range
     // c2 - rune at the end of the uppercase range
     // m2 - rune at the end of the lowercase range
     uint16_t c1, c2, m2;
-};
+} CaseMapping;
 
-static struct CaseMapping casemappings[] = {
+static const CaseMapping casemappings[] = {
     {0x0041, 0x005A, 0x007A},  // A a (26) LATIN CAPITAL LETTER A
     {0x00B5, 0x00B5, 0x03BC},  // µ μ ( 1) MICRO SIGN
     {0x00C0, 0x00D6, 0x00F6},  // À à (23) LATIN CAPITAL LETTER A WITH GRAVE
@@ -232,11 +266,11 @@ static struct CaseMapping casemappings[] = {
 };  // 218
 
 // Only the first 192 entries are used for casefolding.
-enum { casefold_len = 192 };
+static const size_t casefold_len = 192;
 
 // Indexes of uppercase runes in the casemappings table
 // ordered by rune value, e.g.: 0x0041 (0), 0x00C0 (2), 0x00D8 (3), ...
-static uint8_t upcase_ind[162] = {
+static const uint8_t upcase_ind[162] = {
     0,   2,   3,   4,   192, 5,   6,   7,   8,   9,   11,  12,  13,  14,  15,  16,  17,  18,
     19,  20,  21,  22,  23,  24,  25,  26,  27,  28,  29,  30,  31,  32,  33,  34,  35,  36,
     37,  38,  39,  40,  41,  43,  45,  193, 47,  48,  194, 50,  51,  52,  53,  54,  55,  56,
@@ -250,7 +284,7 @@ static uint8_t upcase_ind[162] = {
 
 // Indexes of lowercase runes in the casemappings table
 // ordered by rune value, e.g.: 0x007A (0), 0x00B5 (197), 0x00DF (113), ...
-static uint8_t lowcase_ind[184] = {
+static const uint8_t lowcase_ind[184] = {
     0,   197, 113, 2,   3,   8,   4,   198, 5,   6,   7,   9,   199, 60,  12,  14,  16,  20,  50,
     25,  57,  53,  29,  31,  33,  35,  37,  39,  40,  51,  41,  43,  45,  193, 17,  47,  48,  194,
     52,  54,  56,  158, 59,  63,  154, 152, 155, 11,  13,  15,  18,  19,  174, 21,  175, 22,  170,
@@ -263,4 +297,94 @@ static uint8_t lowcase_ind[184] = {
     168, 169, 171, 183, 172, 182, 186, 187, 188, 189, 181, 195, 191,
 };
 
-#endif  // UTF8_TABLES_H
+#pragma endregion
+
+#pragma region Character classes
+
+// URange16 is an inclusive range of runes in the Basic Multilingual Plane.
+typedef struct {
+    uint16_t lo;
+    uint16_t hi;
+} URange16;
+
+// URangeTable is a sorted list of ranges.
+typedef struct {
+    const URange16* ranges;
+    size_t len;
+} URangeTable;
+
+static const URange16 Lt_range16[] = {
+    // Title case
+    {453, 453},   {456, 456},   {459, 459},   {498, 498},   {8072, 8079},
+    {8088, 8095}, {8104, 8111}, {8124, 8124}, {8140, 8140}, {8188, 8188},
+};
+
+static const URange16 Nd_range16[] = {
+    // Decimal number
+    {48, 57},       {1632, 1641},   {1776, 1785},   {1984, 1993},   {2406, 2415},   {2534, 2543},
+    {2662, 2671},   {2790, 2799},   {2918, 2927},   {3046, 3055},   {3174, 3183},   {3302, 3311},
+    {3430, 3439},   {3558, 3567},   {3664, 3673},   {3792, 3801},   {3872, 3881},   {4160, 4169},
+    {4240, 4249},   {6112, 6121},   {6160, 6169},   {6470, 6479},   {6608, 6617},   {6784, 6793},
+    {6800, 6809},   {6992, 7001},   {7088, 7097},   {7232, 7241},   {7248, 7257},   {42528, 42537},
+    {43216, 43225}, {43264, 43273}, {43472, 43481}, {43504, 43513}, {43600, 43609}, {44016, 44025},
+    {65296, 65305},
+};
+
+static const URange16 Nl_range16[] = {
+    // Number letter
+    {5870, 5872},   {8544, 8578},   {8581, 8584},   {12295, 12295},
+    {12321, 12329}, {12344, 12346}, {42726, 42735},
+};
+
+static const URange16 Pc_range16[] = {
+    // Connector punctuation
+    {95, 95}, {8255, 8256}, {8276, 8276}, {65075, 65076}, {65101, 65103}, {65343, 65343},
+};
+
+static const URange16 Arabic_range16[] = {
+    {1536, 1540},   {1542, 1547},   {1549, 1562},   {1564, 1566},   {1568, 1599},   {1601, 1610},
+    {1622, 1647},   {1649, 1756},   {1758, 1791},   {1872, 1919},   {2160, 2190},   {2192, 2193},
+    {2200, 2273},   {2275, 2303},   {64336, 64450}, {64467, 64829}, {64832, 64911}, {64914, 64967},
+    {64975, 64975}, {65008, 65023}, {65136, 65140}, {65142, 65276},
+};
+
+static const URange16 Cyrillic_range16[] = {
+    {1024, 1156}, {1159, 1327},   {7296, 7304},   {7467, 7467},
+    {7544, 7544}, {11744, 11775}, {42560, 42655}, {65070, 65071},
+};
+
+static const URange16 Devanagari_range16[] = {
+    {2304, 2384},
+    {2389, 2403},
+    {2406, 2431},
+    {43232, 43263},
+};
+
+static const URange16 Greek_range16[] = {
+    {880, 883},   {885, 887},   {890, 893},     {895, 895},   {900, 900},   {902, 902},
+    {904, 906},   {908, 908},   {910, 929},     {931, 993},   {1008, 1023}, {7462, 7466},
+    {7517, 7521}, {7526, 7530}, {7615, 7615},   {7936, 7957}, {7960, 7965}, {7968, 8005},
+    {8008, 8013}, {8016, 8023}, {8025, 8025},   {8027, 8027}, {8029, 8029}, {8031, 8061},
+    {8064, 8116}, {8118, 8132}, {8134, 8147},   {8150, 8155}, {8157, 8175}, {8178, 8180},
+    {8182, 8190}, {8486, 8486}, {43877, 43877},
+};
+
+static const URange16 Han_range16[] = {
+    {11904, 11929}, {11931, 12019}, {12032, 12245}, {12293, 12293}, {12295, 12295}, {12321, 12329},
+    {12344, 12347}, {13312, 19903}, {19968, 40959}, {63744, 64109}, {64112, 64217},
+};
+
+static const URange16 Latin_range16[] = {
+    {65, 90},       {97, 122},      {170, 170},     {186, 186},     {192, 214},     {216, 246},
+    {248, 696},     {736, 740},     {7424, 7461},   {7468, 7516},   {7522, 7525},   {7531, 7543},
+    {7545, 7614},   {7680, 7935},   {8305, 8305},   {8319, 8319},   {8336, 8348},   {8490, 8491},
+    {8498, 8498},   {8526, 8526},   {8544, 8584},   {11360, 11391}, {42786, 42887}, {42891, 42954},
+    {42960, 42961}, {42963, 42963}, {42965, 42969}, {42994, 43007}, {43824, 43866}, {43868, 43876},
+    {43878, 43881}, {64256, 64262}, {65313, 65338}, {65345, 65370},
+};
+
+#define RANGE_TABLE(name) {name##_range16, sizeof(name##_range16) / sizeof(URange16)}
+
+#pragma endregion
+
+#endif /* TEXT_TABLES_H */

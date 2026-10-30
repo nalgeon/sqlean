@@ -203,6 +203,45 @@ A `NULL` percentile in `stats_perc` skips the row. Before, it raised an error.
 
 The error messages have changed: `percentile should be a number between 0 and 100`, `percentile should be the same for all rows`, and `table function stats_seq requires an argument`.
 
+## [text](https://github.com/nalgeon/sqlean/blob/main/docs/text.md)
+
+**Improvements and bug fixes**
+
+Strings with zero bytes now work in every function. Before, most functions stopped at the first zero byte, and the `text_nocase` collation treated `'a\0b'` and `'a\0c'` as equal.
+
+Positions, lengths and counts now accept any 64-bit integer. Before, they were truncated to 32 bits (`text_left('hello', 4294967297)` gave `h`), and some large negative values overflowed.
+
+A result longer than SQLite's maximum string length now fails with `string or blob too big` before it is built. Before, `text_repeat('a', 2000000000)` allocated gigabytes first.
+
+`text_like` now lets `%` match zero characters at the end of a match: `text_like('%a', 'a')` was 0 and is now 1.
+
+`text_title` now uses Unicode title case for digraphs (`ǳ` becomes `ǲ`, not `Ǳ`). `text_upper` and `text_lower` now convert the title case digraphs `ǅ`, `ǈ`, `ǋ` and `ǲ`.
+
+`text_index` and `text_contains` now agree on strings with invalid UTF-8.
+
+An empty search string now gives consistent results, as in Go: `text_last_index(s, '')` is the length plus 1 (it was the length, and 0 for an empty `s`), and `text_count(s, '')` is the length plus 1 (it was 0).
+
+`text_join('|')` and `text_concat()` now fail with `wrong number of arguments`, and the trim and pad functions with a wrong number of arguments now fail when the query is prepared, not when it runs.
+
+Memory allocation failures are now reported as errors instead of giving `NULL` or an empty string.
+
+The `text_casefold` function is now documented.
+
+The extension now reports a function registration failure when it loads, instead of ignoring it.
+
+**Breaking changes**
+
+Invalid data now gives `NULL` instead of an error, as SQLite's built-in functions do:
+
+- A `NULL` position, length or count gives `NULL`. Before, it was an error.
+- A non-integer position, length or count gives `NULL`, including a real number such as `2.0`. Before, it was an error. Integer text such as `'2'` now works.
+- A negative length in `text_substring` gives an empty string, and part 0 in `text_split` gives `NULL`. Before, both were errors.
+- A blob in place of a string gives `NULL`. Before, blobs were treated as text.
+
+Invalid UTF-8 is now kept as is. Before, character functions such as `text_reverse` replaced each malformed sequence with U+FFFD, and case functions returned a string with invalid UTF-8 unchanged. Now invalid bytes are copied unchanged, and case functions convert the valid characters around them.
+
+The aliases no longer replace SQLite's built-in functions. `ltrim` and `rtrim` are removed (use `text_ltrim` and `text_rtrim`). `concat` and `concat_ws` are only registered on SQLite older than 3.44, and `octet_length` on SQLite older than 3.43.
+
 ## [time](https://github.com/nalgeon/sqlean/blob/main/docs/time.md)
 
 **Improvements and bug fixes**

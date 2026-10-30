@@ -14,6 +14,7 @@ SQLean relies heavily on third-party SQLite extensions and open source libraries
 | [libstrcmp](https://github.com/Rostepher/libstrcmp)                                            | Ross Bayer      | MIT License          |
 | [percentile.c](https://sqlite.org/src/file/ext/misc/percentile.c)                              | D. Richard Hipp | Public Domain        |
 | [pcre2](https://github.com/pcre2project/pcre2)                                                 | Philip Hazel    | BSD 3-Clause License |
+| [re2](https://github.com/google/re2)                                                           | Google          | BSD 3-Clause License |
 | [regexp.old](https://github.com/garyhouston/regexp.old)                                        | Henry Spencer   | Spencer License 94   |
 | [series.c](https://sqlite.org/src/file/ext/misc/series.c)                                      | D. Richard Hipp | Public Domain        |
 | [sqlite3_unicode](https://github.com/Zensey/sqlite3_unicode)                                   | Unknown Author  | Public Domain        |
