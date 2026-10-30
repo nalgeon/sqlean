@@ -64,15 +64,18 @@ select '04_16', math_round(42) = 42.0;
 -- a negative number of digits is 0, more than 30 is 30
 select '04_17', math_round(1.25, -1) = 1.0;
 select '04_18', math_round(0.1234567890123456789, 40) = math_round(0.1234567890123456789, 30);
+-- the digits are a 64-bit integer, so 2^32+1 is more than 30, not 1
+select '04_19', math_round(1.25, 4294967297) = 1.25;
+select '04_20', math_round(1.25, -4294967295) = 1.0;
 -- a value beyond 2^52 has no fractional part and is returned as is
-select '04_19', math_round(1e20) = 1e20;
-select '04_20', math_round(-1e20, 2) = -1e20;
+select '04_21', math_round(1e20) = 1e20;
+select '04_22', math_round(-1e20, 2) = -1e20;
 -- like the built-in round(), the value and the digits are converted with
 -- the usual casting rules, so non-numeric text is 0
-select '04_21', math_round('2.5') = 3.0;
-select '04_22', math_round('abc') = 0.0;
-select '04_23', math_round(1.5, 'abc') = 2.0;
-select '04_24', math_round(1.25, '1') = 1.3;
+select '04_23', math_round('2.5') = 3.0;
+select '04_24', math_round('abc') = 0.0;
+select '04_25', math_round(1.5, 'abc') = 2.0;
+select '04_26', math_round(1.25, '1') = 1.3;
 
 -- ln
 select '05_01', math_ln(1) = 0.0;

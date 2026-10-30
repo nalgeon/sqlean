@@ -1,5 +1,5 @@
 // Originally from SQLite 3.42.0 source code (func.c), Public Domain
-// Updated as of 3.46.0
+// Updated as of 3.54.1
 
 // Modified by Anton Zhiyanov, MIT License
 // https://github.com/nalgeon/sqlean/
@@ -7,7 +7,9 @@
 // SQLite math functions.
 
 #include <assert.h>
+#include <locale.h>
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -200,17 +202,38 @@ static void piFunc(sqlite3_context* context, int argc, sqlite3_value** argv) {
 }
 
 /*
+** Converts a number formatted by sqlite3_mprintf() to a double. The number
+** always has a '.' decimal point, while strtod() expects the one of the
+** current locale (such as ',' in de_DE), so it is replaced first.
+*/
+static double parseDouble(const char* z) {
+    const char* zPoint = localeconv()->decimal_point;
+    const char* zDot = strchr(z, '.');
+    /* At most a sign, 16 integer digits, the point and 30 decimals */
+    char zBuf[64];
+    int len;
+    if (zDot == 0 || strcmp(zPoint, ".") == 0) {
+        return strtod(z, NULL);
+    }
+    len = snprintf(zBuf, sizeof(zBuf), "%.*s%s%s", (int)(zDot - z), z, zPoint, zDot + 1);
+    if (len < 0 || (size_t)len >= sizeof(zBuf)) {
+        return strtod(z, NULL);
+    }
+    return strtod(zBuf, NULL);
+}
+
+/*
 ** Implementation of the round() function
 */
 static void roundFunc(sqlite3_context* context, int argc, sqlite3_value** argv) {
-    int n = 0;
+    sqlite3_int64 n = 0;
     double r;
     char* zBuf;
     assert(argc == 1 || argc == 2);
     if (argc == 2) {
         if (SQLITE_NULL == sqlite3_value_type(argv[1]))
             return;
-        n = sqlite3_value_int(argv[1]);
+        n = sqlite3_value_int64(argv[1]);
         if (n > 30)
             n = 30;
         if (n < 0)
@@ -228,13 +251,12 @@ static void roundFunc(sqlite3_context* context, int argc, sqlite3_value** argv) 
     } else if (n == 0) {
         r = (double)((sqlite_int64)(r + (r < 0 ? -0.5 : +0.5)));
     } else {
-        zBuf = sqlite3_mprintf("%!.*f", n, r);
+        zBuf = sqlite3_mprintf("%!.*f", (int)n, r);
         if (zBuf == 0) {
             sqlite3_result_error_nomem(context);
             return;
         }
-        // sqlite3AtoF(zBuf, &r, sqlite3Strlen30(zBuf), SQLITE_UTF8);
-        r = strtod(zBuf, NULL);
+        r = parseDouble(zBuf);
         sqlite3_free(zBuf);
     }
     sqlite3_result_double(context, r);
