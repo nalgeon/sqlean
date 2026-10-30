@@ -1,6 +1,6 @@
 # Third-party authors
 
-SQLean relies heavily on third-party SQLite extensions and open source libraries. Some of them are public domain, others use free permissive licenses. SQLean does not use code distributed under copyleft or non-free licenses.
+Sqlean relies heavily on third-party SQLite extensions and open source libraries. Some of them are public domain, others use free permissive licenses. Sqlean does not use code distributed under copyleft or non-free licenses.
 
 | Library                                                                                        | Author          | License              |
 | ---------------------------------------------------------------------------------------------- | --------------- | -------------------- |
