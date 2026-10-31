@@ -27,7 +27,8 @@ typedef struct {
     char* data;
     char* schema;
     char* fsep;
-    bool header;
+    char* header;
+    char* nulls;
 } Params;
 
 static void params_free(Params* p) {
@@ -35,6 +36,8 @@ static void params_free(Params* p) {
     sqlite3_free(p->data);
     sqlite3_free(p->schema);
     sqlite3_free(p->fsep);
+    sqlite3_free(p->header);
+    sqlite3_free(p->nulls);
 }
 
 // is_space reports whether c is whitespace, as SQLite's tokenizer sees it.
@@ -142,8 +145,7 @@ static bool is_name(const char* s, size_t n, const char* name) {
 static int parse_param(const char* arg, Params* p, char** err) {
     // Parameters that vsv used to support, which would now give
     // different results if ignored.
-    static const char* const removed[] = {"rsep", "dsep",         "nulls",
-                                          "skip", "validatetext", "affinity"};
+    static const char* const removed[] = {"rsep", "dsep", "skip", "validatetext", "affinity"};
 
     const char* eq = strchr(arg, '=');
     size_t name_len = eq != NULL ? (size_t)(eq - arg) : strlen(arg);
@@ -156,6 +158,7 @@ static int parse_param(const char* arg, Params* p, char** err) {
     }
 
     char** str = NULL;
+    bool flag = false;
     if (is_name(name, name_len, "filename")) {
         str = &p->filename;
     } else if (is_name(name, name_len, "data")) {
@@ -164,9 +167,15 @@ static int parse_param(const char* arg, Params* p, char** err) {
         str = &p->schema;
     } else if (is_name(name, name_len, "fsep")) {
         str = &p->fsep;
+    } else if (is_name(name, name_len, "header")) {
+        str = &p->header;
+        flag = true;
+    } else if (is_name(name, name_len, "nulls")) {
+        str = &p->nulls;
+        flag = true;
     }
     if (str != NULL) {
-        if (value == NULL) {
+        if (value == NULL && !flag) {
             *err = sqlite3_mprintf("missing value for %.*s", (int)name_len, name);
             return SQLITE_ERROR;
         }
@@ -174,25 +183,9 @@ static int parse_param(const char* arg, Params* p, char** err) {
             *err = sqlite3_mprintf("more than one %.*s parameter", (int)name_len, name);
             return SQLITE_ERROR;
         }
-        *str = dequote(value, value_len);
+        // A boolean without a value is true.
+        *str = value != NULL ? dequote(value, value_len) : sqlite3_mprintf("yes");
         return *str == NULL ? SQLITE_NOMEM : SQLITE_OK;
-    }
-
-    if (is_name(name, name_len, "header")) {
-        if (value == NULL) {
-            p->header = true;
-            return SQLITE_OK;
-        }
-        char* z = dequote(value, value_len);
-        if (z == NULL) {
-            return SQLITE_NOMEM;
-        }
-        bool ok = parse_bool(z, &p->header);
-        if (!ok) {
-            *err = sqlite3_mprintf("invalid value for header: '%s'", z);
-        }
-        sqlite3_free(z);
-        return ok ? SQLITE_OK : SQLITE_ERROR;
     }
 
     // The column count comes from the schema or the input, but earlier
@@ -224,6 +217,8 @@ typedef struct {
     int32_t comma;
     // whether the first record is a header
     bool header;
+    // whether an unquoted empty field is NULL
+    bool nulls;
     // the affinity of each column
     VsvAffinity* affs;
     int ncols;
@@ -464,6 +459,18 @@ static int xconnect(sqlite3* db,
         rc = SQLITE_ERROR;
         goto fail;
     }
+    bool header = false;
+    if (params.header != NULL && !parse_bool(params.header, &header)) {
+        *errptr = sqlite3_mprintf("invalid value for header: '%s'", params.header);
+        rc = SQLITE_ERROR;
+        goto fail;
+    }
+    bool nulls = false;
+    if (params.nulls != NULL && !parse_bool(params.nulls, &nulls)) {
+        *errptr = sqlite3_mprintf("invalid value for nulls: '%s'", params.nulls);
+        rc = SQLITE_ERROR;
+        goto fail;
+    }
     int32_t comma = ',';
     if (params.fsep != NULL && !parse_fsep(params.fsep, &comma)) {
         *errptr = sqlite3_mprintf("invalid value for fsep: '%s'", params.fsep);
@@ -483,7 +490,8 @@ static int xconnect(sqlite3* db,
     params.filename = NULL;
     params.data = NULL;
     table->comma = comma;
-    table->header = params.header;
+    table->header = header;
+    table->nulls = nulls;
 
     if (params.schema != NULL) {
         rc = sqlite3_declare_vtab(db, params.schema);
@@ -686,7 +694,8 @@ static int convert(sqlite3_context* ctx,
 }
 
 // xcolumn returns field col of the current record, or NULL if the record
-// is shorter. Fields are converted with the column's affinity.
+// is shorter, or if the field is empty and unquoted with nulls on.
+// Fields are converted with the column's affinity.
 static int xcolumn(sqlite3_vtab_cursor* cur, sqlite3_context* ctx, int col) {
     Cursor* cursor = (Cursor*)cur;
     Table* table = (Table*)cursor->base.pVtab;
@@ -695,6 +704,9 @@ static int xcolumn(sqlite3_vtab_cursor* cur, sqlite3_context* ctx, int col) {
     }
     size_t n;
     const char* s = vsv_reader_field(&cursor->in.reader, (size_t)col, &n);
+    if (n == 0 && table->nulls && !vsv_reader_quoted(&cursor->in.reader, (size_t)col)) {
+        return SQLITE_OK;
+    }
     VsvAffinity aff = table->affs != NULL && col < table->ncols ? table->affs[col] : VSV_AFF_TEXT;
     if (aff >= VSV_AFF_NUMERIC && table->conv != NULL) {
         return convert(ctx, table, aff, s, n);

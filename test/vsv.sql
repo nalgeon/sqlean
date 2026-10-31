@@ -428,4 +428,27 @@ create virtual table main.t using vsv(data='a');
 select '07_16', (select c0 from main.t) = 'a';
 drop table main.t;
 
+-- nulls: an unquoted empty field is NULL, a quoted one ("") stays empty
+create virtual table temp.t using vsv(data=',"",x
+"",,', nulls);
+select '08_01', (select c0 is null and c1 = '' and c2 = 'x' from t where rowid = 1);
+select '08_02', (select c0 = '' and c1 is null and c2 is null from t where rowid = 2);
+drop table t;
+create virtual table temp.t using vsv(data=',"",x', nulls=no);
+select '08_03', (select c0 = '' and c1 = '' from t);
+drop table t;
+-- before the conversion, so empty numbers don't count in aggregates
+create virtual table temp.t using vsv(data='1,
+,
+3,', schema='create table x(a int, b real)', nulls);
+select '08_04', (select count(a) = 2 and avg(a) = 2 and max(a) = 3 from t);
+select '08_05', (select count(b) = 0 from t);
+drop table t;
+-- the header is not affected
+create virtual table temp.t using vsv(data='a,
+1,', header, nulls);
+select '08_06', (select group_concat(name, '|') from pragma_table_info('t')) = 'a|';
+select '08_07', (select a = '1' and "" is null from t);
+drop table t;
+
 .shell rm -rf vsv.tmp

@@ -246,6 +246,50 @@ static void test_read_vsv(void) {
     printf("OK\n");
 }
 
+// QuotedTest is an input and whether its fields are quoted: a line per record,
+// with q for a quoted field and - for an unquoted one.
+typedef struct {
+    const char* input;
+    int32_t comma;
+    const char* want;
+} QuotedTest;
+
+static const QuotedTest quoted_tests[] = {
+    {"a,\"b\",,\"\"\n", ',', "-q-q\n"},    // empty fields, quoted or not
+    {"\"\"", ',', "q\n"},                  // "" at the end of the input
+    {"\"\",", ',', "q-\n"},                // an empty field after it
+    {",\n\"\"\r\n", ',', "--\nq\n"},       // CRLF after a quote
+    {"\"a\nb\",c\n\"\"", ',', "q-\nq\n"},  // a multi-line field
+    {"\"a\"\"\"→→\"\"", 0x2192, "q-q\n"},  // a multi-byte separator
+};
+
+// test_read_quoted checks vsv_reader_quoted with the input split into chunks
+// of every size.
+static void test_read_quoted(void) {
+    printf("test_read_quoted...");
+    for (size_t i = 0; i < sizeof(quoted_tests) / sizeof(quoted_tests[0]); i++) {
+        const QuotedTest* test = &quoted_tests[i];
+        size_t len = strlen(test->input);
+        for (size_t chunk = 1; chunk <= len + 1; chunk++) {
+            ChunkSource src = {test->input, len, chunk};
+            VsvReader r;
+            vsv_reader_init(&r, read_chunks, &src, test->comma, SIZE_MAX);
+            Output out = {.len = 0};
+            VsvStatus rc;
+            while ((rc = vsv_reader_next(&r)) == VSV_OK) {
+                for (size_t j = 0; j < vsv_reader_count(&r); j++) {
+                    out_append(&out, vsv_reader_quoted(&r, j) ? "q" : "-", 1);
+                }
+                out_append(&out, "\n", 1);
+            }
+            assert(rc == VSV_EOF);
+            assert(out.len == strlen(test->want) && memcmp(out.buf, test->want, out.len) == 0);
+            vsv_reader_free(&r);
+        }
+    }
+    printf("OK\n");
+}
+
 // make_field returns a malloc'ed string of n copies of c.
 static char* make_field(size_t n, char c) {
     char* s = malloc(n > 0 ? n : 1);
@@ -457,6 +501,7 @@ int main(void) {
     test_read_go();
     test_read_vsv();
     test_read_nul();
+    test_read_quoted();
     test_read_long();
     test_max_size();
     test_read_error();
