@@ -312,7 +312,7 @@ The BOM is now skipped on every scan. Before, the inner table of a join kept it 
 
 The field separator can now be any UTF-8 character (`fsep='→'`). An invalid separator is an error: before, `fsep='abc'` silently used a NUL character.
 
-Parameter names are now case-insensitive, and boolean values can be quoted (`header='yes'`).
+Parameter names are now case-insensitive, and boolean values can be quoted (`header='yes'`). A parameter given twice is an error.
 
 Errors now say what is wrong: `unknown parameter: x`, `invalid value for header: 'maybe'`, `cannot open file: 'people.csv'`. A missing file is always an error when the table is created. A field longer than SQLite's length limit is a `string or blob too big` error. Before, some failures were reported as `vtable constructor failed`, and a read error ended the table without an error.
 
@@ -322,10 +322,9 @@ The extension now reports a module registration failure when it loads, instead o
 
 **Breaking changes**
 
-The `rsep`, `dsep`, `nulls`, `skip`, `validatetext` and `affinity` parameters are removed, and using them is an error (`unsupported parameter: affinity`). Persistent `vsv` tables that use them fail with this error when used: they hold no data, so drop and recreate them. Instead of:
+The `rsep`, `dsep`, `skip`, `validatetext` and `affinity` parameters are removed, and using them is an error (`unsupported parameter: affinity`). Persistent `vsv` tables that use them fail with this error when used: they hold no data, so drop and recreate them. Instead of:
 
 - `affinity`: declare the column types in `schema`.
-- `nulls`: `nullif(c0, '')`.
 - `skip=N`: `where rowid > N`.
 - `dsep`: `cast(replace(c0, ',', '.') as real)`.
 - `rsep`: records are always separated by newlines.

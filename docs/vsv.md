@@ -50,7 +50,7 @@ The input is read as [RFC 4180](https://www.rfc-editor.org/rfc/rfc4180) CSV, the
 - A UTF-8 byte order mark at the start of the input is skipped.
 - Fields are passed to SQLite as text, without checking that they are valid UTF-8. A NUL character is kept in the field.
 
-An empty field is empty text (`''`), never `NULL`. A record shorter than the table gives `NULL` for the missing columns, and the extra fields of a longer record are ignored.
+An empty field is empty text (`''`), unless [nulls](#nulls) is on. A record shorter than the table gives `NULL` for the missing columns, and the extra fields of a longer record are ignored.
 
 ### Rows
 
@@ -102,13 +102,14 @@ create virtual table temp.<name> using vsv(
     filename=STRING | data=STRING,
     [schema=STRING,]
     [header[=BOOL],]
+    [nulls[=BOOL],]
     [fsep=STRING]
 )
 ```
 
 Parameter names are case-insensitive. A `STRING` value can be quoted with `'` or `"` (doubled inside to escape it), and must be quoted if it contains a comma. A `BOOL` value is `yes`, `on`, `true` or `1`, or `no`, `off`, `false` or `0`, in any case, quoted or not. A parameter can be given only once.
 
-The `columns` parameter of older versions is accepted and ignored. The removed `rsep`, `dsep`, `nulls`, `skip`, `validatetext` and `affinity` parameters are errors (`unsupported parameter: affinity`).
+The `columns` parameter of older versions is accepted and ignored. The removed `rsep`, `dsep`, `skip`, `validatetext` and `affinity` parameters are errors (`unsupported parameter: affinity`).
 
 ### filename
 
@@ -181,6 +182,36 @@ select id, name from t;
 ```
 
 The names are used as is, even if they need quoting in SQL. Duplicate names are an error: `bad schema: 'create table x("a","b","a")' - duplicate column name: a`.
+
+### nulls
+
+```text
+nulls[=BOOL]
+```
+
+Whether an empty field is `NULL`. Defaults to no; the name alone means yes. Only an unquoted empty field is `NULL`: a quoted one (`""`) stays an empty string, so a file can tell a missing value from an empty one.
+
+```sql
+create virtual table temp.t using vsv(data='1,,""', nulls);
+select c0, c1 is null, c2 = '' from t;
+-- 1, 1, 1
+```
+
+With a [schema](#schema), the empty fields of numeric columns are `NULL` instead of `''`, so aggregates skip them as they skip missing values. Without `nulls`, `avg` counts an empty field as `0`, and `max` returns it, since text sorts after numbers.
+
+```sql
+create virtual table temp.t using vsv(
+    data='10,
+,
+20,',
+    schema='create table x(price real)',
+    nulls
+);
+select count(price), avg(price) from t;
+-- 2, 15.0
+```
+
+The header is not affected: an empty name stays empty.
 
 ### fsep
 

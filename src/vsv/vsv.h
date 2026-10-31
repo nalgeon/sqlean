@@ -25,6 +25,7 @@
 // - An error doesn't return the fields read before it.
 // - A read error is reported as is, without the record read before it.
 // - A line or record larger than the size limit is an error.
+// - The reader tells whether each field was quoted.
 //
 // Records can have different numbers of fields (FieldsPerRecord = -1 in Go).
 // Fields are bytes: the reader doesn't validate UTF-8.
@@ -91,6 +92,13 @@ typedef struct {
     int64_t col;
 } VsvPos;
 
+// VsvFieldEnd is where a field of the current record ends,
+// and whether it was quoted.
+typedef struct {
+    size_t end;
+    bool quoted;
+} VsvFieldEnd;
+
 // VsvReader reads records from an input. Use the vsv_reader functions,
 // and read the fields only through vsv_reader_field.
 typedef struct {
@@ -114,11 +122,11 @@ typedef struct {
     int64_t num_line;  // the number of lines read
 
     // the current record: the fields one after another in rec,
-    // field i ends at ends[i]
+    // field i ends at ends[i].end
     char* rec;
     size_t rec_len;
     size_t rec_cap;
-    size_t* ends;
+    VsvFieldEnd* ends;
     size_t nfields;
     size_t ends_cap;
 
@@ -147,6 +155,11 @@ size_t vsv_reader_count(const VsvReader* r);
 // until the next call to vsv_reader_next or vsv_reader_free. It's never NULL,
 // even for an empty field.
 const char* vsv_reader_field(const VsvReader* r, size_t i, size_t* len);
+
+// vsv_reader_quoted reports whether field i of the current record
+// (i < vsv_reader_count) was quoted. Not in Go, which can't tell
+// an empty field from "".
+bool vsv_reader_quoted(const VsvReader* r, size_t i);
 
 // vsv_reader_free frees the memory used by the reader. Doesn't touch src.
 void vsv_reader_free(VsvReader* r);

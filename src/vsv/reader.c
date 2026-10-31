@@ -336,12 +336,15 @@ static VsvStatus append_rec(VsvReader* r, const char* data, size_t n) {
 }
 
 // end_field ends the current field of the record.
-static VsvStatus end_field(VsvReader* r) {
-    VsvStatus rc = grow((void**)&r->ends, &r->ends_cap, r->nfields + 1, sizeof(size_t), SIZE_MAX);
+static VsvStatus end_field(VsvReader* r, bool quoted) {
+    VsvStatus rc =
+        grow((void**)&r->ends, &r->ends_cap, r->nfields + 1, sizeof(VsvFieldEnd), SIZE_MAX);
     if (rc != VSV_OK) {
         return rc;
     }
-    r->ends[r->nfields++] = r->rec_len;
+    r->ends[r->nfields].end = r->rec_len;
+    r->ends[r->nfields].quoted = quoted;
+    r->nfields++;
     return VSV_OK;
 }
 
@@ -393,7 +396,7 @@ VsvStatus vsv_reader_next(VsvReader* r) {
                 int64_t col = pos.col + (int64_t)(quote - line);
                 return parse_error(r, VSV_BARE_QUOTE, rec_line, r->num_line, col);
             }
-            if ((rc = append_rec(r, line, n)) != VSV_OK || (rc = end_field(r)) != VSV_OK) {
+            if ((rc = append_rec(r, line, n)) != VSV_OK || (rc = end_field(r, false)) != VSV_OK) {
                 return rc;
             }
             if (comma == NULL) {
@@ -434,13 +437,13 @@ VsvStatus vsv_reader_next(VsvReader* r) {
                     line += r->comma_len;
                     len -= r->comma_len;
                     pos.col += (int64_t)r->comma_len;
-                    if ((rc = end_field(r)) != VSV_OK) {
+                    if ((rc = end_field(r, true)) != VSV_OK) {
                         return rc;
                     }
                     break;
                 } else if (length_nl(line, len) == len) {
                     // `"\n` sequence (end of line).
-                    return end_field(r);
+                    return end_field(r, true);
                 } else {
                     // `"*` sequence (invalid non-escaped quote).
                     return parse_error(r, VSV_QUOTE, rec_line, r->num_line, pos.col - 1);
@@ -478,11 +481,17 @@ size_t vsv_reader_count(const VsvReader* r) {
 // until the next call to vsv_reader_next or vsv_reader_free. It's never NULL,
 // even for an empty field.
 const char* vsv_reader_field(const VsvReader* r, size_t i, size_t* len) {
-    size_t start = i == 0 ? 0 : r->ends[i - 1];
-    *len = r->ends[i] - start;
+    size_t start = i == 0 ? 0 : r->ends[i - 1].end;
+    *len = r->ends[i].end - start;
     // rec is NULL if every field so far was empty,
     // and NULL + 0 is UB.
     return r->rec != NULL ? r->rec + start : "";
+}
+
+// vsv_reader_quoted reports whether field i of the current record
+// (i < vsv_reader_count) was quoted.
+bool vsv_reader_quoted(const VsvReader* r, size_t i) {
+    return r->ends[i].quoted;
 }
 
 // vsv_reader_free frees the memory used by the reader. Doesn't touch src.
